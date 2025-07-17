@@ -6,8 +6,8 @@ async function handler({ userId, pin, action }) {
       return { error: "Missing action" };
     }
 
-    // Force userId and pin to strings ONCE at the top!
-    const userIdStr = userId !== undefined && userId !== null ? String(userId) : "";
+    // Correct types: integer for user_id, string for pin
+    const userIdInt = userId !== undefined && userId !== null ? parseInt(userId, 10) : null;
     const pinStr = pin !== undefined && pin !== null ? String(pin) : "";
 
     switch (action) {
@@ -17,21 +17,21 @@ async function handler({ userId, pin, action }) {
       }
 
       case "checkUserId": {
-        if (!userIdStr) {
+        if (!userIdInt) {
           return { error: "Missing userId" };
         }
         const existingUser = await sql`
-          SELECT user_id FROM users WHERE user_id::text = ${userIdStr}
+          SELECT user_id FROM users WHERE user_id = ${userIdInt}
         `;
         return { available: existingUser.length === 0 };
       }
 
       case "login": {
-        if (!userIdStr || !pinStr) {
+        if (!userIdInt || !pinStr) {
           return { error: "Missing userId or pin" };
         }
         const users = await sql`
-          SELECT user_id FROM users WHERE user_id::text = ${userIdStr} AND pin::text = ${pinStr}
+          SELECT user_id FROM users WHERE user_id = ${userIdInt} AND pin = ${pinStr}
         `;
         if (users.length === 0) {
           return { error: "Invalid credentials" };
@@ -41,17 +41,17 @@ async function handler({ userId, pin, action }) {
 
       case "signup":
       case "createUser": {
-        if (!userIdStr || !pinStr) {
+        if (!userIdInt || !pinStr) {
           return { error: "Missing userId or pin" };
         }
         const existingUser = await sql`
-          SELECT user_id FROM users WHERE user_id::text = ${userIdStr}
+          SELECT user_id FROM users WHERE user_id = ${userIdInt}
         `;
         if (existingUser.length > 0) {
           return { error: "User ID already exists" };
         }
         await sql`
-          INSERT INTO users (user_id, pin) VALUES (${userIdStr}, ${pinStr})
+          INSERT INTO users (user_id, pin) VALUES (${userIdInt}, ${pinStr})
         `;
         return { success: true };
       }
