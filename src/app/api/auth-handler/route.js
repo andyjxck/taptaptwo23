@@ -6,6 +6,10 @@ async function handler({ userId, pin, action }) {
       return { error: "Missing action" };
     }
 
+    // Force userId and pin to strings ONCE at the top!
+    const userIdStr = userId !== undefined && userId !== null ? String(userId) : "";
+    const pinStr = pin !== undefined && pin !== null ? String(pin) : "";
+
     switch (action) {
       case "getNextUserId": {
         const result = await sql`SELECT get_next_user_id() AS next_id`;
@@ -13,11 +17,9 @@ async function handler({ userId, pin, action }) {
       }
 
       case "checkUserId": {
-        if (!userId) {
+        if (!userIdStr) {
           return { error: "Missing userId" };
         }
-        // Use string for safe comparison
-        const userIdStr = String(userId);
         const existingUser = await sql`
           SELECT user_id FROM users WHERE user_id::text = ${userIdStr}
         `;
@@ -25,12 +27,9 @@ async function handler({ userId, pin, action }) {
       }
 
       case "login": {
-        if (!userId || !pin) {
+        if (!userIdStr || !pinStr) {
           return { error: "Missing userId or pin" };
         }
-        // Use string for safe comparison
-        const userIdStr = String(userId);
-        const pinStr = String(pin);
         const users = await sql`
           SELECT user_id FROM users WHERE user_id::text = ${userIdStr} AND pin::text = ${pinStr}
         `;
@@ -42,12 +41,9 @@ async function handler({ userId, pin, action }) {
 
       case "signup":
       case "createUser": {
-        if (!userId || !pin) {
+        if (!userIdStr || !pinStr) {
           return { error: "Missing userId or pin" };
         }
-        // Use string for safe comparison
-        const userIdStr = String(userId);
-        const pinStr = String(pin);
         const existingUser = await sql`
           SELECT user_id FROM users WHERE user_id::text = ${userIdStr}
         `;
