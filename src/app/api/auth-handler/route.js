@@ -74,6 +74,19 @@ async function handler({ userId, pin, action }) {
 }
 
 export async function POST(request) {
-  const body = await request.json();
-  return handler(body);
+  try {
+    const body = await request.json();
+    const result = await handler(body);
+    return new Response(JSON.stringify(result), {
+      headers: { "Content-Type": "application/json" },
+      status: 200,
+    });
+  } catch (error) {
+    console.error("[/api/auth-handler] Uncaught error:", error);
+    return new Response(JSON.stringify({ error: "Server error", details: error.message || String(error) }), {
+      headers: { "Content-Type": "application/json" },
+      status: 500,
+    });
+  }
 }
+
