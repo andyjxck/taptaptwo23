@@ -15,6 +15,9 @@ async function handler({
   newPin,
   code,
 }) {
+
+   const userIdStr = userId !== undefined && userId !== null ? String(userId) : "";
+const pinStr = pin !== undefined && pin !== null ? String(pin) : "";
   // Allow getNextUserId without userId, others require it
   if (action !== "getNextUserId" && !userId) {
     console.error("[HANDLER] Missing userId");
@@ -60,8 +63,6 @@ async function handler({
       return { error: "Invalid credentials" };
     }
 
-    const userIdStr = userId !== undefined && userId !== null ? String(userId) : "";
-const pinStr = pin !== undefined && pin !== null ? String(pin) : "";
 
     // --- BUY REGULAR ITEM ---
     if (action === "buyRegularItem") {
