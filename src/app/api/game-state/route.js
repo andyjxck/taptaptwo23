@@ -2,28 +2,7 @@
 
 import { sql } from '../auth-handler/db';
 
-import pkg from "pg";
-const { Pool } = pkg;
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }, // for Supabase SSL
-});
-
-async function sql(queryStrings, ...values) {
-  const client = await pool.connect();
-  try {
-    // Simple tagged template literal handling
-    let text = "";
-    queryStrings.forEach((str, i) => {
-      text += str + (values[i] !== undefined ? values[i] : "");
-    });
-    const result = await client.query(text);
-    return result.rows;
-  } finally {
-    client.release();
-  }
-}
 
 async function handler({
   action,
