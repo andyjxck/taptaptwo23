@@ -54,11 +54,14 @@ async function handler({
     // --- Credential check ---
     const userResult = await sql`
       SELECT user_id, used_codes FROM users
-      WHERE user_id::text = ${userIdStr} AND pin = ${pin}
+     const userResult = await sql`   SELECT user_id, used_codes FROM users   WHERE user_id::text = ${userIdStr} AND pin::text = ${pinStr} `;
     `;
     if (!userResult || userResult.length === 0) {
       return { error: "Invalid credentials" };
     }
+
+    const userIdStr = userId !== undefined && userId !== null ? String(userId) : "";
+const pinStr = pin !== undefined && pin !== null ? String(pin) : "";
 
     // --- BUY REGULAR ITEM ---
     if (action === "buyRegularItem") {
