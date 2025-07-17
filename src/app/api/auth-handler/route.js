@@ -16,12 +16,10 @@ async function handler({ userId, pin, action }) {
         if (!userId) {
           return { error: "Missing userId" };
         }
-        const userIdInt = parseInt(userId, 10);
-        if (isNaN(userIdInt)) {
-          return { error: "Invalid userId format" };
-        }
+        // Use string for safe comparison
+        const userIdStr = String(userId);
         const existingUser = await sql`
-          SELECT user_id FROM users WHERE user_id = ${userIdInt}
+          SELECT user_id FROM users WHERE user_id::text = ${userIdStr}
         `;
         return { available: existingUser.length === 0 };
       }
@@ -30,12 +28,11 @@ async function handler({ userId, pin, action }) {
         if (!userId || !pin) {
           return { error: "Missing userId or pin" };
         }
-        const userIdInt = parseInt(userId, 10);
-        if (isNaN(userIdInt)) {
-          return { error: "Invalid userId format" };
-        }
+        // Use string for safe comparison
+        const userIdStr = String(userId);
+        const pinStr = String(pin);
         const users = await sql`
-          SELECT user_id FROM users WHERE user_id = ${userIdInt} AND pin = ${pin}
+          SELECT user_id FROM users WHERE user_id::text = ${userIdStr} AND pin::text = ${pinStr}
         `;
         if (users.length === 0) {
           return { error: "Invalid credentials" };
@@ -48,18 +45,17 @@ async function handler({ userId, pin, action }) {
         if (!userId || !pin) {
           return { error: "Missing userId or pin" };
         }
-        const userIdInt = parseInt(userId, 10);
-        if (isNaN(userIdInt)) {
-          return { error: "Invalid userId format" };
-        }
+        // Use string for safe comparison
+        const userIdStr = String(userId);
+        const pinStr = String(pin);
         const existingUser = await sql`
-          SELECT user_id FROM users WHERE user_id = ${userIdInt}
+          SELECT user_id FROM users WHERE user_id::text = ${userIdStr}
         `;
         if (existingUser.length > 0) {
           return { error: "User ID already exists" };
         }
         await sql`
-          INSERT INTO users (user_id, pin) VALUES (${userIdInt}, ${pin})
+          INSERT INTO users (user_id, pin) VALUES (${userIdStr}, ${pinStr})
         `;
         return { success: true };
       }
