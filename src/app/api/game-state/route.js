@@ -1,5 +1,3 @@
-
-
 import { sql } from '../auth-handler/db';
 
 async function handler({
@@ -13,11 +11,11 @@ async function handler({
   newPin,
   code,
 }) {
-  // --- Types at the top, ALWAYS use these below ---
+  // Always treat userId as integer everywhere
   const userIdInt = userId !== undefined && userId !== null ? parseInt(userId, 10) : null;
   const pinStr = pin !== undefined && pin !== null ? String(pin) : "";
 
-  // Allow getNextUserId without userId, others require it
+  // Only allow getNextUserId without userId
   if (action !== "getNextUserId" && !userIdInt) {
     console.error("[HANDLER] Missing userId");
     return { error: "Missing userId" };
@@ -34,12 +32,11 @@ async function handler({
   };
 
   try {
-    // --- getNextUserId: find lowest available user_id integer starting at 1 ---
+    // --- getNextUserId ---
     if (action === "getNextUserId") {
       const rows = await sql`
         SELECT user_id FROM users ORDER BY user_id ASC
       `;
-
       let nextId = 1;
       for (const row of rows) {
         const currentId = parseInt(row.user_id, 10);
@@ -77,26 +74,21 @@ async function handler({
       if (!itemId || !itemType || typeof price !== "number") {
         return { error: "Missing itemId, itemType, or price" };
       }
-
       const saveRows = await sql`
         SELECT owned_profile_icons, owned_themes, owned_boosts, renown_tokens
         FROM game_saves WHERE user_id = ${userIdInt}
       `;
-
       if (!saveRows || saveRows.length === 0) {
         return { error: "No save data found for user" };
       }
-
       const save = saveRows[0];
       const ownedProfileIcons = safeParse(save.owned_profile_icons);
       const ownedThemes = safeParse(save.owned_themes);
       const ownedBoosts = safeParse(save.owned_boosts);
       const currentTokens = Number(save.renown_tokens) || 0;
-
       if (currentTokens < price) {
         return { error: "Insufficient Renown Tokens" };
       }
-
       if (itemType === "profileIcon") {
         if (ownedProfileIcons.includes(itemId)) return { error: "You already own this item" };
         ownedProfileIcons.push(itemId);
@@ -109,7 +101,6 @@ async function handler({
       } else {
         return { error: "Invalid itemType" };
       }
-
       await sql`
         UPDATE game_saves
         SET
@@ -119,7 +110,6 @@ async function handler({
           renown_tokens = ${currentTokens - price}
         WHERE user_id = ${userIdInt}
       `;
-
       return { success: true };
     }
 
@@ -128,40 +118,32 @@ async function handler({
       if (!itemId || !itemType || typeof price !== "number") {
         return { error: "Missing itemId, itemType, or price" };
       }
-
       const stockRows = await sql`
         SELECT total_stock, sold_count FROM limited_item_stock
         WHERE item_id = ${itemId} AND item_type = ${itemType}
       `;
-
       if (!stockRows || stockRows.length === 0) {
         return { error: "Limited item not found" };
       }
-
       const { total_stock, sold_count } = stockRows[0];
       if (sold_count >= total_stock) {
         return { error: "Item is out of stock" };
       }
-
       const saveRows = await sql`
         SELECT owned_profile_icons, owned_themes, owned_boosts, renown_tokens
         FROM game_saves WHERE user_id = ${userIdInt}
       `;
-
       if (!saveRows || saveRows.length === 0) {
         return { error: "No save data found for user" };
       }
-
       const save = saveRows[0];
       const ownedProfileIcons = safeParse(save.owned_profile_icons);
       const ownedThemes = safeParse(save.owned_themes);
       const ownedBoosts = safeParse(save.owned_boosts);
       const currentTokens = Number(save.renown_tokens) || 0;
-
       if (currentTokens < price) {
         return { error: "Insufficient Renown Tokens" };
       }
-
       if (itemType === "profileIcon") {
         if (ownedProfileIcons.includes(itemId)) return { error: "You already own this item" };
         ownedProfileIcons.push(itemId);
@@ -174,18 +156,15 @@ async function handler({
       } else {
         return { error: "Invalid itemType" };
       }
-
       const updated = await sql`
         UPDATE limited_item_stock
         SET sold_count = sold_count + 1
         WHERE item_id = ${itemId} AND item_type = ${itemType} AND sold_count < total_stock
         RETURNING sold_count
       `;
-
       if (!updated || updated.length === 0) {
         return { error: "Failed to purchase: item may be out of stock" };
       }
-
       await sql`
         UPDATE game_saves
         SET
@@ -195,7 +174,6 @@ async function handler({
           renown_tokens = ${currentTokens - price}
         WHERE user_id = ${userIdInt}
       `;
-
       return { success: true };
     }
 
@@ -207,13 +185,11 @@ async function handler({
       if (gameState.house_name && String(gameState.house_name).length > 30) {
         return { error: "House name too long" };
       }
-
       const combinedUpgradeLevel =
         (Number(gameState.tap_power_upgrades) || 0) +
         (Number(gameState.auto_tapper_upgrades) || 0) +
         (Number(gameState.crit_chance_upgrades) || 0) +
         (Number(gameState.tap_speed_bonus_upgrades) || 0);
-
       const currentQuestText = gameState.currentQuest
         ? JSON.stringify(gameState.currentQuest)
         : null;
@@ -221,7 +197,6 @@ async function handler({
       const ownedProfileIconsJSON = JSON.stringify(gameState.ownedProfileIcons || []);
       const profileIcon = gameState.profileIcon || null;
       const coinsEarnedThisRun = Number(gameState.coinsEarnedThisRun) || 0;
-
       await sql`
         INSERT INTO game_saves (
           user_id,
@@ -336,7 +311,6 @@ async function handler({
           equipped_theme = EXCLUDED.equipped_theme,
           last_saved = CURRENT_TIMESTAMP
       `;
-
       await sql`
         INSERT INTO leaderboard (user_id, total_resets, total_coins_earned)
         VALUES (
@@ -349,7 +323,6 @@ async function handler({
           total_coins_earned = EXCLUDED.total_coins_earned,
           updated_at = CURRENT_TIMESTAMP
       `;
-
       return { success: true };
     }
 
@@ -361,40 +334,34 @@ async function handler({
       if (!rows || rows.length === 0) {
         return { gameState: null };
       }
-
       let stockRows = [];
       try {
         stockRows = await sql`
           SELECT item_id, total_stock, sold_count FROM limited_item_stock
         `;
       } catch {}
-
       const limitedStock = {};
       stockRows.forEach(({ item_id, total_stock, sold_count }) => {
         limitedStock[item_id] = total_stock - sold_count;
       });
-
       let currentQuestObj = null;
       if (rows[0].current_quest) {
         try {
           currentQuestObj = JSON.parse(rows[0].current_quest);
         } catch {}
       }
-
       let ownedProfileIconsArr = [];
       try {
         ownedProfileIconsArr = rows[0].owned_profile_icons
           ? JSON.parse(rows[0].owned_profile_icons)
           : [];
       } catch {}
-
       let ownedBoostArr = [];
       try {
         ownedBoostArr = rows[0].owned_boosts
           ? JSON.parse(rows[0].owned_boosts)
           : [];
       } catch {}
-
       let ownedThemes = ["seasons"];
       if (rows[0].owned_themes) {
         if (Array.isArray(rows[0].owned_themes)) {
@@ -406,9 +373,7 @@ async function handler({
           } catch {}
         }
       }
-
       const equippedTheme = rows[0].equipped_theme || "seasons";
-
       return {
         gameState: {
           ...rows[0],
@@ -437,7 +402,6 @@ async function handler({
         ORDER BY l.total_coins_earned DESC
         LIMIT 10
       `;
-
       const topRenown = await sql`
         SELECT l.user_id, g.renown_tokens, g.profile_name, g.profile_icon
         FROM leaderboard l
@@ -445,7 +409,6 @@ async function handler({
         ORDER BY g.renown_tokens DESC
         LIMIT 10
       `;
-
       return {
         coins: topCoins.map((row) => ({
           user_id: row.user_id,
@@ -485,10 +448,9 @@ async function handler({
       `;
       return { success: true };
     }
-    // --- REDEEM REFERRAL / PROMO CODES ---
-   // --- REDEEM REFERRAL / PROMO CODES ---
+
+// --- REDEEM REFERRAL / PROMO CODES ---
 if (action === "redeemReferral") {
-  // Hardcoded lists for all icons and themes:
   const allIcons = [
     "tree","seedling","cloudMoon","sun","star","alien","fire","ghost","cat","unicorn","robot","crown",
     "icecream","rocket","rainbow","mouse","frog","fox","penguin","bunny","duck","hamster","owl","hedgehog",
@@ -796,7 +758,7 @@ if (action === "redeemReferral") {
   return { error: "Invalid or unsupported code" };
 }
 
-    return { error: "Invalid action" };
+
   } catch (err) {
     return {
       error: "Internal server error",
