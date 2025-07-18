@@ -27,7 +27,7 @@ async function handler(req) {
     const result = await sql`
       INSERT INTO feedback (userid, feedback)
       VALUES (${userId}, ${feedback})
-      RETURNING id, userid, feedback
+      RETURNING userid, feedback
     `;
 
     if (!result || result.length === 0) {
