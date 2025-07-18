@@ -748,6 +748,19 @@ async function handler({
 }
 
 export async function POST(request) {
-  const json = await request.json();
-  return handler(json);
+  try {
+    const json = await request.json();
+    const result = await handler(json);
+    return new Response(JSON.stringify(result), {
+      headers: { "Content-Type": "application/json" },
+      status: 200,
+    });
+  } catch (err) {
+    console.error("[/api/game-state] Server error:", err);
+    return new Response(
+      JSON.stringify({ error: "Server error", details: err.message || String(err) }),
+      { headers: { "Content-Type": "application/json" }, status: 500 }
+    );
+  }
 }
+
