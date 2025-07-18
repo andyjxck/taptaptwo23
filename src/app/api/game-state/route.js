@@ -54,14 +54,14 @@ const pinStr = pin !== undefined && pin !== null ? String(pin) : "";
       return { userId: nextId };
     }
 
-    // --- Credential check ---
-    const userResult = await sql`
-      SELECT user_id, used_codes FROM users
-     const userResult = await sql`   SELECT user_id, used_codes FROM users   WHERE user_id::text = ${userIdStr} AND pin::text = ${pinStr} `;
-    `;
-    if (!userResult || userResult.length === 0) {
-      return { error: "Invalid credentials" };
-    }
+// --- Credential check ---
+const userResult = await sql`
+  SELECT user_id, used_codes FROM users
+  WHERE user_id::text = ${userIdStr} AND pin::text = ${pinStr}
+`;
+if (!userResult || userResult.length === 0) {
+  return { error: "Invalid credentials" };
+}
 
 
     // --- BUY REGULAR ITEM ---
