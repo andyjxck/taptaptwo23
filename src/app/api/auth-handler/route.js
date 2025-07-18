@@ -37,7 +37,7 @@ async function handler({ userId, pin, action }) {
 
       case "login": {
         const rows = await sql`
-          SELECT user_id FROM users WHERE user_id = ${userIdInt} AND pin = ${pinStr}
+          SELECT user_id FROM users WHERE user_id = ${userIdInt} AND pin::text = ${pinStr}
         `;
         if (rows.length === 0) {
           return { error: "Invalid credentials" };
