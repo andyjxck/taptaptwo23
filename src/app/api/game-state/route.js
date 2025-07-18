@@ -23,7 +23,6 @@ const pinStr = pin !== undefined && pin !== null ? String(pin) : "";
     console.error("[HANDLER] Missing userId");
     return { error: "Missing userId" };
   }
-  const userIdStr = userId ? String(userId) : "";
 
   // Helper to parse JSON safely
   const safeParse = (str, fallback = []) => {
