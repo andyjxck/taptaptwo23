@@ -1,39 +1,45 @@
-import { sql } from '../auth-handler/db'; // Adjust import based on your setup
+import { sql } from '../auth-handler/db';
 
 async function handler({ userId, pin, action }) {
-  try {
-    if (!action) {
-      return { error: "Missing action" };
+  // Early input validation
+  if (!action || typeof action !== 'string') {
+    return { error: "Missing or invalid action" };
+  }
+
+  // Parse userId strictly as integer if present
+  const userIdInt = Number.isInteger(userId) ? userId : parseInt(userId, 10);
+  const pinStr = typeof pin === 'string' ? pin : String(pin || "");
+
+  // For actions that require userId & pin, validate upfront
+  const needsAuth = ["login", "signup", "createUser", "checkUserId"];
+  if (needsAuth.includes(action)) {
+    if (!userIdInt || Number.isNaN(userIdInt)) {
+      return { error: "Invalid or missing userId" };
     }
+    if (action === "login" && (!pinStr || pinStr.length === 0)) {
+      return { error: "Missing PIN for login" };
+    }
+  }
 
-    // Correct types: integer for user_id, string for pin
-    const userIdInt = userId !== undefined && userId !== null ? parseInt(userId, 10) : null;
-    const pinStr = pin !== undefined && pin !== null ? String(pin) : "";
-
+  try {
     switch (action) {
       case "getNextUserId": {
-        const result = await sql`SELECT get_next_user_id() AS next_id`;
+        const result = await sql`SELECT get_next_user_id() AS next_id;`;
         return { userId: result[0]?.next_id ?? null };
       }
 
       case "checkUserId": {
-        if (!userIdInt) {
-          return { error: "Missing userId" };
-        }
-        const existingUser = await sql`
+        const rows = await sql`
           SELECT user_id FROM users WHERE user_id = ${userIdInt}
         `;
-        return { available: existingUser.length === 0 };
+        return { available: rows.length === 0 };
       }
 
       case "login": {
-        if (!userIdInt || !pinStr) {
-          return { error: "Missing userId or pin" };
-        }
-        const users = await sql`
+        const rows = await sql`
           SELECT user_id FROM users WHERE user_id = ${userIdInt} AND pin = ${pinStr}
         `;
-        if (users.length === 0) {
+        if (rows.length === 0) {
           return { error: "Invalid credentials" };
         }
         return { success: true };
@@ -41,27 +47,26 @@ async function handler({ userId, pin, action }) {
 
       case "signup":
       case "createUser": {
-        if (!userIdInt || !pinStr) {
-          return { error: "Missing userId or pin" };
-        }
-        const existingUser = await sql`
+        const existing = await sql`
           SELECT user_id FROM users WHERE user_id = ${userIdInt}
         `;
-        if (existingUser.length > 0) {
+        if (existing.length > 0) {
           return { error: "User ID already exists" };
         }
+
         await sql`
           INSERT INTO users (user_id, pin) VALUES (${userIdInt}, ${pinStr})
         `;
+
         return { success: true };
       }
 
       default:
         return { error: "Invalid action" };
     }
-  } catch (error) {
-    console.error("Auth error:", error);
-    return { error: "Authentication failed: " + error.message };
+  } catch (err) {
+    console.error("Auth handler error:", err);
+    return { error: "Authentication failed: " + err.message };
   }
 }
 
@@ -73,11 +78,11 @@ export async function POST(request) {
       headers: { "Content-Type": "application/json" },
       status: 200,
     });
-  } catch (error) {
-    console.error("[/api/auth-handler] Uncaught error:", error);
-    return new Response(JSON.stringify({ error: "Server error", details: error.message || String(error) }), {
-      headers: { "Content-Type": "application/json" },
-      status: 500,
-    });
+  } catch (err) {
+    console.error("[/api/auth-handler] Server error:", err);
+    return new Response(
+      JSON.stringify({ error: "Server error", details: err.message || String(err) }),
+      { headers: { "Content-Type": "application/json" }, status: 500 }
+    );
   }
 }
