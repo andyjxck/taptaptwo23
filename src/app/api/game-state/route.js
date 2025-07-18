@@ -11,7 +11,6 @@ async function handler({
   newPin,
   code,
 }) {
-  // Always treat userId as integer everywhere
   const userIdInt = userId !== undefined && userId !== null ? parseInt(userId, 10) : null;
   const pinStr = pin !== undefined && pin !== null ? String(pin) : "";
 
@@ -465,10 +464,7 @@ if (action === "redeemReferral") {
   const codeName = typeof code === "string" ? code.toLowerCase().trim() : "";
   if (!codeName) return { error: "No code provided" };
 
-  // Always parse userId to integer for SQL lookups
-  const userIdInt = userId !== undefined && userId !== null ? parseInt(userId, 10) : null;
-  if (!userIdInt) return { error: "Missing or invalid user ID" };
-
+  // Always parse userId to integer for SQL looku
   // 1. Load game_saves row
   let saveRows;
   try {
