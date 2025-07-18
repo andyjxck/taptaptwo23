@@ -16,8 +16,9 @@ async function handler({
   code,
 }) {
 
-   const userIdStr = userId !== undefined && userId !== null ? String(userId) : "";
+  const userIdInt = userId !== undefined && userId !== null ? parseInt(userId, 10) : null;
 const pinStr = pin !== undefined && pin !== null ? String(pin) : "";
+
   // Allow getNextUserId without userId, others require it
   if (action !== "getNextUserId" && !userId) {
     console.error("[HANDLER] Missing userId");
@@ -56,7 +57,7 @@ const pinStr = pin !== undefined && pin !== null ? String(pin) : "";
 // --- Credential check ---
 const userResult = await sql`
   SELECT user_id, used_codes FROM users
-  WHERE user_id::text = ${userIdStr} AND pin::text = ${pinStr}
+  WHERE user_id = ${userIdInt} AND pin = ${pinStr}
 `;
 if (!userResult || userResult.length === 0) {
   return { error: "Invalid credentials" };
