@@ -2073,7 +2073,7 @@ useEffect(() => {
       const response = await fetch("/api/game-state", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, pin, action: "load" }),
+        body: JSON.stringify({ userId: parseInt(userId, 10), pin, action: "load" }),
       });
 
       if (!response.ok) {
