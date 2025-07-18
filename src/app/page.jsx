@@ -4539,7 +4539,7 @@ useEffect(() => {
                       }
 
                       try {
-                        const response = await fetch("/api/submit-feedback/route.js", {
+                        const response = await fetch("/api/submit-feedback/", {
                           method: "POST",
                           headers: {
                             "Content-Type": "application/json",
