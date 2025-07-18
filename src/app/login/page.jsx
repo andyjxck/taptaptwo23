@@ -1,71 +1,76 @@
 "use client";
 import React, { useState } from "react";
 
-
 function MainComponent() {
   const [userId, setUserId] = useState("");
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Add useEffect for pageview tracking
+  // Track pageview on mount
   React.useEffect(() => {
-    // Record pageview
     fetch("/api/record-pageview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         page_path: "/login",
-        user_id: null, // No user ID since they're not logged in yet
+        user_id: null,
         user_agent: navigator.userAgent,
         referrer: document.referrer,
       }),
-    }).catch(console.error);
-  }, []); // Run once on mount
+    }).catch(() => {});
+  }, []);
 
+  // Login handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
+    // Input validation
+    if (!userId || !pin || pin.length !== 4) {
+      setError("Please enter a valid User ID and 4-digit PIN.");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const authResponse = await fetch("/api/auth-handler", {
+      // Always send as integer (userId)
+      const response = await fetch("/api/auth-handler", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "login",
           userId: parseInt(userId, 10),
-          pin,
+          pin: pin,
         }),
       });
 
-      if (!authResponse.ok) {
-        throw new Error("Failed to login");
-      }
+      if (!response.ok) throw new Error("Failed to login.");
 
-      const authData = await authResponse.json();
+      const data = await response.json();
 
-      if (authData.error) {
-        setError(authData.error);
+      if (data.error) {
+        setError(data.error);
         setLoading(false);
         return;
       }
 
-      if (!authData.success) {
+      if (!data.success) {
         setError("Invalid credentials");
         setLoading(false);
         return;
       }
 
+      // Save credentials
       localStorage.setItem("userId", userId);
       localStorage.setItem("pin", pin);
       localStorage.setItem("lastCredentialCheck", Date.now().toString());
 
       setLoading(false);
       window.location.href = "/";
-    } catch (error) {
-      console.error(error);
-      setError("Something went wrong. Please try again.");
+    } catch (err) {
+      setError("Login failed. Please try again.");
       setLoading(false);
     }
   };
@@ -74,10 +79,10 @@ function MainComponent() {
     <div className="min-h-screen bg-gradient-to-br from-[#c084fc] via-[#a78bfa] to-[#7c3aed] flex items-center justify-center px-4">
       <div
         className="
-  bg-gradient-to-br from-purple-400/50 via-purple-200/40 to-purple-600/60
-  backdrop-blur-xl rounded-2xl p-8 w-full max-w-md border border-white/30 shadow-lg
-  relative
-"
+          bg-gradient-to-br from-purple-400/50 via-purple-200/40 to-purple-600/60
+          backdrop-blur-xl rounded-2xl p-8 w-full max-w-md border border-white/30 shadow-lg
+          relative
+        "
         style={{
           background:
             "linear-gradient(135deg, rgba(192,132,252,0.95), rgba(139,92,246,0.75), rgba(59,7,100,0.7))",
@@ -89,7 +94,6 @@ function MainComponent() {
         <h1 className="text-4xl font-crimson-text text-[#2d3748] text-center mb-8">
           Welcome Back
         </h1>
-
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <input
@@ -97,18 +101,20 @@ function MainComponent() {
               name="userId"
               placeholder="Enter User ID"
               value={userId}
-              onChange={(e) => setUserId(e.target.value.replace(/\D/g, ""))}
+              onChange={(e) =>
+                setUserId(e.target.value.replace(/\D/g, "").slice(0, 6))
+              }
               className="w-full px-4 py-3 rounded-xl bg-white/30 border border-purple-300 text-[#2d3748] placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-[#a78bfa] text-center text-lg"
               inputMode="numeric"
               autoComplete="username"
+              maxLength={6}
             />
           </div>
-
           <div>
             <input
               type="password"
               name="pin"
-              placeholder="Enter PIN"
+              placeholder="Enter 4-digit PIN"
               value={pin}
               onChange={(e) =>
                 setPin(e.target.value.replace(/\D/g, "").slice(0, 4))
@@ -119,11 +125,9 @@ function MainComponent() {
               autoComplete="current-password"
             />
           </div>
-
           {error && (
             <div className="text-[#EF4444] text-center text-sm">{error}</div>
           )}
-
           <button
             type="submit"
             disabled={loading}
@@ -131,7 +135,6 @@ function MainComponent() {
           >
             {loading ? "Logging in..." : "Log In"}
           </button>
-
           <div className="text-center text-sm text-[#4a5568]">
             Don't have an account?{" "}
             <a href="/sign-up" className="text-[#3b82f6] hover:underline">
