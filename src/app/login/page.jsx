@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 function MainComponent() {
   const [userId, setUserId] = useState("");
@@ -7,8 +7,8 @@ function MainComponent() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Track pageview on mount
-  React.useEffect(() => {
+  useEffect(() => {
+    // Track pageview once on mount
     fetch("/api/record-pageview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -21,13 +21,11 @@ function MainComponent() {
     }).catch(() => {});
   }, []);
 
-  // Login handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    // Input validation
     if (!userId || !pin || pin.length !== 4) {
       setError("Please enter a valid User ID and 4-digit PIN.");
       setLoading(false);
@@ -35,14 +33,13 @@ function MainComponent() {
     }
 
     try {
-      // Always send as integer (userId)
       const response = await fetch("/api/auth-handler", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "login",
           userId: parseInt(userId, 10),
-          pin: pin,
+          pin,
         }),
       });
 
@@ -62,14 +59,13 @@ function MainComponent() {
         return;
       }
 
-      // Save credentials
       localStorage.setItem("userId", userId);
       localStorage.setItem("pin", pin);
       localStorage.setItem("lastCredentialCheck", Date.now().toString());
 
       setLoading(false);
       window.location.href = "/";
-    } catch (err) {
+    } catch {
       setError("Login failed. Please try again.");
       setLoading(false);
     }
@@ -94,37 +90,34 @@ function MainComponent() {
         <h1 className="text-4xl font-crimson-text text-[#2d3748] text-center mb-8">
           Welcome Back
         </h1>
+
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <input
-              type="text"
-              name="userId"
-              placeholder="Enter User ID"
-              value={userId}
-              onChange={(e) =>
-                setUserId(e.target.value.replace(/\D/g, "").slice(0, 6))
-              }
-              className="w-full px-4 py-3 rounded-xl bg-white/30 border border-purple-300 text-[#2d3748] placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-[#a78bfa] text-center text-lg"
-              inputMode="numeric"
-              autoComplete="username"
-              maxLength={6}
-            />
-          </div>
-          <div>
-            <input
-              type="password"
-              name="pin"
-              placeholder="Enter 4-digit PIN"
-              value={pin}
-              onChange={(e) =>
-                setPin(e.target.value.replace(/\D/g, "").slice(0, 4))
-              }
-              className="w-full px-4 py-3 rounded-xl bg-white/30 border border-purple-300 text-[#2d3748] placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-[#a78bfa] text-center text-lg"
-              maxLength={4}
-              inputMode="numeric"
-              autoComplete="current-password"
-            />
-          </div>
+          <input
+            type="text"
+            name="userId"
+            placeholder="Enter User ID"
+            value={userId}
+            onChange={(e) =>
+              setUserId(e.target.value.replace(/\D/g, "").slice(0, 6))
+            }
+            className="w-full px-4 py-3 rounded-xl bg-white/30 border border-purple-300 text-[#2d3748] placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-[#a78bfa] text-center text-lg"
+            inputMode="numeric"
+            autoComplete="username"
+            maxLength={6}
+          />
+          <input
+            type="password"
+            name="pin"
+            placeholder="Enter 4-digit PIN"
+            value={pin}
+            onChange={(e) =>
+              setPin(e.target.value.replace(/\D/g, "").slice(0, 4))
+            }
+            className="w-full px-4 py-3 rounded-xl bg-white/30 border border-purple-300 text-[#2d3748] placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-[#a78bfa] text-center text-lg"
+            maxLength={4}
+            inputMode="numeric"
+            autoComplete="current-password"
+          />
           {error && (
             <div className="text-[#EF4444] text-center text-sm">{error}</div>
           )}
