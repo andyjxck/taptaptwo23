@@ -3072,10 +3072,14 @@ useEffect(() => {
 
       try {
         const response = await fetch("/api/game-state", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, pin, action: "getLeaderboard" }),
-        });
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    userId: parseInt(userId, 10),
+    pin,
+    action: "getLeaderboard",
+  }),
+});
 
         if (!response.ok) throw new Error("Failed to fetch leaderboard");
 
