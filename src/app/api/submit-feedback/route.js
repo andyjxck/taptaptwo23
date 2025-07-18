@@ -177,5 +177,17 @@ function MainComponent() {
   );
 }
 export async function POST(request) {
-  return handler(await request.json());
+  try {
+    const result = await handler(await request.json());
+    return new Response(JSON.stringify(result), {
+      headers: { "Content-Type": "application/json" },
+      status: 200,
+    });
+  } catch (err) {
+    console.error("API error:", err);
+    return new Response(
+      JSON.stringify({ success: false, error: "Server error", details: err.message }),
+      { headers: { "Content-Type": "application/json" }, status: 500 }
+    );
+  }
 }
