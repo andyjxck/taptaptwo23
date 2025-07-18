@@ -3,17 +3,24 @@ const { Pool } = pkg;
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }, // Remove or change if your DB does not require SSL
+  ssl: { rejectUnauthorized: false },
 });
 
-export async function sql(queryStrings, ...values) {
+// Accepts SQL as a template literal: sql`SELECT * FROM users WHERE pin = ${pin}`
+export async function sql(strings, ...values) {
+  let text = '';
+  const params = [];
+  strings.forEach((str, i) => {
+    text += str;
+    if (i < values.length) {
+      params.push(values[i]);
+      text += `$${params.length}`;
+    }
+  });
+
   const client = await pool.connect();
   try {
-    let text = "";
-    queryStrings.forEach((str, i) => {
-      text += str + (values[i] !== undefined ? values[i] : "");
-    });
-    const result = await client.query(text);
+    const result = await client.query(text, params);
     return result.rows;
   } finally {
     client.release();
