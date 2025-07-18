@@ -57,7 +57,8 @@ async function handler({
     if (protectedActions.includes(action)) {
       const userResult = await sql`
         SELECT user_id, used_codes FROM users
-        WHERE user_id = ${userIdInt} AND pin = ${pinStr}
+        WHERE user_id = ${userIdInt} AND pin::text = ${pinStr}
+
       `;
       if (!userResult || userResult.length === 0) {
         return { error: "Invalid credentials" };
