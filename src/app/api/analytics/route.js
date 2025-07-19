@@ -53,11 +53,21 @@ async function handler({ action }) {
     return { error: "Failed to get analytics" };
   }
 }
-
 export async function POST(request) {
-  const result = await handler(await request.json());
-  return new Response(JSON.stringify(result), {
-    headers: { "Content-Type": "application/json" },
-    status: 200,
-  });
+  try {
+    const result = await handler(await request.json());
+    return new Response(JSON.stringify(result), {
+      headers: { "Content-Type": "application/json" },
+      status: 200,
+    });
+  } catch (error) {
+    console.error("API error:", error);
+    return new Response(
+      JSON.stringify({ error: "Server error", details: error.message }),
+      {
+        headers: { "Content-Type": "application/json" },
+        status: 500,
+      }
+    );
+  }
 }
