@@ -3217,122 +3217,136 @@ const loadGame = async () => {
   const [leaderboardData, setLeaderboardData] = useState({
     renown: [],
     coins: [],
+    house: [],
   });
 
-  useEffect(() => {
-    const fetchLeaderboard = async () => {
-      if (!userId || !pin) return;
+ useEffect(() => {
+  const fetchLeaderboard = async () => {
+    if (!userId || !pin) return;
 
-      try {
-        const response = await fetch("/api/game-state", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    userId: parseInt(userId, 10),
-    pin,
-    action: "getLeaderboard",
-  }),
-});
+    try {
+      const response = await fetch("/api/game-state", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: parseInt(userId, 10),
+          pin,
+          action: "getLeaderboard",
+        }),
+      });
 
-        if (!response.ok) throw new Error("Failed to fetch leaderboard");
+      if (!response.ok) throw new Error("Failed to fetch leaderboard");
 
-        const data = await response.json();
-        if (data.error) throw new Error(data.error);
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
 
-        setLeaderboardData({
-          renown: data.renown || [],
-          coins: data.coins || [],
-        });
-      } catch (error) {
-        console.error("Error fetching leaderboard:", error);
-      }
-    };
+      setLeaderboardData({
+        renown: data.renown || [],
+        coins: data.coins || [],
+        house: data.house || [], // <-- Add this line
+      });
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+    }
+  };
 
-    fetchLeaderboard();
-    const interval = setInterval(fetchLeaderboard, 5000);
-    return () => clearInterval(interval);
-  }, [userId, pin]);
+  fetchLeaderboard();
+  const interval = setInterval(fetchLeaderboard, 5000);
+  return () => clearInterval(interval);
+}, [userId, pin]);
 
-  const renderLeaderboard = () => (
-    <div className={`${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow}`}>
-      <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#2d3748]">
-        Leaderboard
-      </h2>
 
-      <div className="mb-4">
-        <select
-          value={leaderboardType}
-          onChange={(e) => setLeaderboardType(e.target.value)}
-          className="w-full px-4 py-2 rounded-xl bg-white/40 border border-white/30 text-[#2d3748]"
-        >
-          <option value="renown">Most Renown Tokens</option>
-          <option value="coins">Most Coins Earned</option>
-        </select>
-      </div>
+ const renderLeaderboard = () => (
+  <div className={`${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow}`}>
+    <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#2d3748]">
+      Leaderboard
+    </h2>
 
-      <div className="space-y-2">
-        {leaderboardData[leaderboardType].map((entry, index) => {
-          const iconObj = PROFILE_ICONS.find(
-            (ic) => ic.id === entry.profile_icon
-          );
+    <div className="mb-4">
+      <select
+        value={leaderboardType}
+        onChange={(e) => setLeaderboardType(e.target.value)}
+        className="w-full px-4 py-2 rounded-xl bg-white/40 border border-white/30 text-[#2d3748]"
+      >
+        <option value="renown">Most Renown Tokens</option>
+        <option value="coins">Most Coins Earned</option>
+        <option value="house">Highest House Level</option>
+      </select>
+    </div>
 
-          // Rank string
-          const rankStr = index === 0 ? "👑" : `#${index + 1}`;
+    <div className="space-y-2">
+      {leaderboardData[leaderboardType].map((entry, index) => {
+        const iconObj = PROFILE_ICONS.find(
+          (ic) => ic.id === entry.profile_icon
+        );
 
-          return (
-            <div
-              key={entry.user_id}
-              className="flex justify-between items-center bg-white/10 rounded-lg p-3"
-            >
-              <div className="flex items-center">
-                <span
-                  className={`text-lg font-medium mr-2 ${
-                    index === 0
-                      ? "text-yellow-500"
-                      : index === 1
-                      ? "text-green-500"
-                      : index === 2
-                      ? "text-blue-500"
-                      : "text-black"
-                  }`}
-                >
-                  {rankStr}
-                </span>
-                {/* Profile icon between rank and name */}
-                {iconObj ? (
-                  iconObj.image ? (
-                    <img
-                      src={iconObj.image}
-                      alt={iconObj.name}
-                      className="w-8 h-8 rounded-full object-cover mr-2"
-                      title={iconObj.name}
-                    />
-                  ) : (
-                    <span className="text-2xl mr-2" title={iconObj.name}>
-                      {iconObj.emoji}
-                    </span>
-                  )
+        const rankStr = index === 0 ? "👑" : `#${index + 1}`;
+
+        return (
+          <div
+            key={entry.user_id}
+            className="flex justify-between items-center bg-white/10 rounded-lg p-3"
+          >
+            <div className="flex items-center">
+              <span
+                className={`text-lg font-medium mr-2 ${
+                  index === 0
+                    ? "text-yellow-500"
+                    : index === 1
+                    ? "text-green-500"
+                    : index === 2
+                    ? "text-blue-500"
+                    : "text-black"
+                }`}
+              >
+                {rankStr}
+              </span>
+              {/* Profile icon */}
+              {iconObj ? (
+                iconObj.image ? (
+                  <img
+                    src={iconObj.image}
+                    alt={iconObj.name}
+                    className="w-8 h-8 rounded-full object-cover mr-2"
+                    title={iconObj.name}
+                  />
                 ) : (
-                  <i className="fas fa-user-circle text-gray-400 text-2xl mr-2"></i>
-                )}
+                  <span className="text-2xl mr-2" title={iconObj.name}>
+                    {iconObj.emoji}
+                  </span>
+                )
+              ) : (
+                <i className="fas fa-user-circle text-gray-400 text-2xl mr-2"></i>
+              )}
 
+              <div>
                 <span className="text-lg font-medium">
                   {entry.profile_name || "Player"} ({entry.user_id})
                 </span>
+                {/* House name and level under player name for house leaderboard */}
+                {leaderboardType === "house" && (
+                  <div className="text-xs text-gray-500" style={{ lineHeight: "1.2" }}>
+                    {entry.house_name
+                      ? `${entry.house_name} — Level ${entry.house_level}`
+                      : "No House"}
+                  </div>
+                )}
               </div>
-              <span className="font-medium text-[#2d3748]">
-                {leaderboardType === "renown"
-                  ? `${entry.renown_tokens} Renown`
-                  : `${formatNumberShort(
-                      Math.floor(entry.total_coins_earned)
-                    )} coins`}
-              </span>
             </div>
-          );
-        })}
-      </div>
+            <span className="font-medium text-[#2d3748]">
+              {leaderboardType === "renown"
+                ? `${entry.renown_tokens} Renown`
+                : leaderboardType === "coins"
+                ? `${formatNumberShort(Math.floor(entry.total_coins_earned))} coins`
+                : `Lvl ${entry.house_level || 0}`}
+            </span>
+          </div>
+        );
+      })}
     </div>
-  );
+  </div>
+);
+
   const renderShopTab = () => {
   const discountRate = 0.2; // 20% discount
 
