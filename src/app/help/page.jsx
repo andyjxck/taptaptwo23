@@ -230,18 +230,19 @@ function MainComponent() {
     // Get userId from localStorage
     const userId = localStorage.getItem("userId");
 
-    // Record pageview
-    fetch("/api/record-pageview", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        page_path: "/help",
-        user_id: userId || null,
-        user_agent: navigator.userAgent,
-        referrer: document.referrer,
-      }),
-    }).catch(console.error);
-  }, []); // Run once on mount
+useEffect(() => {
+  fetch("/api/record-pageview", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      page_path: "/help",
+      user_id: userId ? parseInt(userId, 10) : null,
+      user_agent: navigator.userAgent,
+      referrer: document.referrer || null,
+    }),
+  }).catch(console.error);
+}, []); // Run once on mount
+
 
   const currentSeason = "Spring";
 
