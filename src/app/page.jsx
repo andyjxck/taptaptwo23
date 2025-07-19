@@ -672,6 +672,7 @@ function MainComponent() {
   const [confirmPinInput, setConfirmPinInput] = useState("");
   const [pinErrorMessage, setPinErrorMessage] = useState("");
   const [pinSuccessMessage, setPinSuccessMessage] = useState("");
+  const [showOfflineEarnings, setShowOfflineEarnings] = useState(false);
   const [showHardResetModal, setShowHardResetModal] = useState(false);
   const [hardResetLoading, setHardResetLoading] = useState(false);
   const [shopView, setShopView] = React.useState("themes");
@@ -1587,12 +1588,15 @@ const [showNoticeboard, setShowNoticeboard] = useState(true);
       };
 
   
+import React, { useEffect } from "react";
+
 function NoticeboardModal({ entry, onClose }) {
   useEffect(() => {
     // Lock background scroll while modal open
+    const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = originalOverflow;
     };
   }, []);
 
@@ -1600,24 +1604,29 @@ function NoticeboardModal({ entry, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-24 bg-black/60"
-       style={{ overflowY: "auto" }} 
+      className="fixed inset-0 z-50 bg-black/60 flex justify-center items-center"
+      style={{
+        padding: "24px 0",
+        overflowY: "auto",
+      }}
       onClick={onClose}
     >
       <div
-        onClick={(e) => e.stopPropagation()}
         className="bg-gradient-to-br from-purple-400/60 via-purple-200/40 to-purple-600/70
           backdrop-blur-xl rounded-2xl p-6 max-w-lg w-full border border-white/30 shadow-lg relative flex flex-col"
         style={{
           boxShadow: "0 8px 32px 0 rgba(124,58,237,0.25)",
           WebkitBackdropFilter: "blur(16px)",
           fontFamily: "'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-          color: "#6b5bd7", // lighter purple-gray text for readability
+          color: "#6b5bd7",
           letterSpacing: "0.02em",
           lineHeight: 1.6,
-            maxHeight: "80vh",           // add this
-        overflowY: "auto",  
+          maxHeight: "80vh",
+          overflowY: "auto",
+          position: "relative",
         }}
+        onClick={e => e.stopPropagation()}
+        tabIndex={0}
       >
         <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#9f7aea]">
           Flash Notice
@@ -1629,6 +1638,7 @@ function NoticeboardModal({ entry, onClose }) {
             overflowY: "auto",
             flexGrow: 1,
             paddingRight: "8px",
+            maxHeight: "50vh",  // Make just the content scroll if it overflows
           }}
         >
           {entry.content}
@@ -1637,7 +1647,10 @@ function NoticeboardModal({ entry, onClose }) {
         <button
           className="mt-4 self-center px-6 py-2 rounded-full bg-purple-700/90 text-white font-semibold
             hover:bg-purple-800 transition"
-          onClick={onClose}
+          onClick={e => {
+            e.stopPropagation();
+            onClose();
+          }}
           aria-label="Close noticeboard"
           style={{ userSelect: "none" }}
         >
@@ -1647,6 +1660,9 @@ function NoticeboardModal({ entry, onClose }) {
     </div>
   );
 }
+
+export default NoticeboardModal;
+
 
   function equipShopBoost(boost) {
     setActiveShopBoosts((prev) => {
@@ -2317,25 +2333,28 @@ const loadGame = async () => {
         );
       }
 
-      const lastActive = Number(localStorage.getItem("lastActiveTime"));
-      if (lastActive && !isNaN(lastActive)) {
-        const now = Date.now();
-        const seconds = Math.floor((now - lastActive) / 1000);
-        if (seconds > 30) {
-          const maxSeconds = 3 * 60 * 60;
-          const offlineSeconds = Math.min(seconds, maxSeconds);
-          const coins =
-            getAutoTapper(
-              Number(data.gameState.auto_tapper),
-              activeShopBoosts
-            ) * offlineSeconds;
-          setPendingOfflineEarnings({
-            seconds: offlineSeconds,
-            coins: coins,
-          });
-        }
-        localStorage.removeItem("lastActiveTime");
-      }
+ const lastActive = Number(localStorage.getItem("lastActiveTime"));
+if (lastActive && !isNaN(lastActive)) {
+  const now = Date.now();
+  const seconds = Math.floor((now - lastActive) / 1000);
+  if (seconds > 30) {
+    const maxSeconds = 3 * 60 * 60;
+    const offlineSeconds = Math.min(seconds, maxSeconds);
+    const coins =
+      getAutoTapper(
+        Number(data.gameState.auto_tapper),
+        activeShopBoosts
+      ) * offlineSeconds;
+    setPendingOfflineEarnings({
+      seconds: offlineSeconds,
+      coins: coins,
+    });
+    // DO NOT show earnings yet!
+    // We'll show them after the noticeboard is closed.
+  }
+  localStorage.removeItem("lastActiveTime");
+}
+
 
       if (data.gameState.boost_active_until) {
         const boostEnd = new Date(data.gameState.boost_active_until);
@@ -5380,20 +5399,24 @@ const loadGame = async () => {
         </div>
       </div>
 
-      {showNoticeboard && (
+{showNoticeboard && (
   <NoticeboardModal
     entry={noticeboardEntry}
-    onClose={() => setShowNoticeboard(false)}
+    onClose={() => {
+      setShowNoticeboard(false);
+      if (pendingOfflineEarnings) setShowOfflineEarnings(true);
+    }}
   />
 )}
 
 
+
       {showResetModal && renderResetModal()}
       {showHouseRenameModal && renderHouseRenameModal()}
-      {pendingOfflineEarnings && (
-        <div
-          className="fixed inset-0 bg-black/50 flex justify-center z-50"
-          style={{ alignItems: "flex-start", paddingTop: "6rem" }}
+     {showOfflineEarnings && pendingOfflineEarnings && (
+  <div
+    className="fixed inset-0 bg-black/50 flex justify-center z-50"
+    style={{ alignItems: "flex-start", paddingTop: "6rem" }}
         >
           <div
             className="
@@ -5423,17 +5446,18 @@ const loadGame = async () => {
             </p>
 
             <button
-              onClick={() => {
-                const newState = {
-                  ...gameState,
-                  coins: gameState.coins + pendingOfflineEarnings.coins,
-                  totalCoinsEarned:
-                    gameState.totalCoinsEarned + pendingOfflineEarnings.coins,
-                };
-                setGameState(newState);
-                setPendingOfflineEarnings(null);
-                saveGame(newState);
-              }}
+onClick={() => {
+  const newState = {
+    ...gameState,
+    coins: gameState.coins + pendingOfflineEarnings.coins,
+    totalCoinsEarned: gameState.totalCoinsEarned + pendingOfflineEarnings.coins,
+  };
+  setGameState(newState);
+  setPendingOfflineEarnings(null);
+  setShowOfflineEarnings(false); // <-- Add this line!
+  saveGame(newState);
+}}
+
               className="w-full py-3 rounded-xl bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200 mb-3"
             >
               Claim
