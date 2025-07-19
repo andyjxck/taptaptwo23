@@ -5409,7 +5409,7 @@ onClick={() => {
           </div>
         </div>
       )}
-   {showAnnouncementModal && (
+   {showDomainsModal && (
   <div className="fixed inset-x-0 top-0 z-50 bg-black/60 flex justify-center p-4">
     <div
       className="
