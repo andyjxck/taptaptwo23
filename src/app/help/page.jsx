@@ -225,12 +225,9 @@ function RenownTable() {
 }
 
 function MainComponent() {
-  // Add useEffect for pageview tracking at the top
-  React.useEffect(() => {
-    // Get userId from localStorage
-    const userId = localStorage.getItem("userId");
+ React.useEffect(() => {
+  const userId = localStorage.getItem("userId");
 
-useEffect(() => {
   fetch("/api/record-pageview", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -241,8 +238,7 @@ useEffect(() => {
       referrer: document.referrer || null,
     }),
   }).catch(console.error);
-}, []); // Run once on mount
-
+}, []);
 
   const currentSeason = "Spring";
 
