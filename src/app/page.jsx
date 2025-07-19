@@ -865,25 +865,6 @@ const [noticeboardEntry, setNoticeboardEntry] = useState({
         <span style={{ color: "#7c3aed", fontWeight: "700" }}>discount on items</span> in the shop for a limited
         time — making it easier to gear up and enjoy the new content.
       </p>
-
-      <p>
-        Thank you for your continued support as we take TapTapTwo to the next
-        level. We’re just getting started — stay tuned for more updates and
-        cool features coming soon!
-      </p>
-
-      <p
-        style={{
-          fontStyle: "italic",
-          color: "#666666",
-          fontSize: "0.97rem",
-          marginTop: "2rem",
-        }}
-      >
-        Happy tapping! 🎉
-        <br />
-        Andy
-      </p>
     </div>
   ),
 });
