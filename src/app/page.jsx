@@ -1641,8 +1641,7 @@ const [showNoticeboard, setShowNoticeboard] = useState(true);
     </div>
   );
 }
-  
-v  function equipShopBoost(boost) {
+ function equipShopBoost(boost) {
     setActiveShopBoosts((prev) => {
       if (prev.some((b) => b.id === boost.id)) return prev;
       const newBoosts = [
