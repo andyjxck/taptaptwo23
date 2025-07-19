@@ -1569,7 +1569,6 @@ const [showNoticeboard, setShowNoticeboard] = useState(true);
       };
 function NoticeboardModal({ entry, onClose }) {
   useEffect(() => {
-    // Optional: lock background scroll if you want
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = prev; };
@@ -1579,12 +1578,12 @@ function NoticeboardModal({ entry, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-[99999] bg-black/40"
+      className="fixed inset-0 z-[99999] bg-black/60"
       style={{ pointerEvents: "auto" }}
       onClick={onClose}
     >
       <div
-        className="absolute left-1/2 top-12 -translate-x-1/2 bg-gradient-to-br from-purple-400/60 via-purple-200/40 to-purple-600/70
+        className="absolute left-1/2 top-16 -translate-x-1/2 bg-gradient-to-br from-purple-400/60 via-purple-200/40 to-purple-600/70
           backdrop-blur-xl rounded-2xl p-6 max-w-lg w-full border border-white/30 shadow-lg"
         style={{
           boxShadow: "0 8px 32px 0 rgba(124,58,237,0.25)",
@@ -1592,6 +1591,8 @@ function NoticeboardModal({ entry, onClose }) {
           color: "#6b5bd7",
           maxHeight: "70vh",
           overflowY: "auto",
+          zIndex: 100000,
+          pointerEvents: "auto", // Ensure modal eats all events!
         }}
         onClick={e => e.stopPropagation()}
       >
@@ -1609,6 +1610,7 @@ function NoticeboardModal({ entry, onClose }) {
         </div>
         <button
           className="mt-4 self-center px-6 py-2 rounded-full bg-purple-700/90 text-white font-semibold hover:bg-purple-800 transition"
+          style={{ pointerEvents: "auto" }} // <-- ensures button itself can eat clicks
           onClick={e => {
             e.stopPropagation();
             onClose();
@@ -1621,6 +1623,7 @@ function NoticeboardModal({ entry, onClose }) {
     </div>
   );
 }
+
 
 
   
