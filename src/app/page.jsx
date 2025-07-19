@@ -788,7 +788,13 @@ useEffect(() => {
   const [pendingOfflineEarnings, setPendingOfflineEarnings] = useState(null);
   const [lastTapTimes, setLastTapTimes] = useState([]);
   const [showResetModal, setShowResetModal] = useState(false);
-  const [showMaddoxModal, setShowMaddoxModal] = useState(false);
+  const [showMaddoxModal, setShowMaddoxModal] = useState(false
+   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
+useEffect(() => {
+  setShowWelcomeModal(true);
+}, []);
+                                                     
 
   const [hasBoost, setHasBoost] = useState(false);
   const [boostTimeLeft, setBoostTimeLeft] = useState(0);
@@ -5403,6 +5409,27 @@ onClick={() => {
           </div>
         </div>
       )}
+      {showWelcomeModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+    <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4 text-[#2d3748]">
+      <h2 className="text-2xl font-bold mb-4">Announcement</h2>
+      <p className="mb-4">
+        Welcome to the new site.<br /><br />
+        I'm really sorry if some of your stats have been reset, are outdated or are missing.<br />
+        It's been a nightmare moving sites, but I'm pretty sure we're there now.<br /><br />
+        Anyway, use code <strong>"taptaptwo"</strong> in the "house" tab for an extra small boost on top of the extra 100 renown everyone has been gifted.<br /><br />
+        Thanks again.
+      </p>
+      <button
+        onClick={() => setShowWelcomeModal(false)}
+        className="w-full py-2 mt-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md font-semibold transition"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+)}
+
 
       {showChangePinModal && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
