@@ -3333,17 +3333,16 @@ if (lastActive && !isNaN(lastActive)) {
               <div>
                 <span className="text-lg font-medium">
                   {entry.profile_name || "Player"} ({entry.user_id})
-                </span>
-                {/* House name and level under player name for house leaderboard */}
-                {leaderboardType === "house" && (
-                  <div className="text-xs text-white-300" style={{ lineHeight: "1.2" }}>
-                    {entry.house_name
-                      ? `${entry.house_name}
-                      : "No House"}
-                  </div>
-                )}
-              </div>
-            </div>
+            </span>
+{/* House name and level under player name for house leaderboard */}
+{leaderboardType === "house" && (
+  <div className="text-xs text-white-300" style={{ lineHeight: "1.2" }}>
+    {entry.house_name ? entry.house_name : "No House"}
+  </div>
+)}
+</div>
+</div>
+
             <span className="font-medium text-[#2d3748]">
               {leaderboardType === "renown"
                 ? `${entry.renown_tokens} Renown`
