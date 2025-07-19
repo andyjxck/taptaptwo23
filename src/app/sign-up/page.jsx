@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback} from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 function MainComponent() {
   const [userId, setUserId] = useState("");
@@ -12,7 +12,6 @@ function MainComponent() {
   const [isAvailable, setIsAvailable] = useState(false);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
 
-  // Add useEffect for pageview tracking
   React.useEffect(() => {
     // Record pageview
     fetch("/api/record-pageview", {
@@ -20,12 +19,12 @@ function MainComponent() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         page_path: "/sign-up",
-        user_id: null, // No user ID since they're not logged in yet
+        user_id: null,
         user_agent: navigator.userAgent,
         referrer: document.referrer,
       }),
     }).catch(console.error);
-  }, []); // Run once on mount
+  }, []);
 
   useEffect(() => {
     const generateUserId = async () => {
@@ -98,7 +97,6 @@ function MainComponent() {
     }
   };
 
-  // Debounce the check availability function
   const debouncedCheck = useCallback(
     (() => {
       let timeoutId;
@@ -156,7 +154,6 @@ function MainComponent() {
         return;
       }
 
-      // Store credentials
       localStorage.setItem("userId", userId);
       localStorage.setItem("pin", pin);
 
@@ -174,10 +171,10 @@ function MainComponent() {
     <div className="min-h-screen bg-gradient-to-br from-[#c084fc] via-[#a78bfa] to-[#7c3aed] flex items-center justify-center px-4">
       <div
         className="
-  bg-gradient-to-br from-purple-400/50 via-purple-200/40 to-purple-600/60
-  backdrop-blur-xl rounded-2xl p-8 w-full max-w-md border border-white/30 shadow-lg
-  relative
-"
+          bg-gradient-to-br from-purple-400/50 via-purple-200/40 to-purple-600/60
+          backdrop-blur-xl rounded-2xl p-8 w-full max-w-md border border-white/30 shadow-lg
+          relative
+        "
         style={{
           background:
             "linear-gradient(135deg, rgba(192,132,252,0.95), rgba(139,92,246,0.75), rgba(59,7,100,0.7))",
@@ -279,7 +276,21 @@ function MainComponent() {
               Create Account
             </button>
 
-            <div className="text-center text-sm text-[#4a5568]">
+            {/* Privacy policy link added below */}
+            <div className="text-center mt-4 text-sm text-[#4a5568]">
+              By creating an account, you agree to our{" "}
+              <a
+                href="/privacy"
+                className="text-[#7c3aed] hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Privacy Policy
+              </a>
+              .
+            </div>
+
+            <div className="text-center text-sm text-[#4a5568] mt-3">
               Already have an account?{" "}
               <a href="/login" className="text-[#7c3aed] hover:underline">
                 Log In
