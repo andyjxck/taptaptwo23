@@ -5283,7 +5283,6 @@ renderProfileTab()
     </button>
   </div>
 </div>
-</div>
 
       {showResetModal && renderResetModal()}
       {showHouseRenameModal && renderHouseRenameModal()}
