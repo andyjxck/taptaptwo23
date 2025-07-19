@@ -12,6 +12,7 @@ function MainComponent() {
     const userId = localStorage.getItem("userId");
 
     // Record pageview
+    useEffect(() => {
     fetch("/api/record-pageview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -19,11 +20,10 @@ function MainComponent() {
         page_path: "/notice-board",
         user_id: userId || null,
         user_agent: navigator.userAgent,
-        referrer: document.referrer,
+        referrer: document.referrer || null,
       }),
     }).catch(console.error);
-  }, []); // Run once on mount
-
+  }, []);
   const currentSeason = "Spring";
 
   const notes = [
