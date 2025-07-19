@@ -1,4 +1,20 @@
-export default function PrivacyPage() {
+import { useEffect } from "react";
+
+export default function PrivacyPage({ userId }) {
+  useEffect(() => {
+    fetch("/api/record-pageview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        page_path: "/notice-board",
+        user_id: userId || null,
+        user_agent: navigator.userAgent,
+        referrer: document.referrer || null,
+      }),
+    }).catch(console.error);
+  }, [userId]);
+
+     
   return (
     <main className="max-w-3xl mx-auto p-8">
       <h1 className="text-3xl font-bold mb-6">Privacy Policy</h1>
