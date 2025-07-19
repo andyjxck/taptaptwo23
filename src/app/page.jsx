@@ -5409,23 +5409,42 @@ onClick={() => {
           </div>
         </div>
       )}
-      {showWelcomeModal && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-    <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4 text-[#2d3748]">
-      <h2 className="text-2xl font-bold mb-4">Announcement</h2>
-      <p className="mb-4">
-        Welcome to the new site.<br /><br />
-        I'm really sorry if some of your stats have been reset, are outdated or are missing.<br />
-        It's been a nightmare moving sites, but I'm pretty sure we're there now.<br /><br />
-        Anyway, use code <strong>"taptaptwo"</strong> in the "house" tab for an extra small boost on top of the extra 100 renown everyone has been gifted.<br /><br />
-        Thanks again.
+   {showAnnouncementModal && (
+  <div className="fixed inset-x-0 top-0 z-50 bg-black/60 flex justify-center p-4">
+    <div
+      className="
+        bg-gradient-to-br from-purple-400/50 via-purple-200/40 to-purple-600/60
+        backdrop-blur-xl rounded-2xl p-7 max-w-sm w-full border border-white/30 shadow-lg relative
+      "
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(192,132,252,0.95), rgba(139,92,246,0.75), rgba(59,7,100,0.7))",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        boxShadow: "0 8px 32px 0 rgba(124,58,237,0.18)",
+      }}
+    >
+      <h2 className="text-xl font-semibold text-white mb-4 text-center">
+        Announcement
+      </h2>
+      <p className="text-white mb-4 text-center font-semibold">
+        Welcome to the new site! <br />
+        I'm really sorry if some of your stats have been reset, are outdated or missing.
+        <br />
+        It's been a nightmare moving sites, but I'm pretty sure we're there now.
       </p>
-      <button
-        onClick={() => setShowWelcomeModal(false)}
-        className="w-full py-2 mt-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md font-semibold transition"
-      >
-        Close
-      </button>
+      <p className="text-white mb-6 text-center font-semibold">
+        Use code <span className="font-mono bg-purple-700 px-2 rounded">taptaptwo</span> in the "house" tab for an extra small boost on top of the extra 100 renown everyone has been gifted.
+      </p>
+
+      <div className="flex justify-center">
+        <button
+          onClick={() => setShowAnnouncementModal(false)}
+          className="px-4 py-2 rounded-lg bg-purple-700 hover:bg-purple-800 text-white transition"
+        >
+          Close
+        </button>
+      </div>
     </div>
   </div>
 )}
