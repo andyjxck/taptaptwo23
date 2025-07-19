@@ -805,6 +805,8 @@ useEffect(() => {
   const [pendingBonus, setPendingBonus] = useState(null);
   const [showBonusModal, setShowBonusModal] = useState(false);
   const [bonusCooldown, setBonusCooldown] = useState(0);
+  const DISCOUNT_FACTOR = 0.8; // 20% discount
+
 const [noticeboardEntry, setNoticeboardEntry] = useState({
   id: 9,
   title: "Dev Log #9 - 19/07/25",
@@ -3332,289 +3334,423 @@ const loadGame = async () => {
     </div>
   );
   const renderShopTab = () => {
-    // Shop tabs
-    const tabs = [
-      {
-        id: "themes",
-        label: "Themes",
-        color: "border-yellow-200 text-yellow-600 ring-yellow-400",
-      },
-      {
-        id: "boosts",
-        label: "Boosts",
-        color: "border-red-200 text-red-500 ring-red-400",
-      },
-      {
-        id: "profileIcons",
-        label: "Profile Icons",
-        color: "border-green-200 text-green-600 ring-green-400",
-      },
-      {
-        id: "limited",
-        label: "Limited",
-        color: "border-blue-200 text-blue-500 ring-blue-400",
-      },
-    ];
+  const discountRate = 0.2; // 20% discount
 
-    const limitedStock = gameState.limitedStock || {};
+  // Shop tabs
+  const tabs = [
+    {
+      id: "themes",
+      label: "Themes",
+      color: "border-yellow-200 text-yellow-600 ring-yellow-400",
+    },
+    {
+      id: "boosts",
+      label: "Boosts",
+      color: "border-red-200 text-red-500 ring-red-400",
+    },
+    {
+      id: "profileIcons",
+      label: "Profile Icons",
+      color: "border-green-200 text-green-600 ring-green-400",
+    },
+    {
+      id: "limited",
+      label: "Limited",
+      color: "border-blue-200 text-blue-500 ring-blue-400",
+    },
+  ];
 
-    const SHOP_THEMES = [
-      {
-        id: "seasons",
-        name: "Seasons Cycle",
-        emoji: "🔄",
-        price: 0,
-        currency: "renownTokens",
-        isLimited: false,
-      },
-      {
-        id: "heaven",
-        name: "Heaven",
-        emoji: CUSTOM_THEMES.heaven.icon,
-        price: 20,
-        currency: "renownTokens",
-        isLimited: false,
-      },
-      {
-        id: "maddoxtheme",
-        name: "Maddox",
-        emoji: CUSTOM_THEMES.maddoxtheme.icon,
-        price: 250,
-        currency: "renownTokens",
-        isLimited: true,
-        stock: limitedStock["maddoxtheme"] ?? 10,
-      },
-      {
-        id: "hell",
-        name: "Hell",
-        emoji: CUSTOM_THEMES.hell.icon,
-        price: 1000,
-        currency: "renownTokens",
-        isLimited: true,
-        stock: limitedStock["hell"] ?? 5,
-      },
-      {
-        id: "space",
-        name: "Space",
-        emoji: CUSTOM_THEMES.space.icon,
-        price: 30,
-        currency: "renownTokens",
-        isLimited: false,
-      },
-      {
-        id: "city_night",
-        name: "City Night",
-        emoji: CUSTOM_THEMES.city_night.icon,
-        price: 250,
-        currency: "renownTokens",
-        isLimited: true,
-        stock: limitedStock["city_night"] ?? 10,
-      },
-      {
-        id: "midnight",
-        name: "Midnight",
-        emoji: CUSTOM_THEMES.midnight.icon,
-        price: 28,
-        currency: "renownTokens",
-        isLimited: false,
-      },
-      {
-        id: "island",
-        name: "Island",
-        emoji: CUSTOM_THEMES.island.icon,
-        price: 24,
-        currency: "renownTokens",
-        isLimited: false,
-      },
-      {
-        id: "barn",
-        name: "Barn",
-        emoji: CUSTOM_THEMES.barn.icon,
-        price: 18,
-        currency: "renownTokens",
-        isLimited: false,
-      },
-      {
-        id: "city",
-        name: "City",
-        emoji: CUSTOM_THEMES.city.icon,
-        price: 20,
-        currency: "renownTokens",
-        isLimited: false,
-      },
-    ];
+  const limitedStock = gameState.limitedStock || {};
 
-    const ownedIcons = gameState.ownedProfileIcons || [];
-    const equippedIcon = gameState.profileIcon || null;
-    const ownedThemes = gameState.ownedThemes || ["seasons"];
-    const equippedTheme = gameState.equippedTheme || "seasons";
-    const ownedBoosts = gameState.ownedBoosts || [];
-    const canAfford = (price) => (gameState.renownTokens || 0) >= price;
+  const SHOP_THEMES = [
+    {
+      id: "seasons",
+      name: "Seasons Cycle",
+      emoji: "🔄",
+      price: 0,
+      currency: "renownTokens",
+      isLimited: false,
+    },
+    {
+      id: "heaven",
+      name: "Heaven",
+      emoji: CUSTOM_THEMES.heaven.icon,
+      price: 20,
+      currency: "renownTokens",
+      isLimited: false,
+    },
+    {
+      id: "maddoxtheme",
+      name: "Maddox",
+      emoji: CUSTOM_THEMES.maddoxtheme.icon,
+      price: 250,
+      currency: "renownTokens",
+      isLimited: true,
+      stock: limitedStock["maddoxtheme"] ?? 10,
+    },
+    {
+      id: "hell",
+      name: "Hell",
+      emoji: CUSTOM_THEMES.hell.icon,
+      price: 1000,
+      currency: "renownTokens",
+      isLimited: true,
+      stock: limitedStock["hell"] ?? 5,
+    },
+    {
+      id: "space",
+      name: "Space",
+      emoji: CUSTOM_THEMES.space.icon,
+      price: 30,
+      currency: "renownTokens",
+      isLimited: false,
+    },
+    {
+      id: "city_night",
+      name: "City Night",
+      emoji: CUSTOM_THEMES.city_night.icon,
+      price: 250,
+      currency: "renownTokens",
+      isLimited: true,
+      stock: limitedStock["city_night"] ?? 10,
+    },
+    {
+      id: "midnight",
+      name: "Midnight",
+      emoji: CUSTOM_THEMES.midnight.icon,
+      price: 28,
+      currency: "renownTokens",
+      isLimited: false,
+    },
+    {
+      id: "island",
+      name: "Island",
+      emoji: CUSTOM_THEMES.island.icon,
+      price: 24,
+      currency: "renownTokens",
+      isLimited: false,
+    },
+    {
+      id: "barn",
+      name: "Barn",
+      emoji: CUSTOM_THEMES.barn.icon,
+      price: 18,
+      currency: "renownTokens",
+      isLimited: false,
+    },
+    {
+      id: "city",
+      name: "City",
+      emoji: CUSTOM_THEMES.city.icon,
+      price: 20,
+      currency: "renownTokens",
+      isLimited: false,
+    },
+  ];
 
-    // --- SHOP VIEW LOGIC ---
-    let tabContent = null;
+  const ownedIcons = gameState.ownedProfileIcons || [];
+  const equippedIcon = gameState.profileIcon || null;
+  const ownedThemes = gameState.ownedThemes || ["seasons"];
+  const equippedTheme = gameState.equippedTheme || "seasons";
+  const ownedBoosts = gameState.ownedBoosts || [];
+  const canAfford = (price) => (gameState.renownTokens || 0) >= price;
 
-    // Themes
-    if (shopView === "themes") {
-      const normalThemes = SHOP_THEMES.filter((t) => !t.isLimited);
-      tabContent = (
-        <div>
-          <h3 className="text-xl font-bold mb-4 text-[#e11d48]">Themes</h3>
-          <div className="grid grid-cols-1 gap-4">
-            {normalThemes.map((theme) => {
-              const owned = ownedThemes.includes(theme.id);
-              const equipped = equippedTheme === theme.id;
-              const afford = canAfford(theme.price);
-              return (
-                <div
-                  key={theme.id}
-                  className="flex items-center justify-between bg-white/60 border border-gray-200 rounded-xl p-4"
-                >
-                  <div className="flex items-center space-x-4">
-                    <span className="text-3xl">{theme.emoji}</span>
-                    <div>
-                      <div className="font-semibold text-lg">{theme.name}</div>
-                      <div className="text-sm text-gray-500">
-                        {theme.price} ⭐
-                      </div>
-                    </div>
-                  </div>
+  let tabContent = null;
+
+  // Themes
+  if (shopView === "themes") {
+    const normalThemes = SHOP_THEMES.filter((t) => !t.isLimited);
+    tabContent = (
+      <div>
+        <h3 className="text-xl font-bold mb-4 text-[#e11d48]">Themes</h3>
+        <div className="grid grid-cols-1 gap-4">
+          {normalThemes.map((theme) => {
+            const owned = ownedThemes.includes(theme.id);
+            const equipped = equippedTheme === theme.id;
+            const discountedPrice = Math.ceil(theme.price * (1 - discountRate));
+            const afford = canAfford(discountedPrice);
+
+            return (
+              <div
+                key={theme.id}
+                className="flex items-center justify-between bg-white/60 border border-gray-200 rounded-xl p-4"
+              >
+                <div className="flex items-center space-x-4">
+                  <span className="text-3xl">{theme.emoji}</span>
                   <div>
-                    {!owned ? (
-                      <button
-                        className={`px-3 py-1 rounded font-semibold ${
-                          afford
-                            ? "bg-green-600 text-white hover:bg-green-700"
-                            : "bg-red-600 text-white opacity-60 cursor-not-allowed"
-                        }`}
-                        disabled={!afford}
-                        onClick={() => handleBuyTheme(theme)}
-                      >
-                        Buy
-                      </button>
-                    ) : equipped ? (
-                      <span className="px-3 py-1 rounded bg-green-500 text-white font-semibold">
-                        Equipped
-                      </span>
-                    ) : (
-                      <button
-                        className="px-3 py-1 rounded bg-blue-400 text-white font-semibold"
-                        onClick={() => handleEquipTheme(theme)}
-                      >
-                        Equip
-                      </button>
-                    )}
+                    <div className="font-semibold text-lg">{theme.name}</div>
+                    <div className="text-sm text-gray-500 flex items-center space-x-2">
+                      {theme.price > 0 && (
+                        <>
+                          <span className="line-through">{theme.price} ⭐</span>
+                          <span className="bg-purple-300 text-purple-800 px-1 rounded text-xs font-bold">
+                            20% OFF
+                          </span>
+                        </>
+                      )}
+                      <span className="font-semibold">{discountedPrice} ⭐</span>
+                    </div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      );
-    }
-    // Boosts
-    else if (shopView === "boosts") {
-      const normalBoosts = BOOSTS.filter((b) => !b.isLimited);
-      tabContent = (
-        <div>
-          <h3 className="text-xl font-bold mb-4 text-[#e11d48]">Boosts</h3>
-          <div className="grid grid-cols-1 gap-4">
-            {normalBoosts.length === 0 && (
-              <div className="text-center text-gray-400 py-10">
-                Keep your eyes peeled!
-              </div>
-            )}
-            {normalBoosts.map((boost) => {
-              const owned = ownedBoosts.includes(boost.id);
-              const alreadyActive = activeShopBoosts.some(
-                (b) => b.id === boost.id
-              );
-              const afford = canAfford(boost.price);
-              return (
-                <div
-                  key={boost.id}
-                  className="flex items-center justify-between bg-white/60 border border-gray-200 rounded-xl p-4"
-                >
-                  <div>
-                    <div className="font-semibold text-lg">{boost.name}</div>
-                    <div className="text-sm text-gray-500">
-                      {boost.price} ⭐
-                    </div>
-                  </div>
-                  <div>
-                    {/* Only normal boosts, NO unequip for these */}
+                <div>
+                  {!owned ? (
                     <button
                       className={`px-3 py-1 rounded font-semibold ${
-                        afford && !alreadyActive
+                        afford
                           ? "bg-green-600 text-white hover:bg-green-700"
                           : "bg-red-600 text-white opacity-60 cursor-not-allowed"
                       }`}
-                      disabled={!afford || alreadyActive}
-                      onClick={() => {
-                        if (!afford) {
-                          setNotification("Not enough Renown Tokens!");
-                          return;
-                        }
-                        setGameState((prev) => ({
-                          ...prev,
-                          renownTokens: prev.renownTokens - boost.price,
-                        }));
-                        equipShopBoost(boost);
-                      }}
+                      disabled={!afford}
+                      onClick={() =>
+                        handleBuyTheme({ ...theme, price: discountedPrice })
+                      }
                     >
-                      {alreadyActive ? "Active" : "Buy"}
+                      Buy
                     </button>
+                  ) : equipped ? (
+                    <span className="px-3 py-1 rounded bg-green-500 text-white font-semibold">
+                      Equipped
+                    </span>
+                  ) : (
+                    <button
+                      className="px-3 py-1 rounded bg-blue-400 text-white font-semibold"
+                      onClick={() => handleEquipTheme(theme)}
+                    >
+                      Equip
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+  // Boosts
+  else if (shopView === "boosts") {
+    const normalBoosts = BOOSTS.filter((b) => !b.isLimited);
+    tabContent = (
+      <div>
+        <h3 className="text-xl font-bold mb-4 text-[#e11d48]">Boosts</h3>
+        <div className="grid grid-cols-1 gap-4">
+          {normalBoosts.length === 0 && (
+            <div className="text-center text-gray-400 py-10">
+              Keep your eyes peeled!
+            </div>
+          )}
+          {normalBoosts.map((boost) => {
+            const owned = ownedBoosts.includes(boost.id);
+            const alreadyActive = activeShopBoosts.some(
+              (b) => b.id === boost.id
+            );
+            const discountedPrice = Math.ceil(boost.price * (1 - discountRate));
+            const afford = canAfford(discountedPrice);
+
+            return (
+              <div
+                key={boost.id}
+                className="flex items-center justify-between bg-white/60 border border-gray-200 rounded-xl p-4"
+              >
+                <div>
+                  <div className="font-semibold text-lg">{boost.name}</div>
+                  <div className="text-sm text-gray-500 flex items-center space-x-2">
+                    {boost.price > 0 && (
+                      <>
+                        <span className="line-through">{boost.price} ⭐</span>
+                        <span className="bg-purple-300 text-purple-800 px-1 rounded text-xs font-bold">
+                          20% OFF
+                        </span>
+                      </>
+                    )}
+                    <span className="font-semibold">{discountedPrice} ⭐</span>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      );
-    }
-    // Profile Icons
-    else if (shopView === "profileIcons") {
-      const normalIcons = PROFILE_ICONS.filter((i) => !i.isLimited);
-      tabContent = (
-        <div>
-          <h3 className="text-xl font-bold mb-4 text-[#e11d48]">
-            Profile Icons
-          </h3>
-          <div className="grid grid-cols-1 gap-4">
-            {normalIcons.length === 0 && (
-              <div className="text-center text-gray-400 py-10">
-                Keep your eyes peeled!
+                <div>
+                  {/* Only normal boosts, NO unequip for these */}
+                  <button
+                    className={`px-3 py-1 rounded font-semibold ${
+                      afford && !alreadyActive
+                        ? "bg-green-600 text-white hover:bg-green-700"
+                        : "bg-red-600 text-white opacity-60 cursor-not-allowed"
+                    }`}
+                    disabled={!afford || alreadyActive}
+                    onClick={() => {
+                      if (!afford) {
+                        setNotification("Not enough Renown Tokens!");
+                        return;
+                      }
+                      setGameState((prev) => ({
+                        ...prev,
+                        renownTokens: prev.renownTokens - discountedPrice,
+                      }));
+                      equipShopBoost(boost);
+                    }}
+                  >
+                    {alreadyActive ? "Active" : "Buy"}
+                  </button>
+                </div>
               </div>
-            )}
-            {normalIcons.map((icon) => {
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+  // Profile Icons
+  else if (shopView === "profileIcons") {
+    const normalIcons = PROFILE_ICONS.filter((i) => !i.isLimited);
+    tabContent = (
+      <div>
+        <h3 className="text-xl font-bold mb-4 text-[#e11d48]">Profile Icons</h3>
+        <div className="grid grid-cols-1 gap-4">
+          {normalIcons.length === 0 && (
+            <div className="text-center text-gray-400 py-10">
+              Keep your eyes peeled!
+            </div>
+          )}
+          {normalIcons.map((icon) => {
+            const owned = ownedIcons.includes(icon.id);
+            const equipped = equippedIcon === icon.id;
+            const discountedPrice = Math.ceil(icon.price * (1 - discountRate));
+            const afford = canAfford(discountedPrice);
+
+            return (
+              <div
+                key={icon.id}
+                className="flex items-center justify-between bg-white/60 border border-gray-200 rounded-xl p-4"
+              >
+                <div className="flex items-center space-x-4">
+                  <span className="text-3xl">{icon.emoji}</span>
+                  <div>
+                    <div className="text-sm text-gray-500 flex items-center space-x-2">
+                      {icon.price > 0 && (
+                        <>
+                          <span className="line-through">{icon.price} ⭐</span>
+                          <span className="bg-purple-300 text-purple-800 px-1 rounded text-xs font-bold">
+                            20% OFF
+                          </span>
+                        </>
+                      )}
+                      <span className="font-semibold">{discountedPrice} ⭐</span>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  {!owned ? (
+                    <button
+                      className={`px-3 py-1 rounded font-semibold ${
+                        afford
+                          ? "bg-green-600 text-white hover:bg-green-700"
+                          : "bg-red-600 text-white opacity-60 cursor-not-allowed"
+                      }`}
+                      disabled={!afford}
+                      onClick={() => handleBuyIcon({ ...icon, price: discountedPrice })}
+                    >
+                      Buy
+                    </button>
+                  ) : equipped ? (
+                    <span className="px-3 py-1 rounded bg-green-500 text-white font-semibold">
+                      Equipped
+                    </span>
+                  ) : (
+                    <button
+                      className="px-3 py-1 rounded bg-blue-400 text-white font-semibold"
+                      onClick={() => handleEquipIcon(icon)}
+                    >
+                      Equip
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+  // Limited (EDITED: Boosts can now be unequipped/equipped)
+  else if (shopView === "limited") {
+    const limitedIcons = PROFILE_ICONS.filter((i) => i.isLimited);
+    const limitedThemes = SHOP_THEMES.filter((t) => t.isLimited);
+    const limitedBoosts = BOOSTS.filter((b) => b.isLimited);
+
+    tabContent = (
+      <div className="flex flex-col space-y-8">
+        {/* Limited Profile Icons */}
+        <div>
+          <h3 className="text-xl font-bold mb-4 text-[#3b82f6]">
+            Limited Profile Icons
+          </h3>
+          {limitedIcons.length === 0 ? (
+            <div className="text-center text-gray-400 py-10">
+              No limited profile icons yet.
+            </div>
+          ) : (
+            limitedIcons.map((icon) => {
               const owned = ownedIcons.includes(icon.id);
               const equipped = equippedIcon === icon.id;
-              const afford = canAfford(icon.price);
+              const discountedPrice = Math.ceil(icon.price * (1 - discountRate));
+              const afford = canAfford(discountedPrice);
+              const stock = limitedStock[icon.id] ?? 0;
+              const outOfStock = stock <= 0;
+              const isImageIcon = !!icon.image;
+
               return (
                 <div
                   key={icon.id}
-                  className="flex items-center justify-between bg-white/60 border border-gray-200 rounded-xl p-4"
+                  className="flex items-center justify-between bg-yellow-100 border border-yellow-400 rounded-xl p-4 mb-3"
                 >
                   <div className="flex items-center space-x-4">
-                    <span className="text-3xl">{icon.emoji}</span>
+                    {/* Emoji or Image */}
+                    {isImageIcon ? (
+                      <img
+                        src={icon.image}
+                        alt=""
+                        className="w-12 h-12 rounded-full object-cover border border-gray-300"
+                      />
+                    ) : (
+                      <span className="text-3xl">{icon.emoji}</span>
+                    )}
+
                     <div>
-                      <div className="text-sm text-gray-500">
-                        {icon.price} ⭐
+                      <div className="text-sm text-gray-500 flex items-center space-x-2">
+                        {icon.price > 0 && (
+                          <>
+                            <span className="line-through">{icon.price} ⭐</span>
+                            <span className="bg-purple-300 text-purple-800 px-1 rounded text-xs font-bold">
+                              20% OFF
+                            </span>
+                          </>
+                        )}
+                        <span className="font-semibold">{discountedPrice} ⭐</span>
                       </div>
+                      {outOfStock && (
+                        <div className="text-xs text-red-600 font-bold">
+                          Out of Stock
+                        </div>
+                      )}
                     </div>
                   </div>
+
                   <div>
                     {!owned ? (
                       <button
                         className={`px-3 py-1 rounded font-semibold ${
-                          afford
+                          afford && !outOfStock
                             ? "bg-green-600 text-white hover:bg-green-700"
                             : "bg-red-600 text-white opacity-60 cursor-not-allowed"
                         }`}
-                        disabled={!afford}
-                        onClick={() => handleBuyIcon(icon)}
+                        disabled={!afford || outOfStock}
+                        onClick={() =>
+                          buyLimitedItem({
+                            itemId: icon.id,
+                            itemType: "profileIcon",
+                            price: discountedPrice,
+                          })
+                        }
                       >
-                        Buy
+                        {outOfStock ? "Out of Stock" : "Buy"}
                       </button>
                     ) : equipped ? (
                       <span className="px-3 py-1 rounded bg-green-500 text-white font-semibold">
@@ -3631,297 +3767,208 @@ const loadGame = async () => {
                   </div>
                 </div>
               );
-            })}
-          </div>
+            })
+          )}
         </div>
-      );
-    }
-    // Limited (EDITED: Boosts can now be unequipped/equipped)
-    else if (shopView === "limited") {
-      const limitedIcons = PROFILE_ICONS.filter((i) => i.isLimited);
-      const limitedThemes = SHOP_THEMES.filter((t) => t.isLimited);
-      const limitedBoosts = BOOSTS.filter((b) => b.isLimited);
 
-      tabContent = (
-        <div className="flex flex-col space-y-8">
-          {/* Limited Profile Icons */}
-          <div>
-            <h3 className="text-xl font-bold mb-4 text-[#3b82f6]">
-              Limited Profile Icons
-            </h3>
-            {limitedIcons.length === 0 ? (
-              <div className="text-center text-gray-400 py-10">
-                No limited profile icons yet.
-              </div>
-            ) : (
-              limitedIcons.map((icon) => {
-                const owned = ownedIcons.includes(icon.id);
-                const equipped = equippedIcon === icon.id;
-                const afford = canAfford(icon.price);
-                const stock = limitedStock[icon.id] ?? 0;
-                const outOfStock = stock <= 0;
-                const isImageIcon = !!icon.image;
-
-                return (
-                  <div
-                    key={icon.id}
-                    className="flex items-center justify-between bg-yellow-100 border border-yellow-400 rounded-xl p-4 mb-3"
-                  >
-                    <div className="flex items-center space-x-4">
-                      {/* Emoji or Image */}
-                      {isImageIcon ? (
-                        <img
-                          src={icon.image}
-                          alt=""
-                          className="w-12 h-12 rounded-full object-cover border border-gray-300"
-                        />
-                      ) : (
-                        <span className="text-3xl">{icon.emoji}</span>
-                      )}
-
-                      <div>
-                        <div className="text-sm text-gray-500">
-                          {icon.price} ⭐
-                        </div>
-                        {outOfStock && (
-                          <div className="text-xs text-red-600 font-bold">
-                            Out of Stock
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
+        {/* Limited Themes */}
+        <div>
+          <h3 className="text-xl font-bold mb-4 text-[#eab308]">Limited Themes</h3>
+          {limitedThemes.length === 0 ? (
+            <div className="text-center text-gray-400 py-10">No limited themes yet.</div>
+          ) : (
+            limitedThemes.map((theme) => {
+              const owned = ownedThemes.includes(theme.id);
+              const equipped = equippedTheme === theme.id;
+              const discountedPrice = Math.ceil(theme.price * (1 - discountRate));
+              const afford = canAfford(discountedPrice);
+              const stock = limitedStock[theme.id] ?? 0;
+              const outOfStock = stock <= 0;
+              return (
+                <div
+                  key={theme.id}
+                  className="flex items-center justify-between bg-yellow-100 border border-yellow-400 rounded-xl p-4 mb-3"
+                >
+                  <div className="flex items-center space-x-4">
+                    <span className="text-3xl">{theme.emoji}</span>
                     <div>
-                      {!owned ? (
-                        <button
-                          className={`px-3 py-1 rounded font-semibold ${
-                            afford && !outOfStock
-                              ? "bg-green-600 text-white hover:bg-green-700"
-                              : "bg-red-600 text-white opacity-60 cursor-not-allowed"
-                          }`}
-                          disabled={!afford || outOfStock}
-                          onClick={() =>
-                            buyLimitedItem({
-                              itemId: icon.id,
-                              itemType: "profileIcon",
-                              price: icon.price,
-                            })
-                          }
-                        >
-                          {outOfStock ? "Out of Stock" : "Buy"}
-                        </button>
-                      ) : equipped ? (
-                        <span className="px-3 py-1 rounded bg-green-500 text-white font-semibold">
-                          Equipped
-                        </span>
-                      ) : (
-                        <button
-                          className="px-3 py-1 rounded bg-blue-400 text-white font-semibold"
-                          onClick={() => handleEquipIcon(icon)}
-                        >
-                          Equip
-                        </button>
+                      <div className="font-semibold text-lg">{theme.name}</div>
+                      <div className="text-sm text-gray-500 flex items-center space-x-2">
+                        {theme.price > 0 ? (
+                          <>
+                            <span className="line-through">{theme.price} ⭐</span>
+                            <span className="bg-purple-300 text-purple-800 px-1 rounded text-xs font-bold">
+                              20% OFF
+                            </span>
+                          </>
+                        ) : (
+                          "Free"
+                        )}
+                        <span className="font-semibold ml-2">{discountedPrice} ⭐</span>
+                      </div>
+                      {outOfStock && (
+                        <div className="text-xs text-red-600 font-bold">Out of Stock</div>
                       )}
                     </div>
                   </div>
-                );
-              })
-            )}
-          </div>
+                  <div>
+                    {!owned ? (
+                      <button
+                        className={`px-3 py-1 rounded font-semibold ${
+                          afford && !outOfStock
+                            ? "bg-green-600 text-white hover:bg-green-700"
+                            : "bg-red-600 text-white opacity-60 cursor-not-allowed"
+                        }`}
+                        disabled={!afford || outOfStock}
+                        onClick={() =>
+                          buyLimitedItem({
+                            itemId: theme.id,
+                            itemType: "theme",
+                            price: discountedPrice,
+                          })
+                        }
+                      >
+                        {outOfStock ? "Out of Stock" : "Buy"}
+                      </button>
+                    ) : equipped ? (
+                      <span className="px-3 py-1 rounded bg-green-500 text-white font-semibold">
+                        Equipped
+                      </span>
+                    ) : (
+                      <button
+                        className="px-3 py-1 rounded bg-blue-400 text-white font-semibold"
+                        onClick={() => handleEquipTheme(theme)}
+                      >
+                        Equip
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
 
-          {/* Limited Themes */}
+        {/* Limited Boosts (EDITED - allow equip/unequip) */}
+        <div>
+          <h3 className="text-xl font-bold mb-4 text-[#dc2626]">Limited Boosts</h3>
+          {limitedBoosts.length === 0 ? (
+            <div className="text-center text-gray-400 py-10">No limited boosts yet.</div>
+          ) : (
+            limitedBoosts.map((boost) => {
+              const discountedPrice = Math.ceil(boost.price * (1 - discountRate));
+              const afford = canAfford(discountedPrice);
+              const stock = limitedStock[boost.id] ?? 0;
+              const outOfStock = stock <= 0;
+              const alreadyActive = activeShopBoosts.some(
+                (b) => b.id === boost.id
+              );
+              const owned = ownedBoosts.includes(boost.id);
+
+              return (
+                <div
+                  key={boost.id}
+                  className="flex items-center justify-between bg-yellow-100 border border-yellow-400 rounded-xl p-4 mb-3"
+                >
+                  <div>
+                    <div className="font-semibold text-lg">{boost.name}</div>
+                    <div className="text-sm text-gray-500 flex items-center space-x-2">
+                      {boost.price > 0 && (
+                        <>
+                          <span className="line-through">{boost.price} ⭐</span>
+                          <span className="bg-purple-300 text-purple-800 px-1 rounded text-xs font-bold">
+                            20% OFF
+                          </span>
+                        </>
+                      )}
+                      <span className="font-semibold">{discountedPrice} ⭐</span>
+                    </div>
+                    {outOfStock && (
+                      <div className="text-xs text-red-600 font-bold">Out of Stock</div>
+                    )}
+                  </div>
+                  <div>
+                    {!owned ? (
+                      <button
+                        className={`px-3 py-1 rounded font-semibold ${
+                          afford && !outOfStock
+                            ? "bg-green-600 text-white hover:bg-green-700"
+                            : "bg-red-600 text-white opacity-60 cursor-not-allowed"
+                        }`}
+                        disabled={!afford || outOfStock}
+                        onClick={() => {
+                          if (!afford) {
+                            setNotification("Not enough Renown Tokens!");
+                            return;
+                          }
+                          if (outOfStock) {
+                            setNotification("Out of Stock!");
+                            return;
+                          }
+                          setGameState((prev) => ({
+                            ...prev,
+                            renownTokens: prev.renownTokens - discountedPrice,
+                          }));
+                          equipShopBoost(boost);
+                        }}
+                      >
+                        {outOfStock ? "Out of Stock" : "Buy"}
+                      </button>
+                    ) : alreadyActive ? (
+                      <button
+                        className="px-3 py-1 rounded bg-gray-500 text-white font-semibold"
+                        onClick={() => {
+                          unequipShopBoost(boost.id);
+                        }}
+                      >
+                        Unequip
+                      </button>
+                    ) : (
+                      <button
+                        className="px-3 py-1 rounded bg-blue-400 text-white font-semibold"
+                        onClick={() => {
+                          equipShopBoost(boost);
+                        }}
+                      >
+                        Equip
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    );
+  }
+  // Inventory
+  else if (shopView === "inventory") {
+    tabContent = (
+      <div>
+        <h3 className="text-xl font-bold mb-4 text-[#eab308]">Inventory</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Themes */}
           <div>
-            <h3 className="text-xl font-bold mb-4 text-[#eab308]">
-              Limited Themes
-            </h3>
-            {limitedThemes.length === 0 ? (
-              <div className="text-center text-gray-400 py-10">
-                No limited themes yet.
-              </div>
-            ) : (
-              limitedThemes.map((theme) => {
-                const owned = ownedThemes.includes(theme.id);
-                const equipped = equippedTheme === theme.id;
-                const afford = canAfford(theme.price);
-                const stock = limitedStock[theme.id] ?? 0;
-                const outOfStock = stock <= 0;
+            <h4 className="font-semibold mb-2 text-blue-500">Themes</h4>
+            <div className="space-y-2">
+              {(ownedThemes || []).length === 0 && (
+                <div className="text-gray-400 text-sm">No themes owned.</div>
+              )}
+              {(ownedThemes || []).map((themeId) => {
+                const theme = [
+                  ...SHOP_THEMES,
+                  ...Object.entries(CUSTOM_THEMES).map(([id, t]) => ({
+                    ...t,
+                    id,
+                  })),
+                ].find((t) => t.id === themeId);
+                if (!theme) return null;
+                const isEquipped = equippedTheme === theme.id;
                 return (
                   <div
                     key={theme.id}
-                    className="flex items-center justify-between bg-yellow-100 border border-yellow-400 rounded-xl p-4 mb-3"
-                  >
-                    <div className="flex items-center space-x-4">
-                      <span className="text-3xl">{theme.emoji}</span>
-                      <div>
-                        <div className="font-semibold text-lg">
-                          {theme.name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {theme.price > 0
-                            ? `Price: ${theme.price} ⭐`
-                            : "Free"}
-                        </div>
-                        {outOfStock && (
-                          <div className="text-xs text-red-600 font-bold">
-                            Out of Stock
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      {!owned ? (
-                        <button
-                          className={`px-3 py-1 rounded font-semibold ${
-                            afford && !outOfStock
-                              ? "bg-green-600 text-white hover:bg-green-700"
-                              : "bg-red-600 text-white opacity-60 cursor-not-allowed"
-                          }`}
-                          disabled={!afford || outOfStock}
-                          onClick={() =>
-                            buyLimitedItem({
-                              itemId: theme.id,
-                              itemType: "theme",
-                              price: theme.price,
-                            })
-                          }
-                        >
-                          {outOfStock ? "Out of Stock" : "Buy"}
-                        </button>
-                      ) : equipped ? (
-                        <span className="px-3 py-1 rounded bg-green-500 text-white font-semibold">
-                          Equipped
-                        </span>
-                      ) : (
-                        <button
-                          className="px-3 py-1 rounded bg-blue-400 text-white font-semibold"
-                          onClick={() => handleEquipTheme(theme)}
-                        >
-                          Equip
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          {/* Limited Boosts (EDITED - allow equip/unequip) */}
-          <div>
-            <h3 className="text-xl font-bold mb-4 text-[#dc2626]">
-              Limited Boosts
-            </h3>
-            {limitedBoosts.length === 0 ? (
-              <div className="text-center text-gray-400 py-10">
-                No limited boosts yet.
-              </div>
-            ) : (
-              limitedBoosts.map((boost) => {
-                const afford = canAfford(boost.price);
-                const stock = limitedStock[boost.id] ?? 0;
-                const outOfStock = stock <= 0;
-                const alreadyActive = activeShopBoosts.some(
-                  (b) => b.id === boost.id
-                );
-                const owned = ownedBoosts.includes(boost.id);
-                return (
-                  <div
-                    key={boost.id}
-                    className="flex items-center justify-between bg-yellow-100 border border-yellow-400 rounded-xl p-4 mb-3"
-                  >
-                    <div>
-                      <div className="font-semibold text-lg">{boost.name}</div>
-                      <div className="text-sm text-gray-500">
-                        {boost.price} ⭐
-                      </div>
-                      {outOfStock && (
-                        <div className="text-xs text-red-600 font-bold">
-                          Out of Stock
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      {!owned ? (
-                        <button
-                          className={`px-3 py-1 rounded font-semibold ${
-                            afford && !outOfStock
-                              ? "bg-green-600 text-white hover:bg-green-700"
-                              : "bg-red-600 text-white opacity-60 cursor-not-allowed"
-                          }`}
-                          disabled={!afford || outOfStock}
-                          onClick={() => {
-                            if (!afford) {
-                              setNotification("Not enough Renown Tokens!");
-                              return;
-                            }
-                            if (outOfStock) {
-                              setNotification("Out of Stock!");
-                              return;
-                            }
-                            setGameState((prev) => ({
-                              ...prev,
-                              renownTokens: prev.renownTokens - boost.price,
-                            }));
-                            equipShopBoost(boost);
-                          }}
-                        >
-                          {outOfStock ? "Out of Stock" : "Buy"}
-                        </button>
-                      ) : alreadyActive ? (
-                        <button
-                          className="px-3 py-1 rounded bg-gray-500 text-white font-semibold"
-                          onClick={() => {
-                            unequipShopBoost(boost.id);
-                          }}
-                        >
-                          Unequip
-                        </button>
-                      ) : (
-                        <button
-                          className="px-3 py-1 rounded bg-blue-400 text-white font-semibold"
-                          onClick={() => {
-                            equipShopBoost(boost);
-                          }}
-                        >
-                          Equip
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-      );
-    }
-    // Inventory
-    else if (shopView === "inventory") {
-      tabContent = (
-        <div>
-          <h3 className="text-xl font-bold mb-4 text-[#eab308]">Inventory</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Themes */}
-            <div>
-              <h4 className="font-semibold mb-2 text-blue-500">Themes</h4>
-              <div className="space-y-2">
-                {(ownedThemes || []).length === 0 && (
-                  <div className="text-gray-400 text-sm">No themes owned.</div>
-                )}
-                {(ownedThemes || []).map((themeId) => {
-                  const theme = [
-                    ...SHOP_THEMES,
-                    ...Object.entries(CUSTOM_THEMES).map(([id, t]) => ({
-                      ...t,
-                      id,
-                    })),
-                  ].find((t) => t.id === themeId);
-                  if (!theme) return null;
-                  const isEquipped = equippedTheme === theme.id;
-                  return (
-                    <div
-                      key={theme.id}
-                      className={`flex items-center justify-between rounded-lg px-3 py-2 cursor-pointer border
+                    className={`flex items-center justify-between rounded-lg px-3 py-2 cursor-pointer border
                       ${
                         theme.isLimited
                           ? "border-yellow-400 bg-yellow-100"
@@ -3929,52 +3976,50 @@ const loadGame = async () => {
                       }
                       ${isEquipped ? "ring-2 ring-green-400" : ""}
                     `}
-                      onClick={() => {
-                        setGameState((prev) => ({
-                          ...prev,
-                          equippedTheme: isEquipped ? "seasons" : theme.id,
-                        }));
-                        setNotification(
-                          isEquipped
-                            ? "Theme unequipped!"
-                            : `Equipped theme: ${theme.name}`
-                        );
-                      }}
-                      title={theme.name}
-                    >
-                      <span className="text-2xl mr-2">
-                        {theme.emoji || "🎨"}
+                    onClick={() => {
+                      setGameState((prev) => ({
+                        ...prev,
+                        equippedTheme: isEquipped ? "seasons" : theme.id,
+                      }));
+                      setNotification(
+                        isEquipped
+                          ? "Theme unequipped!"
+                          : `Equipped theme: ${theme.name}`
+                      );
+                    }}
+                    title={theme.name}
+                  >
+                    <span className="text-2xl mr-2">
+                      {theme.emoji || "🎨"}
+                    </span>
+                    <span className="font-medium">
+                      {theme.name || theme.id}
+                    </span>
+                    {theme.isLimited && (
+                      <span className="text-yellow-500 font-bold ml-2">
+                        ★
                       </span>
-                      <span className="font-medium">
-                        {theme.name || theme.id}
-                      </span>
-                      {theme.isLimited && (
-                        <span className="text-yellow-500 font-bold ml-2">
-                          ★
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-            {/* Profile Icons */}
-            <div>
-              <h4 className="font-semibold mb-2 text-green-500">
-                Profile Icons
-              </h4>
-              <div className="space-y-2">
-                {(ownedIcons || []).length === 0 && (
-                  <div className="text-gray-400 text-sm">No icons owned.</div>
-                )}
-                {(ownedIcons || []).map((iconId) => {
-                  const icon = PROFILE_ICONS.find((i) => i.id === iconId);
-                  if (!icon) return null;
-                  const isEquipped = equippedIcon === icon.id;
-                  return (
-                    <div
-                      key={icon.id}
-                      className={`flex items-center rounded-lg px-3 py-2 cursor-pointer border w-full min-w-0
+          </div>
+          {/* Profile Icons */}
+          <div>
+            <h4 className="font-semibold mb-2 text-green-500">Profile Icons</h4>
+            <div className="space-y-2">
+              {(ownedIcons || []).length === 0 && (
+                <div className="text-gray-400 text-sm">No icons owned.</div>
+              )}
+              {(ownedIcons || []).map((iconId) => {
+                const icon = PROFILE_ICONS.find((i) => i.id === iconId);
+                if (!icon) return null;
+                const isEquipped = equippedIcon === icon.id;
+                return (
+                  <div
+                    key={icon.id}
+                    className={`flex items-center rounded-lg px-3 py-2 cursor-pointer border w-full min-w-0
         ${
           icon.isLimited
             ? "border-yellow-400 bg-yellow-100"
@@ -3982,42 +4027,40 @@ const loadGame = async () => {
         }
         ${isEquipped ? "ring-2 ring-green-400" : ""}
       `}
-                      onClick={() => {
-                        setGameState((prev) => ({
-                          ...prev,
-                          profileIcon: isEquipped ? null : icon.id,
-                        }));
-                        setNotification(
-                          isEquipped
-                            ? "Icon unequipped!"
-                            : `Equipped icon: ${icon.name}`
-                        );
-                      }}
-                      title={icon.name}
-                    >
-                      <span className="text-2xl mr-2">{icon.emoji}</span>
-                      {icon.isLimited && (
-                        <span className="text-yellow-500 font-bold ml-2">
-                          ★
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                    onClick={() => {
+                      setGameState((prev) => ({
+                        ...prev,
+                        profileIcon: isEquipped ? null : icon.id,
+                      }));
+                      setNotification(
+                        isEquipped
+                          ? "Icon unequipped!"
+                          : `Equipped icon: ${icon.name}`
+                      );
+                    }}
+                    title={icon.name}
+                  >
+                    <span className="text-2xl mr-2">{icon.emoji}</span>
+                    {icon.isLimited && (
+                      <span className="text-yellow-500 font-bold ml-2">★</span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
-      );
-    }
-    // Empty fallback
-    else {
-      tabContent = (
-        <div className="text-center text-gray-400 py-10">
-          Keep your eyes peeled!
-        </div>
-      );
-    }
+      </div>
+    );
+  }
+  // Empty fallback
+  else {
+    tabContent = (
+      <div className="text-center text-gray-400 py-10">
+        Keep your eyes peeled!
+      </div>
+    );
+  }
 
     // ---- MAIN SHOP RETURN ----
     return (
