@@ -702,8 +702,7 @@ useEffect(() => {
     doubleEarningsOfflineEarningsBackup,
     setDoubleEarningsOfflineEarningsBackup,
   ] = useState(null);
-
-  useEffect(() => 
+    useEffect(() => {
     loadGame();
   }, [userId, pin]);
   const [gameState, setGameState] = useState({
