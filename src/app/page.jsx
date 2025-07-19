@@ -1586,6 +1586,62 @@ const [showNoticeboard, setShowNoticeboard] = useState(true);
     : {
         backgroundImage: themeObj.background,
       };
+
+  function NoticeboardModal({ entry, onClose }) {
+  useEffect(() => {
+    // Lock background scroll on mount, unlock on unmount
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = original; };
+  }, []);
+
+  if (!entry) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60"
+      style={{ pointerEvents: "auto" }}
+      onClick={onClose}
+    >
+      <div
+        className="relative flex flex-col bg-gradient-to-br from-purple-400/60 via-purple-200/40 to-purple-600/70 backdrop-blur-xl rounded-2xl p-6 max-w-lg w-full border border-white/30 shadow-lg"
+        style={{
+          boxShadow: "0 8px 32px 0 rgba(124,58,237,0.25)",
+          WebkitBackdropFilter: "blur(16px)",
+          color: "#6b5bd7",
+          maxHeight: "90vh",
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#9f7aea]">
+          Flash Notice
+        </h2>
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: "auto",
+            maxHeight: "60vh",
+            paddingRight: 8,
+          }}
+        >
+          {entry.content}
+        </div>
+        <button
+          className="mt-4 self-center px-6 py-2 rounded-full bg-purple-700/90 text-white font-semibold hover:bg-purple-800 transition"
+          onClick={e => {
+            e.stopPropagation();
+            onClose();
+          }}
+          aria-label="Close noticeboard"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
+  
 v  function equipShopBoost(boost) {
     setActiveShopBoosts((prev) => {
       if (prev.some((b) => b.id === boost.id)) return prev;
