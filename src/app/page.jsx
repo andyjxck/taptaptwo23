@@ -5341,52 +5341,50 @@ if (lastActive && !isNaN(lastActive)) {
           ) : null}
         </div>
       </div>
+<div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+  <div className={`${glassStyle} bg-white/20 rounded-2xl ${buttonGlow} p-2`}>
+    <div className="flex space-x-4">
+      {/* Game Tab Button */}
+      <button
+        onClick={() => setActiveTab("game")}
+        className={`px-6 py-3 rounded-xl transition-all duration-200 ${
+          activeTab === "game"
+            ? "bg-white/40 text-[#2d3748] shadow-md"
+            : "text-[#4a5568] hover:bg-white/20"
+        }`}
+      >
+        <i className="fas fa-gamepad"></i>
+        <span className="block text-xs mt-1">Game</span>
+      </button>
 
-<div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[9999]">
-        <div
-          className={`${glassStyle} bg-white/20 rounded-2xl ${buttonGlow} p-2`}
-        >
-          <div className="flex space-x-4">
-            {/* Game Tab Button */}
-            <button
-              onClick={() => setActiveTab("game")}
-              className={`px-6 py-3 rounded-xl transition-all duration-200 ${
-                activeTab === "game"
-                  ? "bg-white/40 text-[#2d3748] shadow-md"
-                  : "text-[#4a5568] hover:bg-white/20"
-              }`}
-            >
-              <i className="fas fa-gamepad"></i>
-              <span className="block text-xs mt-1">Game</span>
-            </button>
+      {/* House Tab Button */}
+      <button
+        onClick={() => setActiveTab("house")}
+        className={`px-6 py-3 rounded-xl transition-all duration-200 ${
+          activeTab === "house"
+            ? "bg-white/40 text-[#2d3748] shadow-md"
+            : "text-[#4a5568] hover:bg-white/20"
+        }`}
+      >
+        <i className="fas fa-home"></i>
+        <span className="block text-xs mt-1">House</span>
+      </button>
 
-            {/* House Tab Button */}
-            <button
-              onClick={() => setActiveTab("house")}
-              className={`px-6 py-3 rounded-xl transition-all duration-200 ${
-                activeTab === "house"
-                  ? "bg-white/40 text-[#2d3748] shadow-md"
-                  : "text-[#4a5568] hover:bg-white/20"
-              }`}
-            >
-              <i className="fas fa-home"></i>
-              <span className="block text-xs mt-1">House</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("shop")}
-              className={`px-6 py-3 rounded-xl transition-all duration-200 ${
-                activeTab === "shop"
-                  ? "bg-white/40 text-[#e11d48] shadow-md"
-                  : "text-[#e11d48] hover:bg-white/20"
-              } flex flex-col items-center justify-center`}
-            >
-              <i className="fas fa-store"></i>
-              <span className="block text-xs mt-1">Shop</span>
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Shop Tab Button */}
+      <button
+        onClick={() => setActiveTab("shop")}
+        className={`px-6 py-3 rounded-xl transition-all duration-200 ${
+          activeTab === "shop"
+            ? "bg-white/40 text-[#e11d48] shadow-md"
+            : "text-[#e11d48] hover:bg-white/20"
+        } flex flex-col items-center justify-center`}
+      >
+        <i className="fas fa-store"></i>
+        <span className="block text-xs mt-1">Shop</span>
+      </button>
+    </div>
+  </div>
+</div>
 
       {showResetModal && renderResetModal()}
       {showHouseRenameModal && renderHouseRenameModal()}
