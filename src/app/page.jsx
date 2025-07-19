@@ -5237,9 +5237,9 @@ renderProfileTab()
 </div>
 </div>
 
-{/* Fixed Bottom Bar */}
+{/* Sticky Bottom Bar - hides when user is at very bottom */}
 <div
-  className={`${glassStyle} bg-white/20 rounded-2xl ${buttonGlow} p-2 fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full`}
+  className={`${glassStyle} bg-white/20 rounded-2xl ${buttonGlow} p-2 sticky bottom-4 left-1/2 transform -translate-x-1/2 z-40 max-w-md w-full mx-auto`}
   style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
 >
   <div className="flex space-x-4 justify-center">
