@@ -4647,743 +4647,642 @@ if (lastActive && !isNaN(lastActive)) {
     setShowBonusModal(true);
   }
   return (
-    <div
-      className={`relative min-h-screen transition-colors duration-1000 pb-24
+<div
+  className={`relative min-h-screen transition-colors duration-1000 pb-24
     ${gameState.currentWeather === "Sun" ? "sun-bright" : ""}
     ${gameState.currentWeather === "Windy" ? "windy-shake" : ""}
   `}
-      style={
-        gameState.equippedTheme &&
-        gameState.equippedTheme !== "seasons" &&
-        CUSTOM_THEMES[gameState.equippedTheme]?.image
-          ? {
-              backgroundImage: `url(${
-                CUSTOM_THEMES[gameState.equippedTheme].image
-              })`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              backgroundRepeat: "no-repeat",
-            }
-          : SEASONAL_THEMES[gameState.currentSeason]?.image
-          ? {
-              backgroundImage: `url(${
-                SEASONAL_THEMES[gameState.currentSeason].image
-              })`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              backgroundRepeat: "no-repeat",
-            }
-          : {
-              background: "linear-gradient(to bottom, #fff, #eee)",
-            }
-      }
+  style={
+    gameState.equippedTheme &&
+    gameState.equippedTheme !== "seasons" &&
+    CUSTOM_THEMES[gameState.equippedTheme]?.image
+      ? {
+          backgroundImage: `url(${CUSTOM_THEMES[gameState.equippedTheme].image})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }
+      : SEASONAL_THEMES[gameState.currentSeason]?.image
+      ? {
+          backgroundImage: `url(${SEASONAL_THEMES[gameState.currentSeason].image})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }
+      : { background: "linear-gradient(to bottom, #fff, #eee)" }
+  }
+>
+  {gameState.equippedTheme === "heaven" && (
+    <>
+      <CloudBackground />
+      <HeavenEffects />
+    </>
+  )}
+  {gameState.equippedTheme === "hell" && <HellEffects />}
+  {gameState.equippedTheme === "space" && <SpaceEffects />}
+
+  {(gameState.currentWeather === "Rain" ||
+    (gameState.currentWeather === "Windy" &&
+      gameState.currentWeather === "Sleet") ||
+    gameState.currentWeather === "Thunder" ||
+    gameState.currentWeather === "Lightning") && <RainParticles />}
+  {(gameState.currentWeather === "Snow" ||
+    gameState.currentWeather === "Sleet") && <SnowParticles />}
+  {gameState.currentWeather === "Hail" && <HailParticles />}
+  {gameState.currentWeather === "Foggy" && <FoggyOverlay />}
+  {gameState.currentWeather === "Cloudy" && <CloudyOverlay />}
+
+  {notification && (
+    <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-white/20 backdrop-blur-md text-white px-6 py-3 rounded-2xl z-50 font-medium text-center">
+      {notification}
+    </div>
+  )}
+
+  {showFeedback && (
+    <div
+      className="fixed inset-0 bg-black/60 z-50 flex justify-center"
+      style={{ alignItems: "flex-start", paddingTop: "6rem" }}
     >
-      {gameState.equippedTheme === "heaven" && (
-        <>
-          <CloudBackground />
-          <HeavenEffects />
-        </>
-      )}
-      {gameState.equippedTheme === "hell" && <HellEffects />}
-      {gameState.equippedTheme === "space" && <SpaceEffects />}
+      <div
+        className={`
+          bg-gradient-to-br from-purple-400/50 via-purple-200/40 to-purple-600/60
+          backdrop-blur-xl rounded-2xl p-7 max-w-sm w-full border border-white/30 shadow-lg relative
+        `}
+        style={{
+          boxShadow: "0 8px 32px 0 rgba(124,58,237,0.18)",
+          background:
+            "linear-gradient(135deg, rgba(192,132,252,0.95), rgba(139,92,246,0.75), rgba(59,7,100,0.7))",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+        }}
+      >
+        <h2 className="text-xl font-bold mb-4 text-[#2d3748]">Send Feedback</h2>
+        {feedbackSent ? (
+          <div className="text-center text-green-600 mb-4">
+            Thank you for your feedback!
+          </div>
+        ) : (
+          <>
+            <textarea
+              className="w-full min-h-[80px] rounded-lg border border-white/40 bg-white/30 p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-purple-300 transition backdrop-blur-lg"
+              value={feedbackText}
+              onChange={(e) => setFeedbackText(e.target.value)}
+              placeholder="Write your feedback here..."
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-[#e9d5ff]/70 to-[#c4b5fd]/70 text-[#7c3aed] font-semibold shadow-lg backdrop-blur-lg hover:scale-105 transition border border-white/30"
+                onClick={() => setShowFeedback(false)}
+                style={{ boxShadow: "0 2px 8px 0 rgba(124,58,237,0.08)" }}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-[#c4b5fd]/90 to-[#a78bfa]/90 text-white font-bold shadow-lg hover:scale-105 transition border border-white/30 backdrop-blur-lg"
+                disabled={feedbackText.trim().length < 5}
+                onClick={async () => {
+                  if (feedbackText.trim().length < 5) {
+                    setNotification("Feedback must be at least 5 characters long");
+                    return;
+                  }
+                  try {
+                    const response = await fetch("/api/submit-feedback/", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        userId: Number(userId),
+                        feedback: feedbackText.trim(),
+                      }),
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                      setFeedbackSent(true);
+                      setNotification("Thank you for your feedback!");
+                      setTimeout(() => {
+                        setShowFeedback(false);
+                        setFeedbackSent(false);
+                        setFeedbackText("");
+                      }, 1500);
+                    } else {
+                      throw new Error(data.error || "Failed to submit feedback");
+                    }
+                  } catch (error) {
+                    setNotification(
+                      error.message || "Failed to submit feedback. Please try again."
+                    );
+                  }
+                }}
+                style={{
+                  background: "linear-gradient(90deg, #c4b5fdcc 0%, #a78bfacc 100%)",
+                  boxShadow: "0 2px 8px 0 rgba(124,58,237,0.12)",
+                }}
+              >
+                Submit
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )}
 
-      {(gameState.currentWeather === "Rain" ||
-        (gameState.currentWeather === "Windy" &&
-          gameState.currentWeather === "Sleet") ||
-        gameState.currentWeather === "Thunder" ||
-        gameState.currentWeather === "Lightning") && <RainParticles />}
-      {(gameState.currentWeather === "Snow" ||
-        gameState.currentWeather === "Sleet") && <SnowParticles />}
-      {gameState.currentWeather === "Hail" && <HailParticles />}
-      {gameState.currentWeather === "Foggy" && <FoggyOverlay />}
-      {gameState.currentWeather === "Cloudy" && <CloudyOverlay />}
+  <div className="container mx-auto px-2 sm:px-4 py-2 space-y-6">
+    {/* Top row: logo left, buttons right */}
+    <div className="flex justify-between items-end h-20 pl-0 pr-2 sm:px-4">
+      <div className="flex flex-col justify-center items-start">
+        <img
+          src="https://ucarecdn.com/7bdd361d-c411-41ce-b066-c1d20f88e3a7/-/format/auto/"
+          alt="Tap Tap Two Logo"
+          className="h-14 object-contain"
+          style={{ marginLeft: 0 }}
+        />
+        <span className="text-xs text-gray-400 font-medium tracking-wide mt-1 ml-1">
+          made by andysocial
+        </span>
+      </div>
 
-      {notification && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-white/20 backdrop-blur-md text-white px-6 py-3 rounded-2xl z-50 font-medium text-center">
-          {notification}
-        </div>
-      )}
-
-      {showFeedback && (
-        <div
-          className="fixed inset-0 bg-black/60 z-50 flex justify-center"
-          style={{ alignItems: "flex-start", paddingTop: "6rem" }}
+      <div className="flex items-center space-x-2 h-full">
+        <button
+          onClick={() => setShowMaddoxModal(true)}
+          className="relative flex items-center justify-center w-11 h-11 rounded-full bg-gradient-to-br from-[#1e293b] to-[#dc2626] shadow-xl hover:scale-110 transition-all border-2 border-[#dc2626]"
+          aria-label="Maddox Promo"
+          style={{ marginRight: "8px" }}
         >
-          <div
-            className={`
-  bg-gradient-to-br from-purple-400/50 via-purple-200/40 to-purple-600/60
-  backdrop-blur-xl rounded-2xl p-7 max-w-sm w-full border border-white/30 shadow-lg relative
-`}
+          <img
+            src="https://ucarecdn.com/7eaeaf25-2192-4082-a415-dd52f360d379/-/format/auto/"
+            alt="Maddox Logo"
+            className="w-7 h-7 rounded-full object-contain"
+          />
+          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center border-2 border-white shadow">
+            <span className="text-xs font-bold text-white" style={{ lineHeight: "1" }}>
+              !
+            </span>
+          </span>
+        </button>
+
+        <button
+          onClick={() => setShowResetModal(true)}
+          className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200 relative`}
+          aria-label="Reset progress"
+        >
+          <i className="fas fa-sync-alt"></i>
+          <span
+            className="absolute top-0 right-0 flex items-center justify-center rounded-full text-white font-bold"
             style={{
-              boxShadow: "0 8px 32px 0 rgba(124,58,237,0.18)",
-              background:
-                "linear-gradient(135deg, rgba(192,132,252,0.95), rgba(139,92,246,0.75), rgba(59,7,100,0.7))",
-              backdropFilter: "blur(16px)",
-              WebkitBackdropFilter: "blur(16px)",
+              fontSize: "0.75rem",
+              padding: "0 6px",
+              minWidth: "24px",
+              height: "20px",
+              lineHeight: "20px",
+              textAlign: "center",
+              userSelect: "none",
+              backgroundColor: "#4f46e5",
+              transform: "translate(50%, -50%)",
+              zIndex: 20,
             }}
           >
-            <h2 className="text-xl font-bold mb-4 text-[#2d3748]">
-              Send Feedback
-            </h2>
-            {feedbackSent ? (
-              <div className="text-center text-green-600 mb-4">
-                Thank you for your feedback!
+            {getTokensFromCoins(gameState.coinsEarnedThisRun || 0)}
+          </span>
+        </button>
+
+        <a
+          href="/notice-board"
+          className="relative block px-4 py-2 text-[#4a5568] hover:bg-gray-100"
+        >
+          <i className="fas fa-bullhorn"></i>
+          <span
+            className="absolute top-2 right-2 block w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"
+            style={{ pointerEvents: "none", boxShadow: "0 0 0 1px #fff" }}
+          />
+        </a>
+
+        <button
+          onClick={() => setActiveTab("leaderboard")}
+          className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200`}
+        >
+          <i className="fas fa-trophy"></i>
+        </button>
+
+        <div className="relative">
+          <button
+            onClick={() => setShowDropdown((prev) => !prev)}
+            className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200`}
+            aria-label="Open menu"
+          >
+            <i className="fas fa-bars"></i>
+          </button>
+
+          {showDropdown && (
+            <div
+              className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 box-border"
+              onClick={() => setShowDropdown(false)}
+            >
+              <a
+                href="/help"
+                className="block px-4 py-2 text-[#4a5568] hover:bg-gray-100"
+              >
+                <i className="fas fa-question mr-2"></i> Help
+              </a>
+              <button
+                onClick={() => setShowFeedback(true)}
+                className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
+              >
+                <i className="fas fa-comment-alt mr-2"></i> Feedback
+              </button>
+              <button
+                onClick={() => setActiveTab("profile")}
+                className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
+              >
+                <i className="fas fa-user mr-2"></i> Profile
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.removeItem("userId");
+                  localStorage.removeItem("pin");
+                  window.location.href = "/login";
+                }}
+                className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
+              >
+                <i className="fas fa-sign-out-alt mr-2"></i> Logout
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+
+    {["game", "house", "leaderboard"].includes(activeTab) && (
+      <div className="text-center">
+        <h2 className="text-2xl mb-4 font-crimson-text text-[#4a5568]">
+          {gameState.equippedTheme && gameState.equippedTheme !== "seasons"
+            ? CUSTOM_THEMES[gameState.equippedTheme]?.name ||
+              gameState.equippedTheme.charAt(0).toUpperCase() +
+                gameState.equippedTheme.slice(1)
+            : SEASONS[
+                Number.isInteger(gameState.currentSeason) &&
+                gameState.currentSeason >= 0 &&
+                gameState.currentSeason < SEASONS.length
+                  ? gameState.currentSeason
+                  : 0
+              ]}
+        </h2>
+
+        <div className="flex flex-col md:flex-row md:items-center md:justify-center gap-2 text-[#4a5568] text-lg mb-6">
+          <div>
+            <span className="font-semibold">Year:</span>{" "}
+            {Number.isFinite(gameState.currentYear)
+              ? 2000 + gameState.currentYear
+              : "2000"}
+          </div>
+          <div>
+            <span className="font-semibold">Weather:</span>{" "}
+            {CUSTOM_THEME_WEATHER_RENAMES[gameState.equippedTheme]?.[
+              gameState.currentWeather
+            ] ||
+              gameState.currentWeather ||
+              "Clear"}
+          </div>
+        </div>
+
+        <div className="text-[#4a5568] text-sm mt-2">{weatherDescription}</div>
+
+        <div
+          className="grid grid-cols-3 max-w-xs mx-auto mt-6 mb-12"
+          style={{ gap: "5px" }}
+        >
+          {[
+            { icon: "🪙", value: Math.floor(gameState.coins) },
+            { icon: "👆", value: gameState.totalTaps },
+            { icon: "🔄", value: gameState.resets },
+            { icon: "🏠", value: gameState.houseLevel },
+            { icon: "⭐", value: Math.floor(gameState.renownTokens) },
+            { icon: "✴️", value: gameState.permanentMultiplier.toFixed(2) },
+          ].map(({ icon, value }, idx) => (
+            <div
+              key={idx}
+              className={`${glassStyle} bg-gray-300/30 rounded-xl p-1.5 text-center border border-gray-400/50 backdrop-blur-md shadow-md`}
+              style={{ transformOrigin: "center" }}
+            >
+              <span className="text-2xl select-none">{icon}</span>
+              <p className="text-md font-semibold mt-1">{formatNumberShort(value)}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    <div className="max-w-md mx-auto">
+      {activeTab === "game" ? (
+        <div className="flex flex-col items-center justify-center space-y-6">
+          <div className="relative">
+            <button
+              onClick={handleTap}
+              className={`w-[200px] h-[200px] rounded-full ${glassStyle} bg-white/30 ${buttonGlow} transform active:scale-95 transition-all duration-200 relative overflow-hidden hover:shadow-2xl border border-white/30 group`}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div
+                  className={`w-32 h-32 bg-gradient-to-r ${
+                    gameState.equippedTheme &&
+                    gameState.equippedTheme !== "seasons"
+                      ? CUSTOM_THEMES[gameState.equippedTheme]?.buttonGlow
+                      : SEASONAL_THEMES[gameState.currentSeason].buttonGlow
+                  } rounded-full animate-pulse opacity-50`}
+                ></div>
               </div>
-            ) : (
-              <>
-                <textarea
-                  className="w-full min-h-[80px] rounded-lg border border-white/40 bg-white/30 p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-purple-300 transition backdrop-blur-lg"
-                  value={feedbackText}
-                  onChange={(e) => setFeedbackText(e.target.value)}
-                  placeholder="Write your feedback here..."
+              {gameState.equippedTheme && gameState.equippedTheme !== "seasons" ? (
+                <span className="text-6xl relative z-10 select-none">
+                  {CUSTOM_THEMES[gameState.equippedTheme]?.icon || "❓"}
+                </span>
+              ) : (
+                <i
+                  className={`fas ${
+                    SEASONAL_THEMES[gameState.currentSeason].icon
+                  } text-6xl relative z-10 ${
+                    gameState.currentSeason === 0
+                      ? "text-green-400"
+                      : gameState.currentSeason === 1
+                      ? "text-yellow-400"
+                      : gameState.currentSeason === 2
+                      ? "text-orange-400"
+                      : "text-blue-400"
+                  } transition-colors duration-500 group-hover:scale-110 transform`}
                 />
-                <div className="flex justify-end gap-2">
-                  <button
-                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-[#e9d5ff]/70 to-[#c4b5fd]/70 text-[#7c3aed] font-semibold shadow-lg backdrop-blur-lg hover:scale-105 transition border border-white/30"
-                    onClick={() => setShowFeedback(false)}
-                    style={{ boxShadow: "0 2px 8px 0 rgba(124,58,237,0.08)" }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-[#c4b5fd]/90 to-[#a78bfa]/90 text-white font-bold shadow-lg hover:scale-105 transition border border-white/30 backdrop-blur-lg"
-                    disabled={feedbackText.trim().length < 5}
-                    onClick={async () => {
-                      if (feedbackText.trim().length < 5) {
-                        setNotification(
-                          "Feedback must be at least 5 characters long"
-                        );
-                        return;
-                      }
+              )}
+            </button>
 
-                      try {
-                        const response = await fetch("/api/submit-feedback/", {
-                          method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                          },
-                          body: JSON.stringify({
-                            userId: Number(userId),
-                            feedback: feedbackText.trim(),
-                          }),
-                        });
-
-                        const data = await response.json();
-                        console.log("Feedback response:", data); // For debugging
-
-                        if (data.success) {
-                          setFeedbackSent(true);
-                          setNotification("Thank you for your feedback!");
-                          setTimeout(() => {
-                            setShowFeedback(false);
-                            setFeedbackSent(false);
-                            setFeedbackText("");
-                          }, 1500);
-                        } else {
-                          throw new Error(
-                            data.error || "Failed to submit feedback"
-                          );
-                        }
-                      } catch (error) {
-                        console.error("Error submitting feedback:", error);
-                        setNotification(
-                          error.message ||
-                            "Failed to submit feedback. Please try again."
-                        );
-                      }
-                    }}
-                    style={{
-                      background:
-                        "linear-gradient(90deg, #c4b5fdcc 0%, #a78bfacc 100%)",
-                      boxShadow: "0 2px 8px 0 rgba(124,58,237,0.12)",
-                    }}
-                  >
-                    Submit
-                  </button>
-                </div>
-              </>
+            {hasBoost && (
+              <div className="absolute -top-2 -right-2 bg-pink-400 text-white rounded-full px-2 py-1 text-xs">
+                {Math.floor(boostTimeLeft / 60)}:
+                {(boostTimeLeft % 60).toString().padStart(2, "0")}
+              </div>
             )}
           </div>
-        </div>
-      )}
 
-      <div className="container mx-auto px-2 sm:px-4 py-2 space-y-6">
-        {/* Top row: logo left, buttons right */}
-        <div className="flex justify-between items-end h-20 pl-0 pr-2 sm:px-4">
-          {/* Logo + made by andysocial */}
-          <div className="flex flex-col justify-center items-start">
-            <img
-              src="https://ucarecdn.com/7bdd361d-c411-41ce-b066-c1d20f88e3a7/-/format/auto/"
-              alt="Tap Tap Two Logo"
-              className="h-14 object-contain"
-              style={{ marginLeft: 0 }}
-            />
-            <span className="text-xs text-gray-400 font-medium tracking-wide mt-1 ml-1">
-              made by andysocial
-            </span>
-          </div>
-          {/* Buttons: Maddox Promo, Reset, Noticeboard, Leaderboard, Dropdown */}
-          <div className="flex items-center space-x-2 h-full">
-            {/* Maddox Promo Button */}
-            <button
-              onClick={() => setShowMaddoxModal(true)}
-              className="relative flex items-center justify-center w-11 h-11 rounded-full bg-gradient-to-br from-[#1e293b] to-[#dc2626] shadow-xl hover:scale-110 transition-all border-2 border-[#dc2626]"
-              aria-label="Maddox Promo"
-              style={{ marginRight: "8px" }}
-            >
-              <img
-                src="https://ucarecdn.com/7eaeaf25-2192-4082-a415-dd52f360d379/-/format/auto/"
-                alt="Maddox Logo"
-                className="w-7 h-7 rounded-full object-contain"
-              />
-              {/* Red exclamation mark */}
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center border-2 border-white shadow">
-                <span
-                  className="text-xs font-bold text-white"
-                  style={{ lineHeight: "1" }}
-                >
-                  !
-                </span>
-              </span>
-            </button>
-
-            {/* Reset Button */}
-            <button
-              onClick={() => setShowResetModal(true)}
-              className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200 relative`}
-              aria-label="Reset progress"
-            >
-              <i className="fas fa-sync-alt"></i>
-              <span
-                className="absolute top-0 right-0 flex items-center justify-center rounded-full text-white font-bold"
-                style={{
-                  fontSize: "0.75rem",
-                  padding: "0 6px",
-                  minWidth: "24px",
-                  height: "20px",
-                  lineHeight: "20px",
-                  textAlign: "center",
-                  userSelect: "none",
-                  backgroundColor: "#4f46e5", // Indigo-600 badge color
-                  transform: "translate(50%, -50%)",
-                  zIndex: 20,
-                }}
-              >
-                {getTokensFromCoins(gameState.coinsEarnedThisRun || 0)}
-              </span>
-            </button>
-
-            {/* Noticeboard Button */}
-            <a
-              href="/notice-board"
-              className="relative block px-4 py-2 text-[#4a5568] hover:bg-gray-100"
-            >
-              <i className="fas fa-bullhorn"></i>
-              {/* Notification Dot */}
-              <span
-                className="absolute top-2 right-2 block w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"
-                style={{
-                  pointerEvents: "none",
-                  boxShadow: "0 0 0 1px #fff",
-                }}
-              ></span>
-            </a>
-
-            {/* Leaderboard Button */}
-            <button
-              onClick={() => setActiveTab("leaderboard")}
-              className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200`}
-            >
-              <i className="fas fa-trophy"></i>
-            </button>
-
-            {/* Dropdown menu */}
-            <div className="relative">
-              <button
-                onClick={() => setShowDropdown((prev) => !prev)}
-                className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200`}
-                aria-label="Open menu"
-              >
-                <i className="fas fa-bars"></i>
-              </button>
-
-              {showDropdown && (
-                <div
-                  className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 box-border"
-                  onClick={() => setShowDropdown(false)}
-                >
-                  {/* Dropdown items */}
-                  <a
-                    href="/help"
-                    className="block px-4 py-2 text-[#4a5568] hover:bg-gray-100"
-                  >
-                    <i className="fas fa-question mr-2"></i> Help
-                  </a>
-
-                  <button
-                    onClick={() => setShowFeedback(true)}
-                    className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
-                  >
-                    <i className="fas fa-comment-alt mr-2"></i> Feedback
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("profile")}
-                    className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
-                  >
-                    <i className="fas fa-user mr-2"></i> Profile
-                  </button>
-                  <button
-                    onClick={() => {
-                      localStorage.removeItem("userId");
-                      localStorage.removeItem("pin");
-                      window.location.href = "/login";
-                    }}
-                    className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
-                  >
-                    <i className="fas fa-sign-out-alt mr-2"></i> Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {["game", "house", "leaderboard"].includes(activeTab) && (
-          <div className="text-center">
-            <h2 className="text-2xl mb-4 font-crimson-text text-[#4a5568]">
-              {gameState.equippedTheme && gameState.equippedTheme !== "seasons"
-                ? CUSTOM_THEMES[gameState.equippedTheme]?.name ||
-                  gameState.equippedTheme.charAt(0).toUpperCase() +
-                    gameState.equippedTheme.slice(1)
-                : SEASONS[
-                    Number.isInteger(gameState.currentSeason) &&
-                    gameState.currentSeason >= 0 &&
-                    gameState.currentSeason < SEASONS.length
-                      ? gameState.currentSeason
-                      : 0
-                  ]}
-            </h2>
-
-            <div className="flex flex-col md:flex-row md:items-center md:justify-center gap-2 text-[#4a5568] text-lg mb-6">
-              <div>
-                <span className="font-semibold">Year:</span>{" "}
-                {Number.isFinite(gameState.currentYear)
-                  ? 2000 + gameState.currentYear
-                  : "2000"}
-              </div>
-              <div>
-                <span className="font-semibold">Weather:</span>{" "}
-                {CUSTOM_THEME_WEATHER_RENAMES[gameState.equippedTheme]?.[
-                  gameState.currentWeather
-                ] ||
-                  gameState.currentWeather ||
-                  "Clear"}
-              </div>
-            </div>
-
-            <div className="text-[#4a5568] text-sm mt-2">
-              {weatherDescription}
-            </div>
-
+          {!hasBoost && currentQuest && (
             <div
-              className="grid grid-cols-3 max-w-xs mx-auto mt-6 mb-12"
-              style={{ gap: "5px" }}
+              className={`${glassStyle} bg-white/20 rounded-xl p-4 mb-4 text-center shadow`}
             >
-              {[
-                { icon: "🪙", value: Math.floor(gameState.coins) },
-                { icon: "👆", value: gameState.totalTaps },
-                { icon: "🔄", value: gameState.resets },
-                { icon: "🏠", value: gameState.houseLevel },
-                { icon: "⭐", value: Math.floor(gameState.renownTokens) },
-                { icon: "✴️", value: gameState.permanentMultiplier.toFixed(2) },
-              ].map(({ icon, value }, idx) => (
-                <div
-                  key={idx}
-                  className={`${glassStyle} bg-gray-300/30 rounded-xl p-1.5 text-center border border-gray-400/50 backdrop-blur-md shadow-md`}
-                  style={{ transformOrigin: "center" }}
-                >
-                  <span className="text-2xl select-none">{icon}</span>
-                  <p className="text-md font-semibold mt-1">
-                    {formatNumberShort(value)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+              <h2 className="text-xl text-[#2d3748] mb-2">
+                <span role="img" aria-label="gift">
+                  🎁
+                </span>{" "}
+                Quest
+              </h2>
+              <div className="text-[#4a5568] mb-3">{currentQuest.description}</div>
 
-        <div className="max-w-md mx-auto">
-          {activeTab === "game" ? (
-            <div className="flex flex-col items-center justify-center space-y-6">
-              <div className="relative">
-                <button
-  onClick={handleTap}
-  className={`w-[200px] h-[200px] rounded-full ${glassStyle} bg-white/30 ${buttonGlow} transform active:scale-95 transition-all duration-200 relative overflow-hidden hover:shadow-2xl border border-white/30 group`}
->
-  <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
-  <div className="absolute inset-0 flex items-center justify-center">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                {/* Progress Bar */}
+                <div className="flex-1">
+                  {(() => {
+                    const questTemplate = QUEST_TEMPLATES.find((q) => q.id === currentQuest.id);
+let progress = 0;
+if (questTemplate && currentQuest.targetAmount !== undefined) {
+  if (questTemplate.id === "combined_level") {
+    const combined =
+      (gameState.tapPowerUpgrades || 0) +
+      (gameState.autoTapperUpgrades || 0) +
+      (gameState.critChanceUpgrades || 0) +
+      (gameState.tapSpeedBonusUpgrades || 0);
+    progress = Math.min(
+      ((combined - currentQuest.startCombined) / currentQuest.targetAmount) * 100,
+      100
+    );
+  } else if (questTemplate.id === "earn_coins") {
+    const earned = gameState.totalCoinsEarned - currentQuest.startCoins;
+    progress = Math.min((earned / currentQuest.targetAmount) * 100, 100);
+  } else if (questTemplate.id === "upgrade_house") {
+    const upgradesDone = gameState.houseLevel - currentQuest.startLevel;
+    progress = Math.max(Math.min((upgradesDone / currentQuest.targetAmount) * 100, 100), 0);
+  } else if (currentQuest.startLevel !== undefined) {
+    let level = 0;
+    if (questTemplate.id === "upgrade_tap_power") {
+      level = gameState.tapPowerUpgrades || 0;
+    } else if (questTemplate.id === "upgrade_auto_tapper") {
+      level = gameState.autoTapperUpgrades || 0;
+    } else if (questTemplate.id === "upgrade_crit_chance") {
+      level = gameState.critChanceUpgrades || 0;
+    } else if (questTemplate.id === "upgrade_tap_speed") {
+      level =
+        gameState.tapSpeedBonusUpgrades || gameState.tap_speed_bonus_upgrades || 0;
+    }
+    progress = Math.min(((level - currentQuest.startLevel) / currentQuest.targetAmount) * 100, 100);
+  }
+}
+
+progress = Math.max(progress, 0);
+
+return (
+  <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden relative">
     <div
-      className={`w-32 h-32 bg-gradient-to-r ${
-        gameState.equippedTheme &&
-        gameState.equippedTheme !== "seasons"
-          ? CUSTOM_THEMES[gameState.equippedTheme]?.buttonGlow
-          : SEASONAL_THEMES[gameState.currentSeason].buttonGlow
-      } rounded-full animate-pulse opacity-50`}
-    ></div>
-  </div>
-  {gameState.equippedTheme &&
-  gameState.equippedTheme !== "seasons" ? (
-    <span className="text-6xl relative z-10 select-none">
-      {CUSTOM_THEMES[gameState.equippedTheme]?.icon || "❓"}
-    </span>
-  ) : (
-    <i
-      className={`fas ${
-        SEASONAL_THEMES[gameState.currentSeason].icon
-      } text-6xl relative z-10 ${
-        gameState.currentSeason === 0
-          ? "text-green-400"
-          : gameState.currentSeason === 1
-          ? "text-yellow-400"
-          : gameState.currentSeason === 2
-          ? "text-orange-400"
-          : "text-blue-400"
-      } transition-colors duration-500 group-hover:scale-110 transform`}
+      className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-300"
+      style={{ width: `${progress}%` }}
     />
-  )}
+  </div>
+);
+})()}
+
+</div>
+
+{/* Sync/Refresh Button */}
+<button
+  onClick={() => {
+    const newQuest = generateQuest(gameState);
+    setCurrentQuest(newQuest);
+    setCanClaimQuest(false);
+    localStorage.setItem("currentQuest", JSON.stringify(newQuest));
+    saveGame({
+      ...gameState,
+      currentQuest: newQuest,
+      canClaimQuest: false,
+    });
+    setNotification("Quest refreshed!");
+  }}
+  aria-label="Refresh Quest"
+  title="Refresh Quest"
+  className="ml-2 flex items-center justify-center bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-full p-2 transition duration-150 shadow"
+  style={{
+    fontSize: "1.25rem",
+    width: "32px",
+    height: "32px",
+    minWidth: "32px",
+    minHeight: "32px",
+  }}
+>
+  <i className="fas fa-sync-alt text-gray-400"></i>
 </button>
+</div>
 
-                   {hasBoost && (
-                  <div className="absolute -top-2 -right-2 bg-pink-400 text-white rounded-full px-2 py-1 text-xs">
-                    {Math.floor(boostTimeLeft / 60)}:
-                    {(boostTimeLeft % 60).toString().padStart(2, "0")}
-                  </div>
-                )}
-              </div>
+{/* Claim button only if complete */}
+{canClaimQuest && (
+  <button
+    onClick={claimQuestReward}
+    className="px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-green-500 to-green-600 text-white shadow hover:shadow-xl transition-all duration-200"
+  >
+    Claim 10x Boost!
+  </button>
+)}
 
-              {!hasBoost && currentQuest && (
-                <div
-                  className={`${glassStyle} bg-white/20 rounded-xl p-4 mb-4 text-center shadow`}
-                >
-                  <h2 className="text-xl text-[#2d3748] mb-2">
-                    <span role="img" aria-label="gift">
-                      🎁
-                    </span>{" "}
-                    Quest
-                  </h2>
-                  <div className="text-[#4a5568] mb-3">
-                    {currentQuest.description}
-                  </div>
+</div>
+)}
 
-                  <div className="flex items-center justify-center gap-2 mb-3">
-                    {/* Progress Bar */}
-                    <div className="flex-1">
-                      {(() => {
-                        const questTemplate = QUEST_TEMPLATES.find(
-                          (q) => q.id === currentQuest.id
-                        );
-                        let progress = 0;
-                        if (
-                          questTemplate &&
-                          currentQuest.targetAmount !== undefined
-                        ) {
-                          if (questTemplate.id === "combined_level") {
-                            const combined =
-                              (gameState.tapPowerUpgrades || 0) +
-                              (gameState.autoTapperUpgrades || 0) +
-                              (gameState.critChanceUpgrades || 0) +
-                              (gameState.tapSpeedBonusUpgrades || 0);
-                            progress = Math.min(
-                              ((combined - currentQuest.startCombined) /
-                                currentQuest.targetAmount) *
-                                100,
-                              100
-                            );
-                          } else if (questTemplate.id === "earn_coins") {
-                            const earned =
-                              gameState.totalCoinsEarned -
-                              currentQuest.startCoins;
-                            progress = Math.min(
-                              (earned / currentQuest.targetAmount) * 100,
-                              100
-                            );
-                          } else if (questTemplate.id === "upgrade_house") {
-                            // *** FIX: Handle house quest progress correctly ***
-                            const upgradesDone =
-                              gameState.houseLevel - currentQuest.startLevel;
-                            progress = Math.max(
-                              Math.min(
-                                (upgradesDone / currentQuest.targetAmount) *
-                                  100,
-                                100
-                              ),
-                              0
-                            );
-                          } else if (currentQuest.startLevel !== undefined) {
-                            // For upgrade quests (tapPower, autoTapper, critChance, tapSpeedBonus)
-                            let level = 0;
-                            if (questTemplate.id === "upgrade_tap_power") {
-                              level = gameState.tapPowerUpgrades || 0;
-                            } else if (
-                              questTemplate.id === "upgrade_auto_tapper"
-                            ) {
-                              level = gameState.autoTapperUpgrades || 0;
-                            } else if (
-                              questTemplate.id === "upgrade_crit_chance"
-                            ) {
-                              level = gameState.critChanceUpgrades || 0;
-                            } else if (
-                              questTemplate.id === "upgrade_tap_speed"
-                            ) {
-                              // Try both camelCase and snake_case
-                              level =
-                                gameState.tapSpeedBonusUpgrades ||
-                                gameState.tap_speed_bonus_upgrades ||
-                                0;
-                            }
-
-                            progress = Math.min(
-                              ((level - currentQuest.startLevel) /
-                                currentQuest.targetAmount) *
-                                100,
-                              100
-                            );
-                          }
-                        }
-
-                        progress = Math.max(progress, 0);
-
-                        return (
-                          <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden relative">
-                            <div
-                              className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-300"
-                              style={{ width: `${progress}%` }}
-                            />
-                          </div>
-                        );
-                      })()}
-                    </div>
-                    {/* Sync/Refresh Button */}
-                    <button
-                      onClick={() => {
-                        const newQuest = generateQuest(gameState);
-                        setCurrentQuest(newQuest);
-                        setCanClaimQuest(false);
-                        localStorage.setItem(
-                          "currentQuest",
-                          JSON.stringify(newQuest)
-                        );
-                        saveGame({
-                          ...gameState,
-                          currentQuest: newQuest,
-                          canClaimQuest: false,
-                        });
-                        setNotification("Quest refreshed!");
-                      }}
-                      aria-label="Refresh Quest"
-                      title="Refresh Quest"
-                      className="ml-2 flex items-center justify-center bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-full p-2 transition duration-150 shadow"
-                      style={{
-                        fontSize: "1.25rem",
-                        width: "32px",
-                        height: "32px",
-                        minWidth: "32px",
-                        minHeight: "32px",
-                      }}
-                    >
-                      <i className="fas fa-sync-alt text-gray-400"></i>
-                    </button>
-                  </div>
-
-                  {/* Claim button only if complete */}
-                  {canClaimQuest && (
-                    <button
-                      onClick={claimQuestReward}
-                      className="px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-green-500 to-green-600 text-white shadow hover:shadow-xl transition-all duration-200"
-                    >
-                      Claim 10x Boost!
-                    </button>
-                  )}
-                </div>
-              )}
-
-              <div
-                className={`w-full ${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow}`}
-              >
-                <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#2d3748]">
-                  Upgrades
-                </h2>
-                <div className="text-center text-sm text-gray-500 font-semibold mb-4">
-                  Combined Upgrade Level: {combinedLevel}
-                </div>
-                <div className="flex gap-2 mb-4">
-                  {[1, 10, 100, "Max"].map((val) => (
-                    <button
-                      key={val}
-                      onClick={() =>
-                        setUpgradeMultiplier(val === "Max" ? "Max" : val)
-                      }
-                      className={`px-3 py-1 rounded font-bold
+<div
+  className={`w-full ${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow}`}
+>
+  <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#2d3748]">
+    Upgrades
+  </h2>
+  <div className="text-center text-sm text-gray-500 font-semibold mb-4">
+    Combined Upgrade Level: {combinedLevel}
+  </div>
+  <div className="flex gap-2 mb-4">
+    {[1, 10, 100, "Max"].map((val) => (
+      <button
+        key={val}
+        onClick={() => setUpgradeMultiplier(val === "Max" ? "Max" : val)}
+        className={`px-3 py-1 rounded font-bold
         ${
           upgradeMultiplier === val
             ? "bg-[#059669] text-white"
             : "bg-gray-200 text-gray-700"
         }
         hover:bg-[#34d399] transition`}
-                    >
-                      x{val}
-                    </button>
-                  ))}
-                </div>
-                <div className="grid grid-cols-1 gap-4">
-                  {Object.entries(UPGRADE_COSTS).map(([type, costFn]) => {
-                    const upgradeLevel = gameState[`${type}Upgrades`] || 0;
-                    let multiplier =
-                      upgradeMultiplier === "Max"
-                        ? getMaxAffordableUpgrades(
-                            type,
-                            upgradeLevel,
-                            gameState.coins
-                          )
-                        : upgradeMultiplier;
-
-                    const totalCost = getTotalUpgradeCost(
-                      type,
-                      upgradeLevel,
-                      multiplier
-                    );
-                    const canAfford = gameState.coins >= totalCost;
-                    const currentValueRaw = gameState[type] || 0;
-
-                    // Round tapSpeedBonus and others to 1 decimal place (except critChance)
-                    const roundedValue =
-                      type === "critChance"
-                        ? currentValueRaw
-                        : Math.round(currentValueRaw * 10) / 10;
-
-                    // Format with shortening
-                    const currentValueShort = formatNumberShort(roundedValue);
-
-                    // Append % only for critChance
-                    const currentValueFormatted =
-                      type === "critChance"
-                        ? `${currentValueShort}%`
-                        : currentValueShort;
-
-                    return (
-                      <div
-                        key={type}
-                        className={`${glassStyle} bg-white/10 rounded-xl p-4 border border-white/30`}
-                      >
-                        <div className="flex flex-col space-y-2">
-                          <div className="flex justify-between items-center">
-                            <h3 className="font-medium text-lg text-[#2d3748] flex items-center relative">
-                              {type === "tapPower"
-                                ? "Tap Power"
-                                : type === "autoTapper"
-                                ? "Auto Tapper"
-                                : type === "critChance"
-                                ? "Critical Chance"
-                                : "Tap Speed Bonus"}
-
-                              <button
-                                onMouseEnter={() => setTooltipVisibleFor(type)}
-                                onMouseLeave={() => setTooltipVisibleFor(null)}
-                                onFocus={() => setTooltipVisibleFor(type)}
-                                onBlur={() => setTooltipVisibleFor(null)}
-                                onClick={() =>
-                                  setTooltipVisibleFor((prev) =>
-                                    prev === type ? null : type
-                                  )
-                                }
-                                aria-label={`Info about ${type}`}
-                                className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                                style={{ fontSize: "0.8rem" }}
-                              >
-                                <i className="fas fa-info-circle" />
-                              </button>
-                              {tooltipVisibleFor === type && (
-                                <Tooltip text={UPGRADE_DESCRIPTIONS[type]} />
-                              )}
-                            </h3>
-                            <span className="text-sm text-[#4a5568] font-semibold">
-                              Level {upgradeLevel + 1}
-                            </span>
-                          </div>
-                          <p className="text-sm text-[#4a5568]">
-                            Current: {currentValueFormatted}
-                          </p>
-                          {/* UPGRADE BUTTON */}
-                          <button
-                            onClick={() => handleUpgrade(type, multiplier)}
-                            disabled={!canAfford}
-                            className={upgradeButtonStyle(canAfford)}
-                          >
-                            {`Buy${
-                              multiplier > 1 ? ` x${multiplier}` : ""
-                            } (${formatNumberShort(totalCost)})`}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          ) : activeTab === "leaderboard" ? (
-            renderLeaderboard()
-          ) : activeTab === "house" ? (
-            renderHouseTab()
-          ) : activeTab === "shop" ? (
-            renderShopTab()
-          ) : activeTab === "profile" ? (
-            renderProfileTab()
-          ) : null}
-        </div>
-      </div>
-<div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-  <div className={`${glassStyle} bg-white/20 rounded-2xl ${buttonGlow} p-2`}>
-    <div className="flex space-x-4">
-      {/* Game Tab Button */}
-      <button
-        onClick={() => setActiveTab("game")}
-        className={`px-6 py-3 rounded-xl transition-all duration-200 ${
-          activeTab === "game"
-            ? "bg-white/40 text-[#2d3748] shadow-md"
-            : "text-[#4a5568] hover:bg-white/20"
-        }`}
       >
-        <i className="fas fa-gamepad"></i>
-        <span className="block text-xs mt-1">Game</span>
+        x{val}
       </button>
-
-      {/* House Tab Button */}
-      <button
-        onClick={() => setActiveTab("house")}
-        className={`px-6 py-3 rounded-xl transition-all duration-200 ${
-          activeTab === "house"
-            ? "bg-white/40 text-[#2d3748] shadow-md"
-            : "text-[#4a5568] hover:bg-white/20"
-        }`}
-      >
-        <i className="fas fa-home"></i>
-        <span className="block text-xs mt-1">House</span>
-      </button>
-
-      {/* Shop Tab Button */}
-      <button
-        onClick={() => setActiveTab("shop")}
-        className={`px-6 py-3 rounded-xl transition-all duration-200 ${
-          activeTab === "shop"
-            ? "bg-white/40 text-[#e11d48] shadow-md"
-            : "text-[#e11d48] hover:bg-white/20"
-        } flex flex-col items-center justify-center`}
-      >
-        <i className="fas fa-store"></i>
-        <span className="block text-xs mt-1">Shop</span>
-      </button>
-    </div>
+    ))}
   </div>
+  <div className="grid grid-cols-1 gap-4">
+    {Object.entries(UPGRADE_COSTS).map(([type, costFn]) => {
+      const upgradeLevel = gameState[`${type}Upgrades`] || 0;
+      let multiplier =
+        upgradeMultiplier === "Max"
+          ? getMaxAffordableUpgrades(type, upgradeLevel, gameState.coins)
+          : upgradeMultiplier;
+
+      const totalCost = getTotalUpgradeCost(type, upgradeLevel, multiplier);
+      const canAfford = gameState.coins >= totalCost;
+      const currentValueRaw = gameState[type] || 0;
+
+      const roundedValue =
+        type === "critChance"
+          ? currentValueRaw
+          : Math.round(currentValueRaw * 10) / 10;
+
+      const currentValueShort = formatNumberShort(roundedValue);
+
+      const currentValueFormatted =
+        type === "critChance" ? `${currentValueShort}%` : currentValueShort;
+
+      return (
+        <div
+          key={type}
+          className={`${glassStyle} bg-white/10 rounded-xl p-4 border border-white/30`}
+        >
+          <div className="flex flex-col space-y-2">
+            <div className="flex justify-between items-center">
+              <h3 className="font-medium text-lg text-[#2d3748] flex items-center relative">
+                {type === "tapPower"
+                  ? "Tap Power"
+                  : type === "autoTapper"
+                  ? "Auto Tapper"
+                  : type === "critChance"
+                  ? "Critical Chance"
+                  : "Tap Speed Bonus"}
+
+                <button
+                  onMouseEnter={() => setTooltipVisibleFor(type)}
+                  onMouseLeave={() => setTooltipVisibleFor(null)}
+                  onFocus={() => setTooltipVisibleFor(type)}
+                  onBlur={() => setTooltipVisibleFor(null)}
+                  onClick={() =>
+                    setTooltipVisibleFor((prev) => (prev === type ? null : type))
+                  }
+                  aria-label={`Info about ${type}`}
+                  className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  style={{ fontSize: "0.8rem" }}
+                >
+                  <i className="fas fa-info-circle" />
+                </button>
+                {tooltipVisibleFor === type && <Tooltip text={UPGRADE_DESCRIPTIONS[type]} />}
+              </h3>
+              <span className="text-sm text-[#4a5568] font-semibold">
+                Level {upgradeLevel + 1}
+              </span>
+            </div>
+            <p className="text-sm text-[#4a5568]">Current: {currentValueFormatted}</p>
+            <button
+              onClick={() => handleUpgrade(type, multiplier)}
+              disabled={!canAfford}
+              className={upgradeButtonStyle(canAfford)}
+            >
+              {`Buy${multiplier > 1 ? ` x${multiplier}` : ""} (${formatNumberShort(totalCost)})`}
+            </button>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+</div>
+</div>
+) : activeTab === "leaderboard" ? (
+renderLeaderboard()
+) : activeTab === "house" ? (
+renderHouseTab()
+) : activeTab === "shop" ? (
+renderShopTab()
+) : activeTab === "profile" ? (
+renderProfileTab()
+) : null}
+</div>
+</div>
+
+{/* Fixed Bottom Bar */}
+<div
+  className={`${glassStyle} bg-white/20 rounded-2xl ${buttonGlow} p-2 fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full`}
+  style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
+>
+  <div className="flex space-x-4 justify-center">
+    {/* Game Tab Button */}
+    <button
+      onClick={() => setActiveTab("game")}
+      className={`px-6 py-3 rounded-xl transition-all duration-200 ${
+        activeTab === "game"
+          ? "bg-white/40 text-[#2d3748] shadow-md"
+          : "text-[#4a5568] hover:bg-white/20"
+      }`}
+    >
+      <i className="fas fa-gamepad"></i>
+      <span className="block text-xs mt-1">Game</span>
+    </button>
+
+    {/* House Tab Button */}
+    <button
+      onClick={() => setActiveTab("house")}
+      className={`px-6 py-3 rounded-xl transition-all duration-200 ${
+        activeTab === "house"
+          ? "bg-white/40 text-[#2d3748] shadow-md"
+          : "text-[#4a5568] hover:bg-white/20"
+      }`}
+    >
+      <i className="fas fa-home"></i>
+      <span className="block text-xs mt-1">House</span>
+    </button>
+
+    {/* Shop Tab Button */}
+    <button
+      onClick={() => setActiveTab("shop")}
+      className={`px-6 py-3 rounded-xl transition-all duration-200 ${
+        activeTab === "shop"
+          ? "bg-white/40 text-[#e11d48] shadow-md"
+          : "text-[#e11d48] hover:bg-white/20"
+      } flex flex-col items-center justify-center`}
+    >
+      <i className="fas fa-store"></i>
+      <span className="block text-xs mt-1">Shop</span>
+    </button>
+  </div>
+</div>
 </div>
 
       {showResetModal && renderResetModal()}
