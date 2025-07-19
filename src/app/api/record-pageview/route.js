@@ -22,15 +22,15 @@ async function handler({ page_path, user_id, user_agent, referrer }) {
     `;
 
     return { success: true };
-  } catch (error) {
-    console.error("Error recording pageview:", error, {
-      page_path,
-      user_id,
-      user_agent,
-      referrer,
-    });
-    return { error: "Failed to record pageview" };
-  }
+ catch (error) {
+  console.error("Error recording pageview:", error, {
+    page_path,
+    user_id,
+    user_agent,
+    referrer,
+  });
+  return { error: "Failed to record pageview", details: error.message || String(error) };
+}
 }
 export async function POST(request) {
   try {
