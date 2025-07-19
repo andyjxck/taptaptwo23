@@ -703,6 +703,9 @@ useEffect(() => {
     setDoubleEarningsOfflineEarningsBackup,
   ] = useState(null);
 
+  useEffect(() => 
+    loadGame();
+  }, [userId, pin]);
   const [gameState, setGameState] = useState({
     coins: 0,
     tapPower: 1,
