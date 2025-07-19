@@ -1567,30 +1567,31 @@ const [showNoticeboard, setShowNoticeboard] = useState(true);
     : {
         backgroundImage: themeObj.background,
       };
-
-  function NoticeboardModal({ entry, onClose }) {
+function NoticeboardModal({ entry, onClose }) {
   useEffect(() => {
-    // Lock background scroll on mount, unlock on unmount
-    const original = document.body.style.overflow;
+    // Optional: lock background scroll if you want
+    const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = original; };
+    return () => { document.body.style.overflow = prev; };
   }, []);
 
   if (!entry) return null;
 
   return (
     <div
-      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60"
+      className="fixed inset-0 z-[99999] bg-black/40"
       style={{ pointerEvents: "auto" }}
       onClick={onClose}
     >
       <div
-        className="relative flex flex-col bg-gradient-to-br from-purple-400/60 via-purple-200/40 to-purple-600/70 backdrop-blur-xl rounded-2xl p-6 max-w-lg w-full border border-white/30 shadow-lg"
+        className="absolute left-1/2 top-12 -translate-x-1/2 bg-gradient-to-br from-purple-400/60 via-purple-200/40 to-purple-600/70
+          backdrop-blur-xl rounded-2xl p-6 max-w-lg w-full border border-white/30 shadow-lg"
         style={{
           boxShadow: "0 8px 32px 0 rgba(124,58,237,0.25)",
           WebkitBackdropFilter: "blur(16px)",
           color: "#6b5bd7",
-          maxHeight: "90vh",
+          maxHeight: "70vh",
+          overflowY: "auto",
         }}
         onClick={e => e.stopPropagation()}
       >
@@ -1599,10 +1600,8 @@ const [showNoticeboard, setShowNoticeboard] = useState(true);
         </h2>
         <div
           style={{
-            flex: 1,
-            minHeight: 0,
             overflowY: "auto",
-            maxHeight: "60vh",
+            maxHeight: "40vh",
             paddingRight: 8,
           }}
         >
@@ -1622,6 +1621,9 @@ const [showNoticeboard, setShowNoticeboard] = useState(true);
     </div>
   );
 }
+
+
+  
  function equipShopBoost(boost) {
     setActiveShopBoosts((prev) => {
       if (prev.some((b) => b.id === boost.id)) return prev;
