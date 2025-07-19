@@ -5204,7 +5204,9 @@ if (lastActive && !isNaN(lastActive)) {
         </div>
       );
     })}
-
+  </div>
+              </div>
+            </div>
     {/* Tab content rendering */}
     {activeTab === "leaderboard" ? (
       renderLeaderboard()
