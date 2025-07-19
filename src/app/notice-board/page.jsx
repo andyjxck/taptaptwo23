@@ -7,12 +7,9 @@ const seasonBackgrounds = {
 };
 
 function MainComponent() {
-  React.useEffect(() => {
-    // Get userId from localStorage
+   React.useEffect(() => {
     const userId = localStorage.getItem("userId");
 
-    // Record pageview
-    useEffect(() => {
     fetch("/api/record-pageview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -23,7 +20,8 @@ function MainComponent() {
         referrer: document.referrer || null,
       }),
     }).catch(console.error);
-  }, []);
+  }, []); // Runs once on mount
+
   const currentSeason = "Spring";
 
   const notes = [
