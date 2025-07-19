@@ -1,5 +1,6 @@
 import { Inter } from 'next/font/google'
 import './globals.css'
+import Script from 'next/script'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -17,11 +18,16 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
         />
-        {/* Google AdSense */}
-      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9540548227467393"
-     crossorigin="anonymous"></script>
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        {/* Google AdSense Script */}
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9540548227467393"
+          crossOrigin="anonymous"
+        />
+        {children}
+      </body>
     </html>
   )
 }
