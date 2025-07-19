@@ -684,9 +684,12 @@ function MainComponent() {
   const [doubleEarningsExpiresAt, setDoubleEarningsExpiresAt] = useState(null);
   const [showResetInfo, setShowResetInfo] = useState(false);
   const [activeBoost, setActiveBoost] = useState(null);
+
+  
 const [activeShopBoosts, setActiveShopBoosts] = useState([]);
 const [lastDailyClaim, setLastDailyClaim] = useState(0);
 
+  
 useEffect(() => {
   const saved = localStorage.getItem("activeBoost");
   if (saved) setActiveBoost(JSON.parse(saved));
@@ -2015,6 +2018,19 @@ if (loading) {
     }, 1000);
     return () => clearInterval(interval);
   }, [activeBoost]);
+
+  useEffect(() => {
+  fetch("/api/record-pageview", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      page_path: "/",
+      user_agent: navigator.userAgent,
+      referrer: document.referrer || null,
+    }),
+  });
+}, []);
+
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
