@@ -1586,6 +1586,14 @@ const [showNoticeboard, setShowNoticeboard] = useState(true);
 
   
 function NoticeboardModal({ entry, onClose }) {
+  useEffect(() => {
+    // Lock background scroll while modal open
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   if (!entry) return null;
 
   return (
@@ -1596,27 +1604,38 @@ function NoticeboardModal({ entry, onClose }) {
       <div
         onClick={(e) => e.stopPropagation()}
         className="bg-gradient-to-br from-purple-400/60 via-purple-200/40 to-purple-600/70
-          backdrop-blur-xl rounded-2xl p-8 max-w-lg w-full border border-white/30 shadow-lg relative"
+          backdrop-blur-xl rounded-2xl p-6 max-w-lg w-full border border-white/30 shadow-lg relative flex flex-col"
         style={{
           boxShadow: "0 8px 32px 0 rgba(124,58,237,0.25)",
           WebkitBackdropFilter: "blur(16px)",
           fontFamily: "'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-          color: "#2d3748",
+          color: "#6b5bd7", // lighter purple-gray text for readability
           letterSpacing: "0.02em",
           lineHeight: 1.6,
+          maxHeight: "75vh", // limit height
         }}
       >
-        <h2 className="text-2xl font-crimson-text mb-6 text-[#7c3aed] text-center">
+        <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#9f7aea]">
           Flash Notice
         </h2>
 
-        <div>{entry.content}</div>
+        {/* Scrollable content area */}
+        <div
+          style={{
+            overflowY: "auto",
+            flexGrow: 1,
+            paddingRight: "8px",
+          }}
+        >
+          {entry.content}
+        </div>
 
         <button
-          className="absolute top-4 right-4 px-4 py-1 rounded-full bg-purple-700/90 text-white font-semibold
+          className="mt-4 self-center px-6 py-2 rounded-full bg-purple-700/90 text-white font-semibold
             hover:bg-purple-800 transition"
           onClick={onClose}
           aria-label="Close noticeboard"
+          style={{ userSelect: "none" }}
         >
           Close
         </button>
