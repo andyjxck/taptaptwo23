@@ -4928,7 +4928,7 @@ if (lastActive && !isNaN(lastActive)) {
   )}
 </button>
 
-                {hasBoost && (
+                   {hasBoost && (
                   <div className="absolute -top-2 -right-2 bg-pink-400 text-white rounded-full px-2 py-1 text-xs">
                     {Math.floor(boostTimeLeft / 60)}:
                     {(boostTimeLeft % 60).toString().padStart(2, "0")}
@@ -5145,120 +5145,123 @@ if (lastActive && !isNaN(lastActive)) {
                         ? `${currentValueShort}%`
                         : currentValueShort;
 
-                  return (
-  <div className="relative min-h-screen pb-32"> {/* padding bottom to avoid content hiding behind nav */}
-    {Object.entries(upgrades).map(([type, upgradeLevel]) => {
-      const currentValueFormatted = getCurrentValue(type, upgradeLevel);
-      const canAfford = checkIfCanAfford(type, multiplier);
-      const totalCost = getUpgradeCost(type, upgradeLevel, multiplier);
+                    return (
+                      <div
+                        key={type}
+                        className={`${glassStyle} bg-white/10 rounded-xl p-4 border border-white/30`}
+                      >
+                        <div className="flex flex-col space-y-2">
+                          <div className="flex justify-between items-center">
+                            <h3 className="font-medium text-lg text-[#2d3748] flex items-center relative">
+                              {type === "tapPower"
+                                ? "Tap Power"
+                                : type === "autoTapper"
+                                ? "Auto Tapper"
+                                : type === "critChance"
+                                ? "Critical Chance"
+                                : "Tap Speed Bonus"}
 
-      return (
-        <div
-          key={type}
-          className={`${glassStyle} bg-white/10 rounded-xl p-4 border border-white/30 mb-4`}
-        >
-          <div className="flex flex-col space-y-2">
-            <div className="flex justify-between items-center">
-              <h3 className="font-medium text-lg text-[#2d3748] flex items-center relative">
-                {type === "tapPower"
-                  ? "Tap Power"
-                  : type === "autoTapper"
-                  ? "Auto Tapper"
-                  : type === "critChance"
-                  ? "Critical Chance"
-                  : "Tap Speed Bonus"}
-
-                <button
-                  onMouseEnter={() => setTooltipVisibleFor(type)}
-                  onMouseLeave={() => setTooltipVisibleFor(null)}
-                  onFocus={() => setTooltipVisibleFor(type)}
-                  onBlur={() => setTooltipVisibleFor(null)}
-                  onClick={() =>
-                    setTooltipVisibleFor((prev) => (prev === type ? null : type))
-                  }
-                  aria-label={`Info about ${type}`}
-                  className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                  style={{ fontSize: "0.8rem" }}
-                >
-                  <i className="fas fa-info-circle" />
-                </button>
-                {tooltipVisibleFor === type && (
-                  <Tooltip text={UPGRADE_DESCRIPTIONS[type]} />
-                )}
-              </h3>
-              <span className="text-sm text-[#4a5568] font-semibold">
-                Level {upgradeLevel + 1}
-              </span>
+                              <button
+                                onMouseEnter={() => setTooltipVisibleFor(type)}
+                                onMouseLeave={() => setTooltipVisibleFor(null)}
+                                onFocus={() => setTooltipVisibleFor(type)}
+                                onBlur={() => setTooltipVisibleFor(null)}
+                                onClick={() =>
+                                  setTooltipVisibleFor((prev) =>
+                                    prev === type ? null : type
+                                  )
+                                }
+                                aria-label={`Info about ${type}`}
+                                className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                style={{ fontSize: "0.8rem" }}
+                              >
+                                <i className="fas fa-info-circle" />
+                              </button>
+                              {tooltipVisibleFor === type && (
+                                <Tooltip text={UPGRADE_DESCRIPTIONS[type]} />
+                              )}
+                            </h3>
+                            <span className="text-sm text-[#4a5568] font-semibold">
+                              Level {upgradeLevel + 1}
+                            </span>
+                          </div>
+                          <p className="text-sm text-[#4a5568]">
+                            Current: {currentValueFormatted}
+                          </p>
+                          {/* UPGRADE BUTTON */}
+                          <button
+                            onClick={() => handleUpgrade(type, multiplier)}
+                            disabled={!canAfford}
+                            className={upgradeButtonStyle(canAfford)}
+                          >
+                            {`Buy${
+                              multiplier > 1 ? ` x${multiplier}` : ""
+                            } (${formatNumberShort(totalCost)})`}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-            <p className="text-sm text-[#4a5568]">
-              Current: {currentValueFormatted}
-            </p>
+          ) : activeTab === "leaderboard" ? (
+            renderLeaderboard()
+          ) : activeTab === "house" ? (
+            renderHouseTab()
+          ) : activeTab === "shop" ? (
+            renderShopTab()
+          ) : activeTab === "profile" ? (
+            renderProfileTab()
+          ) : null}
+        </div>
+      </div>
+
+      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2">
+        <div
+          className={`${glassStyle} bg-white/20 rounded-2xl ${buttonGlow} p-2`}
+        >
+          <div className="flex space-x-4">
+            {/* Game Tab Button */}
             <button
-              onClick={() => handleUpgrade(type, multiplier)}
-              disabled={!canAfford}
-              className={upgradeButtonStyle(canAfford)}
+              onClick={() => setActiveTab("game")}
+              className={`px-6 py-3 rounded-xl transition-all duration-200 ${
+                activeTab === "game"
+                  ? "bg-white/40 text-[#2d3748] shadow-md"
+                  : "text-[#4a5568] hover:bg-white/20"
+              }`}
             >
-              {`Buy${multiplier > 1 ? ` x${multiplier}` : ""} (${formatNumberShort(totalCost)})`}
+              <i className="fas fa-gamepad"></i>
+              <span className="block text-xs mt-1">Game</span>
+            </button>
+
+            {/* House Tab Button */}
+            <button
+              onClick={() => setActiveTab("house")}
+              className={`px-6 py-3 rounded-xl transition-all duration-200 ${
+                activeTab === "house"
+                  ? "bg-white/40 text-[#2d3748] shadow-md"
+                  : "text-[#4a5568] hover:bg-white/20"
+              }`}
+            >
+              <i className="fas fa-home"></i>
+              <span className="block text-xs mt-1">House</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("shop")}
+              className={`px-6 py-3 rounded-xl transition-all duration-200 ${
+                activeTab === "shop"
+                  ? "bg-white/40 text-[#e11d48] shadow-md"
+                  : "text-[#e11d48] hover:bg-white/20"
+              } flex flex-col items-center justify-center`}
+            >
+              <i className="fas fa-store"></i>
+              <span className="block text-xs mt-1">Shop</span>
             </button>
           </div>
         </div>
-      );
-    })}
-              </div>
-            </div>
-    {/* Tab content rendering */}
-    {activeTab === "leaderboard" ? (
-      renderLeaderboard()
-    ) : activeTab === "house" ? (
-      renderHouseTab()
-    ) : activeTab === "shop" ? (
-      renderShopTab()
-    ) : activeTab === "profile" ? (
-      renderProfileTab()
-    ) : null}
-
-    {/* Fixed bottom navigation bar */}
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-sm px-4 z-50 pointer-events-auto">
-      <div className={`${glassStyle} bg-white/20 rounded-2xl ${buttonGlow} p-2`}>
-        <div className="flex space-x-4">
-          <button
-            onClick={() => setActiveTab("game")}
-            className={`px-6 py-3 rounded-xl transition-all duration-200 ${
-              activeTab === "game"
-                ? "bg-white/40 text-[#2d3748] shadow-md"
-                : "text-[#4a5568] hover:bg-white/20"
-            }`}
-          >
-            <i className="fas fa-gamepad" />
-            <span className="block text-xs mt-1">Game</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("house")}
-            className={`px-6 py-3 rounded-xl transition-all duration-200 ${
-              activeTab === "house"
-                ? "bg-white/40 text-[#2d3748] shadow-md"
-                : "text-[#4a5568] hover:bg-white/20"
-            }`}
-          >
-            <i className="fas fa-home" />
-            <span className="block text-xs mt-1">House</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("shop")}
-            className={`px-6 py-3 rounded-xl transition-all duration-200 ${
-              activeTab === "shop"
-                ? "bg-white/40 text-[#e11d48] shadow-md"
-                : "text-[#e11d48] hover:bg-white/20"
-            } flex flex-col items-center justify-center`}
-          >
-            <i className="fas fa-store" />
-            <span className="block text-xs mt-1">Shop</span>
-          </button>
-        </div>
       </div>
-    </div>
-  </div>
-);
 
       {showResetModal && renderResetModal()}
       {showHouseRenameModal && renderHouseRenameModal()}
