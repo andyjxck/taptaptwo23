@@ -3338,7 +3338,7 @@ if (lastActive && !isNaN(lastActive)) {
                 {leaderboardType === "house" && (
                   <div className="text-xs text-white-300" style={{ lineHeight: "1.2" }}>
                     {entry.house_name
-                      ? `${entry.house_name} — Level ${entry.house_level}`
+                      ? `${entry.house_name}
                       : "No House"}
                   </div>
                 )}
