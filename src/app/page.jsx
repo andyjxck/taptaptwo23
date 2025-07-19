@@ -788,7 +788,7 @@ useEffect(() => {
   const [pendingOfflineEarnings, setPendingOfflineEarnings] = useState(null);
   const [lastTapTimes, setLastTapTimes] = useState([]);
   const [showResetModal, setShowResetModal] = useState(false);
-  const [showMaddoxModal, setShowMaddoxModal] = useState(false
+  const [showMaddoxModal, setShowMaddoxModal] = useState(false);
    const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
 useEffect(() => {
