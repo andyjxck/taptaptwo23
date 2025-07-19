@@ -12,11 +12,6 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <>
-      {/* This fixes Quirks Mode */}
-      <Script id="doctype-fix" strategy="beforeInteractive">
-        {`<!DOCTYPE html>`}
-      </Script>
-
       <html lang="en">
         <head>
           <link
