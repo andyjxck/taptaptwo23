@@ -51,8 +51,8 @@ function MainComponent() {
           lineHeight: 1.6,
         }}
       >
-        Hey everyone! We’ve got a fresh update to share. It’s a big milestone as
-        we’re now fully independent and running from our very own domain,{" "}
+        Hey everyone! I’ve got a fresh update to share. It’s a big milestone as
+        I’m now fully independent and running from my very own domain,{" "}
         <b>taptaptwo.co.uk</b>! 🚀
       </p>
 
@@ -73,7 +73,7 @@ function MainComponent() {
 
       <p style={{ marginBottom: "1.25rem" }}>
         As part of this move, some player stats have been{" "}
-        <b>reset to zero</b>. We understand this can be a bit of a reset shakeup,
+        <b>reset to zero</b>. I understand this can be a bit of a reset shakeup,
         but don’t worry — every player has been gifted{" "}
         <span style={{ color: "#a78bfa", fontWeight: "700" }}>100 renown tokens</span> 🎁 to explore the
         revamped shop and unlock some exciting new themes.
@@ -86,8 +86,8 @@ function MainComponent() {
       </p>
 
       <p>
-        Thank you for your continued support as we take TapTapTwo to the next
-        level. We’re just getting started — stay tuned for more updates and
+        Thank you for your continued support as I take TapTapTwo to the next
+        level. I'm just getting started — stay tuned for more updates and
         cool features coming soon!
       </p>
 
@@ -133,7 +133,7 @@ function MainComponent() {
           >
             Hi everyone! This dev log marks the largest single expansion in the
             history of TapTapTwo. Nearly every system in the game has seen new
-            content, features, polish, or critical backend improvements. We've
+            content, features, polish, or critical backend improvements. I've
             been at it non-stop for the last couple of days—read on for every
             detail!
           </p>
@@ -184,7 +184,7 @@ function MainComponent() {
           </h3>
           <ul style={{ paddingLeft: "1.25rem", marginBottom: "1.5rem" }}>
             <li>
-              After many requests, we've rolled out a{" "}
+              After many requests, I've rolled out a{" "}
               <b>promo/reward code system</b>. You'll now find a special code
               entry box on the home screen, letting you redeem limited-time and
               exclusive codes for instant in-game bonuses.
@@ -196,7 +196,7 @@ function MainComponent() {
               supported.
             </li>
             <li>
-              <b>Note:</b> We are not publicly listing all promo codes yet—keep
+              <b>Note:</b> I am not publicly listing all promo codes yet—keep
               your eyes peeled on our Discord, future dev logs, and (maybe) some
               YouTube collaborations!
             </li>
@@ -211,7 +211,7 @@ function MainComponent() {
               and community creator collaboration with <b>Maddox</b>!
             </li>
             <li>
-              To celebrate, we've added an exclusive, animated "Maddox Football
+              To celebrate, I've added an exclusive, animated "Maddox Football
               Stadium" theme and matching Maddox profile icon. These can be
               earned in-game and really show off if you're an OG supporter.
             </li>
@@ -240,7 +240,7 @@ function MainComponent() {
           <ul style={{ paddingLeft: "1.25rem", marginBottom: "1.5rem" }}>
             <li>
               <b>Massive theme expansion:</b> Every season (Spring, Summer,
-              Autumn, Winter) now has a completely unique background, and we've
+              Autumn, Winter) now has a completely unique background, and I've
               added a whole gallery of special themes including City Night,
               Midnight, Island, Barn, and more.
             </li>
