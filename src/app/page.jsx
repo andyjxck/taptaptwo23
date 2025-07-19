@@ -1586,73 +1586,7 @@ const [showNoticeboard, setShowNoticeboard] = useState(true);
     : {
         backgroundImage: themeObj.background,
       };
-function NoticeboardModal({ entry, onClose }) {
-  useEffect(() => {
-    // Lock background scroll
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = originalOverflow; };
-  }, []);
-
-  if (!entry) return null;
-
-  return (
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60"
-      style={{
-        // Only modal is scrollable if content overflows, not overlay
-        pointerEvents: "auto",
-      }}
-      onClick={onClose}
-    >
-      <div
-        className="relative bg-gradient-to-br from-purple-400/60 via-purple-200/40 to-purple-600/70
-          backdrop-blur-xl rounded-2xl p-6 max-w-lg w-full border border-white/30 shadow-lg flex flex-col"
-        style={{
-          boxShadow: "0 8px 32px 0 rgba(124,58,237,0.25)",
-          WebkitBackdropFilter: "blur(16px)",
-          fontFamily: "'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-          color: "#6b5bd7",
-          maxHeight: "90vh",
-          overflow: "auto",
-        }}
-        onClick={e => e.stopPropagation()}
-        tabIndex={0}
-      >
-        <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#9f7aea]">
-          Flash Notice
-        </h2>
-
-        <div
-          style={{
-            flex: 1,
-            minHeight: 0,
-            overflowY: "auto",
-            paddingRight: 8,
-            maxHeight: "60vh",
-          }}
-        >
-          {entry.content}
-        </div>
-
-        <button
-          className="mt-4 self-center px-6 py-2 rounded-full bg-purple-700/90 text-white font-semibold
-            hover:bg-purple-800 transition"
-          onClick={e => {
-            e.stopPropagation();
-            onClose();
-          }}
-          aria-label="Close noticeboard"
-          style={{ userSelect: "none" }}
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  );
-}
-
-  function equipShopBoost(boost) {
+v  function equipShopBoost(boost) {
     setActiveShopBoosts((prev) => {
       if (prev.some((b) => b.id === boost.id)) return prev;
       const newBoosts = [
