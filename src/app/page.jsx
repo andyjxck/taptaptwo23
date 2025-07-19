@@ -808,68 +808,6 @@ useEffect(() => {
   const [bonusCooldown, setBonusCooldown] = useState(0);
   const DISCOUNT_FACTOR = 0.8; // 20% discount
 
-const [noticeboardEntry, setNoticeboardEntry] = useState({
-  id: 9,
-  title: "Dev Log #9 - 19/07/25",
-  content: (
-    <div
-      style={{
-        fontFamily:
-          "'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-        lineHeight: 1.7,
-        color: "#2d3748",
-        fontSize: "1.05rem",
-        letterSpacing: "0.02em",
-      }}
-    >
-      <p
-        style={{
-          fontStyle: "italic",
-          color: "#666666",
-          fontSize: "0.97rem",
-          marginBottom: "1.5rem",
-          maxWidth: "90%",
-          lineHeight: 1.6,
-        }}
-      >
-        Hey everyone! We’ve got a fresh update to share. It’s a big milestone as
-        we’re now fully independent and running from our very own domain,{" "}
-        <b>taptaptwo.co.uk</b>! 🚀
-      </p>
-
-      <h2
-        style={{
-          fontFamily: "'Crimson Text', serif",
-          fontWeight: 700,
-          fontSize: "2.2rem",
-          color: "#7c3aed",
-          letterSpacing: "0.05em",
-          margin: 0,
-          marginBottom: "2rem",
-          textAlign: "left",
-        }}
-      >
-        First Great Reset
-      </h2>
-
-      <p style={{ marginBottom: "1.25rem" }}>
-        As part of this move, some player stats have been{" "}
-        <b>reset to zero</b>. We understand this can be a bit of a reset shakeup,
-        but don’t worry — every player has been gifted{" "}
-        <span style={{ color: "#a78bfa", fontWeight: "700" }}>100 renown tokens</span> 🎁 to explore the
-        revamped shop and unlock some exciting new themes.
-      </p>
-
-      <p style={{ marginBottom: "1.25rem" }}>
-        To sweeten the deal, there’s also a{" "}
-        <span style={{ color: "#7c3aed", fontWeight: "700" }}>discount on items</span> in the shop for a limited
-        time — making it easier to gear up and enjoy the new content.
-      </p>
-    </div>
-  ),
-});
-const [showNoticeboard, setShowNoticeboard] = useState(true);
-
   const getNewWeather = useCallback(() => {
     const season = gameState.currentSeason ?? 0;
     const weatherOptions =
@@ -1567,66 +1505,7 @@ const [showNoticeboard, setShowNoticeboard] = useState(true);
     : {
         backgroundImage: themeObj.background,
       };
-function NoticeboardModal({ entry, onClose }) {
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, []);
 
-  if (!entry) return null;
-
-  return (
-    <div
-      className="fixed inset-0 z-[99999] bg-black/60"
-      style={{ pointerEvents: "auto" }}
-      onClick={onClose}
-    >
-      <div
-        className="absolute left-1/2 top-16 -translate-x-1/2 bg-gradient-to-br from-purple-400/60 via-purple-200/40 to-purple-600/70
-          backdrop-blur-xl rounded-2xl p-6 max-w-lg w-full border border-white/30 shadow-lg"
-        style={{
-          boxShadow: "0 8px 32px 0 rgba(124,58,237,0.25)",
-          WebkitBackdropFilter: "blur(16px)",
-          color: "#6b5bd7",
-          maxHeight: "70vh",
-          overflowY: "auto",
-          zIndex: 100000,
-          pointerEvents: "auto", // Ensure modal eats all events!
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#9f7aea]">
-          Flash Notice
-        </h2>
-        <div
-          style={{
-            overflowY: "auto",
-            maxHeight: "40vh",
-            paddingRight: 8,
-          }}
-        >
-          {entry.content}
-        </div>
-        <button
-          className="mt-4 self-center px-6 py-2 rounded-full bg-purple-700/90 text-white font-semibold hover:bg-purple-800 transition"
-          style={{ pointerEvents: "auto" }} // <-- ensures button itself can eat clicks
-          onClick={e => {
-            e.stopPropagation();
-            onClose();
-          }}
-          aria-label="Close noticeboard"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  );
-}
-
-
-
-  
  function equipShopBoost(boost) {
     setActiveShopBoosts((prev) => {
       if (prev.some((b) => b.id === boost.id)) return prev;
@@ -2296,7 +2175,7 @@ const loadGame = async () => {
         );
       }
 
- const lastActive = Number(localStorage.getItem("lastActiveTime"));
+const lastActive = Number(localStorage.getItem("lastActiveTime"));
 if (lastActive && !isNaN(lastActive)) {
   const now = Date.now();
   const seconds = Math.floor((now - lastActive) / 1000);
@@ -2312,8 +2191,6 @@ if (lastActive && !isNaN(lastActive)) {
       seconds: offlineSeconds,
       coins: coins,
     });
-    // DO NOT show earnings yet!
-    // We'll show them after the noticeboard is closed.
   }
   localStorage.removeItem("lastActiveTime");
 }
@@ -4992,10 +4869,7 @@ if (lastActive && !isNaN(lastActive)) {
               <div className="relative">
                 <button
   onClick={handleTap}
-  disabled={showNoticeboard}
-  className={`w-[200px] h-[200px] rounded-full ${glassStyle} bg-white/30 ${buttonGlow} transform active:scale-95 transition-all duration-200 relative overflow-hidden hover:shadow-2xl border border-white/30 group
-    ${showNoticeboard ? "opacity-60 pointer-events-none cursor-not-allowed" : ""}
-  `}
+  className={`w-[200px] h-[200px] rounded-full ${glassStyle} bg-white/30 ${buttonGlow} transform active:scale-95 transition-all duration-200 relative overflow-hidden hover:shadow-2xl border border-white/30 group`}
 >
   <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
   <div className="absolute inset-0 flex items-center justify-center">
@@ -5324,13 +5198,11 @@ if (lastActive && !isNaN(lastActive)) {
       {/* Game Tab Button */}
       <button
         onClick={() => setActiveTab("game")}
-        disabled={showNoticeboard}
         className={`
           px-6 py-3 rounded-xl transition-all duration-200
           ${activeTab === "game"
             ? "bg-white/40 text-[#2d3748] shadow-md"
             : "text-[#4a5568] hover:bg-white/20"}
-          ${showNoticeboard ? "opacity-60 pointer-events-none cursor-not-allowed" : ""}
         `}
       >
         <i className="fas fa-gamepad"></i>
@@ -5340,13 +5212,11 @@ if (lastActive && !isNaN(lastActive)) {
       {/* House Tab Button */}
       <button
         onClick={() => setActiveTab("house")}
-        disabled={showNoticeboard}
         className={`
           px-6 py-3 rounded-xl transition-all duration-200
           ${activeTab === "house"
             ? "bg-white/40 text-[#2d3748] shadow-md"
             : "text-[#4a5568] hover:bg-white/20"}
-          ${showNoticeboard ? "opacity-60 pointer-events-none cursor-not-allowed" : ""}
         `}
       >
         <i className="fas fa-home"></i>
@@ -5355,14 +5225,12 @@ if (lastActive && !isNaN(lastActive)) {
 
       <button
         onClick={() => setActiveTab("shop")}
-        disabled={showNoticeboard}
         className={`
           px-6 py-3 rounded-xl transition-all duration-200
           ${activeTab === "shop"
             ? "bg-white/40 text-[#e11d48] shadow-md"
             : "text-[#e11d48] hover:bg-white/20"}
           flex flex-col items-center justify-center
-          ${showNoticeboard ? "opacity-60 pointer-events-none cursor-not-allowed" : ""}
         `}
       >
         <i className="fas fa-store"></i>
@@ -5372,15 +5240,6 @@ if (lastActive && !isNaN(lastActive)) {
   </div>
 </div>
 
-{showNoticeboard && (
-  <NoticeboardModal
-    entry={noticeboardEntry}
-    onClose={() => {
-      setShowNoticeboard(false);
-      if (pendingOfflineEarnings) setShowOfflineEarnings(true);
-    }}
-  />
-)}
 
 
 
