@@ -3327,7 +3327,7 @@ const loadGame = async () => {
                 </span>
                 {/* House name and level under player name for house leaderboard */}
                 {leaderboardType === "house" && (
-                  <div className="text-xs text-gray-500" style={{ lineHeight: "1.2" }}>
+                  <div className="text-xs text-white-300" style={{ lineHeight: "1.2" }}>
                     {entry.house_name
                       ? `${entry.house_name} — Level ${entry.house_level}`
                       : "No House"}
