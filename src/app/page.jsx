@@ -1659,9 +1659,6 @@ function NoticeboardModal({ entry, onClose }) {
   );
 }
 
-export default NoticeboardModal;
-
-
   function equipShopBoost(boost) {
     setActiveShopBoosts((prev) => {
       if (prev.some((b) => b.id === boost.id)) return prev;
