@@ -5342,7 +5342,7 @@ if (lastActive && !isNaN(lastActive)) {
         </div>
       </div>
 
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2">
+<div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[9999]">
         <div
           className={`${glassStyle} bg-white/20 rounded-2xl ${buttonGlow} p-2`}
         >
