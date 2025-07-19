@@ -4648,7 +4648,7 @@ if (lastActive && !isNaN(lastActive)) {
   }
   return (
 <div
-  className={`relative min-h-screen transition-colors duration-1000 pb-24
+  className={`relative min-h-screen transition-colors duration-1000 pb-25
     ${gameState.currentWeather === "Sun" ? "sun-bright" : ""}
     ${gameState.currentWeather === "Windy" ? "windy-shake" : ""}
   `}
