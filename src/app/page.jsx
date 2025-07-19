@@ -5409,12 +5409,12 @@ onClick={() => {
           </div>
         </div>
       )}
-   {showWelcomeModal && (
-  <div className="fixed inset-x-0 top-0 z-50 bg-black/60 flex justify-center p-4">
+ {showWelcomeModal && (
+  <div className="fixed inset-x-0 top-0 z-50 flex justify-center p-4 pointer-events-none">
     <div
       className="
         bg-gradient-to-br from-purple-400/50 via-purple-200/40 to-purple-600/60
-        backdrop-blur-xl rounded-2xl p-7 max-w-sm w-full border border-white/30 shadow-lg relative
+        backdrop-blur-xl rounded-2xl p-7 max-w-sm w-full border border-white/30 shadow-lg relative pointer-events-auto
       "
       style={{
         background:
@@ -5439,7 +5439,7 @@ onClick={() => {
 
       <div className="flex justify-center">
         <button
-          onClick={() => setShowAnnouncementModal(false)}
+          onClick={() => setShowWelcomeModal(false)}
           className="px-4 py-2 rounded-lg bg-purple-700 hover:bg-purple-800 text-white transition"
         >
           Close
