@@ -679,39 +679,53 @@ async function handler({
       };
     }
 
-    // get leaderboard logic
-    if (action === "getLeaderboard") {
-      const topCoins = await sql`
-        SELECT l.user_id, l.total_coins_earned, g.profile_name, g.profile_icon
-        FROM leaderboard l
-        LEFT JOIN game_saves g ON l.user_id = g.user_id
-        ORDER BY l.total_coins_earned DESC
-        LIMIT 10
-      `;
+if (action === "getLeaderboard") {
+  const topCoins = await sql`
+    SELECT l.user_id, l.total_coins_earned, g.profile_name, g.profile_icon
+    FROM leaderboard l
+    LEFT JOIN game_saves g ON l.user_id = g.user_id
+    ORDER BY l.total_coins_earned DESC
+    LIMIT 10
+  `;
 
-      const topRenown = await sql`
-        SELECT l.user_id, g.renown_tokens, g.profile_name, g.profile_icon
-        FROM leaderboard l
-        LEFT JOIN game_saves g ON l.user_id = g.user_id
-        ORDER BY g.renown_tokens DESC
-        LIMIT 10
-      `;
+  const topRenown = await sql`
+    SELECT l.user_id, g.renown_tokens, g.profile_name, g.profile_icon
+    FROM leaderboard l
+    LEFT JOIN game_saves g ON l.user_id = g.user_id
+    ORDER BY g.renown_tokens DESC
+    LIMIT 10
+  `;
 
-      return {
-        coins: topCoins.map((row) => ({
-          user_id: row.user_id,
-          total_coins_earned: row.total_coins_earned,
-          profile_name: row.profile_name || "Player",
-          profile_icon: row.profile_icon || null,
-        })),
-        renown: topRenown.map((row) => ({
-          user_id: row.user_id,
-          renown_tokens: row.renown_tokens,
-          profile_name: row.profile_name || "Player",
-          profile_icon: row.profile_icon || null,
-        })),
-      };
-    }
+  const topHouse = await sql`
+    SELECT g.user_id, g.profile_name, g.profile_icon, g.house_name, g.house_level
+    FROM game_saves g
+    WHERE g.house_name IS NOT NULL AND g.house_level IS NOT NULL
+    ORDER BY g.house_level DESC
+    LIMIT 10
+  `;
+
+  return {
+    coins: topCoins.map((row) => ({
+      user_id: row.user_id,
+      total_coins_earned: row.total_coins_earned,
+      profile_name: row.profile_name || "Player",
+      profile_icon: row.profile_icon || null,
+    })),
+    renown: topRenown.map((row) => ({
+      user_id: row.user_id,
+      renown_tokens: row.renown_tokens,
+      profile_name: row.profile_name || "Player",
+      profile_icon: row.profile_icon || null,
+    })),
+    house: topHouse.map((row) => ({
+      user_id: row.user_id,
+      profile_name: row.profile_name || "Player",
+      profile_icon: row.profile_icon || null,
+      house_name: row.house_name || "",
+      house_level: row.house_level || 0,
+    })),
+  };
+}
 
     // changePin logic
     if (action === "changePin") {
