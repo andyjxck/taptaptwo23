@@ -2019,7 +2019,7 @@ if (loading) {
     return () => clearInterval(interval);
   }, [activeBoost]);
 
-  useEffect(() => {
+useEffect(() => {
   fetch("/api/record-pageview", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -2027,9 +2027,11 @@ if (loading) {
       page_path: "/",
       user_agent: navigator.userAgent,
       referrer: document.referrer || null,
+      // id removed as requested
     }),
   });
 }, []);
+
 
 
   useEffect(() => {
