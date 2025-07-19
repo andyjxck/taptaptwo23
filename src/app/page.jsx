@@ -805,6 +805,86 @@ useEffect(() => {
   const [pendingBonus, setPendingBonus] = useState(null);
   const [showBonusModal, setShowBonusModal] = useState(false);
   const [bonusCooldown, setBonusCooldown] = useState(0);
+const [noticeboardEntry, setNoticeboardEntry] = useState({
+  id: 9,
+  title: "Dev Log #9 - 19/07/25",
+  content: (
+    <div
+      style={{
+        fontFamily:
+          "'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        lineHeight: 1.7,
+        color: "#2d3748",
+        fontSize: "1.05rem",
+        letterSpacing: "0.02em",
+      }}
+    >
+      <p
+        style={{
+          fontStyle: "italic",
+          color: "#666666",
+          fontSize: "0.97rem",
+          marginBottom: "1.5rem",
+          maxWidth: "90%",
+          lineHeight: 1.6,
+        }}
+      >
+        Hey everyone! We’ve got a fresh update to share. It’s a big milestone as
+        we’re now fully independent and running from our very own domain,{" "}
+        <b>taptaptwo.co.uk</b>! 🚀
+      </p>
+
+      <h2
+        style={{
+          fontFamily: "'Crimson Text', serif",
+          fontWeight: 700,
+          fontSize: "2.2rem",
+          color: "#7c3aed",
+          letterSpacing: "0.05em",
+          margin: 0,
+          marginBottom: "2rem",
+          textAlign: "left",
+        }}
+      >
+        First Great Reset
+      </h2>
+
+      <p style={{ marginBottom: "1.25rem" }}>
+        As part of this move, some player stats have been{" "}
+        <b>reset to zero</b>. We understand this can be a bit of a reset shakeup,
+        but don’t worry — every player has been gifted{" "}
+        <span style={{ color: "#a78bfa", fontWeight: "700" }}>100 renown tokens</span> 🎁 to explore the
+        revamped shop and unlock some exciting new themes.
+      </p>
+
+      <p style={{ marginBottom: "1.25rem" }}>
+        To sweeten the deal, there’s also a{" "}
+        <span style={{ color: "#7c3aed", fontWeight: "700" }}>discount on items</span> in the shop for a limited
+        time — making it easier to gear up and enjoy the new content.
+      </p>
+
+      <p>
+        Thank you for your continued support as we take TapTapTwo to the next
+        level. We’re just getting started — stay tuned for more updates and
+        cool features coming soon!
+      </p>
+
+      <p
+        style={{
+          fontStyle: "italic",
+          color: "#666666",
+          fontSize: "0.97rem",
+          marginTop: "2rem",
+        }}
+      >
+        Happy tapping! 🎉
+        <br />
+        Andy
+      </p>
+    </div>
+  ),
+});
+const [showNoticeboard, setShowNoticeboard] = useState(true);
 
   const getNewWeather = useCallback(() => {
     const season = gameState.currentSeason ?? 0;
@@ -1503,6 +1583,47 @@ useEffect(() => {
     : {
         backgroundImage: themeObj.background,
       };
+
+  
+function NoticeboardModal({ entry, onClose }) {
+  if (!entry) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center pt-24 bg-black/60"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-gradient-to-br from-purple-400/60 via-purple-200/40 to-purple-600/70
+          backdrop-blur-xl rounded-2xl p-8 max-w-lg w-full border border-white/30 shadow-lg relative"
+        style={{
+          boxShadow: "0 8px 32px 0 rgba(124,58,237,0.25)",
+          WebkitBackdropFilter: "blur(16px)",
+          fontFamily: "'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+          color: "#2d3748",
+          letterSpacing: "0.02em",
+          lineHeight: 1.6,
+        }}
+      >
+        <h2 className="text-2xl font-crimson-text mb-6 text-[#7c3aed] text-center">
+          Flash Notice
+        </h2>
+
+        <div>{entry.content}</div>
+
+        <button
+          className="absolute top-4 right-4 px-4 py-1 rounded-full bg-purple-700/90 text-white font-semibold
+            hover:bg-purple-800 transition"
+          onClick={onClose}
+          aria-label="Close noticeboard"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
 
   function equipShopBoost(boost) {
     setActiveShopBoosts((prev) => {
@@ -5180,6 +5301,14 @@ const loadGame = async () => {
           </div>
         </div>
       </div>
+
+      {showNoticeboard && (
+  <NoticeboardModal
+    entry={noticeboardEntry}
+    onClose={() => setShowNoticeboard(false)}
+  />
+)}
+
 
       {showResetModal && renderResetModal()}
       {showHouseRenameModal && renderHouseRenameModal()}
