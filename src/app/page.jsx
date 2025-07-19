@@ -5005,41 +5005,44 @@ if (lastActive && !isNaN(lastActive)) {
             <div className="flex flex-col items-center justify-center space-y-6">
               <div className="relative">
                 <button
-                  onClick={handleTap}
-                  className={`w-[200px] h-[200px] rounded-full ${glassStyle} bg-white/30 ${buttonGlow} transform active:scale-95 transition-all duration-200 relative overflow-hidden hover:shadow-2xl border border-white/30 group`}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div
-                      className={`w-32 h-32 bg-gradient-to-r ${
-                        gameState.equippedTheme &&
-                        gameState.equippedTheme !== "seasons"
-                          ? CUSTOM_THEMES[gameState.equippedTheme]?.buttonGlow
-                          : SEASONAL_THEMES[gameState.currentSeason].buttonGlow
-                      } rounded-full animate-pulse opacity-50`}
-                    ></div>
-                  </div>
-                  {gameState.equippedTheme &&
-                  gameState.equippedTheme !== "seasons" ? (
-                    <span className="text-6xl relative z-10 select-none">
-                      {CUSTOM_THEMES[gameState.equippedTheme]?.icon || "❓"}
-                    </span>
-                  ) : (
-                    <i
-                      className={`fas ${
-                        SEASONAL_THEMES[gameState.currentSeason].icon
-                      } text-6xl relative z-10 ${
-                        gameState.currentSeason === 0
-                          ? "text-green-400"
-                          : gameState.currentSeason === 1
-                          ? "text-yellow-400"
-                          : gameState.currentSeason === 2
-                          ? "text-orange-400"
-                          : "text-blue-400"
-                      } transition-colors duration-500 group-hover:scale-110 transform`}
-                    />
-                  )}
-                </button>
+  onClick={handleTap}
+  disabled={showNoticeboard}
+  className={`w-[200px] h-[200px] rounded-full ${glassStyle} bg-white/30 ${buttonGlow} transform active:scale-95 transition-all duration-200 relative overflow-hidden hover:shadow-2xl border border-white/30 group
+    ${showNoticeboard ? "opacity-60 pointer-events-none cursor-not-allowed" : ""}
+  `}
+>
+  <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
+  <div className="absolute inset-0 flex items-center justify-center">
+    <div
+      className={`w-32 h-32 bg-gradient-to-r ${
+        gameState.equippedTheme &&
+        gameState.equippedTheme !== "seasons"
+          ? CUSTOM_THEMES[gameState.equippedTheme]?.buttonGlow
+          : SEASONAL_THEMES[gameState.currentSeason].buttonGlow
+      } rounded-full animate-pulse opacity-50`}
+    ></div>
+  </div>
+  {gameState.equippedTheme &&
+  gameState.equippedTheme !== "seasons" ? (
+    <span className="text-6xl relative z-10 select-none">
+      {CUSTOM_THEMES[gameState.equippedTheme]?.icon || "❓"}
+    </span>
+  ) : (
+    <i
+      className={`fas ${
+        SEASONAL_THEMES[gameState.currentSeason].icon
+      } text-6xl relative z-10 ${
+        gameState.currentSeason === 0
+          ? "text-green-400"
+          : gameState.currentSeason === 1
+          ? "text-yellow-400"
+          : gameState.currentSeason === 2
+          ? "text-orange-400"
+          : "text-blue-400"
+      } transition-colors duration-500 group-hover:scale-110 transform`}
+    />
+  )}
+</button>
 
                 {hasBoost && (
                   <div className="absolute -top-2 -right-2 bg-pink-400 text-white rounded-full px-2 py-1 text-xs">
@@ -5329,52 +5332,59 @@ if (lastActive && !isNaN(lastActive)) {
           ) : null}
         </div>
       </div>
+<div className="fixed bottom-6 left-1/2 transform -translate-x-1/2">
+  <div className={`${glassStyle} bg-white/20 rounded-2xl ${buttonGlow} p-2`}>
+    <div className="flex space-x-4">
+      {/* Game Tab Button */}
+      <button
+        onClick={() => setActiveTab("game")}
+        disabled={showNoticeboard}
+        className={`
+          px-6 py-3 rounded-xl transition-all duration-200
+          ${activeTab === "game"
+            ? "bg-white/40 text-[#2d3748] shadow-md"
+            : "text-[#4a5568] hover:bg-white/20"}
+          ${showNoticeboard ? "opacity-60 pointer-events-none cursor-not-allowed" : ""}
+        `}
+      >
+        <i className="fas fa-gamepad"></i>
+        <span className="block text-xs mt-1">Game</span>
+      </button>
 
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2">
-        <div
-          className={`${glassStyle} bg-white/20 rounded-2xl ${buttonGlow} p-2`}
-        >
-          <div className="flex space-x-4">
-            {/* Game Tab Button */}
-            <button
-              onClick={() => setActiveTab("game")}
-              className={`px-6 py-3 rounded-xl transition-all duration-200 ${
-                activeTab === "game"
-                  ? "bg-white/40 text-[#2d3748] shadow-md"
-                  : "text-[#4a5568] hover:bg-white/20"
-              }`}
-            >
-              <i className="fas fa-gamepad"></i>
-              <span className="block text-xs mt-1">Game</span>
-            </button>
+      {/* House Tab Button */}
+      <button
+        onClick={() => setActiveTab("house")}
+        disabled={showNoticeboard}
+        className={`
+          px-6 py-3 rounded-xl transition-all duration-200
+          ${activeTab === "house"
+            ? "bg-white/40 text-[#2d3748] shadow-md"
+            : "text-[#4a5568] hover:bg-white/20"}
+          ${showNoticeboard ? "opacity-60 pointer-events-none cursor-not-allowed" : ""}
+        `}
+      >
+        <i className="fas fa-home"></i>
+        <span className="block text-xs mt-1">House</span>
+      </button>
 
-            {/* House Tab Button */}
-            <button
-              onClick={() => setActiveTab("house")}
-              className={`px-6 py-3 rounded-xl transition-all duration-200 ${
-                activeTab === "house"
-                  ? "bg-white/40 text-[#2d3748] shadow-md"
-                  : "text-[#4a5568] hover:bg-white/20"
-              }`}
-            >
-              <i className="fas fa-home"></i>
-              <span className="block text-xs mt-1">House</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("shop")}
-              className={`px-6 py-3 rounded-xl transition-all duration-200 ${
-                activeTab === "shop"
-                  ? "bg-white/40 text-[#e11d48] shadow-md"
-                  : "text-[#e11d48] hover:bg-white/20"
-              } flex flex-col items-center justify-center`}
-            >
-              <i className="fas fa-store"></i>
-              <span className="block text-xs mt-1">Shop</span>
-            </button>
-          </div>
-        </div>
-      </div>
+      <button
+        onClick={() => setActiveTab("shop")}
+        disabled={showNoticeboard}
+        className={`
+          px-6 py-3 rounded-xl transition-all duration-200
+          ${activeTab === "shop"
+            ? "bg-white/40 text-[#e11d48] shadow-md"
+            : "text-[#e11d48] hover:bg-white/20"}
+          flex flex-col items-center justify-center
+          ${showNoticeboard ? "opacity-60 pointer-events-none cursor-not-allowed" : ""}
+        `}
+      >
+        <i className="fas fa-store"></i>
+        <span className="block text-xs mt-1">Shop</span>
+      </button>
+    </div>
+  </div>
+</div>
 
 {showNoticeboard && (
   <NoticeboardModal
