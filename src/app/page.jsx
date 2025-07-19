@@ -665,6 +665,7 @@ function MainComponent() {
   const [pin, setPin] = useState(null);
   const [showWeatherFlash, setShowWeatherFlash] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [showChangePinModal, setShowChangePinModal] = useState(false);
   const [currentPinInput, setCurrentPinInput] = useState("");
   const [newPinInput, setNewPinInput] = useState("");
@@ -1636,6 +1637,13 @@ useEffect(() => {
       });
       return () => timers.forEach((t) => clearTimeout(t));
     }, [stars]);
+if (loading) {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
+      <div className="text-white text-xl">Loading game, please wait...</div>
+    </div>
+  );
+}
 
     return (
       <div
@@ -2066,136 +2074,137 @@ useEffect(() => {
     </div>
   );
 
-  const loadGame = async () => {
-    if (!userId || !pin) return;
+const loadGame = async () => {
+  setLoading(true); // Show loading overlay
 
-    try {
-      const response = await fetch("/api/game-state", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: parseInt(userId, 10), pin, action: "load" }),
+  if (!userId || !pin) {
+    setLoading(false);
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/game-state", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: parseInt(userId, 10), pin, action: "load" }),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        localStorage.removeItem("userId");
+        localStorage.removeItem("pin");
+        window.location.href = "/login";
+        setLoading(false);
+        return;
+      }
+      throw new Error("Failed to load game state");
+    }
+
+    const data = await response.json();
+    if (data.gameState) {
+      setGameState({
+        ...data.gameState,
+        coins: Number(data.gameState.coins),
+        tapPower: Number(data.gameState.tap_power),
+        tapPowerUpgrades: Number(data.gameState.tap_power_upgrades) || 0,
+        autoTapper: Number(data.gameState.auto_tapper),
+        autoTapperUpgrades: Number(data.gameState.auto_tapper_upgrades) || 0,
+        critChance: Number(data.gameState.crit_chance),
+        critChanceUpgrades: Number(data.gameState.crit_chance_upgrades) || 0,
+        tapSpeedBonus: Number(data.gameState.tap_speed_bonus),
+        tapSpeedBonusUpgrades:
+          Number(data.gameState.tap_speed_bonus_upgrades) || 0,
+        totalTaps: Number(data.gameState.total_taps),
+        totalCoinsEarned: Number(data.gameState.total_coins_earned),
+        resets: Number(data.gameState.resets),
+        permanentMultiplier: Number(data.gameState.permanent_multiplier),
+        currentSeason: Number(data.gameState.current_season),
+        houseLevel: Number(data.gameState.house_level),
+        houseCoinsMultiplier: Number(data.gameState.house_coins_multiplier),
+        hasFirstReset: Boolean(data.gameState.has_first_reset),
+        currentWeather: data.gameState.current_weather || "Clear",
+        currentYear: Number(data.gameState.current_year) || 0,
+        houseName: data.gameState.house_name || "My Cozy Home",
+        profileName: data.gameState.profile_name || "Player",
+        coinsEarnedThisRun: Number(data.gameState.coins_earned_this_run) || 0,
+        renownTokens:
+          Number(
+            data.gameState.renownTokens ?? data.gameState.renown_tokens
+          ) || 0,
       });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem("userId");
-          localStorage.removeItem("pin");
-          window.location.href = "/login";
-          return;
+      // Handle quests and offline earnings as before...
+
+      if (data.gameState.currentQuest) {
+        const quest = data.gameState.currentQuest;
+        const questTemplate = QUEST_TEMPLATES.find((q) => q.id === quest.id);
+
+        let isComplete = false;
+        if (questTemplate) {
+          isComplete = questTemplate.check(data.gameState, quest);
         }
-        throw new Error("Failed to load game state");
-      }
 
-      const data = await response.json();
-      if (data.gameState) {
-        setGameState({
-          ...data.gameState,
-          coins: Number(data.gameState.coins),
-          tapPower: Number(data.gameState.tap_power),
-          tapPowerUpgrades: Number(data.gameState.tap_power_upgrades) || 0,
-          autoTapper: Number(data.gameState.auto_tapper),
-          autoTapperUpgrades: Number(data.gameState.auto_tapper_upgrades) || 0,
-          critChance: Number(data.gameState.crit_chance),
-          critChanceUpgrades: Number(data.gameState.crit_chance_upgrades) || 0,
-          tapSpeedBonus: Number(data.gameState.tap_speed_bonus),
-          tapSpeedBonusUpgrades:
-            Number(data.gameState.tap_speed_bonus_upgrades) || 0,
-          totalTaps: Number(data.gameState.total_taps),
-          totalCoinsEarned: Number(data.gameState.total_coins_earned),
-          resets: Number(data.gameState.resets),
-          permanentMultiplier: Number(data.gameState.permanent_multiplier),
-          currentSeason: Number(data.gameState.current_season),
-          houseLevel: Number(data.gameState.house_level),
-          houseCoinsMultiplier: Number(data.gameState.house_coins_multiplier),
-          hasFirstReset: Boolean(data.gameState.has_first_reset),
-          currentWeather: data.gameState.current_weather || "Clear",
-          currentYear: Number(data.gameState.current_year) || 0,
-          houseName: data.gameState.house_name || "My Cozy Home",
-          profileName: data.gameState.profile_name || "Player",
-          coinsEarnedThisRun: Number(data.gameState.coins_earned_this_run) || 0,
-          renownTokens:
-            Number(
-              data.gameState.renownTokens ?? data.gameState.renown_tokens
-            ) || 0,
-        });
-        // After setGameState({ ...data.gameState ... }) inside loadGame:
-
-        if (data.gameState.currentQuest) {
-          const quest = data.gameState.currentQuest;
-          const questTemplate = QUEST_TEMPLATES.find((q) => q.id === quest.id);
-
-          // Evaluate progress correctly
-          let isComplete = false;
-          if (questTemplate) {
-            isComplete = questTemplate.check(data.gameState, quest);
-          }
-
-          if (isComplete) {
-            // Generate a new quest with the new startLevel, using current upgrade value
-            const newQuest = generateQuest(data.gameState);
-            setCurrentQuest(newQuest);
-            setCanClaimQuest(false);
-            // Optionally, update backend
-            saveGame({
-              ...data.gameState,
-              currentQuest: newQuest,
-              canClaimQuest: false,
-            });
-          } else {
-            setCurrentQuest(quest);
-            setCanClaimQuest(data.gameState.canClaimQuest ?? false);
-          }
-        } else {
-          // New user or no quest in DB
+        if (isComplete) {
           const newQuest = generateQuest(data.gameState);
           setCurrentQuest(newQuest);
           setCanClaimQuest(false);
+          saveGame({
+            ...data.gameState,
+            currentQuest: newQuest,
+            canClaimQuest: false,
+          });
+        } else {
+          setCurrentQuest(quest);
+          setCanClaimQuest(data.gameState.canClaimQuest ?? false);
         }
+      } else {
+        const newQuest = generateQuest(data.gameState);
+        setCurrentQuest(newQuest);
+        setCanClaimQuest(false);
+      }
 
-        if (data.gameState.lastDailyClaim) {
-          setLastDailyClaim(Number(data.gameState.lastDailyClaim));
-          localStorage.setItem(
-            "lastDailyClaim",
-            String(data.gameState.lastDailyClaim)
-          );
+      if (data.gameState.lastDailyClaim) {
+        setLastDailyClaim(Number(data.gameState.lastDailyClaim));
+        localStorage.setItem(
+          "lastDailyClaim",
+          String(data.gameState.lastDailyClaim)
+        );
+      }
+
+      const lastActive = Number(localStorage.getItem("lastActiveTime"));
+      if (lastActive && !isNaN(lastActive)) {
+        const now = Date.now();
+        const seconds = Math.floor((now - lastActive) / 1000);
+        if (seconds > 30) {
+          const maxSeconds = 3 * 60 * 60;
+          const offlineSeconds = Math.min(seconds, maxSeconds);
+          const coins =
+            getAutoTapper(
+              Number(data.gameState.auto_tapper),
+              activeShopBoosts
+            ) * offlineSeconds;
+          setPendingOfflineEarnings({
+            seconds: offlineSeconds,
+            coins: coins,
+          });
         }
+        localStorage.removeItem("lastActiveTime");
+      }
 
-        const lastActive = Number(localStorage.getItem("lastActiveTime"));
-        if (lastActive && !isNaN(lastActive)) {
-          const now = Date.now();
-          const seconds = Math.floor((now - lastActive) / 1000);
-          if (seconds > 30) {
-            const maxSeconds = 3 * 60 * 60;
-            const offlineSeconds = Math.min(seconds, maxSeconds);
-            const coins =
-              getAutoTapper(
-                Number(data.gameState.auto_tapper),
-                activeShopBoosts
-              ) * offlineSeconds;
-            setPendingOfflineEarnings({
-              seconds: offlineSeconds,
-              coins: coins,
-            });
-          }
-          localStorage.removeItem("lastActiveTime");
-        }
-
-        if (data.gameState.boost_active_until) {
-          const boostEnd = new Date(data.gameState.boost_active_until);
-          if (boostEnd > new Date()) {
-            setHasBoost(true);
-            setBoostTimeLeft(Math.floor((boostEnd - new Date()) / 1000));
-          }
+      if (data.gameState.boost_active_until) {
+        const boostEnd = new Date(data.gameState.boost_active_until);
+        if (boostEnd > new Date()) {
+          setHasBoost(true);
+          setBoostTimeLeft(Math.floor((boostEnd - new Date()) / 1000));
         }
       }
-    } catch (error) {
-      console.error("Error loading game:", error);
     }
-  };
-
-  useEffect(() => {
-    loadGame();
-  }, [userId, pin]);
+  } catch (error) {
+    console.error("Error loading game:", error);
+  } finally {
+    setLoading(false); // Hide loading overlay always at the end
+  }
+};
 
   useEffect(() => {
     if (canClaimDailyBonus(lastDailyClaim)) {
