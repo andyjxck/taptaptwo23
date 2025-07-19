@@ -1990,7 +1990,7 @@ if (loading) {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, []);  }, []);
 
   // QUEST PROGRESS CHECKER
   useEffect(() => {
