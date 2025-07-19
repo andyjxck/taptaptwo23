@@ -5216,7 +5216,7 @@ if (lastActive && !isNaN(lastActive)) {
           ) : null}
         </div>
       </div>
-<div className="fixed bottom-4 left-1/2 transform -translate-x-1/2">
+<div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-sm px-4 z-50 pointer-events-auto">
   <div className={`${glassStyle} bg-white/20 rounded-2xl ${buttonGlow} p-2`}>
     <div className="flex space-x-4">
       {/* Game Tab Button */}
