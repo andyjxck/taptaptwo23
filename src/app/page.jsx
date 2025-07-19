@@ -1586,42 +1586,35 @@ const [showNoticeboard, setShowNoticeboard] = useState(true);
     : {
         backgroundImage: themeObj.background,
       };
-
-
 function NoticeboardModal({ entry, onClose }) {
   useEffect(() => {
-    // Lock background scroll while modal open
+    // Lock background scroll
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
+    return () => { document.body.style.overflow = originalOverflow; };
   }, []);
 
   if (!entry) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/60 flex justify-center items-center"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60"
       style={{
-        padding: "24px 0",
-        overflowY: "auto",
+        // Only modal is scrollable if content overflows, not overlay
+        pointerEvents: "auto",
       }}
       onClick={onClose}
     >
       <div
-        className="bg-gradient-to-br from-purple-400/60 via-purple-200/40 to-purple-600/70
-          backdrop-blur-xl rounded-2xl p-6 max-w-lg w-full border border-white/30 shadow-lg relative flex flex-col"
+        className="relative bg-gradient-to-br from-purple-400/60 via-purple-200/40 to-purple-600/70
+          backdrop-blur-xl rounded-2xl p-6 max-w-lg w-full border border-white/30 shadow-lg flex flex-col"
         style={{
           boxShadow: "0 8px 32px 0 rgba(124,58,237,0.25)",
           WebkitBackdropFilter: "blur(16px)",
           fontFamily: "'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
           color: "#6b5bd7",
-          letterSpacing: "0.02em",
-          lineHeight: 1.6,
-          maxHeight: "80vh",
-          overflowY: "auto",
-          position: "relative",
+          maxHeight: "90vh",
+          overflow: "auto",
         }}
         onClick={e => e.stopPropagation()}
         tabIndex={0}
@@ -1630,13 +1623,13 @@ function NoticeboardModal({ entry, onClose }) {
           Flash Notice
         </h2>
 
-        {/* Scrollable content area */}
         <div
           style={{
+            flex: 1,
+            minHeight: 0,
             overflowY: "auto",
-            flexGrow: 1,
-            paddingRight: "8px",
-            maxHeight: "50vh",  // Make just the content scroll if it overflows
+            paddingRight: 8,
+            maxHeight: "60vh",
           }}
         >
           {entry.content}
