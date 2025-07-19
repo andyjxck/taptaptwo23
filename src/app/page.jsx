@@ -1601,6 +1601,7 @@ function NoticeboardModal({ entry, onClose }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center pt-24 bg-black/60"
+       style={{ overflowY: "auto" }} 
       onClick={onClose}
     >
       <div
@@ -1614,7 +1615,8 @@ function NoticeboardModal({ entry, onClose }) {
           color: "#6b5bd7", // lighter purple-gray text for readability
           letterSpacing: "0.02em",
           lineHeight: 1.6,
-          maxHeight: "75vh", // limit height
+            maxHeight: "80vh",           // add this
+        overflowY: "auto",  
         }}
       >
         <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#9f7aea]">
