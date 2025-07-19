@@ -1587,8 +1587,6 @@ const [showNoticeboard, setShowNoticeboard] = useState(true);
         backgroundImage: themeObj.background,
       };
 
-  
-import React, { useEffect } from "react";
 
 function NoticeboardModal({ entry, onClose }) {
   useEffect(() => {
