@@ -1227,12 +1227,6 @@ useEffect(() => {
   )
   }}
       </div>
-) : (
-  searchQuery && (
-    <p className="mt-4 text-center text-[#2d3748]">No user found with ID "{searchQuery}"</p>
-  )
-)}
-</div>
 
     {/* Pending Requests - ALWAYS SHOWN */}
     <div className="space-y-2 mb-6">
