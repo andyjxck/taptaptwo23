@@ -837,6 +837,7 @@ useEffect(() => {
   fetchFriendsList();
   fetchPendingRequests();
 }, []);
+  
 
 useEffect(() => {
   if (!userId) return;
