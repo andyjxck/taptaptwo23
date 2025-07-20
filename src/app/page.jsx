@@ -5488,6 +5488,7 @@ renderFriendsTab()
     <span className="block text-xs mt-1">Friends</span>
   </button>
 </div>
+  </div>
       {showResetModal && renderResetModal()}
       {showHouseRenameModal && renderHouseRenameModal()}
      {showOfflineEarnings && pendingOfflineEarnings && (
