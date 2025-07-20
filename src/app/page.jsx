@@ -1153,6 +1153,107 @@ useEffect(() => {
     }, 0);
   };
 
+  const renderFriendsTab = () => (
+  <div className={`${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow}`}>
+    <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#2d3748]">
+      Friends
+    </h2>
+
+    {/* Search */}
+    <div className="space-y-2 mb-6">
+      <input
+        type="text"
+        placeholder="Search user ID..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="w-full px-4 py-2 rounded-xl bg-white/40 border border-white/30 text-[#2d3748]"
+      />
+      <button
+        onClick={handleSearch}
+        className="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl"
+      >
+        Search
+      </button>
+
+      {searchResults.length > 0 && (
+        <div className="space-y-2 mt-2">
+          <h4 className="font-semibold text-[#2d3748]">Search Results:</h4>
+          {searchResults.map((user) => (
+            <div
+              key={user.user_id}
+              className="flex justify-between items-center bg-white/10 rounded-lg p-3"
+            >
+              <span className="text-[#2d3748]">
+                {user.profile_name || user.user_id}
+              </span>
+              <button
+                onClick={() => sendFriendRequest(user.user_id)}
+                className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+              >
+                Add
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+
+    {/* Pending Requests */}
+    {pendingRequests.length > 0 && (
+      <div className="space-y-2 mb-6">
+        <h4 className="font-semibold text-[#2d3748]">Pending Requests:</h4>
+        {pendingRequests.map((req) => (
+          <div
+            key={req.user_id}
+            className="flex justify-between items-center bg-yellow-100/20 rounded-lg p-3"
+          >
+            <span className="text-[#2d3748]">
+              {req.profile_name || req.user_id}
+            </span>
+            <button
+              onClick={() => acceptFriendRequest(req.user_id)}
+              className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+            >
+              Accept
+            </button>
+          </div>
+        ))}
+      </div>
+    )}
+
+    {/* Friends List */}
+    {friendsLoading && <p>Loading friends...</p>}
+    {friendError && <p className="text-red-500">{friendError}</p>}
+    {!friendsLoading && !friendError && friends.length === 0 && (
+      <p className="text-center text-[#2d3748]">No friends found.</p>
+    )}
+    {!friendsLoading && !friendError && friends.length > 0 && (
+      <div className="space-y-2">
+        <h4 className="font-semibold text-[#2d3748]">Your Friends:</h4>
+        {friends.map((friend) => (
+          <div
+            key={friend.friend_id}
+            className="flex justify-between items-center bg-white/10 rounded-lg p-3"
+          >
+            <div className="text-[#2d3748]">
+              <p className="font-medium">{friend.profile_name || 'Unknown'}</p>
+              <p className="text-xs">Taps: {friend.total_taps ?? 0}</p>
+              <p className="text-xs">Upgrades: {friend.combined_upgrade_level ?? 0}</p>
+              <p className="text-xs">Coins: {friend.total_coins_earned ?? 0}</p>
+            </div>
+            <button
+              onClick={() => removeFriend(friend.friend_id)}
+              className="text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+            >
+              Remove
+            </button>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+);
+
   const buyRegularItem = async ({ itemId, itemType, price, userId, pin }) => {
     if (!userId || !pin) {
       setNotification("You must be logged in to buy items.");
@@ -5455,106 +5556,6 @@ onClick={() => {
           </div>
         </div>
       )}
-const renderFriendsTab = () => (
-  <div className={`${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow}`}>
-    <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#2d3748]">
-      Friends
-    </h2>
-
-    {/* Search */}
-    <div className="space-y-2 mb-6">
-      <input
-        type="text"
-        placeholder="Search user ID..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="w-full px-4 py-2 rounded-xl bg-white/40 border border-white/30 text-[#2d3748]"
-      />
-      <button
-        onClick={handleSearch}
-        className="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl"
-      >
-        Search
-      </button>
-
-      {searchResults.length > 0 && (
-        <div className="space-y-2 mt-2">
-          <h4 className="font-semibold text-[#2d3748]">Search Results:</h4>
-          {searchResults.map((user) => (
-            <div
-              key={user.user_id}
-              className="flex justify-between items-center bg-white/10 rounded-lg p-3"
-            >
-              <span className="text-[#2d3748]">
-                {user.profile_name || user.user_id}
-              </span>
-              <button
-                onClick={() => sendFriendRequest(user.user_id)}
-                className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-              >
-                Add
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-
-    {/* Pending Requests */}
-    {pendingRequests.length > 0 && (
-      <div className="space-y-2 mb-6">
-        <h4 className="font-semibold text-[#2d3748]">Pending Requests:</h4>
-        {pendingRequests.map((req) => (
-          <div
-            key={req.user_id}
-            className="flex justify-between items-center bg-yellow-100/20 rounded-lg p-3"
-          >
-            <span className="text-[#2d3748]">
-              {req.profile_name || req.user_id}
-            </span>
-            <button
-              onClick={() => acceptFriendRequest(req.user_id)}
-              className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-            >
-              Accept
-            </button>
-          </div>
-        ))}
-      </div>
-    )}
-
-    {/* Friends List */}
-    {friendsLoading && <p>Loading friends...</p>}
-    {friendError && <p className="text-red-500">{friendError}</p>}
-    {!friendsLoading && !friendError && friends.length === 0 && (
-      <p className="text-center text-[#2d3748]">No friends found.</p>
-    )}
-    {!friendsLoading && !friendError && friends.length > 0 && (
-      <div className="space-y-2">
-        <h4 className="font-semibold text-[#2d3748]">Your Friends:</h4>
-        {friends.map((friend) => (
-          <div
-            key={friend.friend_id}
-            className="flex justify-between items-center bg-white/10 rounded-lg p-3"
-          >
-            <div className="text-[#2d3748]">
-              <p className="font-medium">{friend.profile_name || 'Unknown'}</p>
-              <p className="text-xs">Taps: {friend.total_taps ?? 0}</p>
-              <p className="text-xs">Upgrades: {friend.combined_upgrade_level ?? 0}</p>
-              <p className="text-xs">Coins: {friend.total_coins_earned ?? 0}</p>
-            </div>
-            <button
-              onClick={() => removeFriend(friend.friend_id)}
-              className="text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-            >
-              Remove
-            </button>
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-);
 
       {showHardResetModal && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
