@@ -5387,24 +5387,29 @@ onClick={() => {
         </div>
       )}
 {showFriendsList && (
-  <div className="friends-list-panel bg-white shadow-lg rounded-lg p-4 max-w-md mx-auto mt-4">
-    {friendsLoading && <p>Loading friends...</p>}
-    {friendError && <p className="text-red-500">{friendError}</p>}
-    {!friendsLoading && !friendError && friends.length === 0 && (
-      <p>No friends found.</p>
+      <div className="friends-list-panel bg-white shadow-lg rounded-lg p-4 max-w-md mx-auto mt-4">
+        {friendsLoading && <p>Loading friends...</p>}
+        {friendError && <p className="text-red-500">{friendError}</p>}
+        {!friendsLoading && !friendError && friends.length === 0 && (
+          <p>No friends found.</p>
+        )}
+        {!friendsLoading && !friendError && friends.length > 0 && (
+          // <-- PUT IT HERE
+          <div>
+            {friends.map((friend) => (
+              <div key={friend.friend_id} className="friend-card border p-3 rounded-lg shadow mb-3 bg-gray-50">
+                <h3 className="font-semibold text-lg">{friend.profile_name || 'Unknown'}</h3>
+                <p>User ID: {friend.friend_id}</p>
+                <p>Total Taps: {friend.total_taps ?? 0}</p>
+                <p>Upgrade Level: {friend.combined_upgrade_level ?? 0}</p>
+                <p>Total Coins: {friend.total_coins_earned ?? 0}</p>
+                <p>Last Online: {friend.last_online ? new Date(friend.last_online).toLocaleString() : 'Unknown'}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     )}
-    {!friendsLoading && !friendError && friends.length > 0 && (
-      <ul className="space-y-2">
-        {friends.map((friendId) => (
-          <li key={friendId} className="border-b border-gray-200 py-1">
-            {friendId}
-          </li>
-        ))}
-      </ul>
-    )}
-  </div>
-)}
-
       {showHardResetModal && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <div
