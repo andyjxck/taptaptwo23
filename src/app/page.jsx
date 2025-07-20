@@ -2152,12 +2152,11 @@ if (loading) {
   }, [activeBoost]);
 
 useEffect(() => {
-
 fetch("/api/record-pageview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        page_path: "/notice-board",
+        page_path: "/",
         user_id: userId || null,
         user_agent: navigator.userAgent,
         referrer: document.referrer || null,
