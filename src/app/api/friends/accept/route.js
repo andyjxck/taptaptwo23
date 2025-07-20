@@ -1,7 +1,9 @@
 // src/app/api/friends/accept/route.js
 
 import { NextResponse } from 'next/server';
-import db from '../../auth-handler/db'; // adjust if your db file path differs
+
+import db from '../../../auth-handler/db';
+
 
 export async function POST(req) {
   try {
