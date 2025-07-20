@@ -13,19 +13,28 @@ export async function GET(req) {
     }
 
     switch (action) {
-      case 'get': {
-        const userId = searchParams.get('userId');
-        if (!userId) {
-          return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
-        }
+    case 'get': {
+  const userId = searchParams.get('userId');
+  if (!userId) {
+    return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+  }
 
-        const result = await db.query(
-          `SELECT friend_id FROM friends WHERE user_id = $1 AND status = 'accepted'`,
-          [userId]
-        );
-        const friendIds = result.rows.map(row => row.friend_id);
-        return NextResponse.json({ friends: friendIds });
-      }
+  const result = await db.query(
+    `SELECT gs.user_id AS friend_id,
+            gs.profile_name,
+            gs.total_taps,
+            gs.combined_upgrade_level,
+            gs.total_coins_earned,
+            gs.last_online
+     FROM friends f
+     JOIN game_saves gs ON f.friend_id = gs.user_id
+     WHERE f.user_id = $1 AND f.status = 'accepted'`,
+    [userId]
+  );
+
+  return NextResponse.json({ friends: result.rows });
+}
+
 
       case 'pending': {
         const userId = searchParams.get('userId');
