@@ -2151,6 +2151,8 @@ if (loading) {
     return () => clearInterval(interval);
   }, [activeBoost]);
 
+useEffect(() => {
+
 fetch("/api/record-pageview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
