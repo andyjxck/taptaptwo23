@@ -1159,74 +1159,86 @@ useEffect(() => {
       Friends
     </h2>
 
-    {/* Search */}
-    <div className="space-y-2 mb-6">
-      <input
-        type="text"
-        placeholder="Search user ID..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="w-full px-4 py-2 rounded-xl bg-white/40 border border-white/30 text-[#2d3748]"
-      />
-      <button
-        onClick={handleSearch}
-        className="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl"
-      >
-        Search
-      </button>
-{searchResults.length > 0 ? (
-  <div className="space-y-4 mt-2">
-    <h4 className="font-semibold text-[#2d3748]">Search Results:</h4>
-    {searchResults.map((user) => (
-      <div
-        key={user.user_id}
-        className="flex items-center justify-between bg-white/20 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow duration-200"
-      >
-        <div className="flex items-center space-x-4">
-          {/* Render profile icon: either as <i> or <img> */}
-          {user.profile_icon && user.profile_icon.startsWith('fa') ? (
-            <i className={`${user.profile_icon} text-2xl text-purple-600`} aria-hidden="true"></i>
-          ) : user.profile_icon ? (
-            <img
-              src={user.profile_icon}
-              alt="Profile Icon"
-              className="w-12 h-12 rounded-full border-2 border-purple-600 object-cover"
-            />
-          ) : (
-            <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center border-2 border-purple-600">
-              <i className="fas fa-user text-purple-600"></i>
-            </div>
-          )}
+{/* Search */}
+<div className="space-y-2 mb-6">
+  <input
+    type="text"
+    placeholder="Search user ID..."
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+    className="w-full px-4 py-2 rounded-xl bg-white/40 border border-white/30 text-[#2d3748]"
+  />
+  <button
+    onClick={handleSearch}
+    className="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl"
+  >
+    Search
+  </button>
 
-          <div>
-            <p className="font-semibold text-[#2d3748]">
-              {user.profile_name || 'Unknown'} <span className="text-sm text-gray-500">({user.user_id})</span>
-            </p>
-            <p className="text-sm text-purple-700 font-medium">{user.house_name || "No House"}</p>
-          </div>
-        </div>
-
-        <div className="text-right text-[#2d3748] text-xs space-y-1 mr-4">
-          <p><span className="font-semibold">Taps:</span> {user.total_taps ?? 0}</p>
-          <p><span className="font-semibold">Upgrades:</span> {user.combined_upgrade_level ?? 0}</p>
-          <p><span className="font-semibold">Coins:</span> {formatNumberShort(user.total_coins_earned ?? 0)}</p>
-        </div>
-
-        <button
-          onClick={() => sendFriendRequest(user.user_id)}
-          className="ml-2 px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
+  {searchResults.length > 0 ? (
+    <div className="space-y-4 mt-2">
+      <h4 className="font-semibold text-[#2d3748]">Search Results:</h4>
+      {searchResults.map((user) => (
+        <div
+          key={user.user_id}
+          className="flex items-center justify-between bg-white/20 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow duration-200"
         >
-          Add
-        </button>
-      </div>
-    ))}
-  </div>
-) : (
-  searchQuery && (
-    <p className="mt-4 text-center text-[#2d3748]">No user found with ID "{searchQuery}"</p>
-  )
-  }}
-      </div>
+          <div className="flex items-center space-x-4">
+            {/* Render profile icon: either as <i> or <img> */}
+            {user.profile_icon && user.profile_icon.startsWith('fa') ? (
+              <i className={`${user.profile_icon} text-2xl text-purple-600`} aria-hidden="true"></i>
+            ) : user.profile_icon ? (
+              <img
+                src={user.profile_icon}
+                alt="Profile Icon"
+                className="w-12 h-12 rounded-full border-2 border-purple-600 object-cover"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center border-2 border-purple-600">
+                <i className="fas fa-user text-purple-600"></i>
+              </div>
+            )}
+
+            <div>
+              <p className="font-semibold text-[#2d3748]">
+                {user.profile_name || 'Unknown'}{' '}
+                <span className="text-sm text-gray-500">({user.user_id})</span>
+              </p>
+              <p className="text-sm text-purple-700 font-medium">{user.house_name || 'No House'}</p>
+            </div>
+          </div>
+
+          <div className="text-right text-[#2d3748] text-xs space-y-1 mr-4">
+            <p>
+              <span className="font-semibold">Taps:</span> {user.total_taps ?? 0}
+            </p>
+            <p>
+              <span className="font-semibold">Upgrades:</span> {user.combined_upgrade_level ?? 0}
+            </p>
+            <p>
+              <span className="font-semibold">Coins:</span>{' '}
+              {formatNumberShort(user.total_coins_earned ?? 0)}
+            </p>
+          </div>
+
+          <button
+            onClick={() => sendFriendRequest(user.user_id)}
+            className="ml-2 px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
+          >
+            Add
+          </button>
+        </div>
+      ))}
+    </div>
+  ) : (
+    searchQuery && (
+      <p className="mt-4 text-center text-[#2d3748]">
+        No user found with ID "{searchQuery}"
+      </p>
+    )
+  )}
+</div>
+
 
     {/* Pending Requests - ALWAYS SHOWN */}
     <div className="space-y-2 mb-6">
