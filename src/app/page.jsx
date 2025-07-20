@@ -2151,20 +2151,6 @@ if (loading) {
     return () => clearInterval(interval);
   }, [activeBoost]);
 
-useEffectuseEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, (user) => {
-    fetch("/api/record-pageview", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        page_path: "/",
-        user_id: user?.uid || null,
-        user_agent: navigator.userAgent,
-        referrer: document.referrer || null,
-      }),
-    });
-  });
-
 useEffect(() => {
   const unsubscribe = onAuthStateChanged(auth, (user) => {
     fetch("/api/record-pageview", {
@@ -2181,7 +2167,6 @@ useEffect(() => {
 
   return () => unsubscribe();
 }, []);
-
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
