@@ -1,7 +1,9 @@
 // src/app/api/friends/request/route.js
 
 import { NextResponse } from 'next/server';
-import db from '../../auth-handler/db'; // adjust if it's not exactly like this
+
+import db from '../../../auth-handler/db';
+
 
 export async function POST(req) {
   try {
