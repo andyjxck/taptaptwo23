@@ -5426,7 +5426,6 @@ onClick={() => {
                 <p>Total Taps: {friend.total_taps ?? 0}</p>
                 <p>Upgrade Level: {friend.combined_upgrade_level ?? 0}</p>
                 <p>Total Coins: {friend.total_coins_earned ?? 0}</p>
-                <p>Last Online: {friend.last_online ? new Date(friend.last_online).toLocaleString() : 'Unknown'}</p>
               </div>
             ))}
           </div>
