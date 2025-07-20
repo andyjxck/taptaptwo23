@@ -5052,19 +5052,17 @@ if (lastActive && !isNaN(lastActive)) {
           />
         </a>
 <button
-  onClick={() => {
-    setShowFriendsList((prev) => !prev);
-    if (!showFriendsList) {
-      // Only fetch when opening
-      fetchFriendsList();
-    }
-  }}
-  className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200`}
-  aria-label="Toggle Friends List"
-  title="Friends"
+  onClick={() => setActiveTab("friends")}
+  className={`px-6 py-3 rounded-xl transition-all duration-200 ${
+    activeTab === "friends"
+      ? "bg-white/40 text-[#2d3748] shadow-md"
+      : "text-[#4a5568] hover:bg-white/20"
+  } flex flex-col items-center justify-center`}
 >
-  <i className="fas fa-user-friends"></i>
+  <i className="fas fa-users"></i>
+  <span className="block text-xs mt-1">Friends</span>
 </button>
+
         <button
           onClick={() => setActiveTab("leaderboard")}
           className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200`}
@@ -5442,6 +5440,8 @@ renderHouseTab()
 renderShopTab()
 ) : activeTab === "profile" ? (
 renderProfileTab()
+) : activeTab === "friends" ? (
+renderFriendsTab()
 ) : null}
 </div>
 </div>
