@@ -24,7 +24,7 @@ export async function GET(req) {
                  gs.profile_name,
                  gs.total_taps,
                  gs.combined_upgrade_level,
-                 gs.total_coins_earned,
+                 gs.total_coins_earned
           FROM friends f
           JOIN game_saves gs ON f.friend_id = gs.user_id
           WHERE f.user_id = ${userId} AND f.status = 'accepted'
