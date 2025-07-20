@@ -1,7 +1,7 @@
 // src/app/api/friends/route.js
 
 import { NextResponse } from 'next/server';
-import db from '../auth-handler/db';
+import { sql } from '../../auth-handler/db'; // Adjust path if needed
 
 export async function GET(req) {
   try {
@@ -13,28 +13,26 @@ export async function GET(req) {
     }
 
     switch (action) {
-    case 'get': {
-  const userId = searchParams.get('userId');
-  if (!userId) {
-    return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
-  }
+      case 'get': {
+        const userId = searchParams.get('userId');
+        if (!userId) {
+          return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+        }
 
-  const result = await db.query(
-    `SELECT gs.user_id AS friend_id,
-            gs.profile_name,
-            gs.total_taps,
-            gs.combined_upgrade_level,
-            gs.total_coins_earned,
-            gs.last_online
-     FROM friends f
-     JOIN game_saves gs ON f.friend_id = gs.user_id
-     WHERE f.user_id = $1 AND f.status = 'accepted'`,
-    [userId]
-  );
+        const friends = await sql`
+          SELECT gs.user_id AS friend_id,
+                 gs.profile_name,
+                 gs.total_taps,
+                 gs.combined_upgrade_level,
+                 gs.total_coins_earned,
+                 gs.last_online
+          FROM friends f
+          JOIN game_saves gs ON f.friend_id = gs.user_id
+          WHERE f.user_id = ${userId} AND f.status = 'accepted'
+        `;
 
-  return NextResponse.json({ friends: result.rows });
-}
-
+        return NextResponse.json({ friends });
+      }
 
       case 'pending': {
         const userId = searchParams.get('userId');
@@ -42,14 +40,14 @@ export async function GET(req) {
           return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
         }
 
-        const result = await db.query(
-          `SELECT friends.user_id, game_saves.profile_name 
-           FROM friends
-           JOIN users ON friends.user_id = users.user_id
-           WHERE friends.friend_id = $1 AND friends.status = 'pending'`,
-          [userId]
-        );
-        return NextResponse.json({ pending: result.rows });
+        const pending = await sql`
+          SELECT f.user_id, gs.profile_name 
+          FROM friends f
+          JOIN game_saves gs ON f.user_id = gs.user_id
+          WHERE f.friend_id = ${userId} AND f.status = 'pending'
+        `;
+
+        return NextResponse.json({ pending });
       }
 
       case 'search': {
@@ -58,11 +56,14 @@ export async function GET(req) {
           return NextResponse.json({ error: 'Missing search query' }, { status: 400 });
         }
 
-        const result = await db.query(
-          `SELECT user_id, profile_name FROM game_saves WHERE CAST(user_id AS TEXT) ILIKE $1 LIMIT 10`,
-          [`%${query}%`]
-        );
-        return NextResponse.json({ users: result.rows });
+        const users = await sql`
+          SELECT user_id, profile_name 
+          FROM game_saves 
+          WHERE CAST(user_id AS TEXT) ILIKE ${'%' + query + '%'}
+          LIMIT 10
+        `;
+
+        return NextResponse.json({ users });
       }
 
       default:
@@ -92,44 +93,38 @@ export async function POST(req) {
 
     switch (action) {
       case 'accept': {
-        // Update the request to accepted
-        const result = await db.query(
-          `UPDATE friends
-           SET status = 'accepted'
-           WHERE user_id = $1 AND friend_id = $2 AND status = 'pending'`,
-          [friendId, userId] // friendId sent the request originally
-        );
+        const updateResult = await sql`
+          UPDATE friends
+          SET status = 'accepted'
+          WHERE user_id = ${friendId} AND friend_id = ${userId} AND status = 'pending'
+          RETURNING *
+        `;
 
-        if (result.rowCount === 0) {
+        if (updateResult.length === 0) {
           return NextResponse.json({ error: 'No pending request found' }, { status: 404 });
         }
 
-        // Mirror the accepted relationship
-        await db.query(
-          `INSERT INTO friends (user_id, friend_id, status)
-           VALUES ($1, $2, 'accepted')`,
-          [userId, friendId]
-        );
+        await sql`
+          INSERT INTO friends (user_id, friend_id, status)
+          VALUES (${userId}, ${friendId}, 'accepted')
+        `;
 
         return NextResponse.json({ success: true });
       }
 
       case 'request': {
-        // Check if request already exists
-        const existing = await db.query(
-          `SELECT * FROM friends WHERE user_id = $1 AND friend_id = $2`,
-          [userId, friendId]
-        );
+        const existing = await sql`
+          SELECT * FROM friends WHERE user_id = ${userId} AND friend_id = ${friendId}
+        `;
 
-        if (existing.rows.length > 0) {
+        if (existing.length > 0) {
           return NextResponse.json({ error: 'Friend request already exists' }, { status: 409 });
         }
 
-        // Insert pending friend request
-        await db.query(
-          `INSERT INTO friends (user_id, friend_id, status) VALUES ($1, $2, 'pending')`,
-          [userId, friendId]
-        );
+        await sql`
+          INSERT INTO friends (user_id, friend_id, status) 
+          VALUES (${userId}, ${friendId}, 'pending')
+        `;
 
         return NextResponse.json({ success: true });
       }
