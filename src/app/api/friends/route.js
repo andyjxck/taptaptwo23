@@ -34,7 +34,7 @@ export async function GET(req) {
         }
 
         const result = await db.query(
-          `SELECT friends.user_id, users.profile_name 
+          `SELECT friends.user_id, game_saves.profile_name 
            FROM friends
            JOIN users ON friends.user_id = users.user_id
            WHERE friends.friend_id = $1 AND friends.status = 'pending'`,
@@ -50,7 +50,7 @@ export async function GET(req) {
         }
 
         const result = await db.query(
-          `SELECT user_id, profile_name FROM users WHERE user_id ILIKE $1 LIMIT 10`,
+          `SELECT user_id, profile_name FROM game_saves WHERE CAST(user_id AS TEXT) ILIKE $1 LIMIT 10`,
           [`%${query}%`]
         );
         return NextResponse.json({ users: result.rows });
