@@ -813,7 +813,9 @@ function MainComponent() {
   const [friends, setFriends] = useState([]);
   const [friendsLoading, setFriendsLoading] = useState(true);
   const [friendError, setFriendError] = useState(null);
-  
+    const [showFriendsList, setShowFriendsList] = useState(false);
+   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
 const [activeShopBoosts, setActiveShopBoosts] = useState([]);
 const [lastDailyClaim, setLastDailyClaim] = useState(0);
 
@@ -836,7 +838,7 @@ useEffect(() => {
   setFriendsLoading(true);
   setFriendError(null);  // reset error on new fetch
 
-  fetch("/api/friends/get?userId=" + encodeURIComponent(userId))
+fetch("/api/friends?action=get&userId=" + encodeURIComponent(userId))
     .then((res) => res.json())
     .then((data) => {
       if (data.error) {
@@ -953,8 +955,6 @@ useEffect(() => {
   const [lastTapTimes, setLastTapTimes] = useState([]);
   const [showResetModal, setShowResetModal] = useState(false);
   const [showMaddoxModal, setShowMaddoxModal] = useState(false);
-  const [showFriendsList, setShowFriendsList] = useState(false);
-   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
 useEffect(() => {
   setShowWelcomeModal(true);
@@ -4882,7 +4882,13 @@ if (lastActive && !isNaN(lastActive)) {
           />
         </a>
 <button
-  onClick={() => setShowFriendsList((prev) => !prev)}
+  onClick={() => {
+    setShowFriendsList((prev) => !prev);
+    if (!showFriendsList) {
+      // Only fetch when opening
+      fetchFriendsList();
+    }
+  }}
   className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200`}
   aria-label="Toggle Friends List"
   title="Friends"
