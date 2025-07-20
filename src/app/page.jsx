@@ -810,11 +810,36 @@ function MainComponent() {
   const [doubleEarningsExpiresAt, setDoubleEarningsExpiresAt] = useState(null);
   const [showResetInfo, setShowResetInfo] = useState(false);
   const [activeBoost, setActiveBoost] = useState(null);
-
+  const [friends, setFriends] = useState([]);
+  const [friendsLoading, setFriendsLoading] = useState(true);
+  const [friendError, setFriendError] = useState(null);
   
 const [activeShopBoosts, setActiveShopBoosts] = useState([]);
 const [lastDailyClaim, setLastDailyClaim] = useState(0);
 
+useEffect(() => {
+  if (!userId) return;
+
+  setFriendsLoading(true);
+  setFriendError(null);  // reset error on new fetch
+
+  fetch("/api/friends/get?userId=" + encodeURIComponent(userId))
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.error) {
+        setFriendError(data.error);
+        setFriends([]);  // clear friends if error
+      } else {
+        setFriends(data.friends || []);
+      }
+      setFriendsLoading(false);
+    })
+    .catch(() => {
+      setFriendError("Failed to fetch friends");
+      setFriends([]);
+      setFriendsLoading(false);
+    });
+}, [userId]);
   
 useEffect(() => {
   const saved = localStorage.getItem("activeBoost");
@@ -915,6 +940,7 @@ useEffect(() => {
   const [lastTapTimes, setLastTapTimes] = useState([]);
   const [showResetModal, setShowResetModal] = useState(false);
   const [showMaddoxModal, setShowMaddoxModal] = useState(false);
+  const [showFriendsList, setShowFriendsList] = useState(false);
    const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
 useEffect(() => {
@@ -4853,7 +4879,14 @@ if (lastActive && !isNaN(lastActive)) {
             style={{ pointerEvents: "none", boxShadow: "0 0 0 1px #fff" }}
           />
         </a>
-
+<button
+  onClick={() => setShowFriendsList((prev) => !prev)}
+  className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200`}
+  aria-label="Toggle Friends List"
+  title="Friends"
+>
+  <i className="fas fa-user-friends"></i>
+</button>
         <button
           onClick={() => setActiveTab("leaderboard")}
           className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200`}
@@ -5345,6 +5378,24 @@ onClick={() => {
           </div>
         </div>
       )}
+{showFriendsList && (
+  <div className="friends-list-panel bg-white shadow-lg rounded-lg p-4 max-w-md mx-auto mt-4">
+    {friendsLoading && <p>Loading friends...</p>}
+    {friendError && <p className="text-red-500">{friendError}</p>}
+    {!friendsLoading && !friendError && friends.length === 0 && (
+      <p>No friends found.</p>
+    )}
+    {!friendsLoading && !friendError && friends.length > 0 && (
+      <ul className="space-y-2">
+        {friends.map((friendId) => (
+          <li key={friendId} className="border-b border-gray-200 py-1">
+            {friendId}
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+)}
 
       {showHardResetModal && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
