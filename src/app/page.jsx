@@ -2151,19 +2151,36 @@ if (loading) {
     return () => clearInterval(interval);
   }, [activeBoost]);
 
-useEffect(() => {
-  fetch("/api/record-pageview", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      page_path: "/",
-      user_agent: navigator.userAgent,
-      referrer: document.referrer || null,
-      // id removed as requested
-    }),
+useEffectuseEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    fetch("/api/record-pageview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        page_path: "/",
+        user_id: user?.uid || null,
+        user_agent: navigator.userAgent,
+        referrer: document.referrer || null,
+      }),
+    });
   });
-}, []);
 
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    fetch("/api/record-pageview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        page_path: "/",
+        user_id: user?.uid || null,
+        user_agent: navigator.userAgent,
+        referrer: document.referrer || null,
+      }),
+    });
+  });
+
+  return () => unsubscribe();
+}, []);
 
 
   useEffect(() => {
