@@ -3263,30 +3263,6 @@ if (lastActive && !isNaN(lastActive)) {
     },
     [gameState, saveGame, setNotification]
   );
-const fetchFriendsList = () => {
-  if (!userId) return;
-
-  setFriendsLoading(true);
-  setFriendError(null);
-
-  fetch("/api/friends?action=get&userId=" + encodeURIComponent(userId))
-    .then(res => res.json())
-    .then(data => {
-      if (data.error) {
-        setFriendError(data.error);
-        setFriends([]);
-      } else {
-        setFriends(data.friends || []);
-      }
-      setFriendsLoading(false);
-    })
-    .catch(() => {
-      setFriendError("Failed to fetch friends");
-      setFriends([]);
-      setFriendsLoading(false);
-    });
-};
-
   const showFloatingNumber = useCallback((text, color = "#8B5CF6") => {
     const number = document.createElement("div");
     number.className = "floating-number";
