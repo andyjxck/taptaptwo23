@@ -48,16 +48,14 @@ export async function GET(req) {
 
         return NextResponse.json({ pending });
       }
-
-    case 'search': {
+case 'search': {
   const query = searchParams.get('q');
   if (!query) {
     return NextResponse.json({ error: 'Missing search query' }, { status: 400 });
   }
 
-  // Exact match on user_id (cast to text to compare)
   const users = await sql`
-    SELECT user_id, profile_name, total_taps, combined_upgrade_level, total_coins_earned
+    SELECT user_id, profile_name, profile_icon, house_name, total_taps, combined_upgrade_level, total_coins_earned
     FROM game_saves
     WHERE CAST(user_id AS TEXT) = ${query}
     LIMIT 10
