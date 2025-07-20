@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import db from '../../auth-handler/db'; // adjust path if needed
+import db from '../../auth-handler/db'; // adjust path as needed
 
 export async function GET(req) {
   try {
@@ -11,8 +11,7 @@ export async function GET(req) {
     }
 
     const result = await db.query(
-      `SELECT friend_id FROM friends
-       WHERE user_id = $1 AND status = 'accepted'`,
+      `SELECT friend_id FROM friends WHERE user_id = $1 AND status = 'accepted'`,
       [userId]
     );
 
@@ -20,7 +19,7 @@ export async function GET(req) {
 
     return NextResponse.json({ friends: friendIds });
   } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    console.error('API /friends/get error:', err);
+    return NextResponse.json({ error: 'Server error', details: err.message }, { status: 500 });
   }
 }
