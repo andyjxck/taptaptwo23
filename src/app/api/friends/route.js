@@ -1,7 +1,7 @@
 // src/app/api/friends/route.js
 
 import { NextResponse } from 'next/server';
-import { sql } from '../../auth-handler/db'; // Adjust path if needed
+import { sql } from '../auth-handler/db'; // Adjust path if needed
 
 export async function GET(req) {
   try {
