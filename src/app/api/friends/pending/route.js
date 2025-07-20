@@ -2,7 +2,7 @@
 
 import { NextResponse } from 'next/server';
 
-import db from '../../../auth-handler/db';
+import db from '../../auth-handler/db';
 
 
 export async function GET(req) {
