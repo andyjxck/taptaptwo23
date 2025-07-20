@@ -815,7 +815,9 @@ function MainComponent() {
   const [friendError, setFriendError] = useState(null);
     const [showFriendsList, setShowFriendsList] = useState(false);
    const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-
+const [pendingRequests, setPendingRequests] = useState([]);
+const [searchQuery, setSearchQuery] = useState('');
+const [searchResults, setSearchResults] = useState([]);
 const [activeShopBoosts, setActiveShopBoosts] = useState([]);
 const [lastDailyClaim, setLastDailyClaim] = useState(0);
 
@@ -831,6 +833,10 @@ const [lastDailyClaim, setLastDailyClaim] = useState(0);
     setUserId(storedUserId);
     setPin(storedPin);
   }, []);
+useEffect(() => {
+  fetchFriendsList();
+  fetchPendingRequests();
+}, []);
 
 useEffect(() => {
   if (!userId) return;
@@ -1919,6 +1925,69 @@ if (loading) {
       </div>
     );
   }
+  
+  async function fetchFriendsList() {
+  setFriendsLoading(true);
+  setFriendError(null);
+  try {
+    const res = await fetch(`/api/friends?action=get&userId=${userId}`);
+    const data = await res.json();
+    setFriends(data.friends || []);
+  } catch (err) {
+    setFriendError('Failed to load friends.');
+  } finally {
+    setFriendsLoading(false);
+  }
+}
+
+async function fetchPendingRequests() {
+  try {
+    const res = await fetch(`/api/friends?action=pending&userId=${userId}`);
+    const data = await res.json();
+    setPendingRequests(data.pending || []);
+  } catch {
+    console.error('Failed to fetch pending requests');
+  }
+}
+
+async function handleSearch() {
+  if (!searchQuery) return;
+  try {
+    const res = await fetch(`/api/friends?action=search&q=${searchQuery}`);
+    const data = await res.json();
+    setSearchResults(data.users || []);
+  } catch {
+    console.error('Search failed');
+  }
+}
+
+async function sendFriendRequest(friendId) {
+  await fetch(`/api/friends?action=request`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, friendId }),
+  });
+  setSearchResults([]);
+}
+
+async function acceptFriendRequest(fromId) {
+  await fetch(`/api/friends?action=accept`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, friendId: fromId }),
+  });
+  fetchFriendsList();
+  fetchPendingRequests();
+}
+
+async function removeFriend(friendId) {
+  await fetch(`/api/friends?action=remove`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, friendId }),
+  });
+  fetchFriendsList();
+}
 
   function HellEffects() {
     // Generate 18 embers: half float up, half float down, randomly placed
@@ -5410,28 +5479,92 @@ onClick={() => {
         </div>
       )}
 {showFriendsList && (
-      <div className="friends-list-panel bg-white shadow-lg rounded-lg p-4 max-w-md mx-auto mt-4">
-        {friendsLoading && <p>Loading friends...</p>}
-        {friendError && <p className="text-red-500">{friendError}</p>}
-        {!friendsLoading && !friendError && friends.length === 0 && (
-          <p>No friends found.</p>
-        )}
-        {!friendsLoading && !friendError && friends.length > 0 && (
-          // <-- PUT IT HERE
-          <div>
-            {friends.map((friend) => (
-              <div key={friend.friend_id} className="friend-card border p-3 rounded-lg shadow mb-3 bg-gray-50">
-                <h3 className="font-semibold text-lg">{friend.profile_name || 'Unknown'}</h3>
-                <p>User ID: {friend.friend_id}</p>
-                <p>Total Taps: {friend.total_taps ?? 0}</p>
-                <p>Upgrade Level: {friend.combined_upgrade_level ?? 0}</p>
-                <p>Total Coins: {friend.total_coins_earned ?? 0}</p>
-              </div>
-            ))}
+  <div className="friends-list-panel bg-white shadow-lg rounded-lg p-4 max-w-md mx-auto mt-4 space-y-6">
+
+    {/* Search Bar */}
+    <div className="space-y-2">
+      <input
+        type="text"
+        placeholder="Search user ID..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="w-full border rounded px-3 py-2"
+      />
+      <button
+        onClick={handleSearch}
+        className="w-full bg-blue-500 text-white rounded py-2 hover:bg-blue-600"
+      >
+        Search
+      </button>
+
+      {/* Search Results */}
+      {searchResults.length > 0 && (
+        <div className="bg-gray-100 p-3 rounded mt-2">
+          <h4 className="font-semibold mb-2">Search Results:</h4>
+          {searchResults.map((user) => (
+            <div key={user.user_id} className="flex justify-between items-center mb-1">
+              <span>{user.profile_name || user.user_id}</span>
+              <button
+                onClick={() => sendFriendRequest(user.user_id)}
+                className="text-sm bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+              >
+                Add
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+
+    {/* Pending Requests */}
+    {pendingRequests.length > 0 && (
+      <div className="bg-yellow-100 p-3 rounded">
+        <h4 className="font-semibold mb-2">Pending Friend Requests:</h4>
+        {pendingRequests.map((req) => (
+          <div key={req.user_id} className="flex justify-between items-center mb-1">
+            <span>{req.profile_name || req.user_id}</span>
+            <button
+              onClick={() => acceptFriendRequest(req.user_id)}
+              className="text-sm bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+            >
+              Accept
+            </button>
           </div>
-        )}
+        ))}
       </div>
     )}
+
+    {/* Friends List */}
+    {friendsLoading && <p>Loading friends...</p>}
+    {friendError && <p className="text-red-500">{friendError}</p>}
+    {!friendsLoading && !friendError && friends.length === 0 && (
+      <p>No friends found.</p>
+    )}
+    {!friendsLoading && !friendError && friends.length > 0 && (
+      <div>
+        <h4 className="font-semibold mb-2">Your Friends:</h4>
+        {friends.map((friend) => (
+          <div
+            key={friend.friend_id}
+            className="friend-card border p-3 rounded-lg shadow mb-3 bg-gray-50"
+          >
+            <h3 className="font-semibold text-lg">{friend.profile_name || 'Unknown'}</h3>
+            <p>User ID: {friend.friend_id}</p>
+            <p>Total Taps: {friend.total_taps ?? 0}</p>
+            <p>Upgrade Level: {friend.combined_upgrade_level ?? 0}</p>
+            <p>Total Coins: {friend.total_coins_earned ?? 0}</p>
+            <button
+              onClick={() => removeFriend(friend.friend_id)}
+              className="mt-2 text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+            >
+              Remove
+            </button>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
       {showHardResetModal && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <div
