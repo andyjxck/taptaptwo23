@@ -1153,7 +1153,7 @@ useEffect(() => {
     }, 0);
   };
 
-  const renderFriendsTab = () => (
+ const renderFriendsTab = () => (
   <div className={`${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow}`}>
     <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#2d3748]">
       Friends
@@ -1175,34 +1175,43 @@ useEffect(() => {
         Search
       </button>
 
-      {searchResults.length > 0 && (
+      {searchResults.length > 0 ? (
         <div className="space-y-2 mt-2">
           <h4 className="font-semibold text-[#2d3748]">Search Results:</h4>
           {searchResults.map((user) => (
             <div
               key={user.user_id}
-              className="flex justify-between items-center bg-white/10 rounded-lg p-3"
+              className="bg-white/10 rounded-lg p-4 mb-2"
             >
-              <span className="text-[#2d3748]">
-                {user.profile_name || user.user_id}
-              </span>
+              <div className="font-semibold text-[#2d3748]">
+                {user.profile_name || 'Unknown'} ({user.user_id})
+              </div>
+              <div className="text-xs text-[#4a5568] flex space-x-4 mt-1">
+                <span>Taps: {user.total_taps ?? 0}</span>
+                <span>Upgrades: {user.combined_upgrade_level ?? 0}</span>
+                <span>Coins: {user.total_coins_earned ?? 0}</span>
+              </div>
               <button
                 onClick={() => sendFriendRequest(user.user_id)}
-                className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                className="mt-2 text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
               >
                 Add
               </button>
             </div>
           ))}
         </div>
+      ) : (
+        searchQuery && (
+          <p className="mt-2 text-center text-[#2d3748]">No user found with ID "{searchQuery}"</p>
+        )
       )}
     </div>
 
-    {/* Pending Requests */}
-    {pendingRequests.length > 0 && (
-      <div className="space-y-2 mb-6">
-        <h4 className="font-semibold text-[#2d3748]">Pending Requests:</h4>
-        {pendingRequests.map((req) => (
+    {/* Pending Requests - ALWAYS SHOWN */}
+    <div className="space-y-2 mb-6">
+      <h4 className="font-semibold text-[#2d3748]">Pending Requests:</h4>
+      {pendingRequests.length > 0 ? (
+        pendingRequests.map((req) => (
           <div
             key={req.user_id}
             className="flex justify-between items-center bg-yellow-100/20 rounded-lg p-3"
@@ -1217,9 +1226,11 @@ useEffect(() => {
               Accept
             </button>
           </div>
-        ))}
-      </div>
-    )}
+        ))
+      ) : (
+        <p className="text-center text-[#2d3748]">None</p>
+      )}
+    </div>
 
     {/* Friends List */}
     {friendsLoading && <p>Loading friends...</p>}
@@ -1253,6 +1264,7 @@ useEffect(() => {
     )}
   </div>
 );
+
 
   const buyRegularItem = async ({ itemId, itemType, price, userId, pin }) => {
     if (!userId || !pin) {
