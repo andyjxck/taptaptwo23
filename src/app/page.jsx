@@ -817,6 +817,19 @@ function MainComponent() {
 const [activeShopBoosts, setActiveShopBoosts] = useState([]);
 const [lastDailyClaim, setLastDailyClaim] = useState(0);
 
+    useEffect(() => {
+    const storedUserId = localStorage.getItem("userId");
+    const storedPin = localStorage.getItem("pin");
+
+    if (!storedUserId || !storedPin) {
+      window.location.href = "/login";
+      return;
+    }
+
+    setUserId(storedUserId);
+    setPin(storedPin);
+  }, []);
+
 useEffect(() => {
   if (!userId) return;
 
@@ -2190,18 +2203,7 @@ fetch("/api/record-pageview", {
     }).catch(console.error);
   }, []); // Runs once on mount
 
-  useEffect(() => {
-    const storedUserId = localStorage.getItem("userId");
-    const storedPin = localStorage.getItem("pin");
 
-    if (!storedUserId || !storedPin) {
-      window.location.href = "/login";
-      return;
-    }
-
-    setUserId(storedUserId);
-    setPin(storedPin);
-  }, []);
 
   useEffect(() => {
     // Only trigger in thunder or lightning
