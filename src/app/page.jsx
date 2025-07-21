@@ -1255,31 +1255,75 @@ useEffect(() => {
     )
   )}
 </div>
+{pendingRequests.length > 0 ? (
+  pendingRequests.map((req) => {
+    const iconObj = PROFILE_ICONS.find(ic => ic.id === req.profile_icon);
 
-    {/* Pending Requests - ALWAYS SHOWN */}
-    <div className="space-y-2 mb-6">
-      <h4 className="font-semibold text-[#2d3748]">Pending Requests:</h4>
-      {pendingRequests.length > 0 ? (
-        pendingRequests.map((req) => (
-          <div
-            key={req.user_id}
-            className="flex justify-between items-center bg-yellow-100/20 rounded-lg p-3"
-          >
-            <span className="text-[#2d3748]">
-              {req.profile_name || req.user_id}
-            </span>
-            <button
-              onClick={() => acceptFriendRequest(req.user_id)}
-              className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-            >
-              Accept
-            </button>
+    return (
+      <div
+        key={req.user_id}
+        className="flex items-center justify-between bg-yellow-100/20 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow duration-200"
+      >
+        <div className="flex items-center space-x-4">
+          {/* Profile Icon */}
+          {iconObj ? (
+            iconObj.type === 'image' ? (
+              <img
+                src={iconObj.src}
+                alt="Profile Icon"
+                className="w-10 h-10 rounded-full border-2 border-purple-600 object-cover"
+              />
+            ) : (
+              <i
+                className={`${iconObj.className} text-xl text-purple-600`}
+                aria-hidden="true"
+              ></i>
+            )
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center border-2 border-purple-600">
+              <i className="fas fa-user text-purple-600"></i>
+            </div>
+          )}
+
+          <div>
+            <p className="font-semibold text-[#2d3748]">
+              {req.profile_name || 'Unknown'}{' '}
+              <span className="text-sm text-gray-500">({req.user_id})</span>
+            </p>
+            <p className="text-sm text-purple-700 font-medium">
+              {req.house_name || 'No House'}
+            </p>
           </div>
-        ))
-      ) : (
-        <p className="text-center text-[#2d3748]">None</p>
-      )}
-    </div>
+        </div>
+
+        <div className="text-right text-[#2d3748] text-xs space-y-1 mr-4">
+          <p>
+            <span className="font-semibold">Taps:</span>{' '}
+            {req.total_taps ?? 0}
+          </p>
+          <p>
+            <span className="font-semibold">Upgrades:</span>{' '}
+            {req.combined_upgrade_level ?? 0}
+          </p>
+          <p>
+            <span className="font-semibold">Coins:</span>{' '}
+            {formatNumberShort(req.total_coins_earned ?? 0)}
+          </p>
+        </div>
+
+        <button
+          onClick={() => acceptFriendRequest(req.user_id)}
+          className="ml-2 px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
+        >
+          Accept
+        </button>
+      </div>
+    );
+  })
+) : (
+  <p className="text-center text-[#2d3748]">None</p>
+)}
+
 
     {/* Friends List */}
     {friendsLoading && <p>Loading friends...</p>}
