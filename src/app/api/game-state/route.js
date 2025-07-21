@@ -725,13 +725,15 @@ if (action === "save") {
       ${Number(gameState.resets) || 0},
       ${Number(gameState.total_coins_earned) || 0},
       ${Number(gameState.total_taps) || 0},
-      ${Number(gameState.house_level) || 1}
+      ${Number(gameState.highest_house_level) || Number(gameState.house_level) || 1}
+
+      
     )
     ON CONFLICT (user_id) DO UPDATE SET
       total_resets = EXCLUDED.total_resets,
       total_coins_earned = EXCLUDED.total_coins_earned,
       total_taps = EXCLUDED.total_taps,
-      highest_house_level = EXCLUDED.highest_house_level,
+  highest_house_level = GREATEST(leaderboard.highest_house_level, EXCLUDED.highest_house_level)
       updated_at = CURRENT_TIMESTAMP
   `;
 
