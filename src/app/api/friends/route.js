@@ -22,7 +22,7 @@ export async function GET(req) {
         const friends = await sql`
           SELECT gs.user_id AS friend_id,
                  gs.profile_name,
-                 gs.profile_icon,          -- Added profile_icon here
+                 gs.profile_icon,
                  gs.total_taps,
                  gs.combined_upgrade_level,
                  gs.total_coins_earned
@@ -94,46 +94,74 @@ export async function POST(req) {
 
     switch (action) {
       case 'accept': {
-        const updateResult = await sql`
-          UPDATE friends
-          SET status = 'accepted'
+        // Check if pending request exists (friendId -> userId)
+        const pendingReq = await sql`
+          SELECT * FROM friends
           WHERE user_id = ${friendId} AND friend_id = ${userId} AND status = 'pending'
-          RETURNING *
         `;
-
-        if (updateResult.length === 0) {
+        if (pendingReq.length === 0) {
           return NextResponse.json({ error: 'No pending request found' }, { status: 404 });
         }
 
-        await sql`
-          INSERT INTO friends (user_id, friend_id, status)
-          VALUES (${userId}, ${friendId}, 'accepted')
+        // Check if friendship already exists both ways
+        const existingFriendship = await sql`
+          SELECT * FROM friends
+          WHERE (user_id = ${userId} AND friend_id = ${friendId} AND status = 'accepted')
+             OR (user_id = ${friendId} AND friend_id = ${userId} AND status = 'accepted')
         `;
+        if (existingFriendship.length > 0) {
+          return NextResponse.json({ error: 'Friendship already exists' }, { status: 409 });
+        }
+
+        // Update pending request to accepted
+        await sql`
+          UPDATE friends
+          SET status = 'accepted'
+          WHERE user_id = ${friendId} AND friend_id = ${userId} AND status = 'pending'
+        `;
+
+        // Insert reciprocal accepted friend row if not exists
+        const reciprocal = await sql`
+          SELECT * FROM friends
+          WHERE user_id = ${userId} AND friend_id = ${friendId}
+        `;
+
+        if (reciprocal.length === 0) {
+          await sql`
+            INSERT INTO friends (user_id, friend_id, status)
+            VALUES (${userId}, ${friendId}, 'accepted')
+          `;
+        } else {
+          // If row exists but status not accepted, update it
+          await sql`
+            UPDATE friends
+            SET status = 'accepted'
+            WHERE user_id = ${userId} AND friend_id = ${friendId}
+          `;
+        }
 
         return NextResponse.json({ success: true });
       }
 
-    case 'request': {
-  if (userId === friendId) {
-    return NextResponse.json({ error: 'Cannot add yourself as a friend' }, { status: 400 });
-  }
+      case 'request': {
+        // Check if request or friendship exists in either direction
+        const existing = await sql`
+          SELECT * FROM friends
+          WHERE (user_id = ${userId} AND friend_id = ${friendId})
+             OR (user_id = ${friendId} AND friend_id = ${userId})
+        `;
 
-  const existing = await sql`
-    SELECT * FROM friends WHERE user_id = ${userId} AND friend_id = ${friendId}
-  `;
+        if (existing.length > 0) {
+          return NextResponse.json({ error: 'Friend request or friendship already exists' }, { status: 409 });
+        }
 
-  if (existing.length > 0) {
-    return NextResponse.json({ error: 'Friend request already exists' }, { status: 409 });
-  }
+        await sql`
+          INSERT INTO friends (user_id, friend_id, status) 
+          VALUES (${userId}, ${friendId}, 'pending')
+        `;
 
-  await sql`
-    INSERT INTO friends (user_id, friend_id, status) 
-    VALUES (${userId}, ${friendId}, 'pending')
-  `;
-
-  return NextResponse.json({ success: true });
-}
-
+        return NextResponse.json({ success: true });
+      }
 
       case 'remove': {
         await sql`
