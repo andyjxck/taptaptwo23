@@ -3783,7 +3783,7 @@ if (lastActive && !isNaN(lastActive)) {
 );
 
   const renderShopTab = () => {
-  const discountRate = 0.2; // 20% discount
+  const discountRate = 0.1; // 20% discount
 
   // Shop tabs
   const tabs = [
@@ -3933,7 +3933,7 @@ if (lastActive && !isNaN(lastActive)) {
                         <>
                           <span className="line-through">{theme.price} ⭐</span>
                           <span className="bg-purple-300 text-purple-800 px-1 rounded text-xs font-bold">
-                            20% OFF
+                            10% OFF
                           </span>
                         </>
                       )}
@@ -4008,7 +4008,7 @@ if (lastActive && !isNaN(lastActive)) {
                       <>
                         <span className="line-through">{boost.price} ⭐</span>
                         <span className="bg-purple-300 text-purple-800 px-1 rounded text-xs font-bold">
-                          20% OFF
+                          10% OFF
                         </span>
                       </>
                     )}
@@ -4077,7 +4077,7 @@ if (lastActive && !isNaN(lastActive)) {
                         <>
                           <span className="line-through">{icon.price} ⭐</span>
                           <span className="bg-purple-300 text-purple-800 px-1 rounded text-xs font-bold">
-                            20% OFF
+                            10% OFF
                           </span>
                         </>
                       )}
@@ -4168,7 +4168,7 @@ if (lastActive && !isNaN(lastActive)) {
                           <>
                             <span className="line-through">{icon.price} ⭐</span>
                             <span className="bg-purple-300 text-purple-800 px-1 rounded text-xs font-bold">
-                              20% OFF
+                              10% OFF
                             </span>
                           </>
                         )}
@@ -4247,7 +4247,7 @@ if (lastActive && !isNaN(lastActive)) {
                           <>
                             <span className="line-through">{theme.price} ⭐</span>
                             <span className="bg-purple-300 text-purple-800 px-1 rounded text-xs font-bold">
-                              20% OFF
+                              10% OFF
                             </span>
                           </>
                         ) : (
@@ -4326,7 +4326,7 @@ if (lastActive && !isNaN(lastActive)) {
                         <>
                           <span className="line-through">{boost.price} ⭐</span>
                           <span className="bg-purple-300 text-purple-800 px-1 rounded text-xs font-bold">
-                            20% OFF
+                            10% OFF
                           </span>
                         </>
                       )}
