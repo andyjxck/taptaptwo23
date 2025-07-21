@@ -3709,7 +3709,7 @@ if (lastActive && !isNaN(lastActive)) {
         <option value="renown">Most Renown Tokens</option>
         <option value="coins">Most Coins Earned</option>
         <option value="house">Highest House Level</option>
-        <option value="totalTaps">Most Taps</option> // <-- Add this line
+        <option value="totalTaps">Most Taps</option> //
       </select>
     </div>
 
