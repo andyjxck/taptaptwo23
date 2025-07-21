@@ -19,19 +19,27 @@ export async function GET(req) {
           return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
         }
 
-        const friends = await sql`
-          SELECT gs.user_id AS friend_id,
-                 gs.profile_name,
-                 gs.total_taps,
-                 gs.combined_upgrade_level,
-                 gs.total_coins_earned
-          FROM friends f
-          JOIN game_saves gs ON f.friend_id = gs.user_id
-          WHERE f.user_id = ${userId} AND f.status = 'accepted'
-        `;
+       case 'get': {
+  const userId = searchParams.get('userId');
+  if (!userId) {
+    return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+  }
 
-        return NextResponse.json({ friends });
-      }
+  const friends = await sql`
+    SELECT gs.user_id AS friend_id,
+           gs.profile_name,
+           gs.profile_icon,          -- ADD THIS LINE
+           gs.total_taps,
+           gs.combined_upgrade_level,
+           gs.total_coins_earned
+    FROM friends f
+    JOIN game_saves gs ON f.friend_id = gs.user_id
+    WHERE f.user_id = ${userId} AND f.status = 'accepted'
+  `;
+
+  return NextResponse.json({ friends });
+}
+
 
       case 'pending': {
         const userId = searchParams.get('userId');
