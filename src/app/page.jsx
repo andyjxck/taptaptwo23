@@ -1153,177 +1153,194 @@ useEffect(() => {
     }, 0);
   };
 
- const renderFriendsTab = () => (
+const renderFriendsTab = () => (
   <div className={`${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow}`}>
-    <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#2d3748]">
-      Friends
-    </h2>
-
-{/* Search */}
-<div className="space-y-2 mb-6">
-  <input
-    type="text"
-    placeholder="Search user ID..."
-    value={searchQuery}
-    onChange={(e) => setSearchQuery(e.target.value)}
-    className="w-full px-4 py-2 rounded-xl bg-white/40 border border-white/30 text-[#2d3748]"
-  />
-  <button
-    onClick={handleSearch}
-    className="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl"
-  >
-    Search
-  </button>
-
-  {searchQuery && (
-    searchResults.length > 0 ? (
-      <div className="space-y-4 mt-2">
-        <h4 className="font-semibold text-[#2d3748]">Search Results:</h4>
-        {searchResults.map((user) => {
-          const iconObj = PROFILE_ICONS.find(
-            (ic) => ic.id === user.profile_icon
-          );
-
-          return (
-            <div
-              key={user.user_id}
-              className="flex items-center justify-between bg-white/20 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow duration-200"
-            >
-              <div className="flex items-center space-x-4">
-                {/* Profile Icon */}
-                {iconObj ? (
-                  iconObj.type === 'image' ? (
-                    <img
-                      src={iconObj.src}
-                      alt="Profile Icon"
-                      className="w-12 h-12 rounded-full border-2 border-purple-600 object-cover"
-                    />
-                  ) : (
-                    <i
-                      className={`${iconObj.className} text-2xl text-purple-600`}
-                      aria-hidden="true"
-                    ></i>
-                  )
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center border-2 border-purple-600">
-                    <i className="fas fa-user text-purple-600"></i>
-                  </div>
-                )}
-
-                <div>
-                  <p className="font-semibold text-[#2d3748]">
-                    {user.profile_name || 'Unknown'}{' '}
-                    <span className="text-sm text-gray-500">
-                      ({user.user_id})
-                    </span>
-                  </p>
-                  <p className="text-sm text-purple-700 font-medium">
-                    {user.house_name || 'No House'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="text-right text-[#2d3748] text-xs space-y-1 mr-4">
-                <p>
-                  <span className="font-semibold">Taps:</span>{' '}
-                  {user.total_taps ?? 0}
-                </p>
-                <p>
-                  <span className="font-semibold">Upgrades:</span>{' '}
-                  {user.combined_upgrade_level ?? 0}
-                </p>
-                <p>
-                  <span className="font-semibold">Coins:</span>{' '}
-                  {formatNumberShort(user.total_coins_earned ?? 0)}
-                </p>
-              </div>
-
-              <button
-                onClick={() => sendFriendRequest(user.user_id)}
-                className="ml-2 px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
-              >
-                Add
-              </button>
-            </div>
-          );
-        })}
-      </div>
-    ) : (
-      <p className="mt-4 text-center text-[#2d3748]">
-        No user found with ID "{searchQuery}"
-      </p>
-    )
-  )}
-</div>
-{pendingRequests.length > 0 ? (
-  pendingRequests.map((req) => {
-    const iconObj = PROFILE_ICONS.find(ic => ic.id === req.profile_icon);
-
-    return (
-      <div
-        key={req.user_id}
-        className="flex items-center justify-between bg-yellow-100/20 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow duration-200"
+    {/* Header */}
+    <div className="flex justify-between items-center mb-4">
+      {/* Add Friend Icon */}
+      <button
+        onClick={() => setShowSearch((prev) => !prev)}
+        className="text-purple-700 hover:text-purple-900 text-xl"
+        title="Add Friend"
       >
-        <div className="flex items-center space-x-4">
-          {/* Profile Icon */}
-          {iconObj ? (
-            iconObj.type === 'image' ? (
-              <img
-                src={iconObj.src}
-                alt="Profile Icon"
-                className="w-10 h-10 rounded-full border-2 border-purple-600 object-cover"
-              />
-            ) : (
-              <i
-                className={`${iconObj.className} text-xl text-purple-600`}
-                aria-hidden="true"
-              ></i>
-            )
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center border-2 border-purple-600">
-              <i className="fas fa-user text-purple-600"></i>
-            </div>
-          )}
+        <i className="fas fa-user-plus"></i>
+      </button>
 
-          <div>
-            <p className="font-semibold text-[#2d3748]">
-              {req.profile_name || 'Unknown'}{' '}
-              <span className="text-sm text-gray-500">({req.user_id})</span>
-            </p>
-            <p className="text-sm text-purple-700 font-medium">
-              {req.house_name || 'No House'}
-            </p>
-          </div>
-        </div>
+      {/* Title */}
+      <h2 className="text-2xl font-crimson-text text-center text-[#2d3748]">
+        Friends
+      </h2>
 
-        <div className="text-right text-[#2d3748] text-xs space-y-1 mr-4">
-          <p>
-            <span className="font-semibold">Taps:</span>{' '}
-            {req.total_taps ?? 0}
-          </p>
-          <p>
-            <span className="font-semibold">Upgrades:</span>{' '}
-            {req.combined_upgrade_level ?? 0}
-          </p>
-          <p>
-            <span className="font-semibold">Coins:</span>{' '}
-            {formatNumberShort(req.total_coins_earned ?? 0)}
-          </p>
-        </div>
+      {/* Requests Icon */}
+      <button
+        onClick={() => setShowRequests((prev) => !prev)}
+        className="text-yellow-600 hover:text-yellow-800 text-xl"
+        title="Friend Requests"
+      >
+        <i className="fas fa-exclamation-circle"></i>
+      </button>
+    </div>
 
+    {/* Disabled Chat Button */}
+    <div className="text-center mb-4">
+      <button
+        disabled
+        className="cursor-not-allowed text-gray-400 bg-gray-200 px-4 py-2 rounded-full text-sm"
+        title="Chat coming soon"
+      >
+        <i className="fas fa-comments-slash mr-2"></i> Chat (Coming Soon)
+      </button>
+    </div>
+
+    {/* Search Section */}
+    {showSearch && (
+      <div className="space-y-2 mb-6">
+        <input
+          type="text"
+          placeholder="Search user ID..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full px-4 py-2 rounded-xl bg-white/40 border border-white/30 text-[#2d3748]"
+        />
         <button
-          onClick={() => acceptFriendRequest(req.user_id)}
-          className="ml-2 px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
+          onClick={handleSearch}
+          className="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl"
         >
-          Accept
+          Search
         </button>
-      </div>
-    );
-  })
-) : (
-  <p className="text-center text-[#2d3748]">None</p>
-)}
 
+        {searchQuery && (
+          searchResults.length > 0 ? (
+            <div className="space-y-4 mt-2">
+              <h4 className="font-semibold text-[#2d3748]">Search Results:</h4>
+              {searchResults.map((user) => {
+                const iconObj = PROFILE_ICONS.find(
+                  (ic) => ic.id === user.profile_icon
+                );
+
+                return (
+                  <div
+                    key={user.user_id}
+                    className="flex items-center justify-between bg-white/20 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow duration-200"
+                  >
+                    <div className="flex items-center space-x-4">
+                      {iconObj ? (
+                        iconObj.type === 'image' ? (
+                          <img
+                            src={iconObj.src}
+                            alt="Profile Icon"
+                            className="w-12 h-12 rounded-full border-2 border-purple-600 object-cover"
+                          />
+                        ) : (
+                          <i
+                            className={`${iconObj.className} text-2xl text-purple-600`}
+                          ></i>
+                        )
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center border-2 border-purple-600">
+                          <i className="fas fa-user text-purple-600"></i>
+                        </div>
+                      )}
+
+                      <div>
+                        <p className="font-semibold text-[#2d3748]">
+                          {user.profile_name || 'Unknown'}{' '}
+                          <span className="text-sm text-gray-500">
+                            ({user.user_id})
+                          </span>
+                        </p>
+                        <p className="text-sm text-purple-700 font-medium">
+                          {user.house_name || 'No House'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-right text-[#2d3748] text-xs space-y-1 mr-4">
+                      <p><span className="font-semibold">Taps:</span> {user.total_taps ?? 0}</p>
+                      <p><span className="font-semibold">Upgrades:</span> {user.combined_upgrade_level ?? 0}</p>
+                      <p><span className="font-semibold">Coins:</span> {formatNumberShort(user.total_coins_earned ?? 0)}</p>
+                    </div>
+
+                    <button
+                      onClick={() => sendFriendRequest(user.user_id)}
+                      className="ml-2 px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
+                    >
+                      Add
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="mt-4 text-center text-[#2d3748]">
+              No user found with ID "{searchQuery}"
+            </p>
+          )
+        )}
+      </div>
+    )}
+
+    {/* Pending Requests */}
+    {showRequests && (
+      <div className="space-y-2 mb-6">
+        <h4 className="font-semibold text-[#2d3748]">Pending Requests:</h4>
+        {pendingRequests.length > 0 ? (
+          pendingRequests.map((req) => {
+            const iconObj = PROFILE_ICONS.find((ic) => ic.id === req.profile_icon);
+
+            return (
+              <div
+                key={req.user_id}
+                className="flex items-center justify-between bg-yellow-100/20 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow duration-200"
+              >
+                <div className="flex items-center space-x-4">
+                  {iconObj ? (
+                    iconObj.type === 'image' ? (
+                      <img
+                        src={iconObj.src}
+                        alt="Profile Icon"
+                        className="w-10 h-10 rounded-full border-2 border-purple-600 object-cover"
+                      />
+                    ) : (
+                      <i className={`${iconObj.className} text-xl text-purple-600`}></i>
+                    )
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center border-2 border-purple-600">
+                      <i className="fas fa-user text-purple-600"></i>
+                    </div>
+                  )}
+
+                  <div>
+                    <p className="font-semibold text-[#2d3748]">
+                      {req.profile_name || 'Unknown'}{' '}
+                      <span className="text-sm text-gray-500">({req.user_id})</span>
+                    </p>
+                    <p className="text-sm text-purple-700 font-medium">
+                      {req.house_name || 'No House'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-right text-[#2d3748] text-xs space-y-1 mr-4">
+                  <p><span className="font-semibold">Taps:</span> {req.total_taps ?? 0}</p>
+                  <p><span className="font-semibold">Upgrades:</span> {req.combined_upgrade_level ?? 0}</p>
+                  <p><span className="font-semibold">Coins:</span> {formatNumberShort(req.total_coins_earned ?? 0)}</p>
+                </div>
+
+                <button
+                  onClick={() => acceptFriendRequest(req.user_id)}
+                  className="ml-2 px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
+                >
+                  Accept
+                </button>
+              </div>
+            );
+          })
+        ) : (
+          <p className="text-center text-[#2d3748]">No requests</p>
+        )}
+      </div>
+    )}
 
     {/* Friends List */}
     {friendsLoading && <p>Loading friends...</p>}
@@ -1357,7 +1374,6 @@ useEffect(() => {
     )}
   </div>
 );
-
 
   const buyRegularItem = async ({ itemId, itemType, price, userId, pin }) => {
     if (!userId || !pin) {
