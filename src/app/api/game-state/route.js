@@ -579,156 +579,165 @@ if (action === "buyLimitedItem") {
 }
 
 
-    // save game state logic
-    if (action === "save") {
-      if (!gameState || typeof gameState !== "object") {
-        return { error: "Invalid game state" };
-      }
-      if (gameState.house_name && String(gameState.house_name).length > 30) {
-        return { error: "House name too long" };
-      }
-      const combinedUpgradeLevel =
-        (Number(gameState.tap_power_upgrades) || 0) +
-        (Number(gameState.auto_tapper_upgrades) || 0) +
-        (Number(gameState.crit_chance_upgrades) || 0) +
-        (Number(gameState.tap_speed_bonus_upgrades) || 0);
-      const currentQuestText = gameState.currentQuest
-        ? JSON.stringify(gameState.currentQuest)
-        : null;
-      const canClaimQuestBool = !!gameState.canClaimQuest;
-      const ownedProfileIconsJSON = JSON.stringify(gameState.ownedProfileIcons || []);
-      const profileIcon = gameState.profileIcon || null;
-      const coinsEarnedThisRun = Number(gameState.coinsEarnedThisRun) || 0;
-      await sql`
-        INSERT INTO game_saves (
-          user_id,
-          coins,
-          tap_power,
-          auto_tapper,
-          crit_chance,
-          tap_speed_bonus,
-          total_taps,
-          total_coins_earned,
-          resets,
-          permanent_multiplier,
-          current_season,
-          total_upgrade_levels,
-          house_level,
-          house_decorations,
-          house_theme,
-          house_coins_multiplier,
-          has_first_reset,
-          boost_active_until,
-          tap_power_upgrades,
-          auto_tapper_upgrades,
-          crit_chance_upgrades,
-          tap_speed_bonus_upgrades,
-          combined_upgrade_level,
-          current_weather,
-          current_year,
-          house_name,
-          current_quest,
-          can_claim_quest,
-          profile_name,
-          renown_tokens,
-          owned_profile_icons,
-          profile_icon,
-          coins_earned_this_run,
-          owned_themes,
-          owned_boosts,
-          equipped_theme
-        ) VALUES (
-          ${userIdInt},
-          ${Number(gameState.coins) || 0},
-          ${Number(gameState.tap_power) || 1},
-          ${Number(gameState.auto_tapper) || 0},
-          ${Number(gameState.crit_chance) || 0},
-          ${Number(gameState.tap_speed_bonus) || 0},
-          ${Number(gameState.total_taps) || 0},
-          ${Number(gameState.total_coins_earned) || 0},
-          ${Number(gameState.resets) || 0},
-          ${Number(gameState.permanent_multiplier) || 1},
-          ${Number(gameState.current_season) || 0},
-          ${Number(gameState.total_upgrade_levels) || 0},
-          ${Number(gameState.house_level) || 1},
-          ${JSON.stringify(gameState.house_decorations || [])},
-          ${String(gameState.house_theme || "cottage")},
-          ${Number(gameState.house_coins_multiplier) || 0},
-          ${Boolean(gameState.has_first_reset)},
-          ${gameState.boost_active_until || null},
-          ${Number(gameState.tap_power_upgrades) || 0},
-          ${Number(gameState.auto_tapper_upgrades) || 0},
-          ${Number(gameState.crit_chance_upgrades) || 0},
-          ${Number(gameState.tap_speed_bonus_upgrades) || 0},
-          ${combinedUpgradeLevel},
-          ${String(gameState.current_weather || "Clear")},
-          ${Number(gameState.current_year) || 0},
-          ${String(gameState.houseName || "My Cozy Home")},
-          ${currentQuestText},
-          ${canClaimQuestBool},
-          ${String(gameState.profile_name || "Player")},
-          ${Number(gameState.renownTokens) || 0},
-          ${ownedProfileIconsJSON},
-          ${profileIcon},
-          ${Math.floor(coinsEarnedThisRun)},
-          ${JSON.stringify(gameState.ownedThemes || ["seasons"])},
-          ${JSON.stringify(gameState.ownedBoosts || [])},
-          ${String(gameState.equippedTheme || "seasons")}
-        )
-        ON CONFLICT (user_id) DO UPDATE SET
-          coins = EXCLUDED.coins,
-          tap_power = EXCLUDED.tap_power,
-          auto_tapper = EXCLUDED.auto_tapper,
-          crit_chance = EXCLUDED.crit_chance,
-          tap_speed_bonus = EXCLUDED.tap_speed_bonus,
-          total_taps = EXCLUDED.total_taps,
-          total_coins_earned = EXCLUDED.total_coins_earned,
-          resets = EXCLUDED.resets,
-          permanent_multiplier = EXCLUDED.permanent_multiplier,
-          current_season = EXCLUDED.current_season,
-          total_upgrade_levels = EXCLUDED.total_upgrade_levels,
-          house_level = EXCLUDED.house_level,
-          house_decorations = EXCLUDED.house_decorations,
-          house_theme = EXCLUDED.house_theme,
-          house_coins_multiplier = EXCLUDED.house_coins_multiplier,
-          has_first_reset = EXCLUDED.has_first_reset,
-          boost_active_until = EXCLUDED.boost_active_until,
-          tap_power_upgrades = EXCLUDED.tap_power_upgrades,
-          auto_tapper_upgrades = EXCLUDED.auto_tapper_upgrades,
-          crit_chance_upgrades = EXCLUDED.crit_chance_upgrades,
-          tap_speed_bonus_upgrades = EXCLUDED.tap_speed_bonus_upgrades,
-          combined_upgrade_level = EXCLUDED.combined_upgrade_level,
-          current_weather = EXCLUDED.current_weather,
-          current_year = EXCLUDED.current_year,
-          house_name = EXCLUDED.house_name,
-          current_quest = EXCLUDED.current_quest,
-          can_claim_quest = EXCLUDED.can_claim_quest,
-          profile_name = EXCLUDED.profile_name,
-          renown_tokens = EXCLUDED.renown_tokens,
-          owned_profile_icons = EXCLUDED.owned_profile_icons,
-          profile_icon = EXCLUDED.profile_icon,
-          coins_earned_this_run = EXCLUDED.coins_earned_this_run,
-          owned_themes = EXCLUDED.owned_themes,
-          owned_boosts = EXCLUDED.owned_boosts,
-          equipped_theme = EXCLUDED.equipped_theme,
-          last_saved = CURRENT_TIMESTAMP
-      `;
+if (action === "save") {
+  if (!gameState || typeof gameState !== "object") {
+    return { error: "Invalid game state" };
+  }
 
-      await sql`
-        INSERT INTO leaderboard (user_id, total_resets, total_coins_earned)
-        VALUES (
-          ${userIdInt},
-          ${Number(gameState.resets) || 0},
-          ${Number(gameState.total_coins_earned) || 0}
-        )
-        ON CONFLICT (user_id) DO UPDATE SET
-          total_resets = EXCLUDED.total_resets,
-          total_coins_earned = EXCLUDED.total_coins_earned,
-          updated_at = CURRENT_TIMESTAMP
-      `;
+  if (gameState.house_name && String(gameState.house_name).length > 30) {
+    return { error: "House name too long" };
+  }
 
-      return { success: true };
-    }
+  const combinedUpgradeLevel =
+    (Number(gameState.tap_power_upgrades) || 0) +
+    (Number(gameState.auto_tapper_upgrades) || 0) +
+    (Number(gameState.crit_chance_upgrades) || 0) +
+    (Number(gameState.tap_speed_bonus_upgrades) || 0);
+
+  const currentQuestText = gameState.currentQuest
+    ? JSON.stringify(gameState.currentQuest)
+    : null;
+
+  const canClaimQuestBool = !!gameState.canClaimQuest;
+  const ownedProfileIconsJSON = JSON.stringify(gameState.ownedProfileIcons || []);
+  const profileIcon = gameState.profileIcon || null;
+  const coinsEarnedThisRun = Number(gameState.coinsEarnedThisRun) || 0;
+
+  await sql`
+    INSERT INTO game_saves (
+      user_id,
+      coins,
+      tap_power,
+      auto_tapper,
+      crit_chance,
+      tap_speed_bonus,
+      total_taps,
+      total_coins_earned,
+      resets,
+      permanent_multiplier,
+      current_season,
+      total_upgrade_levels,
+      house_level,
+      house_decorations,
+      house_theme,
+      house_coins_multiplier,
+      has_first_reset,
+      boost_active_until,
+      tap_power_upgrades,
+      auto_tapper_upgrades,
+      crit_chance_upgrades,
+      tap_speed_bonus_upgrades,
+      combined_upgrade_level,
+      current_weather,
+      current_year,
+      house_name,
+      current_quest,
+      can_claim_quest,
+      profile_name,
+      renown_tokens,
+      owned_profile_icons,
+      profile_icon,
+      coins_earned_this_run,
+      owned_themes,
+      owned_boosts,
+      equipped_theme
+    ) VALUES (
+      ${userIdInt},
+      ${Number(gameState.coins) || 0},
+      ${Number(gameState.tap_power) || 1},
+      ${Number(gameState.auto_tapper) || 0},
+      ${Number(gameState.crit_chance) || 0},
+      ${Number(gameState.tap_speed_bonus) || 0},
+      ${Number(gameState.total_taps) || 0},
+      ${Number(gameState.total_coins_earned) || 0},
+      ${Number(gameState.resets) || 0},
+      ${Number(gameState.permanent_multiplier) || 1},
+      ${Number(gameState.current_season) || 0},
+      ${Number(gameState.total_upgrade_levels) || 0},
+      ${Number(gameState.house_level) || 1},
+      ${JSON.stringify(gameState.house_decorations || [])},
+      ${String(gameState.house_theme || "cottage")},
+      ${Number(gameState.house_coins_multiplier) || 0},
+      ${Boolean(gameState.has_first_reset)},
+      ${gameState.boost_active_until || null},
+      ${Number(gameState.tap_power_upgrades) || 0},
+      ${Number(gameState.auto_tapper_upgrades) || 0},
+      ${Number(gameState.crit_chance_upgrades) || 0},
+      ${Number(gameState.tap_speed_bonus_upgrades) || 0},
+      ${combinedUpgradeLevel},
+      ${String(gameState.current_weather || "Clear")},
+      ${Number(gameState.current_year) || 0},
+      ${String(gameState.houseName || "My Cozy Home")},
+      ${currentQuestText},
+      ${canClaimQuestBool},
+      ${String(gameState.profile_name || "Player")},
+      ${Number(gameState.renownTokens) || 0},
+      ${ownedProfileIconsJSON},
+      ${profileIcon},
+      ${Math.floor(coinsEarnedThisRun)},
+      ${JSON.stringify(gameState.ownedThemes || ["seasons"])},
+      ${JSON.stringify(gameState.ownedBoosts || [])},
+      ${String(gameState.equippedTheme || "seasons")}
+    )
+    ON CONFLICT (user_id) DO UPDATE SET
+      coins = EXCLUDED.coins,
+      tap_power = EXCLUDED.tap_power,
+      auto_tapper = EXCLUDED.auto_tapper,
+      crit_chance = EXCLUDED.crit_chance,
+      tap_speed_bonus = EXCLUDED.tap_speed_bonus,
+      total_taps = EXCLUDED.total_taps,
+      total_coins_earned = EXCLUDED.total_coins_earned,
+      resets = EXCLUDED.resets,
+      permanent_multiplier = EXCLUDED.permanent_multiplier,
+      current_season = EXCLUDED.current_season,
+      total_upgrade_levels = EXCLUDED.total_upgrade_levels,
+      house_level = EXCLUDED.house_level,
+      house_decorations = EXCLUDED.house_decorations,
+      house_theme = EXCLUDED.house_theme,
+      house_coins_multiplier = EXCLUDED.house_coins_multiplier,
+      has_first_reset = EXCLUDED.has_first_reset,
+      boost_active_until = EXCLUDED.boost_active_until,
+      tap_power_upgrades = EXCLUDED.tap_power_upgrades,
+      auto_tapper_upgrades = EXCLUDED.auto_tapper_upgrades,
+      crit_chance_upgrades = EXCLUDED.crit_chance_upgrades,
+      tap_speed_bonus_upgrades = EXCLUDED.tap_speed_bonus_upgrades,
+      combined_upgrade_level = EXCLUDED.combined_upgrade_level,
+      current_weather = EXCLUDED.current_weather,
+      current_year = EXCLUDED.current_year,
+      house_name = EXCLUDED.house_name,
+      current_quest = EXCLUDED.current_quest,
+      can_claim_quest = EXCLUDED.can_claim_quest,
+      profile_name = EXCLUDED.profile_name,
+      renown_tokens = EXCLUDED.renown_tokens,
+      owned_profile_icons = EXCLUDED.owned_profile_icons,
+      profile_icon = EXCLUDED.profile_icon,
+      coins_earned_this_run = EXCLUDED.coins_earned_this_run,
+      owned_themes = EXCLUDED.owned_themes,
+      owned_boosts = EXCLUDED.owned_boosts,
+      equipped_theme = EXCLUDED.equipped_theme,
+      last_saved = CURRENT_TIMESTAMP
+  `;
+
+  await sql`
+    INSERT INTO leaderboard (user_id, total_resets, total_coins_earned, total_taps, highest_house_level)
+    VALUES (
+      ${userIdInt},
+      ${Number(gameState.resets) || 0},
+      ${Number(gameState.total_coins_earned) || 0},
+      ${Number(gameState.total_taps) || 0},
+      ${Number(gameState.house_level) || 1}
+    )
+    ON CONFLICT (user_id) DO UPDATE SET
+      total_resets = EXCLUDED.total_resets,
+      total_coins_earned = EXCLUDED.total_coins_earned,
+      total_taps = EXCLUDED.total_taps,
+      highest_house_level = EXCLUDED.highest_house_level,
+      updated_at = CURRENT_TIMESTAMP
+  `;
+
+  return { success: true };
+}
+
 if (action === "load") {
   const rows = await sql`
     SELECT * FROM game_saves WHERE user_id = ${userIdInt}
@@ -788,6 +797,7 @@ if (action === "load") {
     gameState: {
       ...rows[0],
       houseLevel: rows[0].house_level ?? 1,
+      highest_house_level: rows[0].highest_house_level ?? 1,
       renownTokens: rows[0].renown_tokens ?? 0,
       totalCoinsEarned: Number(rows[0].total_coins_earned) || 0,
       coinsEarnedThisRun: Number(rows[0].coins_earned_this_run) || 0,
@@ -798,7 +808,7 @@ if (action === "load") {
       ownedThemes,
       ownedBoosts: ownedBoostArr,
       equippedTheme,
-      permanentMultiplier: Number(rows[0].permanent_multiplier) || 1,  // <--- added this
+      permanentMultiplier: Number(rows[0].permanent_multiplier) || 1,
       limitedStock,
     },
   };
