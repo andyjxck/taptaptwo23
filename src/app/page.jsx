@@ -1264,12 +1264,15 @@ const renderFriendsTab = () => (
                       <p><span className="font-semibold">Coins:</span> {formatNumberShort(user.total_coins_earned ?? 0)}</p>
                     </div>
 
-                    <button
-                      onClick={() => sendFriendRequest(user.user_id)}
-                      className="ml-2 px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
-                    >
-                      Add
-                    </button>
+                  <button
+  onClick={() => sendFriendRequest(user.user_id)}
+  className="ml-2 px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
+  disabled={user.user_id === userId}
+  title={user.user_id === userId ? "You can't add yourself" : "Add Friend"}
+>
+  Add
+</button>
+
                   </div>
                 );
               })}
@@ -1356,22 +1359,47 @@ const renderFriendsTab = () => (
         <h4 className="font-semibold text-[#2d3748]">Your Friends:</h4>
         {friends.map((friend) => (
           <div
-            key={friend.friend_id}
-            className="flex justify-between items-center bg-white/10 rounded-lg p-3"
-          >
-            <div className="text-[#2d3748]">
-              <p className="font-medium">{friend.profile_name || 'Unknown'}</p>
-              <p className="text-xs">Taps: {friend.total_taps ?? 0}</p>
-              <p className="text-xs">Upgrades: {friend.combined_upgrade_level ?? 0}</p>
-              <p className="text-xs">Coins: {friend.total_coins_earned ?? 0}</p>
-            </div>
-            <button
-              onClick={() => removeFriend(friend.friend_id)}
-              className="text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-            >
-              Remove
-            </button>
-          </div>
+  key={friend.friend_id}
+  className="flex justify-between items-center bg-white/10 rounded-lg p-3"
+>
+  <div className="flex items-center space-x-4 text-[#2d3748]">
+    {/* Profile Icon */}
+    {(() => {
+      const iconObj = PROFILE_ICONS.find((ic) => ic.id === friend.profile_icon);
+      if (iconObj) {
+        return iconObj.type === 'image' ? (
+          <img
+            src={iconObj.src}
+            alt="Profile Icon"
+            className="w-10 h-10 rounded-full border-2 border-purple-600 object-cover"
+          />
+        ) : (
+          <i className={`${iconObj.className} text-xl text-purple-600`}></i>
+        );
+      }
+      return (
+        <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center border-2 border-purple-600">
+          <i className="fas fa-user text-purple-600"></i>
+        </div>
+      );
+    })()}
+
+    {/* Info */}
+    <div>
+      <p className="font-medium">{friend.profile_name || 'Unknown'}</p>
+      <p className="text-xs">Taps: {formatNumberShort(friend.total_taps ?? 0)}</p>
+      <p className="text-xs">Upgrades: {friend.combined_upgrade_level ?? 0}</p>
+      <p className="text-xs">Coins: {formatNumberShort(friend.total_coins_earned ?? 0)}</p>
+    </div>
+  </div>
+
+  <button
+    onClick={() => removeFriend(friend.friend_id)}
+    className="text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+  >
+    Remove
+  </button>
+</div>
         ))}
       </div>
     )}
