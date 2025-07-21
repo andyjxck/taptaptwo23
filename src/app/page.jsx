@@ -5220,652 +5220,642 @@ const renderLeaderboard = () => (
       </div>
     </div>
   )}
-  <div className="container mx-auto px-2 sm:px-4 py-2 space-y-6">
-    {/* Top row: logo left, buttons right */}
-    <div className="flex justify-between items-end h-20 pl-0 pr-2 sm:px-4">
-      <div className="flex flex-col justify-center items-start">
+<div className="container mx-auto px-2 sm:px-4 py-2 space-y-6">
+  {/* Top row: logo left, buttons right */}
+  <div className="flex justify-between items-end h-20 pl-0 pr-2 sm:px-4">
+    <div className="flex flex-col justify-center items-start">
+      <img
+        src="https://ucarecdn.com/7bdd361d-c411-41ce-b066-c1d20f88e3a7/-/format/auto/"
+        alt="Tap Tap Two Logo"
+        className="h-14 object-contain"
+        style={{ marginLeft: 0 }}
+      />
+      <span className="text-xs text-gray-400 font-medium tracking-wide mt-1 ml-1">
+        made by andysocial
+      </span>
+    </div>
+
+    <div className="flex items-center space-x-2 h-full">
+      <button
+        onClick={() => setShowMaddoxModal(true)}
+        className="relative flex items-center justify-center w-11 h-11 rounded-full bg-gradient-to-br from-[#1e293b] to-[#dc2626] shadow-xl hover:scale-110 transition-all border-2 border-[#dc2626]"
+        aria-label="Maddox Promo"
+        style={{ marginRight: "8px" }}
+      >
         <img
-          src="https://ucarecdn.com/7bdd361d-c411-41ce-b066-c1d20f88e3a7/-/format/auto/"
-          alt="Tap Tap Two Logo"
-          className="h-14 object-contain"
-          style={{ marginLeft: 0 }}
+          src="https://ucarecdn.com/7eaeaf25-2192-4082-a415-dd52f360d379/-/format/auto/"
+          alt="Maddox Logo"
+          className="w-7 h-7 rounded-full object-contain"
         />
-        <span className="text-xs text-gray-400 font-medium tracking-wide mt-1 ml-1">
-          made by andysocial
+        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center border-2 border-white shadow">
+          <span className="text-xs font-bold text-white" style={{ lineHeight: "1" }}>
+            !
+          </span>
         </span>
+      </button>
+
+      <button
+        onClick={() => setShowResetModal(true)}
+        className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200 relative`}
+        aria-label="Reset progress"
+      >
+        <i className="fas fa-sync-alt"></i>
+        <span
+          className="absolute top-0 right-0 flex items-center justify-center rounded-full text-white font-bold"
+          style={{
+            fontSize: "0.75rem",
+            padding: "0 6px",
+            minWidth: "24px",
+            height: "20px",
+            lineHeight: "20px",
+            textAlign: "center",
+            userSelect: "none",
+            backgroundColor: "#4f46e5",
+            transform: "translate(50%, -50%)",
+            zIndex: 20,
+          }}
+        >
+          {getTokensFromCoins(gameState.coinsEarnedThisRun || 0)}
+        </span>
+      </button>
+
+      <a
+        href="/notice-board"
+        className="relative block px-4 py-2 text-[#4a5568] hover:bg-gray-100"
+      >
+        <i className="fas fa-bullhorn"></i>
+        <span
+          className="absolute top-2 right-2 block w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"
+          style={{ pointerEvents: "none", boxShadow: "0 0 0 1px #fff" }}
+        />
+      </a>
+      <button
+        onClick={() => setActiveTab("leaderboard")}
+        className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200`}
+      >
+        <i className="fas fa-trophy"></i>
+      </button>
+
+      <div className="relative">
+        <button
+          onClick={() => setShowDropdown((prev) => !prev)}
+          className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200`}
+          aria-label="Open menu"
+        >
+          <i className="fas fa-bars"></i>
+        </button>
+
+        {showDropdown && (
+          <div
+            className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 box-border"
+            onClick={() => setShowDropdown(false)}
+          >
+            <a
+              href="/help"
+              className="block px-4 py-2 text-[#4a5568] hover:bg-gray-100"
+            >
+              <i className="fas fa-question mr-2"></i> Help
+            </a>
+            <button
+              onClick={() => setShowFeedback(true)}
+              className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
+            >
+              <i className="fas fa-comment-alt mr-2"></i> Feedback
+            </button>
+            <button
+              onClick={() => setActiveTab("profile")}
+              className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
+            >
+              <i className="fas fa-user mr-2"></i> Profile
+            </button>
+            <button
+              onClick={() => {
+                localStorage.removeItem("userId");
+                localStorage.removeItem("pin");
+                window.location.href = "/login";
+              }}
+              className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
+            >
+              <i className="fas fa-sign-out-alt mr-2"></i> Logout
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+
+  {["game", "house", "leaderboard"].includes(activeTab) && (
+    <div className="text-center">
+      <h2 className="text-2xl mb-4 font-crimson-text text-[#4a5568]">
+        {gameState.equippedTheme && gameState.equippedTheme !== "seasons"
+          ? CUSTOM_THEMES[gameState.equippedTheme]?.name ||
+            gameState.equippedTheme.charAt(0).toUpperCase() +
+              gameState.equippedTheme.slice(1)
+          : SEASONS[
+              Number.isInteger(gameState.currentSeason) &&
+              gameState.currentSeason >= 0 &&
+              gameState.currentSeason < SEASONS.length
+                ? gameState.currentSeason
+                : 0
+            ]}
+      </h2>
+
+      <div className="flex flex-col md:flex-row md:items-center md:justify-center gap-2 text-[#4a5568] text-lg mb-6">
+        <div>
+          <span className="font-semibold">Year:</span>{" "}
+          {Number.isFinite(gameState.currentYear)
+            ? 2000 + gameState.currentYear
+            : "2000"}
+        </div>
+        <div>
+          <span className="font-semibold">Weather:</span>{" "}
+          {CUSTOM_THEME_WEATHER_RENAMES[gameState.equippedTheme]?.[
+            gameState.currentWeather
+          ] ||
+            gameState.currentWeather ||
+            "Clear"}
+        </div>
       </div>
 
-      <div className="flex items-center space-x-2 h-full">
-        <button
-          onClick={() => setShowMaddoxModal(true)}
-          className="relative flex items-center justify-center w-11 h-11 rounded-full bg-gradient-to-br from-[#1e293b] to-[#dc2626] shadow-xl hover:scale-110 transition-all border-2 border-[#dc2626]"
-          aria-label="Maddox Promo"
-          style={{ marginRight: "8px" }}
-        >
-          <img
-            src="https://ucarecdn.com/7eaeaf25-2192-4082-a415-dd52f360d379/-/format/auto/"
-            alt="Maddox Logo"
-            className="w-7 h-7 rounded-full object-contain"
-          />
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center border-2 border-white shadow">
-            <span className="text-xs font-bold text-white" style={{ lineHeight: "1" }}>
-              !
-            </span>
-          </span>
-        </button>
+      <div className="text-[#4a5568] text-sm mt-2">{weatherDescription}</div>
 
-        <button
-          onClick={() => setShowResetModal(true)}
-          className={${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200 relative}
-          aria-label="Reset progress"
-        >
-          <i className="fas fa-sync-alt"></i>
-          <span
-            className="absolute top-0 right-0 flex items-center justify-center rounded-full text-white font-bold"
-            style={{
-              fontSize: "0.75rem",
-              padding: "0 6px",
-              minWidth: "24px",
-              height: "20px",
-              lineHeight: "20px",
-              textAlign: "center",
-              userSelect: "none",
-              backgroundColor: "#4f46e5",
-              transform: "translate(50%, -50%)",
-              zIndex: 20,
-            }}
+      <div
+        className="grid grid-cols-3 max-w-xs mx-auto mt-6 mb-12"
+        style={{ gap: "5px" }}
+      >
+        {[
+          { icon: "🪙", value: Math.floor(gameState.coins) },
+          { icon: "👆", value: gameState.totalTaps },
+          { icon: "🔄", value: gameState.resets },
+          { icon: "🏠", value: gameState.houseLevel },
+          { icon: "⭐", value: Math.floor(gameState.renownTokens) },
+          { icon: "✴️", value: gameState.permanentMultiplier.toFixed(2) },
+        ].map(({ icon, value }, idx) => (
+          <div
+            key={idx}
+            className={`${glassStyle} bg-gray-300/30 rounded-xl p-1.5 text-center border border-gray-400/50 backdrop-blur-md shadow-md`}
+            style={{ transformOrigin: "center" }}
           >
-            {getTokensFromCoins(gameState.coinsEarnedThisRun || 0)}
-          </span>
-        </button>
+            <span className="text-2xl select-none">{icon}</span>
+            <p className="text-md font-semibold mt-1">{formatNumberShort(value)}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
 
-        <a
-          href="/notice-board"
-          className="relative block px-4 py-2 text-[#4a5568] hover:bg-gray-100"
-        >
-          <i className="fas fa-bullhorn"></i>
-          <span
-            className="absolute top-2 right-2 block w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"
-            style={{ pointerEvents: "none", boxShadow: "0 0 0 1px #fff" }}
-          />
-        </a>
-        <button
-          onClick={() => setActiveTab("leaderboard")}
-          className={${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200}
-        >
-          <i className="fas fa-trophy"></i>
-        </button>
-
+  <div className="max-w-md mx-auto">
+    {activeTab === "game" ? (
+      <div className="flex flex-col items-center justify-center space-y-6">
         <div className="relative">
           <button
-            onClick={() => setShowDropdown((prev) => !prev)}
-            className={${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200}
-            aria-label="Open menu"
+            onClick={handleTap}
+            className={`w-[200px] h-[200px] rounded-full ${glassStyle} bg-white/30 ${buttonGlow} transform active:scale-95 transition-all duration-200 relative overflow-hidden hover:shadow-2xl border border-white/30 group`}
           >
-            <i className="fas fa-bars"></i>
+            <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div
+                className={`w-32 h-32 bg-gradient-to-r ${
+                  gameState.equippedTheme && gameState.equippedTheme !== "seasons"
+                    ? CUSTOM_THEMES[gameState.equippedTheme]?.buttonGlow
+                    : SEASONAL_THEMES[gameState.currentSeason].buttonGlow
+                } rounded-full animate-pulse opacity-50`}
+              ></div>
+            </div>
+            {gameState.equippedTheme && gameState.equippedTheme !== "seasons" ? (
+              <span className="text-6xl relative z-10 select-none">
+                {CUSTOM_THEMES[gameState.equippedTheme]?.icon || "❓"}
+              </span>
+            ) : (
+              <i
+                className={`fas ${
+                  SEASONAL_THEMES[gameState.currentSeason].icon
+                } text-6xl relative z-10 ${
+                  gameState.currentSeason === 0
+                    ? "text-green-400"
+                    : gameState.currentSeason === 1
+                    ? "text-yellow-400"
+                    : gameState.currentSeason === 2
+                    ? "text-orange-400"
+                    : "text-blue-400"
+                } transition-colors duration-500 group-hover:scale-110 transform`}
+              />
+            )}
           </button>
 
-          {showDropdown && (
-            <div
-              className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 box-border"
-              onClick={() => setShowDropdown(false)}
-            >
-              <a
-                href="/help"
-                className="block px-4 py-2 text-[#4a5568] hover:bg-gray-100"
-              >
-                <i className="fas fa-question mr-2"></i> Help
-              </a>
-              <button
-                onClick={() => setShowFeedback(true)}
-                className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
-              >
-                <i className="fas fa-comment-alt mr-2"></i> Feedback
-              </button>
-              <button
-                onClick={() => setActiveTab("profile")}
-                className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
-              >
-                <i className="fas fa-user mr-2"></i> Profile
-              </button>
-              <button
-                onClick={() => {
-                  localStorage.removeItem("userId");
-                  localStorage.removeItem("pin");
-                  window.location.href = "/login";
-                }}
-                className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
-              >
-                <i className="fas fa-sign-out-alt mr-2"></i> Logout
-              </button>
+          {hasBoost && (
+            <div className="absolute -top-2 -right-2 bg-pink-400 text-white rounded-full px-2 py-1 text-xs">
+              {Math.floor(boostTimeLeft / 60)}:
+              {(boostTimeLeft % 60).toString().padStart(2, "0")}
             </div>
           )}
         </div>
-      </div>
-    </div>
 
-    {["game", "house", "leaderboard"].includes(activeTab) && (
-      <div className="text-center">
-        <h2 className="text-2xl mb-4 font-crimson-text text-[#4a5568]">
-          {gameState.equippedTheme && gameState.equippedTheme !== "seasons"
-            ? CUSTOM_THEMES[gameState.equippedTheme]?.name ||
-              gameState.equippedTheme.charAt(0).toUpperCase() +
-                gameState.equippedTheme.slice(1)
-            : SEASONS[
-                Number.isInteger(gameState.currentSeason) &&
-                gameState.currentSeason >= 0 &&
-                gameState.currentSeason < SEASONS.length
-                  ? gameState.currentSeason
-                  : 0
-              ]}
-        </h2>
+        {!hasBoost && currentQuest && (
+          <div className={`${glassStyle} bg-white/20 rounded-xl p-4 mb-4 text-center shadow`}>
+            <h2 className="text-xl text-[#2d3748] mb-2">
+              <span role="img" aria-label="gift">
+                🎁
+              </span>{" "}
+              Quest
+            </h2>
+            <div className="text-[#4a5568] mb-3">{currentQuest.description}</div>
 
-        <div className="flex flex-col md:flex-row md:items-center md:justify-center gap-2 text-[#4a5568] text-lg mb-6">
-          <div>
-            <span className="font-semibold">Year:</span>{" "}
-            {Number.isFinite(gameState.currentYear)
-              ? 2000 + gameState.currentYear
-              : "2000"}
-          </div>
-          <div>
-            <span className="font-semibold">Weather:</span>{" "}
-            {CUSTOM_THEME_WEATHER_RENAMES[gameState.equippedTheme]?.[
-              gameState.currentWeather
-            ] ||
-              gameState.currentWeather ||
-              "Clear"}
-          </div>
-        </div>
+            <div className="flex items-center justify-center gap-2 mb-3">
+              {/* Progress Bar */}
+              <div className="flex-1">
+                {(() => {
+                  const questTemplate = QUEST_TEMPLATES.find((q) => q.id === currentQuest.id);
+                  let progress = 0;
+                  if (questTemplate && currentQuest.targetAmount !== undefined) {
+                    if (questTemplate.id === "combined_level") {
+                      const combined =
+                        (gameState.tapPowerUpgrades || 0) +
+                        (gameState.autoTapperUpgrades || 0) +
+                        (gameState.critChanceUpgrades || 0) +
+                        (gameState.tapSpeedBonusUpgrades || 0);
+                      progress = Math.min(
+                        ((combined - currentQuest.startCombined) / currentQuest.targetAmount) * 100,
+                        100
+                      );
+                    } else if (questTemplate.id === "earn_coins") {
+                      const earned = gameState.totalCoinsEarned - currentQuest.startCoins;
+                      progress = Math.min((earned / currentQuest.targetAmount) * 100, 100);
+                    } else if (questTemplate.id === "upgrade_house") {
+                      const upgradesDone = gameState.houseLevel - currentQuest.startLevel;
+                      progress = Math.max(Math.min((upgradesDone / currentQuest.targetAmount) * 100, 100), 0);
+                    } else if (currentQuest.startLevel !== undefined) {
+                      let level = 0;
+                      if (questTemplate.id === "upgrade_tap_power") {
+                        level = gameState.tapPowerUpgrades || 0;
+                      } else if (questTemplate.id === "upgrade_auto_tapper") {
+                        level = gameState.autoTapperUpgrades || 0;
+                      } else if (questTemplate.id === "upgrade_crit_chance") {
+                        level = gameState.critChanceUpgrades || 0;
+                      } else if (questTemplate.id === "upgrade_tap_speed") {
+                        level =
+                          gameState.tapSpeedBonusUpgrades || gameState.tap_speed_bonus_upgrades || 0;
+                      }
+                      progress = Math.min(((level - currentQuest.startLevel) / currentQuest.targetAmount) * 100, 100);
+                    }
+                  }
 
-        <div className="text-[#4a5568] text-sm mt-2">{weatherDescription}</div>
+                  progress = Math.max(progress, 0);
 
-        <div
-          className="grid grid-cols-3 max-w-xs mx-auto mt-6 mb-12"
-          style={{ gap: "5px" }}
-        >
-          {[
-            { icon: "🪙", value: Math.floor(gameState.coins) },
-            { icon: "👆", value: gameState.totalTaps },
-            { icon: "🔄", value: gameState.resets },
-            { icon: "🏠", value: gameState.houseLevel },
-            { icon: "⭐", value: Math.floor(gameState.renownTokens) },
-            { icon: "✴️", value: gameState.permanentMultiplier.toFixed(2) },
-          ].map(({ icon, value }, idx) => (
-            <div
-              key={idx}
-              className={${glassStyle} bg-gray-300/30 rounded-xl p-1.5 text-center border border-gray-400/50 backdrop-blur-md shadow-md}
-              style={{ transformOrigin: "center" }}
-            >
-              <span className="text-2xl select-none">{icon}</span>
-              <p className="text-md font-semibold mt-1">{formatNumberShort(value)}</p>
+                  return (
+                    <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden relative">
+                      <div
+                        className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-300"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Sync/Refresh Button */}
+              <button
+                onClick={() => {
+                  const newQuest = generateQuest(gameState);
+                  setCurrentQuest(newQuest);
+                  setCanClaimQuest(false);
+                  localStorage.setItem("currentQuest", JSON.stringify(newQuest));
+                  saveGame({
+                    ...gameState,
+                    currentQuest: newQuest,
+                    canClaimQuest: false,
+                  });
+                  setNotification("Quest refreshed!");
+                }}
+                aria-label="Refresh Quest"
+                title="Refresh Quest"
+                className="ml-2 flex items-center justify-center bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-full p-2 transition duration-150 shadow"
+                style={{
+                  fontSize: "1.25rem",
+                  width: "32px",
+                  height: "32px",
+                  minWidth: "32px",
+                  minHeight: "32px",
+                }}
+              >
+                <i className="fas fa-sync-alt text-gray-400"></i>
+              </button>
             </div>
-          ))}
-        </div>
-      </div>
-    )}
 
-    <div className="max-w-md mx-auto">
-      {activeTab === "game" ? (
-        <div className="flex flex-col items-center justify-center space-y-6">
-          <div className="relative">
-            <button
-              onClick={handleTap}
-              className={w-[200px] h-[200px] rounded-full ${glassStyle} bg-white/30 ${buttonGlow} transform active:scale-95 transition-all duration-200 relative overflow-hidden hover:shadow-2xl border border-white/30 group}
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div
-                  className={w-32 h-32 bg-gradient-to-r ${
-                    gameState.equippedTheme &&
-                    gameState.equippedTheme !== "seasons"
-                      ? CUSTOM_THEMES[gameState.equippedTheme]?.buttonGlow
-                      : SEASONAL_THEMES[gameState.currentSeason].buttonGlow
-                  } rounded-full animate-pulse opacity-50}
-                ></div>
-              </div>
-              {gameState.equippedTheme && gameState.equippedTheme !== "seasons" ? (
-                <span className="text-6xl relative z-10 select-none">
-                  {CUSTOM_THEMES[gameState.equippedTheme]?.icon || "❓"}
-                </span>
-              ) : (
-                <i
-                  className={fas ${
-                    SEASONAL_THEMES[gameState.currentSeason].icon
-                  } text-6xl relative z-10 ${
-                    gameState.currentSeason === 0
-                      ? "text-green-400"
-                      : gameState.currentSeason === 1
-                      ? "text-yellow-400"
-                      : gameState.currentSeason === 2
-                      ? "text-orange-400"
-                      : "text-blue-400"
-                  } transition-colors duration-500 group-hover:scale-110 transform}
-                />
-              )}
-            </button>
-
-            {hasBoost && (
-              <div className="absolute -top-2 -right-2 bg-pink-400 text-white rounded-full px-2 py-1 text-xs">
-                {Math.floor(boostTimeLeft / 60)}:
-                {(boostTimeLeft % 60).toString().padStart(2, "0")}
-              </div>
+            {/* Claim button only if complete */}
+            {canClaimQuest && (
+              <button
+                onClick={claimQuestReward}
+                className="px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-green-500 to-green-600 text-white shadow hover:shadow-xl transition-all duration-200"
+              >
+                Claim 10x Boost!
+              </button>
             )}
           </div>
+        )}
 
-          {!hasBoost && currentQuest && (
-            <div
-              className={${glassStyle} bg-white/20 rounded-xl p-4 mb-4 text-center shadow}
-            >
-              <h2 className="text-xl text-[#2d3748] mb-2">
-                <span role="img" aria-label="gift">
-                  🎁
-                </span>{" "}
-                Quest
-              </h2>
-              <div className="text-[#4a5568] mb-3">{currentQuest.description}</div>
-
-              <div className="flex items-center justify-center gap-2 mb-3">
-                {/* Progress Bar */}
-                <div className="flex-1">
-                  {(() => {
-                    const questTemplate = QUEST_TEMPLATES.find((q) => q.id === currentQuest.id);
-let progress = 0;
-if (questTemplate && currentQuest.targetAmount !== undefined) {
-  if (questTemplate.id === "combined_level") {
-    const combined =
-      (gameState.tapPowerUpgrades || 0) +
-      (gameState.autoTapperUpgrades || 0) +
-      (gameState.critChanceUpgrades || 0) +
-      (gameState.tapSpeedBonusUpgrades || 0);
-    progress = Math.min(
-      ((combined - currentQuest.startCombined) / currentQuest.targetAmount) * 100,
-      100
-    );
-  } else if (questTemplate.id === "earn_coins") {
-    const earned = gameState.totalCoinsEarned - currentQuest.startCoins;
-    progress = Math.min((earned / currentQuest.targetAmount) * 100, 100);
-  } else if (questTemplate.id === "upgrade_house") {
-    const upgradesDone = gameState.houseLevel - currentQuest.startLevel;
-    progress = Math.max(Math.min((upgradesDone / currentQuest.targetAmount) * 100, 100), 0);
-  } else if (currentQuest.startLevel !== undefined) {
-    let level = 0;
-    if (questTemplate.id === "upgrade_tap_power") {
-      level = gameState.tapPowerUpgrades || 0;
-    } else if (questTemplate.id === "upgrade_auto_tapper") {
-      level = gameState.autoTapperUpgrades || 0;
-    } else if (questTemplate.id === "upgrade_crit_chance") {
-      level = gameState.critChanceUpgrades || 0;
-    } else if (questTemplate.id === "upgrade_tap_speed") {
-      level =
-        gameState.tapSpeedBonusUpgrades || gameState.tap_speed_bonus_upgrades || 0;
-    }
-    progress = Math.min(((level - currentQuest.startLevel) / currentQuest.targetAmount) * 100, 100);
-  }
-}
-
-progress = Math.max(progress, 0);
-
-return (
-  <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden relative">
-    <div
-      className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-300"
-      style={{ width: ${progress}% }}
-    />
-  </div>
-);
-})()}
-
-</div>
-
-{/* Sync/Refresh Button */}
-<button
-  onClick={() => {
-    const newQuest = generateQuest(gameState);
-    setCurrentQuest(newQuest);
-    setCanClaimQuest(false);
-    localStorage.setItem("currentQuest", JSON.stringify(newQuest));
-    saveGame({
-      ...gameState,
-      currentQuest: newQuest,
-      canClaimQuest: false,
-    });
-    setNotification("Quest refreshed!");
-  }}
-  aria-label="Refresh Quest"
-  title="Refresh Quest"
-  className="ml-2 flex items-center justify-center bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-full p-2 transition duration-150 shadow"
-  style={{
-    fontSize: "1.25rem",
-    width: "32px",
-    height: "32px",
-    minWidth: "32px",
-    minHeight: "32px",
-  }}
->
-  <i className="fas fa-sync-alt text-gray-400"></i>
-</button>
-</div>
-
-{/* Claim button only if complete */}
-{canClaimQuest && (
-  <button
-    onClick={claimQuestReward}
-    className="px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-green-500 to-green-600 text-white shadow hover:shadow-xl transition-all duration-200"
-  >
-    Claim 10x Boost!
-  </button>
-)}
-<div
-  className={w-full ${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow}}
->
-  <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#2d3748]">
-    Upgrades
-  </h2>
-  <div className="text-center text-sm text-gray-500 font-semibold mb-4">
-    Combined Upgrade Level: {combinedLevel}
-  </div>
-  <div className="flex gap-2 mb-4">
-    {[1, 10, 100, "Max"].map((val) => (
-      <button
-        key={val}
-        onClick={() => setUpgradeMultiplier(val === "Max" ? "Max" : val)}
-        className={px-3 py-1 rounded font-bold
-          ${
-            upgradeMultiplier === val
-              ? "bg-[#059669] text-white"
-              : "bg-gray-200 text-gray-700"
-          }
-          hover:bg-[#34d399] transition}
-      >
-        x{val}
-      </button>
-    ))}
-  </div>
-  <div className="grid grid-cols-1 gap-4">
-    {Object.entries(UPGRADE_COSTS).map(([type, costFn]) => {
-      const upgradeLevel = gameState[${type}Upgrades] || 0;
-      let multiplier =
-        upgradeMultiplier === "Max"
-          ? getMaxAffordableUpgrades(type, upgradeLevel, gameState.coins)
-          : upgradeMultiplier;
-
-      const totalCost = getTotalUpgradeCost(type, upgradeLevel, multiplier);
-      const canAfford = gameState.coins >= totalCost;
-      const currentValueRaw = gameState[type] || 0;
-
-      const roundedValue =
-        type === "critChance"
-          ? currentValueRaw
-          : Math.round(currentValueRaw * 10) / 10;
-
-      const currentValueShort = formatNumberShort(roundedValue);
-
-      const currentValueFormatted =
-        type === "critChance" ? ${currentValueShort}% : currentValueShort;
-
-      return (
-        <div
-          key={type}
-          className={${glassStyle} bg-white/10 rounded-xl p-4 border border-white/30}
-        >
-          <div className="flex flex-col space-y-2">
-            <div className="flex justify-between items-center">
-              <h3 className="font-medium text-lg text-[#2d3748] flex items-center relative">
-                {type === "tapPower"
-                  ? "Tap Power"
-                  : type === "autoTapper"
-                  ? "Auto Tapper"
-                  : type === "critChance"
-                  ? "Critical Chance"
-                  : "Tap Speed Bonus"}
-
-                <button
-                  onMouseEnter={() => setTooltipVisibleFor(type)}
-                  onMouseLeave={() => setTooltipVisibleFor(null)}
-                  onFocus={() => setTooltipVisibleFor(type)}
-                  onBlur={() => setTooltipVisibleFor(null)}
-                  onClick={() =>
-                    setTooltipVisibleFor((prev) => (prev === type ? null : type))
+        <div className={`w-full ${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow}`}>
+          <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#2d3748]">
+            Upgrades
+          </h2>
+          <div className="text-center text-sm text-gray-500 font-semibold mb-4">
+            Combined Upgrade Level: {combinedLevel}
+          </div>
+          <div className="flex gap-2 mb-4">
+            {[1, 10, 100, "Max"].map((val) => (
+              <button
+                key={val}
+                onClick={() => setUpgradeMultiplier(val === "Max" ? "Max" : val)}
+                className={`px-3 py-1 rounded font-bold
+                  ${
+                    upgradeMultiplier === val
+                      ? "bg-[#059669] text-white"
+                      : "bg-gray-200 text-gray-700"
                   }
-                  aria-label={Info about ${type}}
-                  className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                  style={{ fontSize: "0.8rem" }}
+                  hover:bg-[#34d399] transition`}
+              >
+                x{val}
+              </button>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 gap-4">
+            {Object.entries(UPGRADE_COSTS).map(([type, costFn]) => {
+              const upgradeLevel = gameState[`${type}Upgrades`] || 0;
+              let multiplier =
+                upgradeMultiplier === "Max"
+                  ? getMaxAffordableUpgrades(type, upgradeLevel, gameState.coins)
+                  : upgradeMultiplier;
+
+              const totalCost = getTotalUpgradeCost(type, upgradeLevel, multiplier);
+              const canAfford = gameState.coins >= totalCost;
+              const currentValueRaw = gameState[type] || 0;
+
+              const roundedValue =
+                type === "critChance"
+                  ? currentValueRaw
+                  : Math.round(currentValueRaw * 10) / 10;
+
+              const currentValueShort = formatNumberShort(roundedValue);
+
+              const currentValueFormatted =
+                type === "critChance" ? `${currentValueShort}%` : currentValueShort;
+
+              return (
+                <div
+                  key={type}
+                  className={`${glassStyle} bg-white/10 rounded-xl p-4 border border-white/30`}
                 >
-                  <i className="fas fa-info-circle" />
-                </button>
-                {tooltipVisibleFor === type && <Tooltip text={UPGRADE_DESCRIPTIONS[type]} />}
-              </h3>
-              <span className="text-sm text-[#4a5568] font-semibold">
-                Level {upgradeLevel + 1}
-              </span>
-            </div>
-            <p className="text-sm text-[#4a5568]">Current: {currentValueFormatted}</p>
-            <button
-              onClick={() => handleUpgrade(type, multiplier)}
-              disabled={!canAfford}
-              className={upgradeButtonStyle(canAfford)}
-            >
-              {Buy${multiplier > 1 ?  x${multiplier} : ""} (${formatNumberShort(totalCost)})}
-            </button>
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-medium text-lg text-[#2d3748] flex items-center relative">
+                        {type === "tapPower"
+                          ? "Tap Power"
+                          : type === "autoTapper"
+                          ? "Auto Tapper"
+                          : type === "critChance"
+                          ? "Critical Chance"
+                          : "Tap Speed Bonus"}
+
+                        <button
+                          onMouseEnter={() => setTooltipVisibleFor(type)}
+                          onMouseLeave={() => setTooltipVisibleFor(null)}
+                          onFocus={() => setTooltipVisibleFor(type)}
+                          onBlur={() => setTooltipVisibleFor(null)}
+                          onClick={() =>
+                            setTooltipVisibleFor((prev) => (prev === type ? null : type))
+                          }
+                          aria-label={`Info about ${type}`}
+                          className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                          style={{ fontSize: "0.8rem" }}
+                        >
+                          <i className="fas fa-info-circle" />
+                        </button>
+                        {tooltipVisibleFor === type && <Tooltip text={UPGRADE_DESCRIPTIONS[type]} />}
+                      </h3>
+                      <span className="text-sm text-[#4a5568] font-semibold">
+                        Level {upgradeLevel + 1}
+                      </span>
+                    </div>
+                    <p className="text-sm text-[#4a5568]">Current: {currentValueFormatted}</p>
+                    <button
+                      onClick={() => handleUpgrade(type, multiplier)}
+                      disabled={!canAfford}
+                      className={upgradeButtonStyle(canAfford)}
+                    >
+                      {`Buy${multiplier > 1 ? ` x${multiplier}` : ""} (${formatNumberShort(totalCost)})`}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
-      );
-    })}
+      </div>
+    ) : activeTab === "leaderboard" ? (
+      renderLeaderboard()
+    ) : activeTab === "house" ? (
+      renderHouseTab()
+    ) : activeTab === "shop" ? (
+      renderShopTab()
+    ) : activeTab === "profile" ? (
+      renderProfileTab()
+    ) : activeTab === "friends" ? (
+      renderFriendsTab()
+    ) : null}
   </div>
-</div>
-</div>
-) : activeTab === "leaderboard" ? (
-renderLeaderboard()
-) : activeTab === "house" ? (
-renderHouseTab()
-) : activeTab === "shop" ? (
-renderShopTab()
-) : activeTab === "profile" ? (
-renderProfileTab()
-) : activeTab === "friends" ? (
-renderFriendsTab()
-) : null}
-</div>
 </div>
 
 {/* Sticky Bottom Bar - centered */}
 <div
-  className={${glassStyle} bg-white/20 rounded-2xl ${buttonGlow} p-2 sticky bottom-4 inset-x-0 z-40 max-w-md w-full mx-auto}
+  className={`${glassStyle} bg-white/20 rounded-2xl ${buttonGlow} p-2 sticky bottom-4 inset-x-0 z-40 max-w-md w-full mx-auto`}
   style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
 >
-<div className="flex space-x-4 justify-center">
-  <button
-    onClick={() => setActiveTab("game")}
-    className={px-6 py-3 rounded-xl transition-all duration-200 ${
-      activeTab === "game"
-        ? "bg-white/40 text-[#2d3748] shadow-md"
-        : "text-[#4a5568] hover:bg-white/20"
-    } flex flex-col items-center justify-center}
-  >
-    <i className="fas fa-gamepad"></i>
-    <span className="block text-xs mt-1">Game</span>
-  </button>
+  <div className="flex space-x-4 justify-center">
+    <button
+      onClick={() => setActiveTab("game")}
+      className={`px-6 py-3 rounded-xl transition-all duration-200 ${
+        activeTab === "game"
+          ? "bg-white/40 text-[#2d3748] shadow-md"
+          : "text-[#4a5568] hover:bg-white/20"
+      } flex flex-col items-center justify-center`}
+    >
+      <i className="fas fa-gamepad"></i>
+      <span className="block text-xs mt-1">Game</span>
+    </button>
 
-  <button
-    onClick={() => setActiveTab("house")}
-    className={px-6 py-3 rounded-xl transition-all duration-200 ${
-      activeTab === "house"
-        ? "bg-white/40 text-[#2d3748] shadow-md"
-        : "text-[#4a5568] hover:bg-white/20"
-    } flex flex-col items-center justify-center}
-  >
-    <i className="fas fa-home"></i>
-    <span className="block text-xs mt-1">House</span>
-  </button>
+    <button
+      onClick={() => setActiveTab("house")}
+      className={`px-6 py-3 rounded-xl transition-all duration-200 ${
+        activeTab === "house"
+          ? "bg-white/40 text-[#2d3748] shadow-md"
+          : "text-[#4a5568] hover:bg-white/20"
+      } flex flex-col items-center justify-center`}
+    >
+      <i className="fas fa-home"></i>
+      <span className="block text-xs mt-1">House</span>
+    </button>
 
-  <button
-    onClick={() => setActiveTab("shop")}
-    className={px-6 py-3 rounded-xl transition-all duration-200 ${
-      activeTab === "shop"
-        ? "bg-white/40 text-[#e11d48] shadow-md"
-        : "text-[#e11d48] hover:bg-white/20"
-    } flex flex-col items-center justify-center}
-  >
-    <i className="fas fa-store"></i>
-    <span className="block text-xs mt-1">Shop</span>
-  </button>
+    <button
+      onClick={() => setActiveTab("shop")}
+      className={`px-6 py-3 rounded-xl transition-all duration-200 ${
+        activeTab === "shop"
+          ? "bg-white/40 text-[#e11d48] shadow-md"
+          : "text-[#e11d48] hover:bg-white/20"
+      } flex flex-col items-center justify-center`}
+    >
+      <i className="fas fa-store"></i>
+      <span className="block text-xs mt-1">Shop</span>
+    </button>
 
-  <button
-    onClick={() => setActiveTab("friends")}
-    className={px-6 py-3 rounded-xl transition-all duration-200 ${
-      activeTab === "friends"
-        ? "bg-white/40 text-[#2d3748] shadow-md"
-        : "text-[#4a5568] hover:bg-white/20"
-    } flex flex-col items-center justify-center}
-  >
-    <i className="fas fa-users"></i>
-    <span className="block text-xs mt-1">Friends</span>
-  </button>
-</div>
+    <button
+      onClick={() => setActiveTab("friends")}
+      className={`px-6 py-3 rounded-xl transition-all duration-200 ${
+        activeTab === "friends"
+          ? "bg-white/40 text-[#2d3748] shadow-md"
+          : "text-[#4a5568] hover:bg-white/20"
+      } flex flex-col items-center justify-center`}
+    >
+      <i className="fas fa-users"></i>
+      <span className="block text-xs mt-1">Friends</span>
+    </button>
   </div>
-      {showResetModal && renderResetModal()}
-      {showHouseRenameModal && renderHouseRenameModal()}
-     {showOfflineEarnings && pendingOfflineEarnings && (
+</div>
+{showResetModal && renderResetModal()}
+{showHouseRenameModal && renderHouseRenameModal()}
+{showOfflineEarnings && pendingOfflineEarnings && (
   <div
     className="fixed inset-0 bg-black/50 flex justify-center z-50"
     style={{ alignItems: "flex-start", paddingTop: "6rem" }}
+  >
+    <div
+      className="
+        bg-gradient-to-br from-purple-400/50 via-purple-200/40 to-purple-600/60
+        backdrop-blur-xl rounded-2xl p-7 max-w-sm w-full border border-white/30 shadow-lg relative
+      "
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(192,132,252,0.95), rgba(139,92,246,0.75), rgba(59,7,100,0.7))",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        boxShadow: "0 8px 32px 0 rgba(124,58,237,0.18)",
+      }}
+    >
+      <h3 className="text-xl font-medium text-[#2d3748] mb-4">Offline Earnings!</h3>
+      <p className="mb-4 text-lg text-[#4a5568] text-center">
+        You were offline for{" "}
+        {formatDuration(pendingOfflineEarnings.seconds)}.
+        <br />
+        You earned{" "}
+        <span className="font-bold text-green-600">
+          {formatNumberShort(Math.floor(pendingOfflineEarnings.coins))}
+        </span>{" "}
+        coins!
+      </p>
+
+      <button
+        onClick={() => {
+          const newState = {
+            ...gameState,
+            coins: gameState.coins + pendingOfflineEarnings.coins,
+            totalCoinsEarned: gameState.totalCoinsEarned + pendingOfflineEarnings.coins,
+          };
+          setGameState(newState);
+          setPendingOfflineEarnings(null);
+          setShowOfflineEarnings(false);
+          saveGame(newState);
+        }}
+        className="w-full py-3 rounded-xl bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200 mb-3"
+      >
+        Claim
+      </button>
+
+      <button
+        onClick={() => {
+          openDoubleEarningsModal();
+        }}
+        className="w-full py-3 rounded-xl bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+      >
+        Double Earnings! (Sacrifice)
+      </button>
+    </div>
+  </div>
+)}
+
+{showHardResetModal && (
+  <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div
+      className="
+        bg-gradient-to-br from-purple-400/50 via-purple-200/40 to-purple-600/60
+        backdrop-blur-xl rounded-2xl p-7 max-w-sm w-full border border-white/30 shadow-lg relative
+      "
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(192,132,252,0.95), rgba(139,92,246,0.75), rgba(59,7,100,0.7))",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        boxShadow: "0 8px 32px 0 rgba(124,58,237,0.18)",
+      }}
+    >
+      <h2 className="text-xl font-semibold text-white mb-4 text-center">ARE YOU SURE?</h2>
+      <p className="text-white text-center mb-6 font-semibold">
+        THIS IS PERMANENT AND CANNOT BE UNDONE.
+      </p>
+
+      {hardResetError && (
+        <div className="text-red-400 mb-4 text-center">{hardResetError}</div>
+      )}
+
+      <div className="flex justify-between">
+        <button
+          onClick={() => {
+            setShowHardResetModal(false);
+            setHardResetError("");
+          }}
+          className="px-4 py-2 rounded-lg bg-purple-700 hover:bg-purple-800 text-white transition flex-1 mr-2"
+          disabled={hardResetLoading}
         >
-          <div
-            className="
-    bg-gradient-to-br from-purple-400/50 via-purple-200/40 to-purple-600/60
-    backdrop-blur-xl rounded-2xl p-7 max-w-sm w-full border border-white/30 shadow-lg relative
-  "
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(192,132,252,0.95), rgba(139,92,246,0.75), rgba(59,7,100,0.7))",
-              backdropFilter: "blur(16px)",
-              WebkitBackdropFilter: "blur(16px)",
-              boxShadow: "0 8px 32px 0 rgba(124,58,237,0.18)",
-            }}
-          >
-            <h3 className="text-xl font-medium text-[#2d3748] mb-4">
-              Offline Earnings!
-            </h3>
-            <p className="mb-4 text-lg text-[#4a5568] text-center">
-              You were offline for{" "}
-              {formatDuration(pendingOfflineEarnings.seconds)}.
-              <br />
-              You earned{" "}
-              <span className="font-bold text-green-600">
-                {formatNumberShort(Math.floor(pendingOfflineEarnings.coins))}
-              </span>{" "}
-              coins!
-            </p>
+          Cancel
+        </button>
 
-            <button
-onClick={() => {
-  const newState = {
-    ...gameState,
-    coins: gameState.coins + pendingOfflineEarnings.coins,
-    totalCoinsEarned: gameState.totalCoinsEarned + pendingOfflineEarnings.coins,
-  };
-  setGameState(newState);
-  setPendingOfflineEarnings(null);
-  setShowOfflineEarnings(false); // <-- Add this line!
-  saveGame(newState);
-}}
+        <button
+          onClick={async () => {
+            setHardResetError("");
+            setHardResetLoading(true);
+            try {
+              const res = await fetch("/api/game-state", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  action: "hardReset",
+                  userId,
+                  pin,
+                }),
+              });
+              const data = await res.json();
 
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200 mb-3"
-            >
-              Claim
-            </button>
+              if (data.success) {
+                localStorage.clear();
+                window.location.href = "/login";
+              } else {
+                setHardResetError(data.error || "Failed to hard reset.");
+                setHardResetLoading(false);
+              }
+            } catch (err) {
+              setHardResetError("Error during hard reset, try again.");
+              setHardResetLoading(false);
+            }
+          }}
+          className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition flex-1 ml-2"
+          disabled={hardResetLoading}
+        >
+          {hardResetLoading ? "Resetting..." : "Confirm"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
-            <button
-              onClick={() => {
-                openDoubleEarningsModal();
-              }}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200"
-            >
-              Double Earnings! (Sacrifice)
-            </button>
-          </div>
-        </div>
-      )}
-
-      {showHardResetModal && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div
-            className="
-    bg-gradient-to-br from-purple-400/50 via-purple-200/40 to-purple-600/60
-    backdrop-blur-xl rounded-2xl p-7 max-w-sm w-full border border-white/30 shadow-lg relative
-  "
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(192,132,252,0.95), rgba(139,92,246,0.75), rgba(59,7,100,0.7))",
-              backdropFilter: "blur(16px)",
-              WebkitBackdropFilter: "blur(16px)",
-              boxShadow: "0 8px 32px 0 rgba(124,58,237,0.18)",
-            }}
-          >
-            <h2 className="text-xl font-semibold text-white mb-4 text-center">
-              ARE YOU SURE?
-            </h2>
-            <p className="text-white text-center mb-6 font-semibold">
-              THIS IS PERMANENT AND CANNOT BE UNDONE.
-            </p>
-
-            {hardResetError && (
-              <div className="text-red-400 mb-4 text-center">
-                {hardResetError}
-              </div>
-            )}
-
-            <div className="flex justify-between">
-              <button
-                onClick={() => {
-                  setShowHardResetModal(false);
-                  setHardResetError("");
-                }}
-                className="px-4 py-2 rounded-lg bg-purple-700 hover:bg-purple-800 text-white transition flex-1 mr-2"
-                disabled={hardResetLoading}
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={async () => {
-                  setHardResetError("");
-                  setHardResetLoading(true);
-                  try {
-                    const res = await fetch("/api/game-state", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        action: "hardReset",
-                        userId,
-                        pin,
-                      }),
-                    });
-                    const data = await res.json();
-
-                    if (data.success) {
-                      // Clear local data and redirect to login or reload
-                      localStorage.clear();
-                      window.location.href = "/login";
-                    } else {
-                      setHardResetError(data.error || "Failed to hard reset.");
-                      setHardResetLoading(false);
-                    }
-                  } catch (err) {
-                    setHardResetError("Error during hard reset, try again.");
-                    setHardResetLoading(false);
-                  }
-                }}
-                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition flex-1 ml-2"
-                disabled={hardResetLoading}
-              >
-                {hardResetLoading ? "Resetting..." : "Confirm"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
- {showWelcomeModal && (
+{showWelcomeModal && (
   <div className="fixed inset-x-0 top-0 z-50 flex justify-center p-4 pointer-events-none">
     <div
       className="
@@ -5880,9 +5870,7 @@ onClick={() => {
         boxShadow: "0 8px 32px 0 rgba(124,58,237,0.18)",
       }}
     >
-      <h2 className="text-xl font-semibold text-white mb-4 text-center">
-        Announcement
-      </h2>
+      <h2 className="text-xl font-semibold text-white mb-4 text-center">Announcement</h2>
       <p className="text-white mb-4 text-center font-semibold">
         Welcome to the new site! <br />
         I'm really sorry if some of your stats have been reset, are outdated or missing.
@@ -5890,7 +5878,8 @@ onClick={() => {
         It's been a nightmare moving sites, but I'm pretty sure we're there now.
       </p>
       <p className="text-white mb-6 text-center font-semibold">
-        Use code <span className="font-mono bg-purple-700 px-2 rounded">taptaptwo</span> in the "house" tab for an extra small boost on top of the extra 100 renown everyone has been gifted.
+        Use code{" "}
+        <span className="font-mono bg-purple-700 px-2 rounded">taptaptwo</span> in the "house" tab for an extra small boost on top of the extra 100 renown everyone has been gifted.
       </p>
 
       <div className="flex justify-center">
@@ -5905,227 +5894,212 @@ onClick={() => {
   </div>
 )}
 
+{showChangePinModal && (
+  <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div
+      className="
+        bg-gradient-to-br from-purple-400/50 via-purple-200/40 to-purple-600/60
+        backdrop-blur-xl rounded-2xl p-7 max-w-sm w-full border border-white/30 shadow-lg relative
+      "
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(192,132,252,0.95), rgba(139,92,246,0.75), rgba(59,7,100,0.7))",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        boxShadow: "0 8px 32px 0 rgba(124,58,237,0.18)",
+      }}
+    >
+      <h2 className="text-xl font-semibold text-white mb-4">Change Pin</h2>
 
-      {showChangePinModal && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div
-            className="
-    bg-gradient-to-br from-purple-400/50 via-purple-200/40 to-purple-600/60
-    backdrop-blur-xl rounded-2xl p-7 max-w-sm w-full border border-white/30 shadow-lg relative
-  "
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(192,132,252,0.95), rgba(139,92,246,0.75), rgba(59,7,100,0.7))",
-              backdropFilter: "blur(16px)",
-              WebkitBackdropFilter: "blur(16px)",
-              boxShadow: "0 8px 32px 0 rgba(124,58,237,0.18)",
-            }}
-          >
-            <h2 className="text-xl font-semibold text-white mb-4">
-              Change Pin
-            </h2>
+      <input
+        type="password"
+        placeholder="Current Pin"
+        value={currentPinInput}
+        onChange={(e) => setCurrentPinInput(e.target.value)}
+        className="w-full mb-3 px-4 py-2 rounded-xl border border-purple-500 bg-purple-200/30 text-white placeholder-purple-100 focus:outline-none focus:ring-2 focus:ring-purple-400"
+      />
+      <input
+        type="password"
+        placeholder="New Pin"
+        value={newPinInput}
+        onChange={(e) => setNewPinInput(e.target.value)}
+        className="w-full mb-3 px-4 py-2 rounded-xl border border-purple-500 bg-purple-200/30 text-white placeholder-purple-100 focus:outline-none focus:ring-2 focus:ring-purple-400"
+      />
+      <input
+        type="password"
+        placeholder="Confirm New Pin"
+        value={confirmPinInput}
+        onChange={(e) => setConfirmPinInput(e.target.value)}
+        className="w-full mb-4 px-4 py-2 rounded-xl border border-purple-500 bg-purple-200/30 text-white placeholder-purple-100 focus:outline-none focus:ring-2 focus:ring-purple-400"
+      />
 
-            <input
-              type="password"
-              placeholder="Current Pin"
-              value={currentPinInput}
-              onChange={(e) => setCurrentPinInput(e.target.value)}
-              className="w-full mb-3 px-4 py-2 rounded-xl border border-purple-500 bg-purple-200/30 text-white placeholder-purple-100 focus:outline-none focus:ring-2 focus:ring-purple-400"
-            />
-            <input
-              type="password"
-              placeholder="New Pin"
-              value={newPinInput}
-              onChange={(e) => setNewPinInput(e.target.value)}
-              className="w-full mb-3 px-4 py-2 rounded-xl border border-purple-500 bg-purple-200/30 text-white placeholder-purple-100 focus:outline-none focus:ring-2 focus:ring-purple-400"
-            />
-            <input
-              type="password"
-              placeholder="Confirm New Pin"
-              value={confirmPinInput}
-              onChange={(e) => setConfirmPinInput(e.target.value)}
-              className="w-full mb-4 px-4 py-2 rounded-xl border border-purple-500 bg-purple-200/30 text-white placeholder-purple-100 focus:outline-none focus:ring-2 focus:ring-purple-400"
-            />
+      {pinErrorMessage && (
+        <div className="text-red-300 mb-2 text-sm">{pinErrorMessage}</div>
+      )}
+      {pinSuccessMessage && (
+        <div className="text-green-300 mb-2 text-sm">{pinSuccessMessage}</div>
+      )}
 
-            {pinErrorMessage && (
-              <div className="text-red-300 mb-2 text-sm">{pinErrorMessage}</div>
-            )}
-            {pinSuccessMessage && (
-              <div className="text-green-300 mb-2 text-sm">
-                {pinSuccessMessage}
-              </div>
-            )}
+      <div className="flex justify-between">
+        <button
+          onClick={() => setShowChangePinModal(false)}
+          className="px-4 py-2 rounded-lg bg-purple-700 hover:bg-purple-800 text-white transition"
+        >
+          Cancel
+        </button>
 
-            <div className="flex justify-between">
-              <button
-                onClick={() => setShowChangePinModal(false)}
-                className="px-4 py-2 rounded-lg bg-purple-700 hover:bg-purple-800 text-white transition"
-              >
-                Cancel
-              </button>
+        <button
+          onClick={async () => {
+            setPinErrorMessage("");
+            setPinSuccessMessage("");
 
-              <button
-                onClick={async () => {
+            if (!currentPinInput || !newPinInput || !confirmPinInput) {
+              setPinErrorMessage("Please fill all fields.");
+              return;
+            }
+
+            if (newPinInput !== confirmPinInput) {
+              setPinErrorMessage("New pins do not match.");
+              return;
+            }
+
+            if (newPinInput.length < 4) {
+              setPinErrorMessage("New pin must be at least 4 characters.");
+              return;
+            }
+
+            try {
+              const res = await fetch("/api/game-state", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  action: "changePin",
+                  userId,
+                  pin: currentPinInput,
+                  newPin: newPinInput,
+                }),
+              });
+              const data = await res.json();
+
+              if (data.success) {
+                setPinSuccessMessage("Pin changed successfully!");
+                setPin(newPinInput);
+                localStorage.setItem("pin", newPinInput);
+                setTimeout(() => {
+                  setShowChangePinModal(false);
+                  setCurrentPinInput("");
+                  setNewPinInput("");
+                  setConfirmPinInput("");
                   setPinErrorMessage("");
                   setPinSuccessMessage("");
-
-                  if (!currentPinInput || !newPinInput || !confirmPinInput) {
-                    setPinErrorMessage("Please fill all fields.");
-                    return;
-                  }
-
-                  if (newPinInput !== confirmPinInput) {
-                    setPinErrorMessage("New pins do not match.");
-                    return;
-                  }
-
-                  if (newPinInput.length < 4) {
-                    setPinErrorMessage(
-                      "New pin must be at least 4 characters."
-                    );
-                    return;
-                  }
-
-                  try {
-                    const res = await fetch("/api/game-state", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        action: "changePin",
-                        userId,
-                        pin: currentPinInput,
-                        newPin: newPinInput,
-                      }),
-                    });
-                    const data = await res.json();
-
-                    if (data.success) {
-                      setPinSuccessMessage("Pin changed successfully!");
-                      setPin(newPinInput); // Update local pin state to NEW pin
-                      localStorage.setItem("pin", newPinInput); // Save to localStorage
-                      setTimeout(() => {
-                        setShowChangePinModal(false);
-                        setCurrentPinInput("");
-                        setNewPinInput("");
-                        setConfirmPinInput("");
-                        setPinErrorMessage("");
-                        setPinSuccessMessage("");
-                      }, 1200);
-                    } else {
-                      setPinErrorMessage(
-                        data.error || "Incorrect current pin."
-                      );
-                    }
-                  } catch (err) {
-                    setPinErrorMessage("Error changing pin, try again.");
-                  }
-                }}
-                className="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition"
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {showDoubleEarningsModal && renderDoubleEarningsModal()}
-
-      {showBonusModal && pendingBonus && (
-        <div
-          className="fixed inset-0 bg-black/60 z-50 flex justify-center"
-          style={{ alignItems: "flex-start", paddingTop: "6rem" }}
-        >
-          <div
-            className="bg-gradient-to-br from-red-400/60 via-white/10 to-red-700/70
-      backdrop-blur-2xl rounded-2xl p-8 shadow-2xl border border-white/20 flex flex-col items-center max-w-xs w-full"
-            style={{
-              background:
-                "linear-gradient(135deg,rgba(252,165,165,0.95),rgba(255,255,255,0.2),rgba(239,68,68,0.85))",
-              boxShadow: "0 8px 32px 0 rgba(239,68,68,0.15)",
-            }}
-          >
-            <h2 className="text-2xl mb-2 font-bold text-white drop-shadow">
-              Daily Bonus!
-            </h2>
-            <p className="text-lg mb-4 text-white/90">{pendingBonus.label}</p>
-            <button
-              onClick={() => setShowBonusModal(false)}
-              className="mt-2 px-5 py-2 rounded-lg bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold shadow hover:shadow-xl transition"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-      {showMaddoxModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
-          <div className="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 pb-3 flex flex-col items-center border-2 border-[#dc2626]">
-            <button
-              onClick={() => setShowMaddoxModal(false)}
-              className="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-2xl font-bold"
-              aria-label="Close"
-              style={{ background: "none", border: "none" }}
-            >
-              ×
-            </button>
-            <img
-              src="https://ucarecdn.com/7eaeaf25-2192-4082-a415-dd52f360d379/-/format/auto/"
-              alt="Maddox Logo"
-              className="w-16 h-16 rounded-full mb-3"
-            />
-            <h2 className="text-xl font-bold mb-1 text-[#dc2626]">
-              Announcement!
-            </h2>
-            <p className="mb-3 text-center text-[#1e293b] font-medium">
-              We’ve partnered with{" "}
-              <span className="font-bold text-[#dc2626]">Maddox</span>!<br />
-              <span className="text-sm text-[#4b5563]">
-                Check out his channel, support the collab, and claim your bonus!
-              </span>
-            </p>
-            <a
-              href="https://www.youtube.com/channel/UCVXk-ixAOlk9we-5yFfKN9g"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full bg-[#dc2626] text-white text-center font-semibold rounded-xl py-2 px-3 mb-2 hover:bg-[#991b1b] transition"
-            >
-              Maddox on YouTube
-            </a>
-            <div className="bg-gray-100 rounded-lg py-2 px-3 text-center mb-2">
-              <span className="text-[#1e293b] font-bold">
-                Use code{" "}
-                <span className="bg-yellow-200 px-2 py-1 rounded text-[#eab308]">
-                  maddox
-                </span>{" "}
-                in the <b>House</b> tab!
-              </span>
-            </div>
-            <span className="text-xs text-[#6b7280] text-center block mt-2">
-              Exclusive rewards for a limited time only!
-            </span>
-          </div>
-        </div>
-      )}
-
-      {showWeatherFlash && (
-        <div
-          style={{
-            background:
-              SEASON_FLASH_DARK_COLOURS[gameState.currentSeason] ||
-              "rgba(0,0,0,0.35)",
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            zIndex: 200,
-            pointerEvents: "none",
-            transition: "opacity 0.15s",
-            opacity: 0.12,
-            mixBlendMode: "multiply",
+                }, 1200);
+              } else {
+                setPinErrorMessage(data.error || "Incorrect current pin.");
+              }
+            } catch (err) {
+              setPinErrorMessage("Error changing pin, try again.");
+            }
           }}
-        />
-      )}
+          className="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition"
+        >
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+{showDoubleEarningsModal && renderDoubleEarningsModal()}
+
+{showBonusModal && pendingBonus && (
+  <div
+    className="fixed inset-0 bg-black/60 z-50 flex justify-center"
+    style={{ alignItems: "flex-start", paddingTop: "6rem" }}
+  >
+    <div
+      className="bg-gradient-to-br from-red-400/60 via-white/10 to-red-700/70
+        backdrop-blur-2xl rounded-2xl p-8 shadow-2xl border border-white/20 flex flex-col items-center max-w-xs w-full"
+      style={{
+        background:
+          "linear-gradient(135deg,rgba(252,165,165,0.95),rgba(255,255,255,0.2),rgba(239,68,68,0.85))",
+        boxShadow: "0 8px 32px 0 rgba(239,68,68,0.15)",
+      }}
+    >
+      <h2 className="text-2xl mb-2 font-bold text-white drop-shadow">Daily Bonus!</h2>
+      <p className="text-lg mb-4 text-white/90">{pendingBonus.label}</p>
+      <button
+        onClick={() => setShowBonusModal(false)}
+        className="mt-2 px-5 py-2 rounded-lg bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold shadow hover:shadow-xl transition"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+)}
+
+{showMaddoxModal && (
+  <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
+    <div className="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 pb-3 flex flex-col items-center border-2 border-[#dc2626]">
+      <button
+        onClick={() => setShowMaddoxModal(false)}
+        className="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-2xl font-bold"
+        aria-label="Close"
+        style={{ background: "none", border: "none" }}
+      >
+        ×
+      </button>
+      <img
+        src="https://ucarecdn.com/7eaeaf25-2192-4082-a415-dd52f360d379/-/format/auto/"
+        alt="Maddox Logo"
+        className="w-16 h-16 rounded-full mb-3"
+      />
+      <h2 className="text-xl font-bold mb-1 text-[#dc2626]">Announcement!</h2>
+      <p className="mb-3 text-center text-[#1e293b] font-medium">
+        We’ve partnered with{" "}
+        <span className="font-bold text-[#dc2626]">Maddox</span>!<br />
+        <span className="text-sm text-[#4b5563]">
+          Check out his channel, support the collab, and claim your bonus!
+        </span>
+      </p>
+      <a
+        href="https://www.youtube.com/channel/UCVXk-ixAOlk9we-5yFfKN9g"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-full bg-[#dc2626] text-white text-center font-semibold rounded-xl py-2 px-3 mb-2 hover:bg-[#991b1b] transition"
+      >
+        Maddox on YouTube
+      </a>
+      <div className="bg-gray-100 rounded-lg py-2 px-3 text-center mb-2">
+        <span className="text-[#1e293b] font-bold">
+          Use code{" "}
+          <span className="bg-yellow-200 px-2 py-1 rounded text-[#eab308]">maddox</span>{" "}
+          in the <b>House</b> tab!
+        </span>
+      </div>
+      <span className="text-xs text-[#6b7280] text-center block mt-2">
+        Exclusive rewards for a limited time only!
+      </span>
+    </div>
+  </div>
+)}
+
+{showWeatherFlash && (
+  <div
+    style={{
+      background:
+        SEASON_FLASH_DARK_COLOURS[gameState.currentSeason] || "rgba(0,0,0,0.35)",
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100vw",
+      height: "100vh",
+      zIndex: 200,
+      pointerEvents: "none",
+      transition: "opacity 0.15s",
+      opacity: 0.12,
+      mixBlendMode: "multiply",
+    }}
+  />
+)}
 
       <style jsx global>{`
         @keyframes floatUp {
