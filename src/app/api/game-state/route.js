@@ -834,13 +834,20 @@ if (action === "getLeaderboard") {
     LIMIT 10
   `;
 
-  const topHighestHouse = await sql`
-    SELECT g.user_id, g.profile_name, g.profile_icon, g.house_name, g.highest_house_level
-    FROM game_saves g
-    WHERE g.house_name IS NOT NULL AND g.highest_house_level IS NOT NULL
-    ORDER BY g.highest_house_level DESC
-    LIMIT 10
-  `;
+ const topHighestHouse = await sql`
+  SELECT 
+    g.user_id, 
+    g.profile_name, 
+    g.profile_icon, 
+    g.house_name, 
+    l.highest_house_level
+  FROM game_saves g
+  JOIN leaderboard l ON g.user_id = l.user_id
+  WHERE g.house_name IS NOT NULL AND l.highest_house_level IS NOT NULL
+  ORDER BY l.highest_house_level DESC
+  LIMIT 10
+`;
+
 
   const topTotalTaps = await sql`
     SELECT g.user_id, g.profile_name, g.profile_icon, g.total_taps
