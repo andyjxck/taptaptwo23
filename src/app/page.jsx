@@ -2237,13 +2237,18 @@ async function handleSearch() {
 }
 
 async function sendFriendRequest(friendId) {
-  if (friendId === userId) return; // block sending to self
-
   await fetch(`/api/friends?action=request`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId, friendId }),
   });
+
+  // Refresh pending requests
+  if (activeTab === "Requests") {
+    const res = await fetch(`/api/friends?action=pending&userId=${userId}`);
+    const data = await res.json();
+    setPendingRequests(data.pending || []);
+  }
 
   setSearchResults([]);
 }
