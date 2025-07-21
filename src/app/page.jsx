@@ -3651,48 +3651,6 @@ if (lastActive && !isNaN(lastActive)) {
     },
   };
 
- const [leaderboardType, setLeaderboardType] = useState("renown");
-const [leaderboardData, setLeaderboardData] = useState({
-  renown: [],
-  coins: [],
-  totalTaps: [],
-});
-
-useEffect(() => {
-  const fetchLeaderboard = async () => {
-    if (!userId || !pin) return;
-
-    try {
-      const response = await fetch("/api/game-state", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: parseInt(userId, 10),
-          pin,
-          action: "getLeaderboard",
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to fetch leaderboard");
-
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
-
-      setLeaderboardData({
-        renown: data.renown || [],
-        coins: data.coins || [],
-        house: data.highestHouse || [],
-        totalTaps: data.totalTaps || [],
-      });
-    } catch (error) {
-      console.error("Error fetching leaderboard:", error);
-    }
-  };
-
-  fetchLeaderboard();
-  const interval = setInterval(fetchLeaderboard, 5000);
-  return () => clearInterval(interval);
-}, [userId, pin]);
 
 const [leaderboardType, setLeaderboardType] = useState("renown");
 const [leaderboardData, setLeaderboardData] = useState({
