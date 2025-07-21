@@ -1,3 +1,8 @@
+// src/app/api/friends/route.js
+
+import { NextResponse } from 'next/server';
+import { sql } from '../auth-handler/db'; // Adjust path if needed
+
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
@@ -17,7 +22,7 @@ export async function GET(req) {
         const friends = await sql`
           SELECT gs.user_id AS friend_id,
                  gs.profile_name,
-                 gs.profile_icon,       -- <== included here
+                 gs.profile_icon,          -- Added profile_icon here
                  gs.total_taps,
                  gs.combined_upgrade_level,
                  gs.total_coins_earned
@@ -67,6 +72,69 @@ export async function GET(req) {
     }
   } catch (err) {
     console.error('API /friends GET error:', err);
+    return NextResponse.json({ error: 'Server error', details: err.message }, { status: 500 });
+  }
+}
+
+export async function POST(req) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const action = searchParams.get('action');
+
+    if (!action) {
+      return NextResponse.json({ error: 'Missing action parameter' }, { status: 400 });
+    }
+
+    const body = await req.json();
+    const { userId, friendId } = body;
+
+    if (!userId || !friendId || userId === friendId) {
+      return NextResponse.json({ error: 'Invalid user IDs' }, { status: 400 });
+    }
+
+    switch (action) {
+      case 'accept': {
+        const updateResult = await sql`
+          UPDATE friends
+          SET status = 'accepted'
+          WHERE user_id = ${friendId} AND friend_id = ${userId} AND status = 'pending'
+          RETURNING *
+        `;
+
+        if (updateResult.length === 0) {
+          return NextResponse.json({ error: 'No pending request found' }, { status: 404 });
+        }
+
+        await sql`
+          INSERT INTO friends (user_id, friend_id, status)
+          VALUES (${userId}, ${friendId}, 'accepted')
+        `;
+
+        return NextResponse.json({ success: true });
+      }
+
+      case 'request': {
+        const existing = await sql`
+          SELECT * FROM friends WHERE user_id = ${userId} AND friend_id = ${friendId}
+        `;
+
+        if (existing.length > 0) {
+          return NextResponse.json({ error: 'Friend request already exists' }, { status: 409 });
+        }
+
+        await sql`
+          INSERT INTO friends (user_id, friend_id, status) 
+          VALUES (${userId}, ${friendId}, 'pending')
+        `;
+
+        return NextResponse.json({ success: true });
+      }
+
+      default:
+        return NextResponse.json({ error: 'Invalid action for POST' }, { status: 400 });
+    }
+  } catch (err) {
+    console.error('API /friends POST error:', err);
     return NextResponse.json({ error: 'Server error', details: err.message }, { status: 500 });
   }
 }
