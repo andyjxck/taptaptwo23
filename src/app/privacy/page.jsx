@@ -1,5 +1,5 @@
 "use client";
-
+import AdBanner from '@/components/AdBanner'
 import { useEffect } from "react";
 
 export default function PrivacyPage({ userId }) {
@@ -39,6 +39,11 @@ export default function PrivacyPage({ userId }) {
       <p className="mb-4">
         By using this website, you agree to these terms.
       </p>
+
+      <AdBanner />
+      
     </main>
+
+    
   );
 }
