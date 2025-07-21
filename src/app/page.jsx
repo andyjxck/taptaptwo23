@@ -5657,19 +5657,19 @@ return (
     })}
   </div>
 </div>
- </div>
-    ) : activeTab === "leaderboard" ? (
-      renderLeaderboard()
-    ) : activeTab === "house" ? (
-      renderHouseTab()
-    ) : activeTab === "shop" ? (
-      renderShopTab()
-    ) : activeTab === "profile" ? (
-      renderProfileTab()
-    ) : activeTab === "friends" ? (
-      renderFriendsTab()
-    ) : null
-  )}
+</div>
+) : activeTab === "leaderboard" ? (
+renderLeaderboard()
+) : activeTab === "house" ? (
+renderHouseTab()
+) : activeTab === "shop" ? (
+renderShopTab()
+) : activeTab === "profile" ? (
+renderProfileTab()
+) : activeTab === "friends" ? (
+renderFriendsTab()
+) : null}
+</div>
 </div>
 
 
