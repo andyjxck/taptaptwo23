@@ -4774,184 +4774,187 @@ const renderLeaderboard = () => (
     );
   };
 
-  const renderHouseTab = () => {
-    // Calculate upgrade cost and progress
-    const nextUpgradeCost = Math.floor(
-      1000 * Math.pow(1.5, gameState.houseLevel - 1)
-    );
-    const canAfford = gameState.coins >= nextUpgradeCost;
-    const progress = Math.min((gameState.coins / nextUpgradeCost) * 100, 100);
+ const renderHouseTab = () => {
+  // Calculate upgrade cost and progress
+  const nextUpgradeCost = Math.floor(
+    1000 * Math.pow(1.5, gameState.houseLevel - 1)
+  );
+  const canAfford = gameState.coins >= nextUpgradeCost;
+  const progress = Math.min((gameState.coins / nextUpgradeCost) * 100, 100);
 
-    return (
+  return (
+    <div className={`${glassStyle} bg-white rounded-2xl p-5 ${buttonGlow}`}>
+      {/* Daily Bonus Section */}
+      <div className="my-6 flex flex-col items-center">
+        {bonusCooldown === 0 ? (
+          <button
+            onClick={claimDailyBonus}
+            className="px-6 py-3 rounded-lg bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold shadow hover:shadow-xl transition"
+          >
+            🎁 Claim Daily Bonus!
+          </button>
+        ) : (
+          <span className="text-sm text-gray-400">
+            Next bonus in {Math.ceil(bonusCooldown / 1000 / 60 / 60)} hours
+          </span>
+        )}
+      </div>
+
       <div className={`${glassStyle} bg-white rounded-2xl p-5 ${buttonGlow}`}>
-        <div className="my-6 flex flex-col items-center">
-          {bonusCooldown === 0 ? (
-            <button
-              onClick={claimDailyBonus}
-              className="px-6 py-3 rounded-lg bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold shadow hover:shadow-xl transition"
-            >
-              🎁 Claim Daily Bonus!
-            </button>
-          ) : (
-            <span className="text-sm text-gray-400">
-              Next bonus in {Math.ceil(bonusCooldown / 1000 / 60 / 60)} hours
-            </span>
-          )}
+        {/* House Name and Rename Button */}
+        <div className="relative mb-4">
+          <h2 className="text-xl font-semibold text-center text-[#2d3748]">
+            {gameState.houseName || "My Cozy Home"}
+          </h2>
+          <button
+            onClick={() => {
+              setNewHouseName(gameState.houseName || "");
+              setShowHouseRenameModal(true);
+            }}
+            aria-label="Rename house"
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 flex items-center justify-center w-8 h-8 bg-red-200 rounded-md hover:bg-red-300 transition-colors"
+          >
+            <i className="fas fa-edit text-red-700"></i>
+          </button>
         </div>
-        <div className={`${glassStyle} bg-white rounded-2xl p-5 ${buttonGlow}`}>
-          <div className="relative mb-4">
-            <h2 className="text-xl font-semibold text-center text-[#2d3748]">
-              {gameState.houseName || "My Cozy Home"}
-            </h2>
-            <button
-              onClick={() => {
-                setNewHouseName(gameState.houseName || "");
-                setShowHouseRenameModal(true);
-              }}
-              aria-label="Rename house"
-              className="absolute right-0 top-1/2 transform -translate-y-1/2 flex items-center justify-center w-8 h-8 bg-red-200 rounded-md hover:bg-red-300 transition-colors"
-            >
-              <i className="fas fa-edit text-red-700"></i>
-            </button>
+
+        {/* House Level and Coin Multiplier */}
+        <div className="space-y-4 mb-4">
+          <div className="bg-white/20 rounded-xl p-4 text-center">
+            <h3 className="text-lg font-bold text-[#2d3748]">Level</h3>
+            <p className="text-xl text-[#2d3748]">{gameState.houseLevel}</p>
           </div>
-          <div className="space-y-4 mb-4">
-            <div className="bg-white/20 rounded-xl p-4 text-center">
-              <h3 className="text-lg font-bold text-[#2d3748]">Level</h3>
-              <p className="text-xl text-[#2d3748]">{gameState.houseLevel}</p>
-            </div>
-            <div className="bg-white/20 rounded-xl p-4 text-center">
-              <h3 className="text-lg font-bold text-[#2d3748]">
-                Coin Multiplier
-              </h3>
-              <p className="text-xl text-[#2d3748]">
-                {(gameState.houseCoinsMultiplier * 100).toFixed(1)}%
-              </p>
-            </div>
-          </div>
-          <div className="mb-4">
-            <div className="w-full bg-gray-300 rounded-full h-4 overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-[#10B981] to-[#059669] transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              ></div>
-            </div>
-            <p className="text-center text-sm text-[#4a5568] mt-1">
-              {Math.floor(gameState.coins).toLocaleString()} /{" "}
-              {nextUpgradeCost.toLocaleString()} coins
+          <div className="bg-white/20 rounded-xl p-4 text-center">
+            <h3 className="text-lg font-bold text-[#2d3748]">Coin Multiplier</h3>
+            <p className="text-xl text-[#2d3748]">
+              {(gameState.houseCoinsMultiplier * 100).toFixed(1)}%
             </p>
           </div>
-          <div className="flex justify-center w-full mt-4">
-            <button
-              onClick={async () => {
-                if (!canAfford) return;
+        </div>
 
-                setGameState((prev) => {
-  const newHouseLevel = prev.houseLevel + 1;
- const updatedState = {
-    ...prev,
-    coins: prev.coins - nextUpgradeCost,
-    houseLevel: newHouseLevel,
-    highest_house_level:
-      newHouseLevel > (prev.highest_house_level || 0)
-        ? newHouseLevel
-        : prev.highest_house_level || 0,
-    houseCoinsMultiplier: 1.0 + prev.houseLevel * 0.1,
-  };
-  saveGame(updatedState);
-  return updatedState;
-});
+        {/* Progress Bar */}
+        <div className="mb-4">
+          <div className="w-full bg-gray-300 rounded-full h-4 overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-[#10B981] to-[#059669] transition-all duration-500"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <p className="text-center text-sm text-[#4a5568] mt-1">
+            {Math.floor(gameState.coins).toLocaleString()} /{" "}
+            {nextUpgradeCost.toLocaleString()} coins
+          </p>
+        </div>
 
+        {/* Upgrade House Button */}
+        <div className="flex justify-center w-full mt-4">
+          <button
+            onClick={() => {
+              if (!canAfford) return;
 
-                setNotification("House Upgraded!");
-              }}
-              disabled={!canAfford}
-              className={`
-    w-full
-    max-w-xs
-    py-4
-    rounded-2xl
-    font-bold
-    text-lg
-    flex
-    items-center
-    justify-center
-    gap-2
-    transition-all
-    duration-300
-    ${
-      canAfford
-        ? "bg-gradient-to-r from-[#10B981] to-[#059669] text-white shadow-lg hover:shadow-xl hover:scale-105"
-        : "bg-gray-300 text-gray-400 cursor-not-allowed"
-    }
-  `}
+              setGameState((prev) => {
+                const newHouseLevel = prev.houseLevel + 1;
+                const updatedState = {
+                  ...prev,
+                  coins: prev.coins - nextUpgradeCost,
+                  houseLevel: newHouseLevel,
+                  highest_house_level:
+                    newHouseLevel > (prev.highest_house_level || 0)
+                      ? newHouseLevel
+                      : prev.highest_house_level || 0,
+                  houseCoinsMultiplier: 1.0 + newHouseLevel * 0.1,
+                };
+                saveGame(updatedState);
+                return updatedState;
+              });
+
+              setNotification("House Upgraded!");
+            }}
+            disabled={!canAfford}
+            className={`
+              w-full
+              max-w-xs
+              py-4
+              rounded-2xl
+              font-bold
+              text-lg
+              flex
+              items-center
+              justify-center
+              gap-2
+              transition-all
+              duration-300
+              ${
+                canAfford
+                  ? "bg-gradient-to-r from-[#10B981] to-[#059669] text-white shadow-lg hover:shadow-xl hover:scale-105"
+                  : "bg-gray-300 text-gray-400 cursor-not-allowed"
+              }
+            `}
+            style={{
+              boxSizing: "border-box",
+              minWidth: 0,
+              width: "100%",
+            }}
+          >
+            <i
+              className="fas fa-coins"
               style={{
-                boxSizing: "border-box",
-                minWidth: 0,
-                width: "100%",
+                fontSize: "1.2em",
+                marginRight: "0.6em",
+                position: "relative",
+                top: "0.06em",
+                display: "inline-block",
+                verticalAlign: "middle",
               }}
+              aria-hidden="true"
+            />
+            <span style={{ verticalAlign: "middle", display: "inline-block" }}>
+              {canAfford
+                ? "Upgrade House (Ready!)"
+                : `Upgrade House (${formatNumberShort(nextUpgradeCost)} coins)`}
+            </span>
+          </button>
+        </div>
+
+        {/* Referral/Gift Code Box */}
+        <div className="mt-6 mb-4 p-4 bg-purple-50 rounded-xl shadow-md flex flex-col items-center w-full max-w-xs mx-auto overflow-hidden">
+          <div className="text-lg font-bold text-purple-700 mb-2">
+            Enter Gift/Referral Code
+          </div>
+          <div className="flex w-full gap-2">
+            <input
+              type="text"
+              value={referralInput}
+              onChange={(e) => setReferralInput(e.target.value)}
+              className="flex-1 w-0 px-3 py-2 rounded-xl border border-purple-300 text-[#2d3748] focus:ring-2 focus:ring-[#a78bfa]"
+              placeholder="Enter code"
+              maxLength={32}
+              disabled={referralUsed}
+            />
+            <button
+              className="flex-shrink-0 px-4 py-2 rounded-xl bg-gradient-to-r from-[#a78bfa] to-[#7c3aed] text-white font-semibold disabled:opacity-50"
+              onClick={handleReferralSubmit}
+              disabled={!referralInput || referralUsed}
             >
-              <i
-                className="fas fa-coins"
-                style={{
-                  fontSize: "1.2em",
-                  marginRight: "0.6em",
-                  position: "relative",
-                  top: "0.06em",
-                  display: "inline-block",
-                  verticalAlign: "middle",
-                }}
-                aria-hidden="true"
-              />
-              <span
-                style={{ verticalAlign: "middle", display: "inline-block" }}
-              >
-                {canAfford
-                  ? "Upgrade House (Ready!)"
-                  : `Upgrade House (${formatNumberShort(
-                      nextUpgradeCost
-                    )} coins)`}
-              </span>
+              Confirm
             </button>
           </div>
-          {/* Referral/Gift Code Box */}
-          <div className="mt-6 mb-4 p-4 bg-purple-50 rounded-xl shadow-md flex flex-col items-center w-full max-w-xs mx-auto overflow-hidden">
-            <div className="text-lg font-bold text-purple-700 mb-2">
-              Enter Gift/Referral Code
+          {referralMessage && (
+            <div
+              className={`mt-2 text-center ${
+                referralMessageType === "success"
+                  ? "text-green-600"
+                  : "text-red-500"
+              }`}
+            >
+              {referralMessage}
             </div>
-            <div className="flex w-full gap-2">
-              <input
-                type="text"
-                value={referralInput}
-                onChange={(e) => setReferralInput(e.target.value)}
-                className="flex-1 w-0 px-3 py-2 rounded-xl border border-purple-300 text-[#2d3748] focus:ring-2 focus:ring-[#a78bfa]"
-                placeholder="Enter code"
-                maxLength={32}
-                disabled={referralUsed}
-              />
-              <button
-                className="flex-shrink-0 px-4 py-2 rounded-xl bg-gradient-to-r from-[#a78bfa] to-[#7c3aed] text-white font-semibold disabled:opacity-50"
-                onClick={handleReferralSubmit}
-                disabled={!referralInput || referralUsed}
-              >
-                Confirm
-              </button>
-            </div>
-            {referralMessage && (
-              <div
-                className={`mt-2 text-center ${
-                  referralMessageType === "success"
-                    ? "text-green-600"
-                    : "text-red-500"
-                }`}
-              >
-                {referralMessage}
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
   const renderHouseRenameModal = () => (
     <div
