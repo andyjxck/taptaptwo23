@@ -715,93 +715,79 @@ async function handler({
       return { success: true };
     }
 
-    // load game state logic
- if (action === "load") {
-  const rows = await sql`
-    SELECT * FROM game_saves WHERE user_id = ${userIdInt}
-  `;
-  if (!rows || rows.length === 0) {
-    return { gameState: null };
-  }
+    if (action === "load") {
+      const rows = await sql
+        SELECT * FROM game_saves WHERE user_id = ${userIdInt}
+      ;
+      if (!rows || rows.length === 0) {
+        return { gameState: null };
+      }
 
-  let stockRows = [];
-  try {
-    stockRows = await sql`
-      SELECT item_id, total_stock, sold_count FROM limited_item_stock
-    `;
-  } catch {}
-
-  const limitedStock = {};
-  stockRows.forEach(({ item_id, total_stock, sold_count }) => {
-    limitedStock[item_id] = total_stock - sold_count;
-  });
-
-  let currentQuestObj = null;
-  if (rows[0].current_quest) {
-    try {
-      currentQuestObj = JSON.parse(rows[0].current_quest);
-    } catch {}
-  }
-
-  let ownedProfileIconsArr = [];
-  try {
-    ownedProfileIconsArr = rows[0].owned_profile_icons
-      ? JSON.parse(rows[0].owned_profile_icons)
-      : [];
-  } catch {}
-
-  let ownedBoostArr = [];
-  try {
-    ownedBoostArr = rows[0].owned_boosts
-      ? JSON.parse(rows[0].owned_boosts)
-      : [];
-  } catch {}
-
-  let ownedThemes = ["seasons"];
-  if (rows[0].owned_themes) {
-    if (Array.isArray(rows[0].owned_themes)) {
-      ownedThemes = rows[0].owned_themes;
-    } else if (typeof rows[0].owned_themes === "string") {
+      let stockRows = [];
       try {
-        const parsed = JSON.parse(rows[0].owned_themes);
-        if (Array.isArray(parsed)) ownedThemes = parsed;
+        stockRows = await sql
+          SELECT item_id, total_stock, sold_count FROM limited_item_stock
+        ;
       } catch {}
+
+      const limitedStock = {};
+      stockRows.forEach(({ item_id, total_stock, sold_count }) => {
+        limitedStock[item_id] = total_stock - sold_count;
+      });
+
+      let currentQuestObj = null;
+      if (rows[0].current_quest) {
+        try {
+          currentQuestObj = JSON.parse(rows[0].current_quest);
+        } catch {}
+      }
+
+      let ownedProfileIconsArr = [];
+      try {
+        ownedProfileIconsArr = rows[0].owned_profile_icons
+          ? JSON.parse(rows[0].owned_profile_icons)
+          : [];
+      } catch {}
+
+      let ownedBoostArr = [];
+      try {
+        ownedBoostArr = rows[0].owned_boosts
+          ? JSON.parse(rows[0].owned_boosts)
+          : [];
+      } catch {}
+
+      let ownedThemes = ["seasons"];
+      if (rows[0].owned_themes) {
+        if (Array.isArray(rows[0].owned_themes)) {
+          ownedThemes = rows[0].owned_themes;
+        } else if (typeof rows[0].owned_themes === "string") {
+          try {
+            const parsed = JSON.parse(rows[0].owned_themes);
+            if (Array.isArray(parsed)) ownedThemes = parsed;
+          } catch {}
+        }
+      }
+
+      const equippedTheme = rows[0].equipped_theme || "seasons";
+
+      return {
+        gameState: {
+          ...rows[0],
+          houseLevel: rows[0].house_level ?? 1,
+          renownTokens: rows[0].renown_tokens ?? 0,
+          totalCoinsEarned: Number(rows[0].total_coins_earned) || 0,
+          coinsEarnedThisRun: Number(rows[0].coins_earned_this_run) || 0,
+          currentQuest: currentQuestObj,
+          canClaimQuest: !!rows[0].can_claim_quest,
+          ownedProfileIcons: ownedProfileIconsArr,
+          profileIcon: rows[0].profile_icon || null,
+          ownedThemes,
+          ownedBoosts: ownedBoostArr,
+          equippedTheme,
+          limitedStock,
+        },
+      };
     }
-  }
-
-  const equippedTheme = rows[0].equipped_theme || "seasons";
-
-  // 🔁 Recalculate permanent_multiplier
-  const renownSpentResult = await sql`
-    SELECT renown_spent FROM users WHERE user_id = ${userIdInt}
-  `;
-  const renownSpent = renownSpentResult?.[0]?.renown_spent || 0;
-  const permanentMultiplier = 1 + renownSpent * 0.01;
-
-  await sql`
-    UPDATE users SET permanent_multiplier = ${permanentMultiplier}
-    WHERE user_id = ${userIdInt}
-  `;
-
-  return {
-    gameState: {
-      ...rows[0],
-      houseLevel: rows[0].house_level ?? 1,
-      renownTokens: rows[0].renown_tokens ?? 0,
-      totalCoinsEarned: Number(rows[0].total_coins_earned) || 0,
-      coinsEarnedThisRun: Number(rows[0].coins_earned_this_run) || 0,
-      currentQuest: currentQuestObj,
-      canClaimQuest: !!rows[0].can_claim_quest,
-      ownedProfileIcons: ownedProfileIconsArr,
-      profileIcon: rows[0].profile_icon || null,
-      ownedThemes,
-      ownedBoosts: ownedBoostArr,
-      equippedTheme,
-      limitedStock,
-    },
-  };
-}
-
 
 if (action === "getLeaderboard") {
   const topCoins = await sql`
