@@ -6125,7 +6125,7 @@ onClick={() => {
             mixBlendMode: "multiply",
           }}
         />
-      )}?
+      )}
 
       <style jsx global>{`
         @keyframes floatUp {
