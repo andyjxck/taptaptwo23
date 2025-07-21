@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
-import AdBanner from '@/components/AdBanner'
+import AdBanner from '../../components/AdBanner';
+
 
 
 const seasonBackgrounds = {
