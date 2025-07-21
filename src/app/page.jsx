@@ -3654,6 +3654,7 @@ if (lastActive && !isNaN(lastActive)) {
     renown: [],
     coins: [],
     house: [],
+    totalTaps: [],
   });
 
  useEffect(() => {
@@ -3677,10 +3678,11 @@ if (lastActive && !isNaN(lastActive)) {
       if (data.error) throw new Error(data.error);
 
       setLeaderboardData({
-        renown: data.renown || [],
-        coins: data.coins || [],
-        house: data.house || [], // <-- Add this line
-      });
+  renown: data.renown || [],
+  coins: data.coins || [],
+  house: data.highestHouse || [],
+  totalTaps: data.totalTaps || [], // <-- Add this
+});
     } catch (error) {
       console.error("Error fetching leaderboard:", error);
     }
@@ -3707,6 +3709,7 @@ if (lastActive && !isNaN(lastActive)) {
         <option value="renown">Most Renown Tokens</option>
         <option value="coins">Most Coins Earned</option>
         <option value="house">Highest House Level</option>
+        <option value="totalTaps">Most Taps</option> // <-- Add this line
       </select>
     </div>
 
@@ -3773,7 +3776,9 @@ if (lastActive && !isNaN(lastActive)) {
                 ? `${entry.renown_tokens} Renown`
                 : leaderboardType === "coins"
                 ? `${formatNumberShort(Math.floor(entry.total_coins_earned))} coins`
-                : `Lvl ${entry.house_level || 0}`}
+                : leaderboardType === "house"
+  ? `Lvl ${entry.highest_house_level || 0}`
+  : `${formatNumberShort(entry.total_taps || 0)} taps`
             </span>
           </div>
         );
