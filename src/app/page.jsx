@@ -3693,86 +3693,89 @@ useEffect(() => {
   const interval = setInterval(fetchLeaderboard, 5000);
   return () => clearInterval(interval);
 }, [userId, pin]);
-
 const renderLeaderboard = () => (
-  <div className={`${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow}`}>
-    <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#2d3748]">
-      Leaderboard
-    </h2>
+  <>
+    <div className={`${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow}`}>
+      <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#2d3748]">
+        Leaderboard
+      </h2>
 
-    <div className="mb-4">
-      <select
-        value={leaderboardType}
-        onChange={(e) => setLeaderboardType(e.target.value)}
-        className="w-full px-4 py-2 rounded-xl bg-white/40 border border-white/30 text-[#2d3748]"
-      >
-        <option value="renown">Most Renown Tokens</option>
-        <option value="coins">Most Coins Earned</option>
-        <option value="totalTaps">Most Taps</option>
-      </select>
-    </div>
+      <div className="mb-4">
+        <select
+          value={leaderboardType}
+          onChange={(e) => setLeaderboardType(e.target.value)}
+          className="w-full px-4 py-2 rounded-xl bg-white/40 border border-white/30 text-[#2d3748]"
+        >
+          <option value="renown">Most Renown Tokens</option>
+          <option value="coins">Most Coins Earned</option>
+          <option value="totalTaps">Most Taps</option>
+        </select>
+      </div>
 
-    <div className="space-y-2">
-      {leaderboardData[leaderboardType].map((entry, index) => {
-        const iconObj = PROFILE_ICONS.find((ic) => ic.id === entry.profile_icon);
-        const rankStr = index === 0 ? "👑" : `#${index + 1}`;
+      <div className="space-y-2">
+        {leaderboardData[leaderboardType].map((entry, index) => {
+          const iconObj = PROFILE_ICONS.find((ic) => ic.id === entry.profile_icon);
+          const rankStr = index === 0 ? "👑" : `#${index + 1}`;
 
-        return (
-          <div
-            key={entry.user_id}
-            className="flex justify-between items-center bg-white/10 rounded-lg p-3"
-          >
-            <div className="flex items-center">
-              <span
-                className={`text-lg font-medium mr-2 ${
-                  index === 0
-                    ? "text-yellow-500"
-                    : index === 1
-                    ? "text-green-500"
-                    : index === 2
-                    ? "text-blue-500"
-                    : "text-black"
-                }`}
-              >
-                {rankStr}
-              </span>
-
-              {iconObj ? (
-                iconObj.image ? (
-                  <img
-                    src={iconObj.image}
-                    alt={iconObj.name}
-                    className="w-8 h-8 rounded-full object-cover mr-2"
-                    title={iconObj.name}
-                  />
-                ) : (
-                  <span className="text-2xl mr-2" title={iconObj.name}>
-                    {iconObj.emoji}
-                  </span>
-                )
-              ) : (
-                <i className="fas fa-user-circle text-gray-400 text-2xl mr-2"></i>
-              )}
-
-              <div>
-                <span className="text-lg font-medium">
-                  {entry.profile_name || "Player"} ({entry.user_id})
+          return (
+            <div
+              key={entry.user_id}
+              className="flex justify-between items-center bg-white/10 rounded-lg p-3"
+            >
+              <div className="flex items-center">
+                <span
+                  className={`text-lg font-medium mr-2 ${
+                    index === 0
+                      ? "text-yellow-500"
+                      : index === 1
+                      ? "text-green-500"
+                      : index === 2
+                      ? "text-blue-500"
+                      : "text-black"
+                  }`}
+                >
+                  {rankStr}
                 </span>
-              </div>
-            </div>
 
-            <span className="font-medium text-[#2d3748]">
-              {leaderboardType === "renown"
-                ? `${entry.renown_tokens} Renown`
-                : leaderboardType === "coins"
-                ? `${formatNumberShort(Math.floor(entry.total_coins_earned))} coins`
-                : `${formatNumberShort(entry.total_taps || 0)} taps`}
-            </span>
-          </div>
-        );
-      })}
+                {iconObj ? (
+                  iconObj.image ? (
+                    <img
+                      src={iconObj.image}
+                      alt={iconObj.name}
+                      className="w-8 h-8 rounded-full object-cover mr-2"
+                      title={iconObj.name}
+                    />
+                  ) : (
+                    <span className="text-2xl mr-2" title={iconObj.name}>
+                      {iconObj.emoji}
+                    </span>
+                  )
+                ) : (
+                  <i className="fas fa-user-circle text-gray-400 text-2xl mr-2"></i>
+                )}
+
+                <div>
+                  <span className="text-lg font-medium">
+                    {entry.profile_name || "Player"} ({entry.user_id})
+                  </span>
+                </div>
+              </div>
+
+              <span className="font-medium text-[#2d3748]">
+                {leaderboardType === "renown"
+                  ? `${entry.renown_tokens} Renown`
+                  : leaderboardType === "coins"
+                  ? `${formatNumberShort(Math.floor(entry.total_coins_earned))} coins`
+                  : `${formatNumberShort(entry.total_taps || 0)} taps`}
+              </span>
+            </div>
+          );
+        })}
+      </div>
     </div>
-  </div>
+
+    <AdBanner />
+  </>
 );
 
 
@@ -4558,6 +4561,8 @@ const renderLeaderboard = () => (
             <span className="text-xs text-[#e11d48] mt-1">Renown Tokens</span>
           </div>
         </div>
+<AdBanner />
+        
         {/* Main Shop Box */}
         <div className={`${glassStyle} bg-white/80 rounded-2xl p-6 relative`}>
           {/* Backpack Button */}
@@ -4693,6 +4698,7 @@ const renderLeaderboard = () => (
             </div>
           </div>
         </div>
+         <AdBanner />
       </div>
     );
   };
@@ -5550,7 +5556,7 @@ return (
     Claim 10x Boost!
   </button>
 )}
-
+<AdBanner />
 </div>
 )}
 
