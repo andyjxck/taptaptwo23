@@ -1,5 +1,5 @@
 "use client";
-import AdBanner from '@/components/AdBanner'
+import AdBanner from '../components/AdBanner';
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 
 // Generate 25 static stars (adjust count as you wish)
