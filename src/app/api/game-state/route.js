@@ -58,254 +58,378 @@ async function handler({
       const userResult = await sql`
         SELECT user_id, used_codes FROM users
         WHERE user_id = ${userIdInt} AND pin::text = ${pinStr}
-
       `;
       if (!userResult || userResult.length === 0) {
         return { error: "Invalid credentials" };
       }
     }
 
- if (action === "redeemReferral") {
-  const allIcons = [
-    "tree","seedling","cloudMoon","sun","star","alien","fire","ghost","cat","unicorn","robot","crown",
-    "icecream","rocket","rainbow","mouse","frog","fox","penguin","bunny","duck","hamster","owl","hedgehog",
-    "panda","monkey","logo","maddox","bee","butterfly","ladybug","chick","dog","bear","dolphin","whale",
-    "snail","peach","avocado","mushroom","cherry","cookie","diamond","dragon","mermaid","wizard",
-    "crystalball","cactus","volcano","jellyfish","starstruck","medal"
-  ];
-  const limitedIcons = ["starstruck","medal"];
-  const allThemes = [
-    "heaven","hell","maddoxtheme","space","city_night","midnight","island","barn","city","forest","beach","seasons"
-  ];
+    if (action === "redeemReferral") {
+      const allIcons = [
+        "tree","seedling","cloudMoon","sun","star","alien","fire","ghost","cat","unicorn","robot","crown",
+        "icecream","rocket","rainbow","mouse","frog","fox","penguin","bunny","duck","hamster","owl","hedgehog",
+        "panda","monkey","logo","maddox","bee","butterfly","ladybug","chick","dog","bear","dolphin","whale",
+        "snail","peach","avocado","mushroom","cherry","cookie","diamond","dragon","mermaid","wizard",
+        "crystalball","cactus","volcano","jellyfish","starstruck","medal"
+      ];
+      const limitedIcons = ["starstruck","medal"];
+      const allThemes = [
+        "heaven","hell","maddoxtheme","space","city_night","midnight","island","barn","city","forest","beach","seasons"
+      ];
 
-  const codeName = typeof code === "string" ? code.toLowerCase().trim() : "";
-  if (!codeName) return { error: "No code provided" };
+      const codeName = typeof code === "string" ? code.toLowerCase().trim() : "";
+      if (!codeName) return { error: "No code provided" };
 
-  let saveRows;
-  try {
-    saveRows = await sql`SELECT * FROM game_saves WHERE user_id = ${userIdInt}`;
-  } catch {
-    return { error: "Database error fetching game save" };
-  }
-  if (!saveRows || saveRows.length === 0) {
-    return { error: "Game save not found" };
-  }
-  const save = saveRows[0];
-
-  let usedCodes = [];
-  try {
-    const userInfo = await sql`SELECT used_codes FROM users WHERE user_id = ${userIdInt}`;
-    if (userInfo && userInfo.length > 0 && userInfo[0].used_codes) {
-      usedCodes = JSON.parse(userInfo[0].used_codes);
-    }
-  } catch {}
-  if (!Array.isArray(usedCodes)) usedCodes = [];
-
-  if (usedCodes.includes(codeName)) {
-    return { error: "Code already used" };
-  }
-
-  // === TAPTAPTWO CODE ===
-  if (codeName === "taptaptwo") {
-    // Level & upgrades
-    let houseLevel = (Number(save.house_level) || 1) + 6;
-    let tap_power_upgrades = Number(save.tap_power_upgrades) || 0;
-    let auto_tapper_upgrades = Number(save.auto_tapper_upgrades) || 0;
-    let crit_chance_upgrades = Number(save.crit_chance_upgrades) || 0;
-    let tap_speed_bonus_upgrades = Number(save.tap_speed_bonus_upgrades) || 0;
-
-    // Distribute 50 random upgrades
-    let upgs = [0, 0, 0, 0];
-    let remain = 50;
-    for (let i = 0; i < 4; i++) {
-      if (i === 3) {
-        upgs[i] = remain;
-      } else {
-        const val = Math.floor(Math.random() * (remain + 1));
-        upgs[i] = val;
-        remain -= val;
+      let saveRows;
+      try {
+        saveRows = await sql`SELECT * FROM game_saves WHERE user_id = ${userIdInt}`;
+      } catch {
+        return { error: "Database error fetching game save" };
       }
-    }
-    tap_power_upgrades += upgs[0];
-    auto_tapper_upgrades += upgs[1];
-    crit_chance_upgrades += upgs[2];
-    tap_speed_bonus_upgrades += upgs[3];
-
-    // Profile icons (load)
-    let ownedProfileIcons = [];
-    try {
-      ownedProfileIcons = save.owned_profile_icons ? JSON.parse(save.owned_profile_icons) : [];
-    } catch {}
-    if (!Array.isArray(ownedProfileIcons)) ownedProfileIcons = [];
-
-    // 2 random (non-limited) profile icons
-    const nonLimitedIcons = allIcons.filter(
-      (icon) => !ownedProfileIcons.includes(icon) && !limitedIcons.includes(icon)
-    );
-    for (let i = 0; i < 2 && nonLimitedIcons.length > 0; i++) {
-      const idx = Math.floor(Math.random() * nonLimitedIcons.length);
-      ownedProfileIcons.push(nonLimitedIcons[idx]);
-      nonLimitedIcons.splice(idx, 1);
-    }
-
-    // 1 random limited profile icon
-    const availableLimited = limitedIcons.filter((icon) => !ownedProfileIcons.includes(icon));
-    if (availableLimited.length > 0) {
-      const idx = Math.floor(Math.random() * availableLimited.length);
-      ownedProfileIcons.push(availableLimited[idx]);
-    }
-
-    // Themes (load)
-    let ownedThemes = [];
-    try {
-      ownedThemes = save.owned_themes
-        ? typeof save.owned_themes === "string"
-          ? JSON.parse(save.owned_themes)
-          : save.owned_themes
-        : [];
-    } catch {}
-    if (!Array.isArray(ownedThemes)) ownedThemes = [];
-    // 1 random theme
-    const availableThemes = allThemes.filter((t) => !ownedThemes.includes(t));
-    if (availableThemes.length > 0) {
-      const idx = Math.floor(Math.random() * availableThemes.length);
-      ownedThemes.push(availableThemes[idx]);
-    }
-
-    // Renown tokens
-    const renownTokens = (Number(save.renown_tokens) || 0) + 10;
-
-    // 10x boost for 10 minutes (set boost_active_until to 10min in future, ISO string)
-    let boostActiveUntil = null;
-    try {
-      const now = new Date();
-      boostActiveUntil = new Date(now.getTime() + 10 * 60 * 1000).toISOString();
-    } catch {}
-
-    usedCodes.push(codeName);
-
-    try {
-      await sql`
-        UPDATE game_saves
-        SET
-          house_level = ${houseLevel},
-          tap_power_upgrades = ${tap_power_upgrades},
-          auto_tapper_upgrades = ${auto_tapper_upgrades},
-          crit_chance_upgrades = ${crit_chance_upgrades},
-          tap_speed_bonus_upgrades = ${tap_speed_bonus_upgrades},
-          renown_tokens = ${renownTokens},
-          owned_profile_icons = ${JSON.stringify(ownedProfileIcons)},
-          owned_themes = ${JSON.stringify(ownedThemes)},
-          boost_active_until = ${boostActiveUntil}
-        WHERE user_id = ${userIdInt}
-      `;
-      await sql`
-        UPDATE users SET used_codes = ${JSON.stringify(usedCodes)}
-        WHERE user_id = ${userIdInt}
-      `;
-    } catch {
-      return { error: "Database error applying code" };
-    }
-    return { success: true, message: "Tap Tap Two promo code applied!" };
-  }
-
-  // === MADDOX CODE ===
-  if (codeName === "maddox") {
-    let houseLevel = (Number(save.house_level) || 1) + 5;
-    let tap_power_upgrades = Number(save.tap_power_upgrades) || 0;
-    let auto_tapper_upgrades = Number(save.auto_tapper_upgrades) || 0;
-    let crit_chance_upgrades = Number(save.crit_chance_upgrades) || 0;
-    let tap_speed_bonus_upgrades = Number(save.tap_speed_bonus_upgrades) || 0;
-    let house_coins_multiplier = (Number(save.house_coins_multiplier) || 0) + 0.5;
-
-    let remain = 10;
-    const upgKeys = ["tap_power_upgrades", "auto_tapper_upgrades", "crit_chance_upgrades", "tap_speed_bonus_upgrades"];
-    const upgradeValues = [0, 0, 0, 0];
-    for (let i = 0; i < upgKeys.length; i++) {
-      if (i === upgKeys.length - 1) {
-        upgradeValues[i] = remain;
-      } else {
-        const rand = Math.floor(Math.random() * (remain + 1));
-        upgradeValues[i] = rand;
-        remain -= rand;
+      if (!saveRows || saveRows.length === 0) {
+        return { error: "Game save not found" };
       }
-    }
-    tap_power_upgrades += upgradeValues[0];
-    auto_tapper_upgrades += upgradeValues[1];
-    crit_chance_upgrades += upgradeValues[2];
-    tap_speed_bonus_upgrades += upgradeValues[3];
+      const save = saveRows[0];
 
-    let ownedProfileIcons = [];
-    try {
-      ownedProfileIcons = save.owned_profile_icons
-        ? JSON.parse(save.owned_profile_icons)
-        : [];
-    } catch {}
-    if (!Array.isArray(ownedProfileIcons)) ownedProfileIcons = [];
-    if (!ownedProfileIcons.includes("maddox")) ownedProfileIcons.push("maddox");
-    const availableRandomIcons = allIcons.filter(
-      (x) => x !== "maddox" && !ownedProfileIcons.includes(x)
-    );
-    if (availableRandomIcons.length > 0) {
-      const randIcon = availableRandomIcons[Math.floor(Math.random() * availableRandomIcons.length)];
-      ownedProfileIcons.push(randIcon);
-    }
-    const profileIcon = "maddox";
+      let usedCodes = [];
+      try {
+        const userInfo = await sql`SELECT used_codes FROM users WHERE user_id = ${userIdInt}`;
+        if (userInfo && userInfo.length > 0 && userInfo[0].used_codes) {
+          usedCodes = JSON.parse(userInfo[0].used_codes);
+        }
+      } catch {}
+      if (!Array.isArray(usedCodes)) usedCodes = [];
 
-    let ownedThemes = [];
-    try {
-      ownedThemes = save.owned_themes
-        ? typeof save.owned_themes === "string"
-          ? JSON.parse(save.owned_themes)
-          : save.owned_themes
-        : [];
-    } catch {}
-    if (!Array.isArray(ownedThemes)) ownedThemes = [];
-    if (!ownedThemes.includes("seasons")) ownedThemes.push("seasons");
-    if (!ownedThemes.includes("maddoxtheme")) ownedThemes.push("maddoxtheme");
-    const availableThemes = allThemes.filter(
-      (t) => t !== "maddoxtheme" && t !== "seasons" && !ownedThemes.includes(t)
-    );
-    if (availableThemes.length > 0) {
-      const randTheme = availableThemes[Math.floor(Math.random() * availableThemes.length)];
-      ownedThemes.push(randTheme);
-    }
+      if (usedCodes.includes(codeName)) {
+        return { error: "Code already used" };
+      }
 
-    const renownTokens = (Number(save.renown_tokens) || 0) + 10;
-    const coins = (Number(save.coins) || 0) + 10000;
-    usedCodes.push(codeName);
+      // === TAPTAPTWO CODE ===
+      if (codeName === "taptaptwo") {
+        // Level & upgrades
+        let houseLevel = (Number(save.house_level) || 1) + 6;
+        let tap_power_upgrades = Number(save.tap_power_upgrades) || 0;
+        let auto_tapper_upgrades = Number(save.auto_tapper_upgrades) || 0;
+        let crit_chance_upgrades = Number(save.crit_chance_upgrades) || 0;
+        let tap_speed_bonus_upgrades = Number(save.tap_speed_bonus_upgrades) || 0;
 
-    try {
-      await sql`
-        UPDATE game_saves
-        SET
-          house_level = ${houseLevel},
-          house_coins_multiplier = ${house_coins_multiplier},
-          tap_power_upgrades = ${tap_power_upgrades},
-          auto_tapper_upgrades = ${auto_tapper_upgrades},
-          crit_chance_upgrades = ${crit_chance_upgrades},
-          tap_speed_bonus_upgrades = ${tap_speed_bonus_upgrades},
-          owned_profile_icons = ${JSON.stringify(ownedProfileIcons)},
-          profile_icon = ${profileIcon},
-          owned_themes = ${JSON.stringify(ownedThemes)},
-          equipped_theme = 'maddoxtheme',
-          renown_tokens = ${renownTokens},
-          coins = ${coins},
-          profile_name = ${save.profile_name || "Player"}
-        WHERE user_id = ${userIdInt}
-      `;
-      await sql`
-        UPDATE users SET used_codes = ${JSON.stringify(usedCodes)}
-        WHERE user_id = ${userIdInt}
-      `;
+        // Distribute 50 random upgrades
+        let upgs = [0, 0, 0, 0];
+        let remain = 50;
+        for (let i = 0; i < 4; i++) {
+          if (i === 3) {
+            upgs[i] = remain;
+          } else {
+            const val = Math.floor(Math.random() * (remain + 1));
+            upgs[i] = val;
+            remain -= val;
+          }
+        }
+        tap_power_upgrades += upgs[0];
+        auto_tapper_upgrades += upgs[1];
+        crit_chance_upgrades += upgs[2];
+        tap_speed_bonus_upgrades += upgs[3];
 
-      const newSaveRows = await sql`SELECT * FROM game_saves WHERE user_id = ${userIdInt}`;
-      if (newSaveRows && newSaveRows.length > 0) {
-        const n = newSaveRows[0];
-        const tapPower =
-          (1 + (Number(n.tap_power_upgrades) || 0)) *
-          (Number(n.permanent_multiplier) || 1) *
-          (1 + (Number(n.house_coins_multiplier) || 0));
+        // Profile icons (load)
+        let ownedProfileIcons = [];
+        try {
+          ownedProfileIcons = save.owned_profile_icons ? JSON.parse(save.owned_profile_icons) : [];
+        } catch {}
+        if (!Array.isArray(ownedProfileIcons)) ownedProfileIcons = [];
+
+        // 2 random (non-limited) profile icons
+        const nonLimitedIcons = allIcons.filter(
+          (icon) => !ownedProfileIcons.includes(icon) && !limitedIcons.includes(icon)
+        );
+        for (let i = 0; i < 2 && nonLimitedIcons.length > 0; i++) {
+          const idx = Math.floor(Math.random() * nonLimitedIcons.length);
+          ownedProfileIcons.push(nonLimitedIcons[idx]);
+          nonLimitedIcons.splice(idx, 1);
+        }
+
+        // 1 random limited profile icon
+        const availableLimited = limitedIcons.filter((icon) => !ownedProfileIcons.includes(icon));
+        if (availableLimited.length > 0) {
+          const idx = Math.floor(Math.random() * availableLimited.length);
+          ownedProfileIcons.push(availableLimited[idx]);
+        }
+
+        // Themes (load)
+        let ownedThemes = [];
+        try {
+          ownedThemes = save.owned_themes
+            ? typeof save.owned_themes === "string"
+              ? JSON.parse(save.owned_themes)
+              : save.owned_themes
+            : [];
+        } catch {}
+        if (!Array.isArray(ownedThemes)) ownedThemes = [];
+        // 1 random theme
+        const availableThemes = allThemes.filter((t) => !ownedThemes.includes(t));
+        if (availableThemes.length > 0) {
+          const idx = Math.floor(Math.random() * availableThemes.length);
+          ownedThemes.push(availableThemes[idx]);
+        }
+
+        // Renown tokens
+        const renownTokens = (Number(save.renown_tokens) || 0) + 10;
+
+        // 10x boost for 10 minutes (set boost_active_until to 10min in future, ISO string)
+        let boostActiveUntil = null;
+        try {
+          const now = new Date();
+          boostActiveUntil = new Date(now.getTime() + 10 * 60 * 1000).toISOString();
+        } catch {}
+
+        usedCodes.push(codeName);
+
+        try {
+          await sql`
+            UPDATE game_saves
+            SET
+              house_level = ${houseLevel},
+              tap_power_upgrades = ${tap_power_upgrades},
+              auto_tapper_upgrades = ${auto_tapper_upgrades},
+              crit_chance_upgrades = ${crit_chance_upgrades},
+              tap_speed_bonus_upgrades = ${tap_speed_bonus_upgrades},
+              renown_tokens = ${renownTokens},
+              owned_profile_icons = ${JSON.stringify(ownedProfileIcons)},
+              owned_themes = ${JSON.stringify(ownedThemes)},
+              boost_active_until = ${boostActiveUntil}
+            WHERE user_id = ${userIdInt}
+          `;
+          await sql`
+            UPDATE users SET used_codes = ${JSON.stringify(usedCodes)}
+            WHERE user_id = ${userIdInt}
+          `;
+        } catch {
+          return { error: "Database error applying code" };
+        }
+        return { success: true, message: "Tap Tap Two promo code applied!" };
+      }
+
+      // === MADDOX CODE ===
+      if (codeName === "maddox") {
+        let houseLevel = (Number(save.house_level) || 1) + 5;
+        let tap_power_upgrades = Number(save.tap_power_upgrades) || 0;
+        let auto_tapper_upgrades = Number(save.auto_tapper_upgrades) || 0;
+        let crit_chance_upgrades = Number(save.crit_chance_upgrades) || 0;
+        let tap_speed_bonus_upgrades = Number(save.tap_speed_bonus_upgrades) || 0;
+        let house_coins_multiplier = (Number(save.house_coins_multiplier) || 0) + 0.5;
+
+        let remain = 10;
+        const upgKeys = ["tap_power_upgrades", "auto_tapper_upgrades", "crit_chance_upgrades", "tap_speed_bonus_upgrades"];
+        const upgradeValues = [0, 0, 0, 0];
+        for (let i = 0; i < upgKeys.length; i++) {
+          if (i === upgKeys.length - 1) {
+            upgradeValues[i] = remain;
+          } else {
+            const rand = Math.floor(Math.random() * (remain + 1));
+            upgradeValues[i] = rand;
+            remain -= rand;
+          }
+        }
+        tap_power_upgrades += upgradeValues[0];
+        auto_tapper_upgrades += upgradeValues[1];
+        crit_chance_upgrades += upgradeValues[2];
+        tap_speed_bonus_upgrades += upgradeValues[3];
+
+        let ownedProfileIcons = [];
+        try {
+          ownedProfileIcons = save.owned_profile_icons
+            ? JSON.parse(save.owned_profile_icons)
+            : [];
+        } catch {}
+        if (!Array.isArray(ownedProfileIcons)) ownedProfileIcons = [];
+        if (!ownedProfileIcons.includes("maddox")) ownedProfileIcons.push("maddox");
+        const availableRandomIcons = allIcons.filter(
+          (x) => x !== "maddox" && !ownedProfileIcons.includes(x)
+        );
+        if (availableRandomIcons.length > 0) {
+          const randIcon = availableRandomIcons[Math.floor(Math.random() * availableRandomIcons.length)];
+          ownedProfileIcons.push(randIcon);
+        }
+        const profileIcon = "maddox";
+
+        let ownedThemes = [];
+        try {
+          ownedThemes = save.owned_themes
+            ? typeof save.owned_themes === "string"
+              ? JSON.parse(save.owned_themes)
+              : save.owned_themes
+            : [];
+        } catch {}
+        if (!Array.isArray(ownedThemes)) ownedThemes = [];
+        if (!ownedThemes.includes("seasons")) ownedThemes.push("seasons");
+        if (!ownedThemes.includes("maddoxtheme")) ownedThemes.push("maddoxtheme");
+        const availableThemes = allThemes.filter(
+          (t) => t !== "maddoxtheme" && t !== "seasons" && !ownedThemes.includes(t)
+        );
+        if (availableThemes.length > 0) {
+          const randTheme = availableThemes[Math.floor(Math.random() * availableThemes.length)];
+          ownedThemes.push(randTheme);
+        }
+
+        const renownTokens = (Number(save.renown_tokens) || 0) + 10;
+        const coins = (Number(save.coins) || 0) + 10000;
+        usedCodes.push(codeName);
+
+        try {
+          await sql`
+            UPDATE game_saves
+            SET
+              house_level = ${houseLevel},
+              house_coins_multiplier = ${house_coins_multiplier},
+              tap_power_upgrades = ${tap_power_upgrades},
+              auto_tapper_upgrades = ${auto_tapper_upgrades},
+              crit_chance_upgrades = ${crit_chance_upgrades},
+              tap_speed_bonus_upgrades = ${tap_speed_bonus_upgrades},
+              owned_profile_icons = ${JSON.stringify(ownedProfileIcons)},
+              profile_icon = ${profileIcon},
+              owned_themes = ${JSON.stringify(ownedThemes)},
+              equipped_theme = 'maddoxtheme',
+              renown_tokens = ${renownTokens},
+              coins = ${coins},
+              profile_name = ${save.profile_name || "Player"}
+            WHERE user_id = ${userIdInt}
+          `;
+          await sql`
+            UPDATE users SET used_codes = ${JSON.stringify(usedCodes)}
+            WHERE user_id = ${userIdInt}
+          `;
+
+          const newSaveRows = await sql`SELECT * FROM game_saves WHERE user_id = ${userIdInt}`;
+          if (newSaveRows && newSaveRows.length > 0) {
+            const n = newSaveRows[0];
+            const tapPower =
+              (1 + (Number(n.tap_power_upgrades) || 0)) *
+              (Number(n.permanent_multiplier) || 1) *
+              (1 + (Number(n.house_coins_multiplier) || 0));
+            const autoTapper =
+              (Number(n.auto_tapper_upgrades) || 0) *
+              (Number(n.permanent_multiplier) || 1) *
+              (1 + (Number(n.house_coins_multiplier) || 0));
+            const critChance = (Number(n.crit_chance_upgrades) || 0) * 0.25;
+            const tapSpeedBonus = (Number(n.tap_speed_bonus_upgrades) || 0) * 0.05;
+
+            await sql`
+              UPDATE game_saves
+              SET
+                tap_power = ${tapPower},
+                auto_tapper = ${autoTapper},
+                crit_chance = ${critChance},
+                tap_speed_bonus = ${tapSpeedBonus}
+              WHERE user_id = ${userIdInt}
+            `;
+          }
+        } catch {
+          return { error: "Database error applying code" };
+        }
+        return { success: true, message: "Maddox promo code applied!" };
+      }
+
+      // === ANDYSOCIAL CODE ===
+      if (codeName === "andysocial") {
+        let houseLevel = (Number(save.house_level) || 1) + 10;
+        let tap_power_upgrades = Number(save.tap_power_upgrades) || 0;
+        let auto_tapper_upgrades = Number(save.auto_tapper_upgrades) || 0;
+        let crit_chance_upgrades = Number(save.crit_chance_upgrades) || 0;
+        let tap_speed_bonus_upgrades = Number(save.tap_speed_bonus_upgrades) || 0;
+        let house_coins_multiplier = (Number(save.house_coins_multiplier) || 0) + 0.75;
+
+        const upgKeys = [
+          "tap_power_upgrades",
+          "auto_tapper_upgrades",
+          "crit_chance_upgrades",
+          "tap_speed_bonus_upgrades",
+        ];
+        const selected = [];
+        while (selected.length < 2) {
+          const rand = Math.floor(Math.random() * upgKeys.length);
+          if (!selected.includes(rand)) selected.push(rand);
+        }
+        const upgAdd = [0, 0, 0, 0];
+        const randVal = Math.floor(Math.random() * 21);
+        upgAdd[selected[0]] = randVal;
+        upgAdd[selected[1]] = 20 - randVal;
+        tap_power_upgrades += upgAdd[0];
+        auto_tapper_upgrades += upgAdd[1];
+        crit_chance_upgrades += upgAdd[2];
+        tap_speed_bonus_upgrades += upgAdd[3];
+
+        const renownTokens = (Number(save.renown_tokens) || 0) + 100;
+
+        let ownedProfileIcons = [];
+        try {
+          ownedProfileIcons = save.owned_profile_icons
+            ? JSON.parse(save.owned_profile_icons)
+            : [];
+        } catch {}
+        if (!Array.isArray(ownedProfileIcons)) ownedProfileIcons = [];
+        const iconPool = allIcons.filter(
+          (x) => x !== "maddox" && !ownedProfileIcons.includes(x)
+        );
+        for (let i = 0; i < 3 && iconPool.length > 0; i++) {
+          const idx = Math.floor(Math.random() * iconPool.length);
+          ownedProfileIcons.push(iconPool[idx]);
+          iconPool.splice(idx, 1);
+        }
+
+        let ownedThemes = [];
+        try {
+          ownedThemes = save.owned_themes
+            ? typeof save.owned_themes === "string"
+              ? JSON.parse(save.owned_themes)
+              : save.owned_themes
+            : [];
+        } catch {}
+        if (!Array.isArray(ownedThemes)) ownedThemes = [];
+        if (!ownedThemes.includes("seasons")) ownedThemes.push("seasons");
+        const themePool = allThemes.filter(
+          (t) =>
+            t !== "maddoxtheme" &&
+            !ownedThemes.includes(t) &&
+            !t.toLowerCase().includes("limited")
+        );
+        let randTheme = null;
+        if (themePool.length > 0) {
+          randTheme = themePool[Math.floor(Math.random() * themePool.length)];
+          ownedThemes.push(randTheme);
+        }
+
+        usedCodes.push(codeName);
+
+        try {
+          await sql`
+            UPDATE game_saves
+            SET
+              house_level = ${houseLevel},
+              house_coins_multiplier = ${house_coins_multiplier},
+              tap_power_upgrades = ${tap_power_upgrades},
+              auto_tapper_upgrades = ${auto_tapper_upgrades},
+              crit_chance_upgrades = ${crit_chance_upgrades},
+              tap_speed_bonus_upgrades = ${tap_speed_bonus_upgrades},
+              owned_profile_icons = ${JSON.stringify(ownedProfileIcons)},
+              owned_themes = ${JSON.stringify(ownedThemes)},
+              renown_tokens = ${renownTokens}
+            WHERE user_id = ${userIdInt}
+          `;
+          await sql`
+            UPDATE users SET used_codes = ${JSON.stringify(usedCodes)}
+            WHERE user_id = ${userIdInt}
+          `;
+
+          const newSaveRows = await sql`SELECT * FROM game_saves WHERE user_id = ${userIdInt}`;
+          if (newSaveRows && newSaveRows.length > 0) {
+            const n = newSaveRows[0];
+            const tapPower =
+              (1 + (Number(n.tap_power_upgrades) || 0)) *
+              (Number(n.permanent_multiplier) || 1) *
+              (1 + (Number(n.house_coins_multiplier) || 0));
+            const autoTapper =
+              (Number(n.auto_tapper_upgrades) || 0) *
+              (Number(n.permanent_multiplier) || 1) *
+              (1 + (Number(n.house_coins_multiplier) || 0));
         const autoTapper =
           (Number(n.auto_tapper_upgrades) || 0) *
           (Number(n.permanent_multiplier) || 1) *
