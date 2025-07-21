@@ -4845,16 +4845,21 @@ const renderLeaderboard = () => (
                 if (!canAfford) return;
 
                 setGameState((prev) => {
-                  const updatedState = {
-                    ...prev,
-                    coins: prev.coins - nextUpgradeCost,
-                    houseLevel: prev.houseLevel + 1,
-                    houseCoinsMultiplier: 1.0 + prev.houseLevel * 0.1,
-                  };
-                  // Save game immediately after state update
-                  saveGame(updatedState);
-                  return updatedState;
-                });
+  const newHouseLevel = prev.houseLevel + 1;
+  const updatedState = {
+    ...prev,
+    coins: prev.coins - nextUpgradeCost,
+    houseLevel: newHouseLevel,
+    houseCoinsMultiplier: 1.0 + prev.houseLevel * 0.1,
+    highest_house_level:
+      newHouseLevel > (prev.highest_house_level || 0)
+        ? newHouseLevel
+        : prev.highest_house_level || 0,
+  };
+  saveGame(updatedState);
+  return updatedState;
+});
+
 
                 setNotification("House Upgraded!");
               }}
