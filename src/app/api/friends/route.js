@@ -39,12 +39,15 @@ export async function GET(req) {
           return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
         }
 
-        const pending = await sql`
-          SELECT f.user_id, gs.profile_name 
-          FROM friends f
-          JOIN game_saves gs ON f.user_id = gs.user_id
-          WHERE f.friend_id = ${userId} AND f.status = 'pending'
-        `;
+const pending = await sql`
+  SELECT f.user_id, gs.profile_name, gs.profile_icon, gs.house_name,
+         gs.total_taps, gs.combined_upgrade_level, gs.total_coins_earned
+  FROM friends f
+  JOIN game_saves gs ON f.user_id = gs.user_id
+  WHERE f.friend_id = ${userId} AND f.status = 'pending'
+`;
+
+
 
         return NextResponse.json({ pending });
       }
