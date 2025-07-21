@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import AdBanner from '@/components/AdBanner'
 
 const seasonBackgrounds = {
   Spring: "from-[#d8b4fe] via-[#c084fc] to-[#a78bfa]", // pastel purple gradient
@@ -944,6 +945,9 @@ function MainComponent() {
             Help Board
           </h2>
         </div>
+
+        <AdBanner />
+
         {/* 4. Notices */}
         {notes.length === 0 ? (
           <div className="text-center text-[#4a5568] text-lg">
