@@ -5659,18 +5659,19 @@ return (
 </div>
 </div>
 ) : activeTab === "leaderboard" ? (
-renderLeaderboard()
+  renderLeaderboard()
 ) : activeTab === "house" ? (
-renderHouseTab()
+  renderHouseTab()
 ) : activeTab === "shop" ? (
-renderShopTab()
+  renderShopTab()
 ) : activeTab === "profile" ? (
-renderProfileTab()
+  renderProfileTab()
 ) : activeTab === "friends" ? (
-renderFriendsTab()
-) : null}
+  renderFriendsTab()
+) : null
 </div>
 </div>
+
 
 {/* Sticky Bottom Bar - centered */}
 <div
