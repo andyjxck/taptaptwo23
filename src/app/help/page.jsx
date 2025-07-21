@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import AdBanner from '@/components/AdBanner'
+import AdBanner from '../../components/AdBanner'
 
 const seasonBackgrounds = {
   Spring: "from-[#d8b4fe] via-[#c084fc] to-[#a78bfa]", // pastel purple gradient
