@@ -821,6 +821,7 @@ const [searchResults, setSearchResults] = useState([]);
 const [activeShopBoosts, setActiveShopBoosts] = useState([]);
 const [lastDailyClaim, setLastDailyClaim] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
+    const [showRequests, setShowRequests] = useState(false);
 
 
     useEffect(() => {
