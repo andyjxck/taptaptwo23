@@ -456,113 +456,128 @@ async function handler({
 }
 
 
-    // buyRegularItem logic
-    if (action === "buyRegularItem") {
-      if (!itemId || !itemType || typeof price !== "number") {
-        return { error: "Missing itemId, itemType, or price" };
-      }
-      const saveRows = await sql`
-        SELECT owned_profile_icons, owned_themes, owned_boosts, renown_tokens
-        FROM game_saves WHERE user_id = ${userIdInt}
-      `;
-      if (!saveRows || saveRows.length === 0) {
-        return { error: "No save data found for user" };
-      }
-      const save = saveRows[0];
-      const ownedProfileIcons = safeParse(save.owned_profile_icons);
-      const ownedThemes = safeParse(save.owned_themes);
-      const ownedBoosts = safeParse(save.owned_boosts);
-      const currentTokens = Number(save.renown_tokens) || 0;
-      if (currentTokens < price) {
-        return { error: "Insufficient Renown Tokens" };
-      }
-      if (itemType === "profileIcon") {
-        if (ownedProfileIcons.includes(itemId)) return { error: "You already own this item" };
-        ownedProfileIcons.push(itemId);
-      } else if (itemType === "theme") {
-        if (ownedThemes.includes(itemId)) return { error: "You already own this item" };
-        ownedThemes.push(itemId);
-      } else if (itemType === "boost") {
-        if (ownedBoosts.includes(itemId)) return { error: "You already own this item" };
-        ownedBoosts.push(itemId);
-      } else {
-        return { error: "Invalid itemType" };
-      }
-      await sql`
-        UPDATE game_saves
-        SET
-          owned_profile_icons = ${JSON.stringify(ownedProfileIcons)},
-          owned_themes = ${JSON.stringify(ownedThemes)},
-          owned_boosts = ${JSON.stringify(ownedBoosts)},
-          renown_tokens = ${currentTokens - price}
-        WHERE user_id = ${userIdInt}
-      `;
-      return { success: true };
-    }
+ // buyRegularItem logic
+if (action === "buyRegularItem") {
+  if (!itemId || !itemType || typeof price !== "number") {
+    return { error: "Missing itemId, itemType, or price" };
+  }
+  const saveRows = await sql`
+    SELECT owned_profile_icons, owned_themes, owned_boosts, renown_tokens
+    FROM game_saves WHERE user_id = ${userIdInt}
+  `;
+  if (!saveRows || saveRows.length === 0) {
+    return { error: "No save data found for user" };
+  }
+  const save = saveRows[0];
+  const ownedProfileIcons = safeParse(save.owned_profile_icons);
+  const ownedThemes = safeParse(save.owned_themes);
+  const ownedBoosts = safeParse(save.owned_boosts);
+  const currentTokens = Number(save.renown_tokens) || 0;
+  if (currentTokens < price) {
+    return { error: "Insufficient Renown Tokens" };
+  }
+  if (itemType === "profileIcon") {
+    if (ownedProfileIcons.includes(itemId)) return { error: "You already own this item" };
+    ownedProfileIcons.push(itemId);
+  } else if (itemType === "theme") {
+    if (ownedThemes.includes(itemId)) return { error: "You already own this item" };
+    ownedThemes.push(itemId);
+  } else if (itemType === "boost") {
+    if (ownedBoosts.includes(itemId)) return { error: "You already own this item" };
+    ownedBoosts.push(itemId);
+  } else {
+    return { error: "Invalid itemType" };
+  }
+  await sql`
+    UPDATE game_saves
+    SET
+      owned_profile_icons = ${JSON.stringify(ownedProfileIcons)},
+      owned_themes = ${JSON.stringify(ownedThemes)},
+      owned_boosts = ${JSON.stringify(ownedBoosts)},
+      renown_tokens = ${currentTokens - price}
+    WHERE user_id = ${userIdInt}
+  `;
 
-    // buyLimitedItem logic
-    if (action === "buyLimitedItem") {
-      if (!itemId || !itemType || typeof price !== "number") {
-        return { error: "Missing itemId, itemType, or price" };
-      }
-      const stockRows = await sql`
-        SELECT total_stock, sold_count FROM limited_item_stock
-        WHERE item_id = ${itemId} AND item_type = ${itemType}
-      `;
-      if (!stockRows || stockRows.length === 0) {
-        return { error: "Limited item not found" };
-      }
-      const { total_stock, sold_count } = stockRows[0];
-      if (sold_count >= total_stock) {
-        return { error: "Item is out of stock" };
-      }
-      const saveRows = await sql`
-        SELECT owned_profile_icons, owned_themes, owned_boosts, renown_tokens
-        FROM game_saves WHERE user_id = ${userIdInt}
-      `;
-      if (!saveRows || saveRows.length === 0) {
-        return { error: "No save data found for user" };
-      }
-      const save = saveRows[0];
-      const ownedProfileIcons = safeParse(save.owned_profile_icons);
-      const ownedThemes = safeParse(save.owned_themes);
-      const ownedBoosts = safeParse(save.owned_boosts);
-      const currentTokens = Number(save.renown_tokens) || 0;
-      if (currentTokens < price) {
-        return { error: "Insufficient Renown Tokens" };
-      }
-      if (itemType === "profileIcon") {
-        if (ownedProfileIcons.includes(itemId)) return { error: "You already own this item" };
-        ownedProfileIcons.push(itemId);
-      } else if (itemType === "theme") {
-        if (ownedThemes.includes(itemId)) return { error: "You already own this item" };
-        ownedThemes.push(itemId);
-      } else if (itemType === "boost") {
-        if (ownedBoosts.includes(itemId)) return { error: "You already own this item" };
-        ownedBoosts.push(itemId);
-      } else {
-        return { error: "Invalid itemType" };
-      }
-      const updated = await sql`
-        UPDATE limited_item_stock
-        SET sold_count = sold_count + 1
-        WHERE item_id = ${itemId} AND item_type = ${itemType} AND sold_count < total_stock
-        RETURNING sold_count
-      `;
-      if (!updated || updated.length === 0) {
-        return { error: "Failed to purchase: item may be out of stock" };
-      }
-      await sql`
-        UPDATE game_saves
-        SET
-          owned_profile_icons = ${JSON.stringify(ownedProfileIcons)},
-          owned_themes = ${JSON.stringify(ownedThemes)},
-          owned_boosts = ${JSON.stringify(ownedBoosts)},
-          renown_tokens = ${currentTokens - price}
-        WHERE user_id = ${userIdInt}
-      `;
-      return { success: true };
-    }
+  // Query updated permanent_multiplier
+  const [updatedSave] = await sql`
+    SELECT permanent_multiplier FROM game_saves WHERE user_id = ${userIdInt}
+  `;
+  const permanentMultiplier = updatedSave ? Number(updatedSave.permanent_multiplier) : 1;
+
+  return { success: true, permanentMultiplier };
+}
+
+// buyLimitedItem logic
+if (action === "buyLimitedItem") {
+  if (!itemId || !itemType || typeof price !== "number") {
+    return { error: "Missing itemId, itemType, or price" };
+  }
+  const stockRows = await sql`
+    SELECT total_stock, sold_count FROM limited_item_stock
+    WHERE item_id = ${itemId} AND item_type = ${itemType}
+  `;
+  if (!stockRows || stockRows.length === 0) {
+    return { error: "Limited item not found" };
+  }
+  const { total_stock, sold_count } = stockRows[0];
+  if (sold_count >= total_stock) {
+    return { error: "Item is out of stock" };
+  }
+  const saveRows = await sql`
+    SELECT owned_profile_icons, owned_themes, owned_boosts, renown_tokens
+    FROM game_saves WHERE user_id = ${userIdInt}
+  `;
+  if (!saveRows || saveRows.length === 0) {
+    return { error: "No save data found for user" };
+  }
+  const save = saveRows[0];
+  const ownedProfileIcons = safeParse(save.owned_profile_icons);
+  const ownedThemes = safeParse(save.owned_themes);
+  const ownedBoosts = safeParse(save.owned_boosts);
+  const currentTokens = Number(save.renown_tokens) || 0;
+  if (currentTokens < price) {
+    return { error: "Insufficient Renown Tokens" };
+  }
+  if (itemType === "profileIcon") {
+    if (ownedProfileIcons.includes(itemId)) return { error: "You already own this item" };
+    ownedProfileIcons.push(itemId);
+  } else if (itemType === "theme") {
+    if (ownedThemes.includes(itemId)) return { error: "You already own this item" };
+    ownedThemes.push(itemId);
+  } else if (itemType === "boost") {
+    if (ownedBoosts.includes(itemId)) return { error: "You already own this item" };
+    ownedBoosts.push(itemId);
+  } else {
+    return { error: "Invalid itemType" };
+  }
+  const updated = await sql`
+    UPDATE limited_item_stock
+    SET sold_count = sold_count + 1
+    WHERE item_id = ${itemId} AND item_type = ${itemType} AND sold_count < total_stock
+    RETURNING sold_count
+  `;
+  if (!updated || updated.length === 0) {
+    return { error: "Failed to purchase: item may be out of stock" };
+  }
+  await sql`
+    UPDATE game_saves
+    SET
+      owned_profile_icons = ${JSON.stringify(ownedProfileIcons)},
+      owned_themes = ${JSON.stringify(ownedThemes)},
+      owned_boosts = ${JSON.stringify(ownedBoosts)},
+      renown_tokens = ${currentTokens - price}
+    WHERE user_id = ${userIdInt}
+  `;
+
+  // Query updated permanent_multiplier
+  const [updatedSave] = await sql`
+    SELECT permanent_multiplier FROM game_saves WHERE user_id = ${userIdInt}
+  `;
+  const permanentMultiplier = updatedSave ? Number(updatedSave.permanent_multiplier) : 1;
+
+  return { success: true, permanentMultiplier };
+}
+
 
     // save game state logic
     if (action === "save") {
