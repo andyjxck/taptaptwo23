@@ -1,5 +1,7 @@
 "use client";
 import React from "react";
+import AdBanner from '@/components/AdBanner'
+
 
 const seasonBackgrounds = {
   Spring: "from-[#c084fc] via-[#a78bfa] to-[#7c3aed]", // deep pastel purple
@@ -1132,6 +1134,7 @@ function MainComponent() {
             Tap Board
           </h2>
         </div>
+<AdBanner />
 
         {/* 4. Notices */}
         {notes.length === 0 ? (
