@@ -822,11 +822,19 @@ if (action === "getLeaderboard") {
     LIMIT 10
   `;
 
-  const topHouse = await sql`
-    SELECT g.user_id, g.profile_name, g.profile_icon, g.house_name, g.house_level
+  const topHighestHouse = await sql`
+    SELECT g.user_id, g.profile_name, g.profile_icon, g.house_name, g.highest_house_level
     FROM game_saves g
-    WHERE g.house_name IS NOT NULL AND g.house_level IS NOT NULL
-    ORDER BY g.house_level DESC
+    WHERE g.house_name IS NOT NULL AND g.highest_house_level IS NOT NULL
+    ORDER BY g.highest_house_level DESC
+    LIMIT 10
+  `;
+
+  const topTotalTaps = await sql`
+    SELECT g.user_id, g.profile_name, g.profile_icon, g.total_taps
+    FROM game_saves g
+    WHERE g.total_taps IS NOT NULL
+    ORDER BY g.total_taps DESC
     LIMIT 10
   `;
 
@@ -843,28 +851,35 @@ if (action === "getLeaderboard") {
       profile_name: row.profile_name || "Player",
       profile_icon: row.profile_icon || null,
     })),
-    house: topHouse.map((row) => ({
+    highestHouse: topHighestHouse.map((row) => ({
       user_id: row.user_id,
       profile_name: row.profile_name || "Player",
       profile_icon: row.profile_icon || null,
       house_name: row.house_name || "",
-      house_level: row.house_level || 0,
+      highest_house_level: row.highest_house_level || 0,
+    })),
+    totalTaps: topTotalTaps.map((row) => ({
+      user_id: row.user_id,
+      profile_name: row.profile_name || "Player",
+      profile_icon: row.profile_icon || null,
+      total_taps: row.total_taps || 0,
     })),
   };
 }
 
-    // changePin logic
-    if (action === "changePin") {
-      if (!pin || !userIdInt || !newPin) {
-        return { error: "Missing parameters" };
-      }
-      await sql`
-        UPDATE users
-        SET pin = ${newPin}
-        WHERE user_id = ${userIdInt}
-      `;
-      return { success: true };
-    }
+// changePin logic
+if (action === "changePin") {
+  if (!pin || !userIdInt || !newPin) {
+    return { error: "Missing parameters" };
+  }
+  await sql`
+    UPDATE users
+    SET pin = ${newPin}
+    WHERE user_id = ${userIdInt}
+  `;
+  return { success: true };
+}
+
 
     // hardReset logic
     if (action === "hardReset") {
