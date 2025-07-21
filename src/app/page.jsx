@@ -910,6 +910,7 @@ useEffect(() => {
     currentSeason: 0,
     totalUpgradeLevels: 0,
     houseLevel: 1,
+      highest_house_level: 1,
     houseDecorations: [],
     houseTheme: "cottage",
     houseCoinsMultiplier: 0,
