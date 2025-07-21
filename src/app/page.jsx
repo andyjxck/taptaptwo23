@@ -824,36 +824,34 @@ const [lastDailyClaim, setLastDailyClaim] = useState(0);
     const [showRequests, setShowRequests] = useState(false);
 
 
-    useEffect(() => {
-    const storedUserId = localStorage.getItem("userId");
-    const storedPin = localStorage.getItem("pin");
-
-    if (!storedUserId || !storedPin) {
-      window.location.href = "/login";
-      return;
-    }
-
-    setUserId(storedUserId);
-    setPin(storedPin);
-  }, []);
+// Load userId and pin from localStorage once on mount
 useEffect(() => {
-  fetchFriendsList();
-  fetchPendingRequests();
-}, []);
-  
+  const storedUserId = localStorage.getItem("userId");
+  const storedPin = localStorage.getItem("pin");
 
+  if (!storedUserId || !storedPin) {
+    window.location.href = "/login";
+    return;
+  }
+
+  setUserId(storedUserId);
+  setPin(storedPin);
+}, []);
+
+// Fetch friends list and pending requests only when userId is set
 useEffect(() => {
   if (!userId) return;
 
+  // Fetch Friends List
   setFriendsLoading(true);
-  setFriendError(null);  // reset error on new fetch
+  setFriendError(null);
 
-fetch("/api/friends?action=get&userId=" + encodeURIComponent(userId))
+  fetch(`/api/friends?action=get&userId=${encodeURIComponent(userId)}`)
     .then((res) => res.json())
     .then((data) => {
       if (data.error) {
         setFriendError(data.error);
-        setFriends([]);  // clear friends if error
+        setFriends([]);
       } else {
         setFriends(data.friends || []);
       }
@@ -864,8 +862,12 @@ fetch("/api/friends?action=get&userId=" + encodeURIComponent(userId))
       setFriends([]);
       setFriendsLoading(false);
     });
+
+  // Fetch Pending Requests
+  fetchPendingRequests();
+
 }, [userId]);
-  
+
 useEffect(() => {
   const saved = localStorage.getItem("activeBoost");
   if (saved) setActiveBoost(JSON.parse(saved));
