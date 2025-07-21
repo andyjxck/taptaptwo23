@@ -2165,16 +2165,18 @@ if (loading) {
     setFriendsLoading(false);
   }
 }
-
 async function fetchPendingRequests() {
   try {
     const res = await fetch(`/api/friends?action=pending&userId=${userId}`);
+    if (!res.ok) throw new Error('Failed to fetch pending requests');
     const data = await res.json();
     setPendingRequests(data.pending || []);
-  } catch {
-    console.error('Failed to fetch pending requests');
+  } catch (error) {
+    console.error('Failed to fetch pending requests:', error);
+    setPendingRequests([]);
   }
 }
+
 
 async function handleSearch() {
   if (!searchQuery) return;
