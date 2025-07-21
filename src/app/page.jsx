@@ -5555,9 +5555,6 @@ return (
     Claim 10x Boost!
   </button>
 )}
-
-<AdBanner />
-
 <div
   className={w-full ${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow}}
 >
