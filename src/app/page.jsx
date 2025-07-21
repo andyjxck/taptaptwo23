@@ -1424,92 +1424,94 @@ const renderFriendsTab = () => {
   );
 };
 
+const buyRegularItem = async ({ itemId, itemType, price, userId, pin }) => {
+  if (!userId || !pin) {
+    setNotification("You must be logged in to buy items.");
+    return { error: "Not logged in" };
+  }
 
-  const buyRegularItem = async ({ itemId, itemType, price, userId, pin }) => {
-    if (!userId || !pin) {
-      setNotification("You must be logged in to buy items.");
-      return { error: "Not logged in" };
+  try {
+    const response = await fetch("/api/game-state", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId,
+        pin,
+        action: "buyRegularItem",
+        itemId,
+        itemType,
+        price,
+      }),
+    });
+
+    if (!response.ok) {
+      setNotification("Failed to purchase item.");
+      return { error: "Failed to purchase item" };
     }
 
-    try {
-      const response = await fetch("/api/game-state", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          pin,
-          action: "buyRegularItem",
-          itemId,
-          itemType,
-          price,
-        }),
-      });
+    const data = await response.json();
 
-      if (!response.ok) {
-        setNotification("Failed to purchase item.");
-        return { error: "Failed to purchase item" };
-      }
+    if (data.error) {
+      setNotification(`Purchase error: ${data.error}`);
+      return { error: data.error };
+    }
 
-      const data = await response.json();
+    if (typeof price !== "number" || price < 0) {
+      setNotification("Invalid item price.");
+      return { error: "Invalid price" };
+    }
 
-      if (data.error) {
-        setNotification(`Purchase error: ${data.error}`);
-        return { error: data.error };
-      }
+    setGameState((prev) => {
+      if (!prev) return prev;
 
-      if (typeof price !== "number" || price < 0) {
-        setNotification("Invalid item price.");
-        return { error: "Invalid price" };
-      }
+      let newOwnedProfileIcons = Array.isArray(prev.ownedProfileIcons)
+        ? [...prev.ownedProfileIcons]
+        : [];
+      let newOwnedThemes = Array.isArray(prev.ownedThemes) ? [...prev.ownedThemes] : [];
+      let newOwnedBoosts = Array.isArray(prev.ownedBoosts) ? [...prev.ownedBoosts] : [];
+      let newRenownTokens = typeof prev.renownTokens === "number" ? prev.renownTokens : 0;
 
-      setGameState((prev) => {
-        if (!prev) return prev;
-
-        let newOwnedProfileIcons = Array.isArray(prev.ownedProfileIcons)
-          ? [...prev.ownedProfileIcons]
-          : [];
-        let newOwnedThemes = Array.isArray(prev.ownedThemes)
-          ? [...prev.ownedThemes]
-          : [];
-        let newOwnedBoosts = Array.isArray(prev.ownedBoosts)
-          ? [...prev.ownedBoosts]
-          : [];
-        let newRenownTokens =
-          typeof prev.renownTokens === "number" ? prev.renownTokens : 0;
-
-        if (itemType === "profileIcon") {
-          if (!newOwnedProfileIcons.includes(itemId)) {
-            newOwnedProfileIcons.push(itemId);
-          }
-        } else if (itemType === "theme") {
-          if (!newOwnedThemes.includes(itemId)) {
-            newOwnedThemes.push(itemId);
-          }
-        } else if (itemType === "boost") {
-          if (!newOwnedBoosts.includes(itemId)) {
-            newOwnedBoosts.push(itemId);
-          }
+      if (itemType === "profileIcon") {
+        if (!newOwnedProfileIcons.includes(itemId)) {
+          newOwnedProfileIcons.push(itemId);
         }
+      } else if (itemType === "theme") {
+        if (!newOwnedThemes.includes(itemId)) {
+          newOwnedThemes.push(itemId);
+        }
+      } else if (itemType === "boost") {
+        if (!newOwnedBoosts.includes(itemId)) {
+          newOwnedBoosts.push(itemId);
+        }
+      }
 
-        newRenownTokens -= price;
-        if (newRenownTokens < 0) newRenownTokens = 0;
+      newRenownTokens -= price;
+      if (newRenownTokens < 0) newRenownTokens = 0;
 
-        return {
-          ...prev,
-          ownedProfileIcons: newOwnedProfileIcons,
-          ownedThemes: newOwnedThemes,
-          ownedBoosts: newOwnedBoosts,
-          renownTokens: newRenownTokens,
-        };
-      });
+      // Update permanentMultiplier based on new renown tokens count (1.5% per token)
+      const newPermanentMultiplier = 1 + newRenownTokens * 0.015;
 
-      setNotification("Item purchased successfully!");
-      return { success: true };
-    } catch (error) {
-      setNotification("Error purchasing item.");
-      return { error: error.message || "Unknown error" };
-    }
-  };
+      const updated = {
+        ...prev,
+        ownedProfileIcons: newOwnedProfileIcons,
+        ownedThemes: newOwnedThemes,
+        ownedBoosts: newOwnedBoosts,
+        renownTokens: newRenownTokens,
+        permanentMultiplier: newPermanentMultiplier,
+      };
+
+      saveGame(updated);
+      return updated;
+    });
+
+    setNotification("Item purchased successfully!");
+    return { success: true };
+  } catch (error) {
+    setNotification("Error purchasing item.");
+    return { error: error.message || "Unknown error" };
+  }
+};
+
 
   // QUEST SYSTEM — PASTE THIS BELOW YOUR useState HOOKS AT THE TOP
 
@@ -1661,26 +1663,88 @@ const renderFriendsTab = () => {
 
   // Place these inside MainComponent, above renderShopTab
 
-  const handleBuyTheme = async (theme) => {
-    if (theme.isLimited) {
-      await buyLimitedItem({
-        itemId: theme.id,
-        itemType: "theme",
-        price: theme.price,
-      });
-      // Make sure your buyLimitedItem logic (or response) adds the theme to ownedThemes!
-    } else {
-      await buyRegularItem({
-        itemId: theme.id,
-        itemType: "theme",
-        price: theme.price,
-        userId,
-        pin,
-      });
-      // Make sure your buyRegularItem logic (or response) adds the theme to ownedThemes!
-    }
-    // Optionally, refetch or reload game state after buying
-  };
+const handleBuyTheme = async (theme) => {
+  // First check if user has enough renown tokens before buying
+  if (gameState.renownTokens < theme.price) {
+    setNotification("Not enough Renown Tokens to buy this theme.");
+    return;
+  }
+
+  if (theme.isLimited) {
+    await buyLimitedItem({
+      itemId: theme.id,
+      itemType: "theme",
+      price: theme.price,
+    });
+  } else {
+    await buyRegularItem({
+      itemId: theme.id,
+      itemType: "theme",
+      price: theme.price,
+      userId,
+      pin,
+    });
+  }
+
+  // Deduct tokens and update multiplier immediately after purchase
+  setGameState((prev) => {
+    const newRenownTokens = prev.renownTokens - theme.price;
+    const newPermanentMultiplier = 1 + newRenownTokens * 0.015;
+
+    const updated = {
+      ...prev,
+      renownTokens: newRenownTokens,
+      permanentMultiplier: newPermanentMultiplier,
+      // Also add the theme to ownedThemes here if applicable
+      ownedThemes: [...(prev.ownedThemes || []), theme.id],
+    };
+    saveGame(updated);
+    return updated;
+  });
+
+  setNotification(`Purchased theme: ${theme.name}`);
+};
+
+const handleBuyIcon = async (icon) => {
+  if (gameState.renownTokens < icon.price) {
+    setNotification("Not enough Renown Tokens to buy this icon.");
+    return;
+  }
+
+  if (icon.isLimited) {
+    await buyLimitedItem({
+      itemId: icon.id,
+      itemType: "profileIcon",
+      price: icon.price,
+    });
+  } else {
+    await buyRegularItem({
+      itemId: icon.id,
+      itemType: "profileIcon",
+      price: icon.price,
+      userId,
+      pin,
+    });
+  }
+
+  setGameState((prev) => {
+    const newRenownTokens = prev.renownTokens - icon.price;
+    const newPermanentMultiplier = 1 + newRenownTokens * 0.015;
+
+    const updated = {
+      ...prev,
+      renownTokens: newRenownTokens,
+      permanentMultiplier: newPermanentMultiplier,
+      // Add icon to ownedIcons if you track ownership
+      ownedIcons: [...(prev.ownedIcons || []), icon.id],
+    };
+    saveGame(updated);
+    return updated;
+  });
+
+  setNotification(`Purchased icon: ${icon.name}`);
+};
+
 
   const handleEquipTheme = (theme) => {
     setGameState((prev) => {
@@ -1691,23 +1755,6 @@ const renderFriendsTab = () => {
     setNotification(`Equipped theme: ${theme.name}`);
   };
 
-  const handleBuyIcon = async (icon) => {
-    if (icon.isLimited) {
-      await buyLimitedItem({
-        itemId: icon.id,
-        itemType: "profileIcon",
-        price: icon.price,
-      });
-    } else {
-      await buyRegularItem({
-        itemId: icon.id,
-        itemType: "profileIcon", // or "profileIcon", etc.
-        price: icon.price,
-        userId,
-        pin,
-      });
-    }
-  };
 
   const handleEquipIcon = (icon) => {
     setGameState((prev) => ({
