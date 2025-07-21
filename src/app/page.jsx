@@ -5556,9 +5556,8 @@ return (
     Claim 10x Boost!
   </button>
 )}
+
 <AdBanner />
-</div>
-)}
 
 <div
   className={`w-full ${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow}`}
@@ -5575,12 +5574,12 @@ return (
         key={val}
         onClick={() => setUpgradeMultiplier(val === "Max" ? "Max" : val)}
         className={`px-3 py-1 rounded font-bold
-        ${
-          upgradeMultiplier === val
-            ? "bg-[#059669] text-white"
-            : "bg-gray-200 text-gray-700"
-        }
-        hover:bg-[#34d399] transition`}
+          ${
+            upgradeMultiplier === val
+              ? "bg-[#059669] text-white"
+              : "bg-gray-200 text-gray-700"
+          }
+          hover:bg-[#34d399] transition`}
       >
         x{val}
       </button>
