@@ -6283,14 +6283,15 @@ onClick={() => {
 .cloudy-overlay {
   background: linear-gradient(
     120deg,
-    rgba(230, 230, 230, 0.21) 0%,
-    rgba(210, 210, 210, 0.25) 100%
+    rgba(200, 200, 200, 0.35) 0%,
+    rgba(180, 180, 180, 0.4) 100%
   );
   backdrop-filter: blur(3px);
-  opacity: 0.44;
+  opacity: 0.6;
   transition: opacity 0.5s;
   pointer-events: none;
 }
+
 
 .foggy-overlay {
   position: fixed;
