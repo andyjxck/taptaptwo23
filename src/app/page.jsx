@@ -1233,11 +1233,14 @@ const renderFriendsTab = () => {
                           iconObj.image ? (
                             <img
                               src={iconObj.image}
-                              alt="Profile Icon"
+                              alt={iconObj.name}
                               className="w-12 h-12 rounded-full border-2 border-purple-600 object-cover"
+                              title={iconObj.name}
                             />
                           ) : (
-                            <span className="text-2xl">{iconObj.emoji}</span>
+                            <span className="text-2xl" title={iconObj.name}>
+                              {iconObj.emoji}
+                            </span>
                           )
                         ) : (
                           <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center border-2 border-purple-600">
@@ -1303,11 +1306,14 @@ const renderFriendsTab = () => {
                       iconObj.image ? (
                         <img
                           src={iconObj.image}
-                          alt="Profile Icon"
+                          alt={iconObj.name}
                           className="w-10 h-10 rounded-full border-2 border-purple-600 object-cover"
+                          title={iconObj.name}
                         />
                       ) : (
-                        <span className="text-xl">{iconObj.emoji}</span>
+                        <span className="text-xl" title={iconObj.name}>
+                          {iconObj.emoji}
+                        </span>
                       )
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center border-2 border-purple-600">
@@ -1372,9 +1378,12 @@ const renderFriendsTab = () => {
                         src={iconObj.image}
                         alt={iconObj.name}
                         className="w-10 h-10 rounded-full border-2 border-purple-600 object-cover"
+                        title={iconObj.name}
                       />
                     ) : (
-                      <span className="text-2xl">{iconObj.emoji}</span>
+                      <span className="text-2xl" title={iconObj.name}>
+                        {iconObj.emoji}
+                      </span>
                     )
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center border-2 border-purple-600">
@@ -1408,6 +1417,7 @@ const renderFriendsTab = () => {
     </div>
   );
 };
+
 
   const buyRegularItem = async ({ itemId, itemType, price, userId, pin }) => {
     if (!userId || !pin) {
