@@ -5220,7 +5220,6 @@ const renderLeaderboard = () => (
       </div>
     </div>
   )}
-
   <div className="container mx-auto px-2 sm:px-4 py-2 space-y-6">
     {/* Top row: logo left, buttons right */}
     <div className="flex justify-between items-end h-20 pl-0 pr-2 sm:px-4">
@@ -5257,7 +5256,7 @@ const renderLeaderboard = () => (
 
         <button
           onClick={() => setShowResetModal(true)}
-          className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200 relative`}
+          className={${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200 relative}
           aria-label="Reset progress"
         >
           <i className="fas fa-sync-alt"></i>
@@ -5292,7 +5291,7 @@ const renderLeaderboard = () => (
         </a>
         <button
           onClick={() => setActiveTab("leaderboard")}
-          className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200`}
+          className={${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200}
         >
           <i className="fas fa-trophy"></i>
         </button>
@@ -5300,7 +5299,7 @@ const renderLeaderboard = () => (
         <div className="relative">
           <button
             onClick={() => setShowDropdown((prev) => !prev)}
-            className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200`}
+            className={${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200}
             aria-label="Open menu"
           >
             <i className="fas fa-bars"></i>
@@ -5394,7 +5393,7 @@ const renderLeaderboard = () => (
           ].map(({ icon, value }, idx) => (
             <div
               key={idx}
-              className={`${glassStyle} bg-gray-300/30 rounded-xl p-1.5 text-center border border-gray-400/50 backdrop-blur-md shadow-md`}
+              className={${glassStyle} bg-gray-300/30 rounded-xl p-1.5 text-center border border-gray-400/50 backdrop-blur-md shadow-md}
               style={{ transformOrigin: "center" }}
             >
               <span className="text-2xl select-none">{icon}</span>
@@ -5411,17 +5410,17 @@ const renderLeaderboard = () => (
           <div className="relative">
             <button
               onClick={handleTap}
-              className={`w-[200px] h-[200px] rounded-full ${glassStyle} bg-white/30 ${buttonGlow} transform active:scale-95 transition-all duration-200 relative overflow-hidden hover:shadow-2xl border border-white/30 group`}
+              className={w-[200px] h-[200px] rounded-full ${glassStyle} bg-white/30 ${buttonGlow} transform active:scale-95 transition-all duration-200 relative overflow-hidden hover:shadow-2xl border border-white/30 group}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
               <div className="absolute inset-0 flex items-center justify-center">
                 <div
-                  className={`w-32 h-32 bg-gradient-to-r ${
+                  className={w-32 h-32 bg-gradient-to-r ${
                     gameState.equippedTheme &&
                     gameState.equippedTheme !== "seasons"
                       ? CUSTOM_THEMES[gameState.equippedTheme]?.buttonGlow
                       : SEASONAL_THEMES[gameState.currentSeason].buttonGlow
-                  } rounded-full animate-pulse opacity-50`}
+                  } rounded-full animate-pulse opacity-50}
                 ></div>
               </div>
               {gameState.equippedTheme && gameState.equippedTheme !== "seasons" ? (
@@ -5430,7 +5429,7 @@ const renderLeaderboard = () => (
                 </span>
               ) : (
                 <i
-                  className={`fas ${
+                  className={fas ${
                     SEASONAL_THEMES[gameState.currentSeason].icon
                   } text-6xl relative z-10 ${
                     gameState.currentSeason === 0
@@ -5440,7 +5439,7 @@ const renderLeaderboard = () => (
                       : gameState.currentSeason === 2
                       ? "text-orange-400"
                       : "text-blue-400"
-                  } transition-colors duration-500 group-hover:scale-110 transform`}
+                  } transition-colors duration-500 group-hover:scale-110 transform}
                 />
               )}
             </button>
@@ -5455,7 +5454,7 @@ const renderLeaderboard = () => (
 
           {!hasBoost && currentQuest && (
             <div
-              className={`${glassStyle} bg-white/20 rounded-xl p-4 mb-4 text-center shadow`}
+              className={${glassStyle} bg-white/20 rounded-xl p-4 mb-4 text-center shadow}
             >
               <h2 className="text-xl text-[#2d3748] mb-2">
                 <span role="img" aria-label="gift">
@@ -5510,7 +5509,7 @@ return (
   <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden relative">
     <div
       className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-300"
-      style={{ width: `${progress}%` }}
+      style={{ width: ${progress}% }}
     />
   </div>
 );
@@ -5560,7 +5559,7 @@ return (
 <AdBanner />
 
 <div
-  className={`w-full ${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow}`}
+  className={w-full ${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow}}
 >
   <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#2d3748]">
     Upgrades
@@ -5573,13 +5572,13 @@ return (
       <button
         key={val}
         onClick={() => setUpgradeMultiplier(val === "Max" ? "Max" : val)}
-        className={`px-3 py-1 rounded font-bold
+        className={px-3 py-1 rounded font-bold
           ${
             upgradeMultiplier === val
               ? "bg-[#059669] text-white"
               : "bg-gray-200 text-gray-700"
           }
-          hover:bg-[#34d399] transition`}
+          hover:bg-[#34d399] transition}
       >
         x{val}
       </button>
@@ -5587,7 +5586,7 @@ return (
   </div>
   <div className="grid grid-cols-1 gap-4">
     {Object.entries(UPGRADE_COSTS).map(([type, costFn]) => {
-      const upgradeLevel = gameState[`${type}Upgrades`] || 0;
+      const upgradeLevel = gameState[${type}Upgrades] || 0;
       let multiplier =
         upgradeMultiplier === "Max"
           ? getMaxAffordableUpgrades(type, upgradeLevel, gameState.coins)
@@ -5605,12 +5604,12 @@ return (
       const currentValueShort = formatNumberShort(roundedValue);
 
       const currentValueFormatted =
-        type === "critChance" ? `${currentValueShort}%` : currentValueShort;
+        type === "critChance" ? ${currentValueShort}% : currentValueShort;
 
       return (
         <div
           key={type}
-          className={`${glassStyle} bg-white/10 rounded-xl p-4 border border-white/30`}
+          className={${glassStyle} bg-white/10 rounded-xl p-4 border border-white/30}
         >
           <div className="flex flex-col space-y-2">
             <div className="flex justify-between items-center">
@@ -5631,7 +5630,7 @@ return (
                   onClick={() =>
                     setTooltipVisibleFor((prev) => (prev === type ? null : type))
                   }
-                  aria-label={`Info about ${type}`}
+                  aria-label={Info about ${type}}
                   className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
                   style={{ fontSize: "0.8rem" }}
                 >
@@ -5649,7 +5648,7 @@ return (
               disabled={!canAfford}
               className={upgradeButtonStyle(canAfford)}
             >
-              {`Buy${multiplier > 1 ? ` x${multiplier}` : ""} (${formatNumberShort(totalCost)})`}
+              {Buy${multiplier > 1 ?  x${multiplier} : ""} (${formatNumberShort(totalCost)})}
             </button>
           </div>
         </div>
@@ -5672,20 +5671,19 @@ renderFriendsTab()
 </div>
 </div>
 
-
 {/* Sticky Bottom Bar - centered */}
 <div
-  className={`${glassStyle} bg-white/20 rounded-2xl ${buttonGlow} p-2 sticky bottom-4 inset-x-0 z-40 max-w-md w-full mx-auto`}
+  className={${glassStyle} bg-white/20 rounded-2xl ${buttonGlow} p-2 sticky bottom-4 inset-x-0 z-40 max-w-md w-full mx-auto}
   style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
 >
 <div className="flex space-x-4 justify-center">
   <button
     onClick={() => setActiveTab("game")}
-    className={`px-6 py-3 rounded-xl transition-all duration-200 ${
+    className={px-6 py-3 rounded-xl transition-all duration-200 ${
       activeTab === "game"
         ? "bg-white/40 text-[#2d3748] shadow-md"
         : "text-[#4a5568] hover:bg-white/20"
-    } flex flex-col items-center justify-center`}
+    } flex flex-col items-center justify-center}
   >
     <i className="fas fa-gamepad"></i>
     <span className="block text-xs mt-1">Game</span>
@@ -5693,11 +5691,11 @@ renderFriendsTab()
 
   <button
     onClick={() => setActiveTab("house")}
-    className={`px-6 py-3 rounded-xl transition-all duration-200 ${
+    className={px-6 py-3 rounded-xl transition-all duration-200 ${
       activeTab === "house"
         ? "bg-white/40 text-[#2d3748] shadow-md"
         : "text-[#4a5568] hover:bg-white/20"
-    } flex flex-col items-center justify-center`}
+    } flex flex-col items-center justify-center}
   >
     <i className="fas fa-home"></i>
     <span className="block text-xs mt-1">House</span>
@@ -5705,11 +5703,11 @@ renderFriendsTab()
 
   <button
     onClick={() => setActiveTab("shop")}
-    className={`px-6 py-3 rounded-xl transition-all duration-200 ${
+    className={px-6 py-3 rounded-xl transition-all duration-200 ${
       activeTab === "shop"
         ? "bg-white/40 text-[#e11d48] shadow-md"
         : "text-[#e11d48] hover:bg-white/20"
-    } flex flex-col items-center justify-center`}
+    } flex flex-col items-center justify-center}
   >
     <i className="fas fa-store"></i>
     <span className="block text-xs mt-1">Shop</span>
@@ -5717,11 +5715,11 @@ renderFriendsTab()
 
   <button
     onClick={() => setActiveTab("friends")}
-    className={`px-6 py-3 rounded-xl transition-all duration-200 ${
+    className={px-6 py-3 rounded-xl transition-all duration-200 ${
       activeTab === "friends"
         ? "bg-white/40 text-[#2d3748] shadow-md"
         : "text-[#4a5568] hover:bg-white/20"
-    } flex flex-col items-center justify-center`}
+    } flex flex-col items-center justify-center}
   >
     <i className="fas fa-users"></i>
     <span className="block text-xs mt-1">Friends</span>
@@ -6130,7 +6128,7 @@ onClick={() => {
             mixBlendMode: "multiply",
           }}
         />
-      )}
+      )}?
 
       <style jsx global>{`
         @keyframes floatUp {
