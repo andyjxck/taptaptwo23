@@ -1350,63 +1350,66 @@ const renderFriendsTab = () => (
       </div>
     )}
 
-    {/* Friends List */}
-    {friendsLoading && <p>Loading friends...</p>}
-    {friendError && <p className="text-red-500">{friendError}</p>}
-    {!friendsLoading && !friendError && friends.length === 0 && (
-      <p className="text-center text-[#2d3748]">No friends found.</p>
-    )}
-    {!friendsLoading && !friendError && friends.length > 0 && (
-      <div className="space-y-2">
-        <h4 className="font-semibold text-[#2d3748]">Your Friends:</h4>
-        {friends.map((friend) => (
-          <div
-  key={friend.friend_id}
-  className="flex justify-between items-center bg-white/10 rounded-lg p-3"
->
-  <div className="flex items-center space-x-4 text-[#2d3748]">
-    {/* Profile Icon */}
-    {(() => {
+   {/* Friends List */}
+{friendsLoading && <p>Loading friends...</p>}
+{friendError && <p className="text-red-500">{friendError}</p>}
+{!friendsLoading && !friendError && friends.length === 0 && (
+  <p className="text-center text-[#2d3748]">No friends found.</p>
+)}
+{!friendsLoading && !friendError && friends.length > 0 && (
+  <div className="space-y-2">
+    <h4 className="font-semibold text-[#2d3748]">Your Friends:</h4>
+    {friends.map((friend) => {
       const iconObj = PROFILE_ICONS.find((ic) => ic.id === friend.profile_icon);
-      if (iconObj) {
-        return iconObj.type === 'image' ? (
-          <img
-            src={iconObj.src}
-            alt="Profile Icon"
-            className="w-10 h-10 rounded-full border-2 border-purple-600 object-cover"
-          />
-        ) : (
-          <i className={`${iconObj.className} text-xl text-purple-600`}></i>
-        );
-      }
+
       return (
-        <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center border-2 border-purple-600">
-          <i className="fas fa-user text-purple-600"></i>
+        <div
+          key={friend.friend_id}
+          className="flex justify-between items-center bg-white/10 rounded-lg p-3"
+        >
+          <div className="flex items-center space-x-4 text-[#2d3748]">
+            {/* Profile Icon */}
+            {iconObj ? (
+              iconObj.image ? (
+                <img
+                  src={iconObj.image}
+                  alt={iconObj.name}
+                  className="w-10 h-10 rounded-full border-2 border-purple-600 object-cover"
+                />
+              ) : (
+                <span className="text-2xl">{iconObj.emoji}</span>
+              )
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center border-2 border-purple-600">
+                <i className="fas fa-user text-purple-600"></i>
+              </div>
+            )}
+
+            {/* Info */}
+            <div>
+              <p className="font-medium">
+                {friend.profile_name || 'Unknown'}{' '}
+                <span className="text-xs text-gray-500">({friend.friend_id})</span>
+              </p>
+              <p className="text-xs">Taps: {formatNumberShort(friend.total_taps ?? 0)}</p>
+              <p className="text-xs">Upgrades: {friend.combined_upgrade_level ?? 0}</p>
+              <p className="text-xs">Coins: {formatNumberShort(friend.total_coins_earned ?? 0)}</p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => removeFriend(friend.friend_id)}
+            className="text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+          >
+            Remove
+          </button>
         </div>
       );
-    })()}
-
-    {/* Info */}
-    <div>
-      <p className="font-medium">{friend.profile_name || 'Unknown'}</p>
-      <p className="text-xs">Taps: {formatNumberShort(friend.total_taps ?? 0)}</p>
-      <p className="text-xs">Upgrades: {friend.combined_upgrade_level ?? 0}</p>
-      <p className="text-xs">Coins: {formatNumberShort(friend.total_coins_earned ?? 0)}</p>
-    </div>
+    })}
   </div>
-
-  <button
-    onClick={() => removeFriend(friend.friend_id)}
-    className="text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-  >
-    Remove
-  </button>
-</div>
-        ))}
-      </div>
-    )}
+)}
   </div>
-);
+  };
 
   const buyRegularItem = async ({ itemId, itemType, price, userId, pin }) => {
     if (!userId || !pin) {
