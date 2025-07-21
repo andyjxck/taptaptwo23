@@ -1,5 +1,5 @@
 "use client";
-
+import AdBanner from '@/components/AdBanner'
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 
 // Generate 25 static stars (adjust count as you wish)
@@ -4775,7 +4775,9 @@ const renderLeaderboard = () => (
   const progress = Math.min((gameState.coins / nextUpgradeCost) * 100, 100);
 
   return (
+    
     <div className={`${glassStyle} bg-white rounded-2xl p-5 ${buttonGlow}`}>
+            <AdBanner />
       {/* Daily Bonus Section */}
       <div className="my-6 flex flex-col items-center">
         {bonusCooldown === 0 ? (
