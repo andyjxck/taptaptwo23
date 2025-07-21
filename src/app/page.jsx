@@ -3655,7 +3655,6 @@ if (lastActive && !isNaN(lastActive)) {
 const [leaderboardData, setLeaderboardData] = useState({
   renown: [],
   coins: [],
-  house: [],
   totalTaps: [],
 });
 
@@ -3695,6 +3694,48 @@ useEffect(() => {
   return () => clearInterval(interval);
 }, [userId, pin]);
 
+const [leaderboardType, setLeaderboardType] = useState("renown");
+const [leaderboardData, setLeaderboardData] = useState({
+  renown: [],
+  coins: [],
+  totalTaps: [],
+});
+
+useEffect(() => {
+  const fetchLeaderboard = async () => {
+    if (!userId || !pin) return;
+
+    try {
+      const response = await fetch("/api/game-state", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: parseInt(userId, 10),
+          pin,
+          action: "getLeaderboard",
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch leaderboard");
+
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+
+      setLeaderboardData({
+        renown: data.renown || [],
+        coins: data.coins || [],
+        totalTaps: data.totalTaps || [],
+      });
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+    }
+  };
+
+  fetchLeaderboard();
+  const interval = setInterval(fetchLeaderboard, 5000);
+  return () => clearInterval(interval);
+}, [userId, pin]);
+
 const renderLeaderboard = () => (
   <div className={`${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow}`}>
     <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#2d3748]">
@@ -3709,7 +3750,6 @@ const renderLeaderboard = () => (
       >
         <option value="renown">Most Renown Tokens</option>
         <option value="coins">Most Coins Earned</option>
-        <option value="house">Highest House Level</option>
         <option value="totalTaps">Most Taps</option>
       </select>
     </div>
@@ -3760,11 +3800,6 @@ const renderLeaderboard = () => (
                 <span className="text-lg font-medium">
                   {entry.profile_name || "Player"} ({entry.user_id})
                 </span>
-                {leaderboardType === "house" && (
-                  <div className="text-xs text-white-300" style={{ lineHeight: "1.2" }}>
-                    {entry.house_name ? entry.house_name : "No House"}
-                  </div>
-                )}
               </div>
             </div>
 
@@ -3773,8 +3808,6 @@ const renderLeaderboard = () => (
                 ? `${entry.renown_tokens} Renown`
                 : leaderboardType === "coins"
                 ? `${formatNumberShort(Math.floor(entry.total_coins_earned))} coins`
-                : leaderboardType === "house"
-                ? `Lvl ${entry.highest_house_level || 0}`
                 : `${formatNumberShort(entry.total_taps || 0)} taps`}
             </span>
           </div>
@@ -3783,6 +3816,7 @@ const renderLeaderboard = () => (
     </div>
   </div>
 );
+
 
   const renderShopTab = () => {
   const discountRate = 0.1; // 20% discount
