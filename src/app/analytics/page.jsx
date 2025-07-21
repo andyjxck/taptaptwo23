@@ -1,5 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import AdBanner from "@/components/AdBanner";
+
 
 function MainComponent() {
   const [metrics, setMetrics] = useState({
@@ -96,6 +98,8 @@ function MainComponent() {
             Last updated: {formatDate(metrics.lastUpdated)}
           </div>
         </div>
+
+              <AdBanner />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white/30 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-white/30">
