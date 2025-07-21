@@ -2701,6 +2701,7 @@ const loadGame = async () => {
         permanentMultiplier: Number(data.gameState.permanent_multiplier),
         currentSeason: Number(data.gameState.current_season),
         houseLevel: Number(data.gameState.house_level),
+        highest_house_level: Number(data.gameState.highest_house_level) || Number(data.gameState.house_level) || 1,
         houseCoinsMultiplier: Number(data.gameState.house_coins_multiplier),
         hasFirstReset: Boolean(data.gameState.has_first_reset),
         currentWeather: data.gameState.current_weather || "Clear",
@@ -4846,15 +4847,15 @@ const renderLeaderboard = () => (
 
                 setGameState((prev) => {
   const newHouseLevel = prev.houseLevel + 1;
-  const updatedState = {
+ const updatedState = {
     ...prev,
     coins: prev.coins - nextUpgradeCost,
     houseLevel: newHouseLevel,
-    houseCoinsMultiplier: 1.0 + prev.houseLevel * 0.1,
     highest_house_level:
       newHouseLevel > (prev.highest_house_level || 0)
         ? newHouseLevel
         : prev.highest_house_level || 0,
+    houseCoinsMultiplier: 1.0 + prev.houseLevel * 0.1,
   };
   saveGame(updatedState);
   return updatedState;
