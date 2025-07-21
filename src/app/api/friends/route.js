@@ -113,22 +113,27 @@ export async function POST(req) {
         return NextResponse.json({ success: true });
       }
 
-      case 'request': {
-        const existing = await sql`
-          SELECT * FROM friends WHERE user_id = ${userId} AND friend_id = ${friendId}
-        `;
+    case 'request': {
+  if (userId === friendId) {
+    return NextResponse.json({ error: 'Cannot add yourself as a friend' }, { status: 400 });
+  }
 
-        if (existing.length > 0) {
-          return NextResponse.json({ error: 'Friend request already exists' }, { status: 409 });
-        }
+  const existing = await sql`
+    SELECT * FROM friends WHERE user_id = ${userId} AND friend_id = ${friendId}
+  `;
 
-        await sql`
-          INSERT INTO friends (user_id, friend_id, status) 
-          VALUES (${userId}, ${friendId}, 'pending')
-        `;
+  if (existing.length > 0) {
+    return NextResponse.json({ error: 'Friend request already exists' }, { status: 409 });
+  }
 
-        return NextResponse.json({ success: true });
-      }
+  await sql`
+    INSERT INTO friends (user_id, friend_id, status) 
+    VALUES (${userId}, ${friendId}, 'pending')
+  `;
+
+  return NextResponse.json({ success: true });
+}
+
 
       case 'remove': {
         await sql`
