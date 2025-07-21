@@ -820,6 +820,8 @@ const [searchQuery, setSearchQuery] = useState('');
 const [searchResults, setSearchResults] = useState([]);
 const [activeShopBoosts, setActiveShopBoosts] = useState([]);
 const [lastDailyClaim, setLastDailyClaim] = useState(0);
+  const [showSearch, setShowSearch] = useState(false);
+
 
     useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
