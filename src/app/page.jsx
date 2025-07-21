@@ -868,6 +868,12 @@ useEffect(() => {
 
 }, [userId]);
 
+  useEffect(() => {
+  if (showRequests) {
+    fetchPendingRequests();  // your existing fetch function for pending requests
+  }
+}, [showRequests]);
+
 useEffect(() => {
   const saved = localStorage.getItem("activeBoost");
   if (saved) setActiveBoost(JSON.parse(saved));
@@ -2231,13 +2237,17 @@ async function handleSearch() {
 }
 
 async function sendFriendRequest(friendId) {
+  if (friendId === userId) return; // block sending to self
+
   await fetch(`/api/friends?action=request`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId, friendId }),
   });
+
   setSearchResults([]);
 }
+
 
 async function acceptFriendRequest(fromId) {
   await fetch(`/api/friends?action=accept`, {
