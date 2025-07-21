@@ -130,6 +130,16 @@ export async function POST(req) {
         return NextResponse.json({ success: true });
       }
 
+      case 'remove': {
+        await sql`
+          DELETE FROM friends 
+          WHERE (user_id = ${userId} AND friend_id = ${friendId}) 
+             OR (user_id = ${friendId} AND friend_id = ${userId})
+        `;
+
+        return NextResponse.json({ success: true });
+      }
+
       default:
         return NextResponse.json({ error: 'Invalid action for POST' }, { status: 400 });
     }
