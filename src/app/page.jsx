@@ -3649,15 +3649,15 @@ if (lastActive && !isNaN(lastActive)) {
     },
   };
 
-  const [leaderboardType, setLeaderboardType] = useState("renown");
-  const [leaderboardData, setLeaderboardData] = useState({
-    renown: [],
-    coins: [],
-    house: [],
-    totalTaps: [],
-  });
+ const [leaderboardType, setLeaderboardType] = useState("renown");
+const [leaderboardData, setLeaderboardData] = useState({
+  renown: [],
+  coins: [],
+  house: [],
+  totalTaps: [],
+});
 
- useEffect(() => {
+useEffect(() => {
   const fetchLeaderboard = async () => {
     if (!userId || !pin) return;
 
@@ -3678,11 +3678,11 @@ if (lastActive && !isNaN(lastActive)) {
       if (data.error) throw new Error(data.error);
 
       setLeaderboardData({
-  renown: data.renown || [],
-  coins: data.coins || [],
-  house: data.highestHouse || [],
-  totalTaps: data.totalTaps || [], // <-- Add this
-});
+        renown: data.renown || [],
+        coins: data.coins || [],
+        house: data.highestHouse || [],
+        totalTaps: data.totalTaps || [],
+      });
     } catch (error) {
       console.error("Error fetching leaderboard:", error);
     }
@@ -3693,8 +3693,7 @@ if (lastActive && !isNaN(lastActive)) {
   return () => clearInterval(interval);
 }, [userId, pin]);
 
-
- const renderLeaderboard = () => (
+const renderLeaderboard = () => (
   <div className={`${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow}`}>
     <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#2d3748]">
       Leaderboard
@@ -3709,16 +3708,13 @@ if (lastActive && !isNaN(lastActive)) {
         <option value="renown">Most Renown Tokens</option>
         <option value="coins">Most Coins Earned</option>
         <option value="house">Highest House Level</option>
-        <option value="totalTaps">Most Taps</option> 
+        <option value="totalTaps">Most Taps</option>
       </select>
     </div>
 
     <div className="space-y-2">
       {leaderboardData[leaderboardType].map((entry, index) => {
-        const iconObj = PROFILE_ICONS.find(
-          (ic) => ic.id === entry.profile_icon
-        );
-
+        const iconObj = PROFILE_ICONS.find((ic) => ic.id === entry.profile_icon);
         const rankStr = index === 0 ? "👑" : `#${index + 1}`;
 
         return (
@@ -3740,7 +3736,7 @@ if (lastActive && !isNaN(lastActive)) {
               >
                 {rankStr}
               </span>
-              {/* Profile icon */}
+
               {iconObj ? (
                 iconObj.image ? (
                   <img
@@ -3761,15 +3757,14 @@ if (lastActive && !isNaN(lastActive)) {
               <div>
                 <span className="text-lg font-medium">
                   {entry.profile_name || "Player"} ({entry.user_id})
-            </span>
-{/* House name and level under player name for house leaderboard */}
-{leaderboardType === "house" && (
-  <div className="text-xs text-white-300" style={{ lineHeight: "1.2" }}>
-    {entry.house_name ? entry.house_name : "No House"}
-  </div>
-)}
-</div>
-</div>
+                </span>
+                {leaderboardType === "house" && (
+                  <div className="text-xs text-white-300" style={{ lineHeight: "1.2" }}>
+                    {entry.house_name ? entry.house_name : "No House"}
+                  </div>
+                )}
+              </div>
+            </div>
 
             <span className="font-medium text-[#2d3748]">
               {leaderboardType === "renown"
@@ -3777,8 +3772,8 @@ if (lastActive && !isNaN(lastActive)) {
                 : leaderboardType === "coins"
                 ? `${formatNumberShort(Math.floor(entry.total_coins_earned))} coins`
                 : leaderboardType === "house"
-  ? `Lvl ${entry.highest_house_level || 0}`
-  : `${formatNumberShort(entry.total_taps || 0)} taps`
+                ? `Lvl ${entry.highest_house_level || 0}`
+                : `${formatNumberShort(entry.total_taps || 0)} taps`}
             </span>
           </div>
         );
