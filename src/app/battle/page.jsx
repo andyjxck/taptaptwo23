@@ -12,6 +12,8 @@ function MainComponent() {
   const [showRules, setShowRules] = React.useState(false);
   const [gameMode, setGameMode] = React.useState(""); // 'ai' or 'multiplayer'
   const [aiDifficulty, setAiDifficulty] = React.useState("medium");
+const [playerName, setPlayerName] = React.useState("");
+const [userId, setUserId] = React.useState("");
 
   // Room and player management
   const [roomCode, setRoomCode] = React.useState("");
