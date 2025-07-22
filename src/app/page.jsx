@@ -979,10 +979,11 @@ useEffect(() => {
   setShowWelcomeModal(true);
 }, []);
 
-  const [bgMusicStarted, setBgMusicStarted] = React.useState(false);
+  const [bgMusicStarted, setBgMusicStarted] = useState(false);
  const [muted, setMuted] = useState(false);
   const [playClick] = useSound("/sounds/click.wav", { volume: muted ? 0 : 0.4 });
 const [playUpgrade] = useSound("/sounds/upgrade.wav", { volume: muted ? 0 : 0.4 });
+  const [playBg] = useSound("/sounds/taptaptwobg.mp3", { volume: muted ? 0 : 0.3, loop: true, interrupt: false});
   
   const [hasBoost, setHasBoost] = useState(false);
   const [boostTimeLeft, setBoostTimeLeft] = useState(0);
@@ -3429,6 +3430,12 @@ const handleReset = useCallback(() => {
 }, [gameState, saveGame, activeShopBoosts]);
 
 const handleTap = useCallback(() => {
+  // Play background music only once on first tap
+  if (!bgMusicStarted) {
+    playBg();
+    setBgMusicStarted(true);
+  }
+
   if (navigator.vibrate) navigator.vibrate(250);
   playClick(); // 🔊 Play tap sound immediately
 
@@ -3533,6 +3540,8 @@ const handleTap = useCallback(() => {
   saveGame(newState);
   localStorage.setItem("lastActiveTime", Date.now());
 }, [
+  bgMusicStarted,
+  playBg,
   playClick,
   lastTapTimes,
   hasBoost,
