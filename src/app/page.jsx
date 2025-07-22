@@ -2483,6 +2483,10 @@ async function removeFriend(friendId) {
           <div className="flex justify-between">
             <button
               onClick={() => {
+                if (navigator.vibrate) {
+  navigator.vibrate(50); // vibrate for 50 milliseconds
+}
+
                 setShowDoubleEarningsModal(false);
                 setDoubleEarningsSacrifice(null);
                 setDoubleEarningsOfflineEarningsBackup(null);
@@ -3342,6 +3346,9 @@ if (lastActive && !isNaN(lastActive)) {
               }`}
               onClick={() => {
                 if (canReset) {
+                  if (navigator.vibrate) {
+  navigator.vibrate(50); // vibrate for 50 milliseconds
+}
                   handleReset();
                 }
               }}
@@ -3414,6 +3421,7 @@ if (lastActive && !isNaN(lastActive)) {
   }, [gameState, saveGame]);
 
 const handleTap = useCallback(() => {
+ if (navigator.vibrate) navigator.vibrate(50);
   playClick(); // 🔊 Play sound immediately when tapped
 
   const now = Date.now();
@@ -3537,6 +3545,8 @@ const handleUpgrade = useCallback(
       const cost = UPGRADE_COSTS[type](currentLevel);
 
       if (state.coins < cost) break;
+
+      if (navigator.vibrate) navigator.vibrate(50);
 
       // ✅ Play sound before upgrade is applied
       playUpgrade();
@@ -4029,9 +4039,13 @@ const renderLeaderboard = () => (
                     disabled={!afford || alreadyActive}
                     onClick={() => {
                       if (!afford) {
+
                         setNotification("Not enough Renown Tokens!");
                         return;
                       }
+                       if (navigator.vibrate) {
+  navigator.vibrate(50); // vibrate for 50 milliseconds
+}
                       setGameState((prev) => ({
                         ...prev,
                         renownTokens: prev.renownTokens - discountedPrice,
@@ -5334,17 +5348,15 @@ const renderLeaderboard = () => (
             >
               <i className="fas fa-user mr-2"></i> Profile
             </button>
-            <button
+           <button
   onClick={() => setMuted((m) => !m)}
-  className="flex items-center gap-2 p-2 hover:bg-gray-200 rounded"
+  className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
   aria-label={muted ? "Unmute sounds" : "Mute sounds"}
 >
-  <i
-    className={`fas ${muted ? "fa-volume-mute" : "fa-volume-up"}`}
-    aria-hidden="true"
-  />
-  <span>{muted ? "Unmute" : "Mute"}</span>
+  <i className={`fas mr-2 ${muted ? "fa-volume-mute" : "fa-volume-up"}`}></i>
+  {muted ? "Unmute" : "Mute"}
 </button>
+
             <button
               onClick={() => {
                 localStorage.removeItem("userId");
