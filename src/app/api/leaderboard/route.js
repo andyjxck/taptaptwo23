@@ -3,18 +3,18 @@ import { sql } from "../auth-handler/db";
 async function handler({ action }) {
   switch (action) {
     case "getLeaderboard": {
-    const coins = await sql`
+  const coins = await sql`
   SELECT 
-    gs.user_id, 
-    gs.profile_name, 
-    gs.profile_icon, 
-    lb.total_coins_earned
-  FROM game_saves gs
-  JOIN leaderboard lb ON gs.user_id = lb.user_id
-  WHERE lb.total_coins_earned IS NOT NULL
-  ORDER BY lb.total_coins_earned DESC
+    user_id, 
+    profile_name, 
+    profile_icon, 
+    total_coins_earned
+  FROM game_saves
+  WHERE total_coins_earned IS NOT NULL
+  ORDER BY total_coins_earned DESC
   LIMIT 100
 `;
+
 
 
       const renown = await sql`
