@@ -11,6 +11,22 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
+  if (action === 'fetchProfile') {
+  const { rows } = await sql`
+    SELECT profile_name, profile_icon, total_taps, renown_tokens 
+    FROM game_saves 
+    WHERE user_id = ${userId}
+    LIMIT 1;
+  `;
+
+  if (rows.length === 0) {
+    return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+  }
+
+  return NextResponse.json(rows[0]);
+}
+
+
   if (action === 'create') {
     const roomCode = code || Math.random().toString(36).substring(2, 8).toUpperCase();
     const { rows } = await sql`
