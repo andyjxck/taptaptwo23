@@ -931,6 +931,7 @@ if (gamePhase === "finished") {
               </div>
             </div>
           </div>
+          
 
           <div
             className="backdrop-blur-xl bg-white/10 rounded-2xl p-4 mb-6 border border-white/20"
@@ -980,3 +981,5 @@ if (gamePhase === "finished") {
 return null;
 
   }
+
+export default MainComponent;
