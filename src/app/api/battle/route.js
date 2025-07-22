@@ -77,24 +77,24 @@ export async function POST(req) {
     return NextResponse.json({ bothReady });
   }
 
-  if (action === 'end') {
-    await sql`
-      UPDATE game_saves SET total_taps = total_taps + ${taps}
-      WHERE user_id = ${winnerId} OR user_id = ${loserId};
-    `;
+ if (action === 'end') {
+  await sql`
+    UPDATE game_saves SET total_taps = total_taps + ${taps}
+    WHERE user_id = ${winnerId} OR user_id = ${loserId};
+  `;
 
-    await sql`
-      UPDATE game_saves
-      SET renown_tokens = renown_tokens + CASE
-        WHEN user_id = ${winnerId} THEN 5
-        WHEN user_id = ${loserId} THEN 1
-        ELSE 0
-      END
-      WHERE user_id IN (${winnerId}, ${loserId});
-    `;
+  await sql`
+    UPDATE game_saves
+    SET renown_tokens = renown_tokens + CASE
+      WHEN user_id = ${winnerId} THEN 5
+      WHEN user_id = ${loserId} THEN 1
+      ELSE 0
+    END
+    WHERE user_id IN (${winnerId}, ${loserId});
+  `;
 
-    return NextResponse.json({ success: true });
-  }
+  return NextResponse.json({ success: true });
+}
 
   return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
 }
