@@ -4856,7 +4856,7 @@ const renderLeaderboard = () => (
           <button
             onClick={() => {
               if (!canAfford) return;
-
+  playUpgrade(); 
               setGameState((prev) => {
                 const newHouseLevel = prev.houseLevel + 1;
                 const updatedState = {
