@@ -869,23 +869,6 @@ useEffect(() => {
 }, [userId]);
 
   useEffect(() => {
-  if (!battleModalVisible) return;
-  const timer = setInterval(() => {
-    setBattleTimeLeft(t => {
-      if (t <= 1) {
-        clearInterval(timer);
-        endBattle();
-        return 0;
-      }
-      return t - 1;
-    });
-  }, 1000);
-
-  return () => clearInterval(timer);
-}, [battleModalVisible]);
-
-
-  useEffect(() => {
   if (showRequests) {
     fetchPendingRequests();  // your existing fetch function for pending requests
   }
@@ -1007,13 +990,6 @@ const [playUpgrade] = useSound("/sounds/upgrade.wav", { volume: muted ? 0 : 0.4 
   const [hailParticles, setHailParticles] = useState([]);
   const [showHouseRenameModal, setShowHouseRenameModal] = useState(false);
   const [newHouseName, setNewHouseName] = useState("");
-  const [battleModalVisible, setBattleModalVisible] = useState(false);
-const [battleOpponent, setBattleOpponent] = useState(null);
-const [battleScore, setBattleScore] = useState(0);
-const [opponentScore, setOpponentScore] = useState(0);
-const [battleTimeLeft, setBattleTimeLeft] = useState(300);
-const [battleId, setBattleId] = useState(null);
-
   const [houseNameError, setHouseNameError] = useState("");
   const MADDOX_LOGO =
     "https://ucarecdn.com/7eaeaf25-2192-4082-a415-dd52f360d379/-/format/auto/";
@@ -1145,87 +1121,6 @@ const [battleId, setBattleId] = useState(null);
     }, 50);
   };
 
-  const endBattle = async () => {
-  if (!battleId || !userId) return;
-
-  // 1. Get both players' coins from the battle state
-  // (Assuming you track these in battleCoins or similar)
-  const player1Coins = battleCoins[player1Id] || 0;
-  const player2Coins = battleCoins[player2Id] || 0;
-
-  // 2. Determine winnerId
-  const winnerId = player1Coins > player2Coins ? player1Id : player2Id;
-
-  // 3. Update battle in Supabase: status=finished, end_time=now, winner_id=winnerId
-  const { error } = await supabase
-    .from('battles')
-    .update({
-      status: 'finished',
-      end_time: new Date().toISOString(),
-      winner_id: winnerId,
-    })
-    .eq('id', battleId);
-
-  if (error) {
-    console.error('Failed to end battle:', error);
-    return;
-  }
-
-  // 4. Award 5 renown tokens to winner in your game_saves table
-  // (Assuming renown_tokens is stored there)
-  const { data: existingSave, error: saveError } = await supabase
-    .from('game_saves')
-    .select('renown_tokens')
-    .eq('user_id', winnerId)
-    .single();
-
-  if (saveError) {
-    console.error('Failed to fetch game save:', saveError);
-    return;
-  }
-
-  const currentTokens = existingSave?.renown_tokens || 0;
-  const newTokens = currentTokens + 5;
-
-  const { error: updateError } = await supabase
-    .from('game_saves')
-    .update({ renown_tokens: newTokens })
-    .eq('user_id', winnerId);
-
-  if (updateError) {
-    console.error('Failed to update renown tokens:', updateError);
-  }
-
-  // 5. Clear battle UI / reset state
-  setBattleActive(false);
-  setBattleId(null);
-  setBattleCoins({});
-  // ...any other reset
-
-  alert(`Battle finished! Winner is ${winnerId === userId ? 'You' : 'Your friend'}! 5 Renown tokens awarded.`);
-};
-
-  
-const sendBattleInvite = async (toUserId) => {
-  if (!userId) return;
-
-  // Optional: check if the user is online first (see Step 3)
-  const { data, error } = await supabase.from("battle_invites").insert([
-    {
-      from_user_id: userId,
-      to_user_id: toUserId,
-      status: "pending",
-    },
-  ]);
-
-  if (error) {
-    console.error("Failed to send battle invite:", error);
-  } else {
-    console.log("Invite sent!");
-  }
-};
-
-  
   const handleDoubleEarningsAccept = () => {
     if (!doubleEarningsSacrifice || !doubleEarningsOfflineEarningsBackup)
       return;
@@ -1516,12 +1411,6 @@ const renderFriendsTab = () => {
                     <p className="text-xs">Coins: {formatNumberShort(friend.total_coins_earned ?? 0)}</p>
                   </div>
                 </div>
-<button
-  onClick={() => sendBattleInvite(friend.id)}
-  className="bg-red-500 px-2 py-1 rounded hover:bg-red-600"
->
-  Invite to Battle
-</button>
 
                 <button
                   onClick={() => removeFriend(friend.friend_id)}
@@ -1869,17 +1758,6 @@ const handleBuyIcon = async (icon) => {
     setNotification(`Equipped theme: ${theme.name}`);
   };
 
-useEffect(() => {
-  if (!userId) return;
-  const updateOnline = async () => {
-    await supabase
-      .from("online_status")
-      .upsert({ user_id: userId, last_seen: new Date().toISOString() });
-  };
-  updateOnline();
-  const interval = setInterval(updateOnline, 30000); // update every 30s
-  return () => clearInterval(interval);
-}, [userId]);
 
   const handleEquipIcon = (icon) => {
     setGameState((prev) => ({
@@ -2731,14 +2609,6 @@ fetch("/api/record-pageview", {
       }),
     }).catch(console.error);
   }, []); // Runs once on mount
-useEffect(() => {
-  if (battleActive) {
-    const timer = setTimeout(() => {
-      endBattle();
-    }, 5 * 60 * 1000);
-    return () => clearTimeout(timer);
-  }
-}, [battleActive]);
 
 
 
@@ -3556,7 +3426,7 @@ const handleReset = useCallback(() => {
 }, [gameState, saveGame, activeShopBoosts]);
 
 const handleTap = useCallback(() => {
-  if (navigator.vibrate) navigator.vibrate(250);
+ if (navigator.vibrate) navigator.vibrate(250);
   playClick(); // 🔊 Play sound immediately when tapped
 
   const now = Date.now();
@@ -3570,15 +3440,10 @@ const handleTap = useCallback(() => {
   const updatedTapTimes = [...recentTaps, now];
   setLastTapTimes(updatedTapTimes);
 
-  // Battle mode buff factor (change as needed)
-  const battleBuff = battleActive ? 10 : 1;
-
-  // Tap multiplier base
   let tapMultiplier = 1;
   if (hasBoost) tapMultiplier *= 10;
 
-  // Adjusted Speed Bonus (buffed if battle active)
-  let adjustedSpeedBonus = gameState.tapSpeedBonus * battleBuff;
+  let adjustedSpeedBonus = gameState.tapSpeedBonus;
   if (gameState.currentWeather === "Rain") adjustedSpeedBonus *= 0.9;
   if (gameState.currentWeather === "Windy") adjustedSpeedBonus *= 1.05;
 
@@ -3589,8 +3454,7 @@ const handleTap = useCallback(() => {
     tapMultiplier *= 1 + adjustedSpeedBonus / 100;
   }
 
-  // Adjusted Crit Chance (buffed if battle active)
-  let adjustedCritChance = gameState.critChance * battleBuff;
+  let adjustedCritChance = gameState.critChance;
   if (gameState.currentWeather === "Thunder") adjustedCritChance += 15;
   if (gameState.currentWeather === "Lightning") adjustedCritChance += 25;
   if (gameState.currentWeather === "Foggy") adjustedCritChance -= 5;
@@ -3602,15 +3466,10 @@ const handleTap = useCallback(() => {
     showFloatingNumber("CRITICAL!", "#ff0000");
   }
 
-  // Calculate base tap power with buff
-  const baseTapPower = getTapPower(gameState.tapPower * battleBuff, activeShopBoosts);
-
-  // Base coins calculation
   const baseCoins =
-    baseTapPower *
+    getTapPower(gameState.tapPower, activeShopBoosts) *
     gameState.permanentMultiplier *
     tapMultiplier;
-
   const coinsBeforeWeather = baseCoins * (1 + gameState.houseCoinsMultiplier);
 
   let weatherMultiplier = 1;
@@ -3620,9 +3479,7 @@ const handleTap = useCallback(() => {
   if (gameState.currentWeather === "Sleet") weatherMultiplier *= 0.9;
   if (gameState.currentWeather === "Cloudy") weatherMultiplier *= 0.98;
 
-  // Apply active boost multiplier (buffed if battle active)
-  const boostMultiplier = (activeBoost?.multiplier || 1) * battleBuff;
-
+  const boostMultiplier = activeBoost?.multiplier || 1;
   let coinsEarned = coinsBeforeWeather * weatherMultiplier * boostMultiplier;
 
   const nowTime = Date.now();
@@ -3635,7 +3492,6 @@ const handleTap = useCallback(() => {
     coinsEarned *= 1 + gameState.tempMultiplier.percent;
   }
 
-  // Show coin number with chance
   const showCoinNumberChance = 0.6;
   if (Math.random() < showCoinNumberChance) {
     showFloatingNumber(`+${Math.floor(coinsEarned)}`, "#FFD700");
@@ -3675,8 +3531,7 @@ const handleTap = useCallback(() => {
   setGameState(newState);
   saveGame(newState);
   localStorage.setItem("lastActiveTime", Date.now());
-}, [gameState, lastTapTimes, hasBoost, battleActive]);
-
+}, [gameState, lastTapTimes, hasBoost]);
 
 const handleUpgrade = useCallback(
   (type, multiplier = 1) => {
@@ -6273,35 +6128,6 @@ const renderLeaderboard = () => (
     </div>
   </div>
 )}
-  {battleModalVisible && (
-  <div className="fixed inset-0 bg-black/90 text-white z-50 flex flex-col justify-center items-center p-4">
-    <button
-      onClick={disconnectBattle}
-      className="absolute top-4 right-4 text-white text-xl"
-    >✖</button>
-
-    <h2 className="text-2xl mb-2">Battle with {battleOpponentName}</h2>
-    <div className="flex gap-8 mb-4">
-      <div>Your Score: {battleScore}</div>
-      <div>Opp Score: {opponentScore}</div>
-    </div>
-    <div className="text-lg mb-4">Time Left: {Math.floor(battleTimeLeft/60)}:{String(battleTimeLeft%60).padStart(2,'0')}</div>
-
-    <button
-      onClick={handleBattleTap}
-      className="w-[200px] h-[200px] rounded-full bg-yellow-500 mb-4"
-    >
-      TAP
-    </button>
-
-    {/* Buffed upgrade buttons */}
-    <button className="absolute top-4 left-4 bg-blue-600 p-2 rounded">Tap Power</button>
-    <button className="absolute top-4 right-4 bg-green-600 p-2 rounded">AutoTapper</button>
-    <button className="absolute bottom-4 left-4 bg-purple-600 p-2 rounded">Crit Chance</button>
-    <button className="absolute bottom-4 right-4 bg-pink-600 p-2 rounded">Tap Speed</button>
-  </div>
-)}
-
 
 {showWeatherFlash && (
   <div
