@@ -1,12 +1,13 @@
 // app/api/battle/route.js
 
 import { NextResponse } from 'next/server';
-import { sql } from '@vercel/postgres';
+import { sql } from '../auth-handler/db';
 
 export async function POST(req) {
-  const { action, code, userId, profileName } = await req.json();
+  const body = await req.json();
+  const { action, code, userId, profileName, winnerId, loserId, taps } = body;
 
-  if (!action || !userId || !profileName) {
+  if (!action || !userId) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
@@ -44,18 +45,23 @@ export async function POST(req) {
     const room = roomRows[0];
     if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 });
 
-    const playerColumn = room.player1_id === userId ? 'player1_ready' : 'player2_ready';
+    const isPlayer1 = room.player1_id === userId;
+    const playerColumn = isPlayer1 ? 'player1_ready' : 'player2_ready';
+
     await sql`
       UPDATE battle_games SET ${sql([playerColumn])} = true WHERE room_code = ${code};
     `;
 
-    const bothReady = room.player1_ready && room.player2_ready;
+    const { rows: updatedRows } = await sql`
+      SELECT player1_ready, player2_ready FROM battle_games WHERE room_code = ${code};
+    `;
+    const updated = updatedRows[0];
+    const bothReady = updated.player1_ready && updated.player2_ready;
+
     return NextResponse.json({ bothReady });
   }
 
   if (action === 'end') {
-    const { winnerId, loserId, taps } = await req.json();
-
     await sql`
       UPDATE game_saves SET total_taps = total_taps + ${taps}
       WHERE user_id = ${winnerId} OR user_id = ${loserId};
