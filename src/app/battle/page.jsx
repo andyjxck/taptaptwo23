@@ -105,46 +105,40 @@ const [totalTapsInGame, setTotalTapsInGame] = React.useState(0);
   }, 1000);
 };
 
-
- const loadProfile = async (id) => {
-  if (!id) return;
-
+const loadProfile = async (userId) => {
   try {
-    const res = await fetch("/api/battle", {
+    const response = await fetch("/api/battle", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "fetchProfile", userId: id }),
+      body: JSON.stringify({
+        action: "fetchProfile",
+        userId: parseInt(userId, 10),
+      }),
     });
+    if (!response.ok) throw new Error(`Status ${response.status}`);
 
-    if (!res.ok) {
-      console.error("Failed to fetch profile:", res.statusText);
-      return;
-    }
-
-    const data = await res.json();
-
-    if (data.error) {
+    const data = await response.json();
+    if (!data.profile) {
       console.error("Backend error:", data.error);
       return;
     }
 
     setProfileName(data.profile.profile_name);
-    setProfileIcon(data.profile.profile_icon);
+    setLogoUrl(data.profile.profile_icon);
     setAllTimeTotalTaps(data.profile.total_taps);
     setRenownTokens(data.profile.renown_tokens);
-  } catch (error) {
-    console.error("Fetch error:", error);
+  } catch (err) {
+    console.error("Profile load failed:", err);
   }
 };
 
 
- React.useEffect(() => {
-  if (userId) {
+React.useEffect(() => {
+  if (typeof userId === "number") {
     loadProfile(userId);
   }
 }, [userId]);
 
-  
 
   // Upgrade functions
   const upgradeTapPower = () => {
