@@ -817,12 +817,16 @@ if (action === "load") {
 
 if (action === "getLeaderboard") {
   const topCoins = await sql`
-    SELECT l.user_id, l.total_coins_earned, g.profile_name, g.profile_icon
-    FROM leaderboard l
-    LEFT JOIN game_saves g ON l.user_id = g.user_id
-    ORDER BY l.total_coins_earned DESC
-    LIMIT 10
-  `;
+  SELECT 
+    g.user_id, 
+    g.total_coins_earned, 
+    g.profile_name, 
+    g.profile_icon
+  FROM game_saves g
+  ORDER BY g.total_coins_earned DESC
+  LIMIT 10
+`;
+
 
   const topRenown = await sql`
     SELECT l.user_id, g.renown_tokens, g.profile_name, g.profile_icon
