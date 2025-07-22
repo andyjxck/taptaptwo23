@@ -3793,7 +3793,7 @@ const renderLeaderboard = () => (
                   ? `${formatNumberShort(Math.floor(entry.total_coins_earned))} coins`
                   : leaderboardType === "totalTaps"
                   ? `${formatNumberShort(entry.total_taps || 0)} taps`
-              leaderboardType === "highest_house_level"
+             : leaderboardType === "highest_house_level"
   ? `Level ${entry.highest_house_level}`
 
                   : null}
