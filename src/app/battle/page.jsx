@@ -13,7 +13,12 @@ function MainComponent() {
   const [gameMode, setGameMode] = React.useState(""); // 'ai' or 'multiplayer'
   const [aiDifficulty, setAiDifficulty] = React.useState("medium");
 const [playerName, setPlayerName] = React.useState("");
-const [userId, setUserId] = React.useState("");
+const [userId, setUserId] = React.useState(null);
+const [profileName, setProfileName] = React.useState("");
+const [profileIcon, setProfileIcon] = React.useState("");
+const [allTimeTotalTaps, setAllTimeTotalTaps] = React.useState(0);
+const [renownTokens, setRenownTokens] = React.useState(0);
+
 
   // Room and player management
   const [roomCode, setRoomCode] = React.useState("");
@@ -34,12 +39,9 @@ const [userId, setUserId] = React.useState("");
 
   const [isAnimating, setIsAnimating] = React.useState(false);
   const [upgradesPurchased, setUpgradesPurchased] = React.useState(0);
-  const [renownTokens, setRenownTokens] = React.useState(0);
   const [floatingNumbers, setFloatingNumbers] = React.useState([]);
 
   // Profile data
-  const [profileName, setProfileName] = React.useState("TapMaster");
-  const [allTimeTotalTaps, setAllTimeTotalTaps] = React.useState(1247);
 
   // Logo state
   const [logoUrl, setLogoUrl] = React.useState("");
@@ -63,67 +65,85 @@ const [userId, setUserId] = React.useState("");
     return result;
   };
 
-  // Handle main tap
-  const handleTap = () => {
-    if (gamePhase !== "playing") return;
+ const handleTap = () => {
+  if (gamePhase !== "playing") return;
 
-    setIsAnimating(true);
-    setTimeout(() => setIsAnimating(false), 150);
+  setIsAnimating(true);
+  setTimeout(() => setIsAnimating(false), 150);
 
-    let coinsEarned = tapPower;
+  let coinsEarned = tapPower;
 
-    // Apply tap speed bonus
-    coinsEarned += Math.floor(coinsEarned * (tapSpeedBonus / 100));
+  // Apply tap speed bonus
+  coinsEarned += Math.floor(coinsEarned * (tapSpeedBonus / 100));
 
-    // Check for critical hit
-    const isCrit = Math.random() * 100 < critChance;
-    if (isCrit) {
-      coinsEarned *= 2;
+  // Check for critical hit
+  const isCrit = Math.random() * 100 < critChance;
+  if (isCrit) {
+    coinsEarned *= 2;
+  }
+
+  setPlayerScore((prev) => prev + coinsEarned);
+  setTotalTapsInGame((prev) => prev + 1); // Fix here: increment totalTapsInGame
+
+  // Add floating number animation
+  const floatingId = Date.now() + Math.random();
+  setFloatingNumbers((prev) => [
+    ...prev,
+    {
+      id: floatingId,
+      value: coinsEarned,
+      isCrit: isCrit,
+      x: Math.random() * 100 - 50,
+      y: Math.random() * 100 - 50,
+    },
+  ]);
+
+  // Remove floating number after animation
+  setTimeout(() => {
+    setFloatingNumbers((prev) => prev.filter((num) => num.id !== floatingId));
+  }, 1000);
+};
+
+
+ const loadProfile = async (id) => {
+  if (!id) return;
+
+  try {
+    const res = await fetch("/api/battle", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "fetchProfile", userId: id }),
+    });
+
+    if (!res.ok) {
+      console.error("Failed to fetch profile:", res.statusText);
+      return;
     }
 
-    setPlayerScore((prev) => prev + coinsEarned);
-    setTotalTaps((prev) => prev + 1);
+    const data = await res.json();
 
-    // Add floating number animation
-    const floatingId = Date.now() + Math.random();
-    setFloatingNumbers((prev) => [
-      ...prev,
-      {
-        id: floatingId,
-        value: coinsEarned,
-        isCrit: isCrit,
-        x: Math.random() * 100 - 50,
-        y: Math.random() * 100 - 50,
-      },
-    ]);
+    if (data.error) {
+      console.error("Backend error:", data.error);
+      return;
+    }
 
-    // Remove floating number after animation
-    setTimeout(() => {
-      setFloatingNumbers((prev) => prev.filter((num) => num.id !== floatingId));
-    }, 1000);
-  };
-
-
-  const loadProfile = async (id) => {
-  const res = await fetch('/api/battle', {
-    method: 'POST',
-    body: JSON.stringify({ action: 'fetchProfile', userId }),
-  });
-  const data = await res.json();
-
-  if (!data.error) {
-    setProfileName(data.profile_name);
-    setLogoUrl(data.profile_icon);
-    setAllTimeTotalTaps(data.total_taps);
-    setRenownTokens(data.renown_tokens);
+    setProfileName(data.profile.profile_name);
+    setProfileIcon(data.profile.profile_icon);
+    setAllTimeTotalTaps(data.profile.total_taps);
+    setRenownTokens(data.profile.renown_tokens);
+  } catch (error) {
+    console.error("Fetch error:", error);
   }
 };
 
-  React.useEffect(() => {
-  if (playerName) { // assuming playerName is your current userId or user unique id
+
+ React.useEffect(() => {
+  if (userId) {
     loadProfile(userId);
   }
-}, [playerName]);
+}, [userId]);
+
+  
 
   // Upgrade functions
   const upgradeTapPower = () => {
@@ -196,48 +216,48 @@ const [userId, setUserId] = React.useState("");
     setIsPlayerReady(!isPlayerReady);
   };
 
-  const startGame = () => {
-    setShowRules(false);
-    setGamePhase("playing");
-    setTimeLeft(gameDuration);
-    setPlayerScore(0);
-    setOpponentScore(0);
-    setTotalTaps(0);
-    setUpgradesPurchased(0);
-    setFloatingNumbers([]);
-    setTapPower(1);
-    setTapPowerLevel(1);
-    setCritChance(0);
-    setCritLevel(0);
-    setTapSpeedBonus(0);
-    setTapSpeedLevel(0);
-    setAutoTapper(0);
-    setAutoTapperLevel(0);
-  };
+ 
+const startGame = () => {
+  setShowRules(false);
+  setGamePhase("playing");
+  setTimeLeft(gameDuration);
+  setPlayerScore(0);
+  setOpponentScore(0);
+  setTotalTapsInGame(0);    // Reset total taps for current game
+  setUpgradesPurchased(0);
+  setFloatingNumbers([]);
+  setTapPower(1);
+  setTapPowerLevel(1);
+  setCritChance(0);
+  setCritLevel(0);
+  setTapSpeedBonus(0);
+  setTapSpeedLevel(0);
+  setAutoTapper(0);
+  setAutoTapperLevel(0);
+};
 
-  const resetToStart = () => {
-    setGamePhase("start");
-    setIsPlayerReady(false);
-    setIsOpponentReady(false);
-    setPlayerScore(0);
-    setOpponentScore(0);
-    setTotalTaps(0);
-    setTimeLeft(gameDuration);
-    setCurrentRoom("");
-    setRoomCode("");
-    setGameMode("");
-    setUpgradesPurchased(0);
-    setFloatingNumbers([]);
-    setTapPower(1);
-    setTapPowerLevel(1);
-    setCritChance(0);
-    setCritLevel(0);
-    setTapSpeedBonus(0);
-    setTapSpeedLevel(0);
-    setAutoTapper(0);
-    setAutoTapperLevel(0);
-  };
-
+const resetToStart = () => {
+  setGamePhase("start");
+  setIsPlayerReady(false);
+  setIsOpponentReady(false);
+  setPlayerScore(0);
+  setOpponentScore(0);
+  setTotalTapsInGame(0);  // Reset on reset too
+  setTimeLeft(gameDuration);
+  setCurrentRoom("");
+  setRoomCode("");
+  setGameMode("");
+  setUpgradesPurchased(0);
+  setFloatingNumbers([]);
+  setTapPower(1);
+  setTapPowerLevel(1);
+  setCritChance(0);
+  setCritLevel(0);
+  setTapSpeedBonus(0);
+  setTapSpeedLevel(0);
+  setAutoTapper(0);
+  setAutoTapperLevel(0);
+};
   // Game timer effect
   React.useEffect(() => {
     let interval;
@@ -299,18 +319,23 @@ const [userId, setUserId] = React.useState("");
   }, [gamePhase, isPlayerReady, isOpponentReady]);
 
   // Update all-time total taps when game finishes
-  React.useEffect(() => {
-    if (gamePhase === "finished") {
-      setAllTimeTotalTaps((prev) => prev + totalTaps);
-      const playerWon = playerScore > opponentScore;
-      const tie = playerScore === opponentScore;
-      const renownEarned = playerWon ? 5 : tie ? 3 : 1;
-      setRenownTokens((prev) => prev + renownEarned);
-    }
-  }, [gamePhase, playerScore, opponentScore, totalTaps]);
+React.useEffect(() => {
+  if (gamePhase === "finished") {
+    setAllTimeTotalTaps((prev) => prev + totalTapsInGame);  // Use totalTapsInGame here
+    const playerWon = playerScore > opponentScore;
+    const tie = playerScore === opponentScore;
+    const renownEarned = playerWon ? 5 : tie ? 3 : 1;
+    setRenownTokens((prev) => prev + renownEarned);
+  }
+}, [gamePhase, playerScore, opponentScore, totalTapsInGame]);
 
-// Top Profile Bar Component
-const TopProfileBar = () => (
+const TopProfileBar = ({
+  profileName,
+  userId,
+  profileIcon,
+  allTimeTotalTaps,
+  renownTokens,
+}) => (
   <div
     className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white/10 border-b border-white/20 p-3 shadow-xl"
     style={{
@@ -321,11 +346,21 @@ const TopProfileBar = () => (
     <div className="flex items-center justify-between max-w-6xl mx-auto">
       {/* Left side - Profile info */}
       <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center shadow-lg">
-          <i className="fas fa-user text-white text-sm"></i>
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center shadow-lg overflow-hidden">
+          {profileIcon ? (
+            <img
+              src={profileIcon}
+              alt={`${profileName} icon`}
+              className="w-full h-full object-cover rounded-full"
+            />
+          ) : (
+            <i className="fas fa-user text-white text-sm"></i>
+          )}
         </div>
         <div className="hidden sm:block">
-          <div className="text-white font-bold text-sm">{profileName}</div>
+          <div className="text-white font-bold text-sm">
+            {profileName} {userId ? `(${userId})` : ""}
+          </div>
           <div className="text-white/70 text-xs">
             <i className="fas fa-coins text-yellow-400 mr-1"></i>
             {renownTokens} tokens
@@ -423,28 +458,35 @@ const UpgradeButton = ({
 if (gamePhase === "start") {
   return (
     <>
-      <TopProfileBar />
-      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4 pt-20 relative overflow-hidden">
-        {/* Animated background elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
-          <div
-            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse"
-            style={{ animationDelay: "1s" }}
-          ></div>
-          <div
-            className="absolute top-1/2 left-1/2 w-64 h-64 bg-pink-500/20 rounded-full blur-3xl animate-pulse"
-            style={{ animationDelay: "2s" }}
-          ></div>
-        </div>
+    <TopProfileBar
+  profileName={profileName}
+  userId={userId}
+  profileIcon={profileIcon}
+  allTimeTotalTaps={allTimeTotalTaps}
+  renownTokens={renownTokens}
+/>
 
-        <div
-          className="relative backdrop-blur-xl bg-white/10 rounded-3xl p-6 sm:p-8 border border-white/20 w-full max-w-sm shadow-2xl"
-          style={{
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-          }}
-        >
+<div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4 pt-20 relative overflow-hidden">
+  {/* Animated background elements */}
+  <div className="absolute inset-0">
+    <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
+    <div
+      className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse"
+      style={{ animationDelay: "1s" }}
+    ></div>
+    <div
+      className="absolute top-1/2 left-1/2 w-64 h-64 bg-pink-500/20 rounded-full blur-3xl animate-pulse"
+      style={{ animationDelay: "2s" }}
+    ></div>
+  </div>
+
+  <div
+    className="relative backdrop-blur-xl bg-white/10 rounded-3xl p-6 sm:p-8 border border-white/20 w-full max-w-sm shadow-2xl"
+    style={{
+      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
+    }}
+  >
           {/* Logo and Title */}
           <div className="text-center mb-6">
             <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 tracking-tight">
