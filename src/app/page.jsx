@@ -982,7 +982,17 @@ useEffect(() => {
  const [muted, setMuted] = useState(false);
   const [playClick] = useSound("/sounds/click.wav", { volume: muted ? 0 : 0.4 });
 const [playUpgrade] = useSound("/sounds/upgrade.wav", { volume: muted ? 0 : 0.4 });
-  const [playBg] = useSound("/sounds/taptaptwobg.mp3", { volume: muted ? 0 : 0.3, loop: true });
+const [playBg] = useSound("/sounds/taptaptwobg.mp3", {
+  volume: muted ? 0 : 0.3,
+  loop: true,
+  interrupt: false,
+});
+
+  useEffect(() => {
+  playBg();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
+  
   const [hasBoost, setHasBoost] = useState(false);
   const [boostTimeLeft, setBoostTimeLeft] = useState(0);
   const [hasFirstReset, setHasFirstReset] = useState(false);
@@ -2663,7 +2673,6 @@ fetch("/api/record-pageview", {
   );
 
 const loadGame = async () => {
-  playBg();
 
   setLoading(true); // Show loading overlay
 
