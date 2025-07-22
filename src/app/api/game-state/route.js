@@ -846,7 +846,8 @@ if (action === "getLeaderboard") {
 FROM game_saves
 WHERE house_name IS NOT NULL AND highest_house_level IS NOT NULL
 ORDER BY highest_house_level DESC
-LIMIT 10;
+LIMIT 10
+';
 
 
 
