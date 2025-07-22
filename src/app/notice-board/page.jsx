@@ -28,7 +28,87 @@ function MainComponent() {
   const currentSeason = "Spring";
 
   const notes = [
-   {
+  {
+  id: 10,
+  title: "Dev Log #10 - 22/07/25",
+  content: (
+    <div
+      style={{
+        fontFamily:
+          "'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        lineHeight: 1.7,
+        color: "#2d3748",
+        fontSize: "1.05rem",
+        letterSpacing: "0.02em",
+      }}
+    >
+      <p
+        style={{
+          fontStyle: "italic",
+          color: "#666666",
+          fontSize: "0.97rem",
+          marginBottom: "1.5rem",
+          maxWidth: "90%",
+          lineHeight: 1.6,
+        }}
+      >
+        Hey everyone! This update focuses on making the game more social and
+        fun to play with friends.
+      </p>
+
+      <h2
+        style={{
+          fontFamily: "'Crimson Text', serif",
+          fontWeight: 700,
+          fontSize: "2.2rem",
+          color: "#7c3aed",
+          letterSpacing: "0.05em",
+          margin: 0,
+          marginBottom: "2rem",
+          textAlign: "left",
+        }}
+      >
+        The Social Update
+      </h2>
+
+      <p style={{ marginBottom: "1.25rem" }}>
+        We’ve added a new <b>Friends Tab</b> to help you connect, though it’s
+        still limited for now. More features are coming soon to improve your
+        social experience!
+      </p>
+
+      <p style={{ marginBottom: "1.25rem" }}>
+        Several leaderboards have been fixed to better reflect your progress
+        and competition with others.
+      </p>
+
+      <p style={{ marginBottom: "1.25rem" }}>
+        Finally, a few bugs have been addressed to make gameplay smoother and
+        more enjoyable overall.
+      </p>
+
+      <p>
+        Thanks for being part of this journey. Keep tapping and stay tuned for
+        more updates that will make TapTapTwo even better!
+      </p>
+
+      <p
+        style={{
+          fontStyle: "italic",
+          color: "#666666",
+          fontSize: "0.97rem",
+          marginTop: "2rem",
+        }}
+      >
+        Happy tapping! 🎉
+        <br />
+        Andy
+      </p>
+    </div>
+  ),
+  created_at: "20:31",
+},
+{
   id: 9,
   title: "Dev Log #9 - 19/07/25",
   content: (
