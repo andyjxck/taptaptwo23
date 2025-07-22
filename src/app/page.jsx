@@ -2690,36 +2690,34 @@ const loadGame = async () => {
     const data = await response.json();
     if (data.gameState) {
       setGameState({
-        ...data.gameState,
-        coins: Number(data.gameState.coins),
-        tapPower: Number(data.gameState.tap_power),
-        tapPowerUpgrades: Number(data.gameState.tap_power_upgrades) || 0,
-        autoTapper: Number(data.gameState.auto_tapper),
-        autoTapperUpgrades: Number(data.gameState.auto_tapper_upgrades) || 0,
-        critChance: Number(data.gameState.crit_chance),
-        critChanceUpgrades: Number(data.gameState.crit_chance_upgrades) || 0,
-        tapSpeedBonus: Number(data.gameState.tap_speed_bonus),
-        tapSpeedBonusUpgrades:
-          Number(data.gameState.tap_speed_bonus_upgrades) || 0,
-        totalTaps: Number(data.gameState.total_taps),
-        totalCoinsEarned: Number(data.gameState.total_coins_earned),
-        resets: Number(data.gameState.resets),
-        permanentMultiplier: Number(data.gameState.permanent_multiplier),
-        currentSeason: Number(data.gameState.current_season),
-        houseLevel: Number(data.gameState.house_level),
-        highest_house_level: Number(data.gameState.highest_house_level) || Number(data.gameState.house_level) || 1,
-        houseCoinsMultiplier: Number(data.gameState.house_coins_multiplier),
-        hasFirstReset: Boolean(data.gameState.has_first_reset),
-        currentWeather: data.gameState.current_weather || "Clear",
-        currentYear: Number(data.gameState.current_year) || 0,
-        houseName: data.gameState.house_name || "My Cozy Home",
-        profileName: data.gameState.profile_name || "Player",
-        coinsEarnedThisRun: Number(data.gameState.coins_earned_this_run) || 0,
-        renownTokens:
-          Number(
-            data.gameState.renownTokens ?? data.gameState.renown_tokens
-          ) || 0,
-      });
+  ...data.gameState,
+  coins: Number(data.gameState.coins),
+  tapPower: Number(data.gameState.tap_power),
+  tapPowerUpgrades: Number(data.gameState.tap_power_upgrades) || 0,
+  autoTapper: Number(data.gameState.auto_tapper),
+  autoTapperUpgrades: Number(data.gameState.auto_tapper_upgrades) || 0,
+  critChance: Number(data.gameState.crit_chance),
+  critChanceUpgrades: Number(data.gameState.crit_chance_upgrades) || 0,
+  tapSpeedBonus: Number(data.gameState.tap_speed_bonus),
+  tapSpeedBonusUpgrades: Number(data.gameState.tap_speed_bonus_upgrades) || 0,
+  totalTaps: Number(data.gameState.total_taps),
+  totalCoinsEarned: Number(data.gameState.total_coins_earned),
+  resets: Number(data.gameState.resets),
+  permanentMultiplier: Number(data.gameState.permanent_multiplier),
+  currentSeason: Number(data.gameState.current_season),
+  houseLevel: Number(data.gameState.house_level),
+  highest_house_level:
+    Number(data.gameState.highest_house_level ?? data.gameState.house_level) || 1,
+  houseCoinsMultiplier: Number(data.gameState.house_coins_multiplier),
+  hasFirstReset: Boolean(data.gameState.has_first_reset),
+  currentWeather: data.gameState.current_weather || "Clear",
+  currentYear: Number(data.gameState.current_year) || 0,
+  houseName: data.gameState.house_name || "My Cozy Home",
+  profileName: data.gameState.profile_name || "Player",
+  coinsEarnedThisRun: Number(data.gameState.coins_earned_this_run) || 0,
+  renownTokens:
+    Number(data.gameState.renown_tokens ?? data.gameState.renownTokens) || 0,
+});
 
       // Handle quests and offline earnings as before...
 
@@ -3368,57 +3366,64 @@ if (lastActive && !isNaN(lastActive)) {
     );
   };
 
-  const handleReset = useCallback(() => {
-    const tokensEarnedRaw = getTokensFromCoins(
-      gameState.coinsEarnedThisRun || 0,
-      50000000,
-      1.6
-    );
-    const tokensEarned = getRenownTokens(tokensEarnedRaw, activeShopBoosts);
+const handleReset = useCallback(() => {
+  const tokensEarnedRaw = getTokensFromCoins(
+    gameState.coinsEarnedThisRun || 0,
+    50000000,
+    1.6
+  );
+  const tokensEarned = getRenownTokens(tokensEarnedRaw, activeShopBoosts);
 
-    if (tokensEarned === 0) {
-      setNotification(
-        "You need more progress to earn Renown Tokens. Keep playing!"
-      );
-      return;
-    }
-
-    const newRenownTotal = gameState.renownTokens + tokensEarned;
-
-    const newState = {
-      ...gameState,
-      coins: 0,
-      tapPower: 1,
-      tapPowerUpgrades: 0,
-      autoTapper: 0,
-      autoTapperUpgrades: 0,
-      critChance: 0,
-      critChanceUpgrades: 0,
-      tapSpeedBonus: 0,
-      tapSpeedBonusUpgrades: 0,
-      totalCoinsEarned: gameState.totalCoinsEarned, // Do not reset this
-      coinsEarnedThisRun: 0, // <-- Reset to zero on prestige
-      resets: gameState.resets + 1,
-      houseLevel: 1,
-      houseCoinsMultiplier: 0,
-      permanentMultiplier: 1 + newRenownTotal * 0.015, // 5% bonus per Renown Token
-      renownTokens: newRenownTotal,
-      currentSeason: 0,
-      currentYear: 0,
-      hasFirstReset: true,
-    };
-
-    setGameState(newState);
-    saveGame(newState);
-    localStorage.setItem("lastActiveTime", Date.now());
-
+  if (tokensEarned === 0) {
     setNotification(
-      `Reset successful! You earned ${tokensEarned} Renown Token${
-        tokensEarned > 1 ? "s" : ""
-      }. Total Renown: ${newRenownTotal}.`
+      "You need more progress to earn Renown Tokens. Keep playing!"
     );
-    setShowResetModal(false);
-  }, [gameState, saveGame]);
+    return;
+  }
+
+  const newRenownTotal = gameState.renownTokens + tokensEarned;
+
+  // Determine new highestHouseLevel:
+  const newHighestHouseLevel =
+    (gameState.houseLevel || 1) > (gameState.highestHouseLevel || 1)
+      ? gameState.houseLevel
+      : gameState.highestHouseLevel || 1;
+
+  const newState = {
+    ...gameState,
+    coins: 0,
+    tapPower: 1,
+    tapPowerUpgrades: 0,
+    autoTapper: 0,
+    autoTapperUpgrades: 0,
+    critChance: 0,
+    critChanceUpgrades: 0,
+    tapSpeedBonus: 0,
+    tapSpeedBonusUpgrades: 0,
+    totalCoinsEarned: gameState.totalCoinsEarned, // Do not reset this
+    coinsEarnedThisRun: 0, // Reset to zero on prestige
+    resets: gameState.resets + 1,
+    houseLevel: 1,
+    highestHouseLevel: newHighestHouseLevel, // Update highest house level here
+    houseCoinsMultiplier: 0,
+    permanentMultiplier: 1 + newRenownTotal * 0.015, // 5% bonus per Renown Token
+    renownTokens: newRenownTotal,
+    currentSeason: 0,
+    currentYear: 0,
+    hasFirstReset: true,
+  };
+
+  setGameState(newState);
+  saveGame(newState);
+  localStorage.setItem("lastActiveTime", Date.now());
+
+  setNotification(
+    `Reset successful! You earned ${tokensEarned} Renown Token${
+      tokensEarned > 1 ? "s" : ""
+    }. Total Renown: ${newRenownTotal}.`
+  );
+  setShowResetModal(false);
+}, [gameState, saveGame, activeShopBoosts]);
 
 const handleTap = useCallback(() => {
  if (navigator.vibrate) navigator.vibrate(250);
@@ -3673,6 +3678,7 @@ const [leaderboardData, setLeaderboardData] = useState({
   renown: [],
   coins: [],
   totalTaps: [],
+  highestHouseLevel: [],  // <-- Add this line
 });
 
 useEffect(() => {
@@ -3699,6 +3705,7 @@ useEffect(() => {
         renown: data.renown || [],
         coins: data.coins || [],
         totalTaps: data.totalTaps || [],
+        highestHouseLevel: data.highestHouseLevel || [],  // <-- Add this line
       });
     } catch (error) {
       console.error("Error fetching leaderboard:", error);
@@ -3709,6 +3716,7 @@ useEffect(() => {
   const interval = setInterval(fetchLeaderboard, 5000);
   return () => clearInterval(interval);
 }, [userId, pin]);
+
 const renderLeaderboard = () => (
   <>
     <div className={`${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow}`}>
@@ -3725,6 +3733,7 @@ const renderLeaderboard = () => (
           <option value="renown">Most Renown Tokens</option>
           <option value="coins">Most Coins Earned</option>
           <option value="totalTaps">Most Taps</option>
+          <option value="highestHouseLevel">Highest House Level</option> {/* <-- New option */}
         </select>
       </div>
 
@@ -3782,7 +3791,11 @@ const renderLeaderboard = () => (
                   ? `${entry.renown_tokens} Renown`
                   : leaderboardType === "coins"
                   ? `${formatNumberShort(Math.floor(entry.total_coins_earned))} coins`
-                  : `${formatNumberShort(entry.total_taps || 0)} taps`}
+                  : leaderboardType === "totalTaps"
+                  ? `${formatNumberShort(entry.total_taps || 0)} taps`
+                  : leaderboardType === "highestHouseLevel"
+                  ? `Level ${entry.highest_house_level}` // <-- New display for highestHouseLevel
+                  : null}
               </span>
             </div>
           );
@@ -3793,6 +3806,7 @@ const renderLeaderboard = () => (
     <AdBanner />
   </>
 );
+
 
 
   const renderShopTab = () => {
