@@ -980,8 +980,8 @@ useEffect(() => {
 }, []);
                                                      
  const [muted, setMuted] = useState(false);
-  const [playClick] = useSound("/sounds/click.wav", { volume: muted ? 0 : 1 });
-const [playUpgrade] = useSound("/sounds/upgrade.wav", { volume: muted ? 0 : 1 });
+  const [playClick] = useSound("/sounds/click.wav", { volume: muted ? 0 : 0.4 });
+const [playUpgrade] = useSound("/sounds/upgrade.wav", { volume: muted ? 0 : 0.4 });
   const [hasBoost, setHasBoost] = useState(false);
   const [boostTimeLeft, setBoostTimeLeft] = useState(0);
   const [hasFirstReset, setHasFirstReset] = useState(false);
