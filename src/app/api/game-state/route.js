@@ -836,18 +836,19 @@ if (action === "getLeaderboard") {
     LIMIT 10
   `;
 
- const topHighestHouse = await sql`
+const topHighestHouse = await sql`
   SELECT 
-  user_id, 
-  profile_name, 
-  profile_icon, 
-  house_name, 
-  highest_house_level
-FROM game_saves
-WHERE house_name IS NOT NULL AND highest_house_level IS NOT NULL
-ORDER BY highest_house_level DESC
-LIMIT 10
-';
+    user_id, 
+    profile_name, 
+    profile_icon, 
+    house_name, 
+    highest_house_level
+  FROM game_saves
+  WHERE house_name IS NOT NULL AND highest_house_level IS NOT NULL
+  ORDER BY highest_house_level DESC
+  LIMIT 10
+`;
+
 
 
 
