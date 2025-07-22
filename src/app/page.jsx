@@ -823,8 +823,7 @@ const [activeShopBoosts, setActiveShopBoosts] = useState([]);
 const [lastDailyClaim, setLastDailyClaim] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
     const [showRequests, setShowRequests] = useState(false);
-const [playClick] = useSound("/sounds/click.wav");
-const [playUpgrade] = useSound("/sounds/upgrade.wav");
+
 // Load userId and pin from localStorage once on mount
 useEffect(() => {
   const storedUserId = localStorage.getItem("userId");
@@ -980,7 +979,9 @@ useEffect(() => {
   setShowWelcomeModal(true);
 }, []);
                                                      
-
+ const [muted, setMuted] = useState(false);
+  const [playClick] = useSound("/sounds/click.wav", { volume: muted ? 0 : 1 });
+const [playUpgrade] = useSound("/sounds/upgrade.wav", { volume: muted ? 0 : 1 });
   const [hasBoost, setHasBoost] = useState(false);
   const [boostTimeLeft, setBoostTimeLeft] = useState(0);
   const [hasFirstReset, setHasFirstReset] = useState(false);
@@ -5333,6 +5334,17 @@ const renderLeaderboard = () => (
             >
               <i className="fas fa-user mr-2"></i> Profile
             </button>
+            <button
+  onClick={() => setMuted((m) => !m)}
+  className="flex items-center gap-2 p-2 hover:bg-gray-200 rounded"
+  aria-label={muted ? "Unmute sounds" : "Mute sounds"}
+>
+  <i
+    className={`fas ${muted ? "fa-volume-mute" : "fa-volume-up"}`}
+    aria-hidden="true"
+  />
+  <span>{muted ? "Unmute" : "Mute"}</span>
+</button>
             <button
               onClick={() => {
                 localStorage.removeItem("userId");
