@@ -869,6 +869,23 @@ useEffect(() => {
 }, [userId]);
 
   useEffect(() => {
+  if (!battleModalVisible) return;
+  const timer = setInterval(() => {
+    setBattleTimeLeft(t => {
+      if (t <= 1) {
+        clearInterval(timer);
+        endBattle();
+        return 0;
+      }
+      return t - 1;
+    });
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, [battleModalVisible]);
+
+
+  useEffect(() => {
   if (showRequests) {
     fetchPendingRequests();  // your existing fetch function for pending requests
   }
@@ -990,6 +1007,13 @@ const [playUpgrade] = useSound("/sounds/upgrade.wav", { volume: muted ? 0 : 0.4 
   const [hailParticles, setHailParticles] = useState([]);
   const [showHouseRenameModal, setShowHouseRenameModal] = useState(false);
   const [newHouseName, setNewHouseName] = useState("");
+  const [battleModalVisible, setBattleModalVisible] = useState(false);
+const [battleOpponent, setBattleOpponent] = useState(null);
+const [battleScore, setBattleScore] = useState(0);
+const [opponentScore, setOpponentScore] = useState(0);
+const [battleTimeLeft, setBattleTimeLeft] = useState(300);
+const [battleId, setBattleId] = useState(null);
+
   const [houseNameError, setHouseNameError] = useState("");
   const MADDOX_LOGO =
     "https://ucarecdn.com/7eaeaf25-2192-4082-a415-dd52f360d379/-/format/auto/";
@@ -6164,6 +6188,35 @@ const renderLeaderboard = () => (
     </div>
   </div>
 )}
+  {battleModalVisible && (
+  <div className="fixed inset-0 bg-black/90 text-white z-50 flex flex-col justify-center items-center p-4">
+    <button
+      onClick={disconnectBattle}
+      className="absolute top-4 right-4 text-white text-xl"
+    >✖</button>
+
+    <h2 className="text-2xl mb-2">Battle with {battleOpponentName}</h2>
+    <div className="flex gap-8 mb-4">
+      <div>Your Score: {battleScore}</div>
+      <div>Opp Score: {opponentScore}</div>
+    </div>
+    <div className="text-lg mb-4">Time Left: {Math.floor(battleTimeLeft/60)}:{String(battleTimeLeft%60).padStart(2,'0')}</div>
+
+    <button
+      onClick={handleBattleTap}
+      className="w-[200px] h-[200px] rounded-full bg-yellow-500 mb-4"
+    >
+      TAP
+    </button>
+
+    {/* Buffed upgrade buttons */}
+    <button className="absolute top-4 left-4 bg-blue-600 p-2 rounded">Tap Power</button>
+    <button className="absolute top-4 right-4 bg-green-600 p-2 rounded">AutoTapper</button>
+    <button className="absolute bottom-4 left-4 bg-purple-600 p-2 rounded">Crit Chance</button>
+    <button className="absolute bottom-4 right-4 bg-pink-600 p-2 rounded">Tap Speed</button>
+  </div>
+)}
+
 
 {showWeatherFlash && (
   <div
