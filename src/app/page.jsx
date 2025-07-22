@@ -2110,6 +2110,7 @@ const handleBuyIcon = async (icon) => {
     let tokens = 0;
     while (coins >= getTotalCoinsForTokens(tokens + 1, base, growth)) {
       tokens++;
+    
     }
     return tokens;
   }
