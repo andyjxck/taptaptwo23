@@ -26,18 +26,6 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className={inter.className}>
-        {/* AdSense Banner */}
-        <ins className="adsbygoogle"
-          style={{ display: 'block' }}
-          data-ad-client="ca-pub-3535780178030938"
-          data-ad-slot="1313217052"
-          data-ad-format="auto"
-          data-full-width-responsive="true"
-        ></ins>
-        <Script id="ads-init" strategy="afterInteractive">
-          {(adsbygoogle = window.adsbygoogle || []).push({})}
-        </Script>
-
         {children}
       </body>
     </html>
