@@ -11,9 +11,17 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
-  if (action === 'fetchProfile') {
+if (action === 'fetchProfile') {
+  if (!userId) {
+    return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+  }
+
   const { rows } = await sql`
-    SELECT profile_name, profile_icon, total_taps, renown_tokens 
+    SELECT 
+      profile_name, 
+      profile_icon, 
+      total_taps, 
+      renown_tokens 
     FROM game_saves 
     WHERE user_id = ${userId}
     LIMIT 1;
@@ -23,8 +31,10 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
   }
 
-  return NextResponse.json(rows[0]);
+  const profile = rows[0];
+  return NextResponse.json({ profile });
 }
+
 
 
   if (action === 'create') {
