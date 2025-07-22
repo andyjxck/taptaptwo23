@@ -10,7 +10,20 @@ export async function POST(req) {
   if (!action || !userId) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
+  
+if (action === 'getTapsInGame') {
+  const { rows } = await sql`
+    SELECT total_taps_ingame FROM battle_games WHERE room_code = ${code};
+  `;
 
+  if (rows.length === 0) {
+    return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+  }
+
+  return NextResponse.json({ totalTapsInGame: rows[0].total_taps_ingame });
+}
+
+  
 if (action === 'fetchProfile') {
   if (!userId) {
     return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
