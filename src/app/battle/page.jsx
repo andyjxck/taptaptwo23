@@ -104,7 +104,7 @@ const [userId, setUserId] = React.useState("");
   };
 
 
-  const loadProfile = async (userId) => {
+  const loadProfile = async (id) => {
   const res = await fetch('/api/battle', {
     method: 'POST',
     body: JSON.stringify({ action: 'fetchProfile', userId }),
