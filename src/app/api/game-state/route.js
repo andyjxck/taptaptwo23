@@ -718,24 +718,22 @@ if (action === "save") {
       last_saved = CURRENT_TIMESTAMP
   `;
 
-  await sql`
-    INSERT INTO leaderboard (user_id, total_resets, total_coins_earned, total_taps, highest_house_level)
-    VALUES (
-      ${userIdInt},
-      ${Number(gameState.resets) || 0},
-      ${Number(gameState.total_coins_earned) || 0},
-      ${Number(gameState.total_taps) || 0},
-      ${Number(gameState.highest_house_level) || Number(gameState.house_level) || 1}
-
-      
-    )
-    ON CONFLICT (user_id) DO UPDATE SET
-      total_resets = EXCLUDED.total_resets,
-      total_coins_earned = EXCLUDED.total_coins_earned,
-      total_taps = EXCLUDED.total_taps,
-  highest_house_level = GREATEST(leaderboard.highest_house_level, EXCLUDED.highest_house_level)
-      updated_at = CURRENT_TIMESTAMP
-  `;
+await sql`
+  INSERT INTO leaderboard (user_id, total_resets, total_coins_earned, total_taps, highest_house_level)
+  VALUES (
+    ${userIdInt},
+    ${Number(gameState.resets) || 0},
+    ${Number(gameState.total_coins_earned) || 0},
+    ${Number(gameState.total_taps) || 0},
+    ${Number(gameState.highest_house_level) || Number(gameState.house_level) || 1}
+  )
+  ON CONFLICT (user_id) DO UPDATE SET
+    total_resets = EXCLUDED.total_resets,
+    total_coins_earned = EXCLUDED.total_coins_earned,
+    total_taps = EXCLUDED.total_taps,
+    highest_house_level = GREATEST(leaderboard.highest_house_level, EXCLUDED.highest_house_level),
+    updated_at = CURRENT_TIMESTAMP
+`;
 
   return { success: true };
 }
