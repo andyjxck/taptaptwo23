@@ -102,6 +102,28 @@ function MainComponent() {
     }, 1000);
   };
 
+
+  const loadProfile = async (userId) => {
+  const res = await fetch('/api/battle', {
+    method: 'POST',
+    body: JSON.stringify({ action: 'fetchProfile', userId }),
+  });
+  const data = await res.json();
+
+  if (!data.error) {
+    setProfileName(data.profile_name);
+    setLogoUrl(data.profile_icon);
+    setAllTimeTotalTaps(data.total_taps);
+    setRenownTokens(data.renown_tokens);
+  }
+};
+
+  React.useEffect(() => {
+  if (playerName) { // assuming playerName is your current userId or user unique id
+    loadProfile(playerName);
+  }
+}, [playerName]);
+
   // Upgrade functions
   const upgradeTapPower = () => {
     const cost = getTapPowerCost();
