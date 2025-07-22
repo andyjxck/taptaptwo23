@@ -18,6 +18,7 @@ const [profileName, setProfileName] = React.useState("");
 const [profileIcon, setProfileIcon] = React.useState("");
 const [allTimeTotalTaps, setAllTimeTotalTaps] = React.useState(0);
 const [renownTokens, setRenownTokens] = React.useState(0);
+const [totalTapsInGame, setTotalTapsInGame] = React.useState(0);
 
 
   // Room and player management
