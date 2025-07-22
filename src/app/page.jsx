@@ -3671,10 +3671,6 @@ const handleUpgrade = useCallback(
         "https://ucarecdn.com/947b8b5d-7c2a-41aa-a429-e54b6d0b50f1/-/format/auto/", // replace with uploaded/generated image URL
     },
   };
-
-
-import { useEffect, useState } from "react";
-
 export default function Leaderboard({ userId, pin, glassStyle, buttonGlow, PROFILE_ICONS, formatNumberShort, AdBanner }) {
   const [leaderboardType, setLeaderboardType] = useState("renown");
   const [leaderboardData, setLeaderboardData] = useState({
