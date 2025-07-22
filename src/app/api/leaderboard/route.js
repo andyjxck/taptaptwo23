@@ -3,19 +3,17 @@ import { sql } from "../auth-handler/db";
 async function handler({ action }) {
   switch (action) {
     case "getLeaderboard": {
-  const coins = await sql`
-  SELECT 
-    user_id, 
-    profile_name, 
-    profile_icon, 
-    total_coins_earned
-  FROM game_saves
-  WHERE total_coins_earned IS NOT NULL
-  ORDER BY total_coins_earned DESC
-  LIMIT 100
-`;
-
-
+      const coins = await sql`
+        SELECT 
+          user_id, 
+          profile_name, 
+          profile_icon, 
+          total_coins_earned
+        FROM game_saves
+        WHERE total_coins_earned IS NOT NULL
+        ORDER BY total_coins_earned DESC
+        LIMIT 100
+      `;
 
       const renown = await sql`
         SELECT user_id, profile_name, renown_tokens, profile_icon
@@ -24,18 +22,16 @@ async function handler({ action }) {
         LIMIT 100
       `;
 
-      // Fixed house leaderboard query to JOIN leaderboard table for highest_house_level
       const house = await sql`
         SELECT 
-          gs.user_id, 
-          gs.profile_name, 
-          gs.house_name, 
-          gs.profile_icon, 
-          lb.highest_house_level 
-        FROM game_saves gs
-        JOIN leaderboard lb ON gs.user_id = lb.user_id
-        WHERE lb.highest_house_level IS NOT NULL
-        ORDER BY lb.highest_house_level DESC
+          user_id, 
+          profile_name, 
+          house_name, 
+          profile_icon, 
+          highest_house_level 
+        FROM game_saves
+        WHERE highest_house_level IS NOT NULL
+        ORDER BY highest_house_level DESC
         LIMIT 100
       `;
 
