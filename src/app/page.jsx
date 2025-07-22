@@ -3678,7 +3678,7 @@ const [leaderboardData, setLeaderboardData] = useState({
   renown: [],
   coins: [],
   totalTaps: [],
-  highestHouseLevel: [],  // <-- Add this line
+  highest_house_level: [],  // changed from highestHouseLevel to highest_house_level
 });
 
 useEffect(() => {
@@ -3701,12 +3701,12 @@ useEffect(() => {
       const data = await response.json();
       if (data.error) throw new Error(data.error);
 
-      setLeaderboardData({
-        renown: data.renown || [],
-        coins: data.coins || [],
-        totalTaps: data.totalTaps || [],
-        highestHouseLevel: data.highestHouseLevel || [],  // <-- Add this line
-      });
+    setLeaderboardData({
+  renown: data.renown || [],
+  coins: data.coins || [],
+  totalTaps: data.totalTaps || [],
+  highest_house_level: data.highest_house_level || [],  // <-- use snake_case here
+});
     } catch (error) {
       console.error("Error fetching leaderboard:", error);
     }
@@ -3733,7 +3733,7 @@ const renderLeaderboard = () => (
           <option value="renown">Most Renown Tokens</option>
           <option value="coins">Most Coins Earned</option>
           <option value="totalTaps">Most Taps</option>
-          <option value="highestHouseLevel">Highest House Level</option> {/* <-- New option */}
+       <option value="highest_house_level">Highest House Level</option>
         </select>
       </div>
 
@@ -3793,8 +3793,9 @@ const renderLeaderboard = () => (
                   ? `${formatNumberShort(Math.floor(entry.total_coins_earned))} coins`
                   : leaderboardType === "totalTaps"
                   ? `${formatNumberShort(entry.total_taps || 0)} taps`
-                  : leaderboardType === "highestHouseLevel"
-                  ? `Level ${entry.highest_house_level}` // <-- New display for highestHouseLevel
+              leaderboardType === "highest_house_level"
+  ? `Level ${entry.highest_house_level}`
+
                   : null}
               </span>
             </div>
