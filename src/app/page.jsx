@@ -1120,7 +1120,26 @@ const [playUpgrade] = useSound("/sounds/upgrade.wav", { volume: muted ? 0 : 0.4 
       setPendingOfflineEarnings(null);
     }, 50);
   };
+const sendBattleInvite = async (toUserId) => {
+  if (!userId) return;
 
+  // Optional: check if the user is online first (see Step 3)
+  const { data, error } = await supabase.from("battle_invites").insert([
+    {
+      from_user_id: userId,
+      to_user_id: toUserId,
+      status: "pending",
+    },
+  ]);
+
+  if (error) {
+    console.error("Failed to send battle invite:", error);
+  } else {
+    console.log("Invite sent!");
+  }
+};
+
+  
   const handleDoubleEarningsAccept = () => {
     if (!doubleEarningsSacrifice || !doubleEarningsOfflineEarningsBackup)
       return;
@@ -1411,6 +1430,12 @@ const renderFriendsTab = () => {
                     <p className="text-xs">Coins: {formatNumberShort(friend.total_coins_earned ?? 0)}</p>
                   </div>
                 </div>
+<button
+  onClick={() => sendBattleInvite(friend.id)}
+  className="bg-red-500 px-2 py-1 rounded hover:bg-red-600"
+>
+  Invite to Battle
+</button>
 
                 <button
                   onClick={() => removeFriend(friend.friend_id)}
@@ -1758,6 +1783,17 @@ const handleBuyIcon = async (icon) => {
     setNotification(`Equipped theme: ${theme.name}`);
   };
 
+useEffect(() => {
+  if (!userId) return;
+  const updateOnline = async () => {
+    await supabase
+      .from("online_status")
+      .upsert({ user_id: userId, last_seen: new Date().toISOString() });
+  };
+  updateOnline();
+  const interval = setInterval(updateOnline, 30000); // update every 30s
+  return () => clearInterval(interval);
+}, [userId]);
 
   const handleEquipIcon = (icon) => {
     setGameState((prev) => ({
