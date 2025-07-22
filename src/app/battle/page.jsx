@@ -18,7 +18,6 @@ const [userId, setUserId] = React.useState("");
   // Room and player management
   const [roomCode, setRoomCode] = React.useState("");
   const [currentRoom, setCurrentRoom] = React.useState("");
-  const [playerName, setPlayerName] = React.useState("You");
   const [opponentName, setOpponentName] = React.useState("Opponent");
   const [isPlayerReady, setIsPlayerReady] = React.useState(false);
   const [isOpponentReady, setIsOpponentReady] = React.useState(false);
