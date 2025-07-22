@@ -121,7 +121,7 @@ const [userId, setUserId] = React.useState("");
 
   React.useEffect(() => {
   if (playerName) { // assuming playerName is your current userId or user unique id
-    loadProfile(playerName);
+    loadProfile(userId);
   }
 }, [playerName]);
 
