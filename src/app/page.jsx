@@ -1,6 +1,7 @@
 "use client";
 import AdBanner from '../components/AdBanner';
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import useSound from "use-sound"; // 👈 add this line
 
 // Generate 25 static stars (adjust count as you wish)
 const STATIC_STARS = Array.from({ length: 25 }, (_, i) => {
@@ -822,7 +823,7 @@ const [activeShopBoosts, setActiveShopBoosts] = useState([]);
 const [lastDailyClaim, setLastDailyClaim] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
     const [showRequests, setShowRequests] = useState(false);
-
+const [playClick] = useSound("/sounds/click.wav");
 
 // Load userId and pin from localStorage once on mount
 useEffect(() => {
@@ -3411,112 +3412,112 @@ if (lastActive && !isNaN(lastActive)) {
     setShowResetModal(false);
   }, [gameState, saveGame]);
 
-  const handleTap = useCallback(() => {
-    const now = Date.now();
-    const recentTapWindow = 2000;
-    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-    const requiredTapsForSpeedBonus = isMobile ? 2 : 3;
+const handleTap = useCallback(() => {
+  playClick(); // 🔊 Play sound immediately when tapped
 
-    const recentTaps = lastTapTimes.filter(
-      (time) => now - time < recentTapWindow
-    );
-    const updatedTapTimes = [...recentTaps, now];
-    setLastTapTimes(updatedTapTimes);
+  const now = Date.now();
+  const recentTapWindow = 2000;
+  const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+  const requiredTapsForSpeedBonus = isMobile ? 2 : 3;
 
-    let tapMultiplier = 1;
-    if (hasBoost) tapMultiplier *= 10;
+  const recentTaps = lastTapTimes.filter(
+    (time) => now - time < recentTapWindow
+  );
+  const updatedTapTimes = [...recentTaps, now];
+  setLastTapTimes(updatedTapTimes);
 
-    let adjustedSpeedBonus = gameState.tapSpeedBonus;
-    if (gameState.currentWeather === "Rain") adjustedSpeedBonus *= 0.9;
-    if (gameState.currentWeather === "Windy") adjustedSpeedBonus *= 1.05;
+  let tapMultiplier = 1;
+  if (hasBoost) tapMultiplier *= 10;
 
-    if (
-      updatedTapTimes.length >= requiredTapsForSpeedBonus &&
-      adjustedSpeedBonus > 0
-    ) {
-      tapMultiplier *= 1 + adjustedSpeedBonus / 100;
-    }
+  let adjustedSpeedBonus = gameState.tapSpeedBonus;
+  if (gameState.currentWeather === "Rain") adjustedSpeedBonus *= 0.9;
+  if (gameState.currentWeather === "Windy") adjustedSpeedBonus *= 1.05;
 
-    let adjustedCritChance = gameState.critChance;
-    if (gameState.currentWeather === "Thunder") adjustedCritChance += 15;
-    if (gameState.currentWeather === "Lightning") adjustedCritChance += 25;
-    if (gameState.currentWeather === "Foggy") adjustedCritChance -= 5;
-    if (gameState.currentWeather === "Snow") adjustedCritChance = 0;
+  if (
+    updatedTapTimes.length >= requiredTapsForSpeedBonus &&
+    adjustedSpeedBonus > 0
+  ) {
+    tapMultiplier *= 1 + adjustedSpeedBonus / 100;
+  }
 
-    const isCritical = Math.random() < adjustedCritChance / 100;
-    if (isCritical) {
-      tapMultiplier *= 2.5;
-      showFloatingNumber("CRITICAL!", "#ff0000");
-    }
+  let adjustedCritChance = gameState.critChance;
+  if (gameState.currentWeather === "Thunder") adjustedCritChance += 15;
+  if (gameState.currentWeather === "Lightning") adjustedCritChance += 25;
+  if (gameState.currentWeather === "Foggy") adjustedCritChance -= 5;
+  if (gameState.currentWeather === "Snow") adjustedCritChance = 0;
 
-    const baseCoins =
-      getTapPower(gameState.tapPower, activeShopBoosts) *
-      gameState.permanentMultiplier *
-      tapMultiplier;
-    const coinsBeforeWeather = baseCoins * (1 + gameState.houseCoinsMultiplier);
+  const isCritical = Math.random() < adjustedCritChance / 100;
+  if (isCritical) {
+    tapMultiplier *= 2.5;
+    showFloatingNumber("CRITICAL!", "#ff0000");
+  }
 
-    let weatherMultiplier = 1;
-    if (gameState.currentWeather === "Rain") weatherMultiplier *= 0.9;
-    if (gameState.currentWeather === "Sun") weatherMultiplier *= 1.15;
-    if (gameState.currentWeather === "Hail") weatherMultiplier *= 0.85;
-    if (gameState.currentWeather === "Sleet") weatherMultiplier *= 0.9;
-    if (gameState.currentWeather === "Cloudy") weatherMultiplier *= 0.98;
+  const baseCoins =
+    getTapPower(gameState.tapPower, activeShopBoosts) *
+    gameState.permanentMultiplier *
+    tapMultiplier;
+  const coinsBeforeWeather = baseCoins * (1 + gameState.houseCoinsMultiplier);
 
-    const boostMultiplier = activeBoost?.multiplier || 1;
-    let coinsEarned = coinsBeforeWeather * weatherMultiplier * boostMultiplier;
+  let weatherMultiplier = 1;
+  if (gameState.currentWeather === "Rain") weatherMultiplier *= 0.9;
+  if (gameState.currentWeather === "Sun") weatherMultiplier *= 1.15;
+  if (gameState.currentWeather === "Hail") weatherMultiplier *= 0.85;
+  if (gameState.currentWeather === "Sleet") weatherMultiplier *= 0.9;
+  if (gameState.currentWeather === "Cloudy") weatherMultiplier *= 0.98;
 
-    // Apply daily bonus multiplier if active
-    const nowTime = Date.now();
-    if (
-      gameState.tempMultiplier &&
-      typeof gameState.tempMultiplier.percent === "number" &&
-      gameState.tempMultiplier.expires &&
-      nowTime < gameState.tempMultiplier.expires
-    ) {
-      coinsEarned *= 1 + gameState.tempMultiplier.percent;
-    }
+  const boostMultiplier = activeBoost?.multiplier || 1;
+  let coinsEarned = coinsBeforeWeather * weatherMultiplier * boostMultiplier;
 
-    const showCoinNumberChance = 0.6;
-    if (Math.random() < showCoinNumberChance) {
-      showFloatingNumber(`+${Math.floor(coinsEarned)}`, "#FFD700");
-    }
-    if (hasBoost) {
-      showFloatingNumber(`+${Math.floor(coinsEarned)}`, "#FFB6C1");
-    }
+  const nowTime = Date.now();
+  if (
+    gameState.tempMultiplier &&
+    typeof gameState.tempMultiplier.percent === "number" &&
+    gameState.tempMultiplier.expires &&
+    nowTime < gameState.tempMultiplier.expires
+  ) {
+    coinsEarned *= 1 + gameState.tempMultiplier.percent;
+  }
 
-    const combinedLevel =
-      (gameState.tapPowerUpgrades || 0) +
-      (gameState.autoTapperUpgrades || 0) +
-      (gameState.critChanceUpgrades || 0) +
-      (gameState.tapSpeedBonusUpgrades || 0);
+  const showCoinNumberChance = 0.6;
+  if (Math.random() < showCoinNumberChance) {
+    showFloatingNumber(`+${Math.floor(coinsEarned)}`, "#FFD700");
+  }
+  if (hasBoost) {
+    showFloatingNumber(`+${Math.floor(coinsEarned)}`, "#FFB6C1");
+  }
 
-    const newSeason = Math.floor(combinedLevel / 50) % 4;
+  const combinedLevel =
+    (gameState.tapPowerUpgrades || 0) +
+    (gameState.autoTapperUpgrades || 0) +
+    (gameState.critChanceUpgrades || 0) +
+    (gameState.tapSpeedBonusUpgrades || 0);
 
-    const weatherChangeChance = 0.03;
-    let newWeather = gameState.currentWeather;
-    if (Math.random() < weatherChangeChance) {
-      newWeather = getNewWeather();
-    }
+  const newSeason = Math.floor(combinedLevel / 50) % 4;
 
-    const newYear = Math.floor(combinedLevel / 200);
+  const weatherChangeChance = 0.03;
+  let newWeather = gameState.currentWeather;
+  if (Math.random() < weatherChangeChance) {
+    newWeather = getNewWeather();
+  }
 
-    const newState = {
-      ...gameState,
-      coins: gameState.coins + coinsEarned,
-      totalCoinsEarned: gameState.totalCoinsEarned + coinsEarned,
-      coinsEarnedThisRun: (gameState.coinsEarnedThisRun || 0) + coinsEarned, // <-- Increment each tap
-      totalTaps: gameState.totalTaps + 1,
-    };
+  const newYear = Math.floor(combinedLevel / 200);
 
-    // Only update currentWeather if it actually changed
-    if (newWeather !== gameState.currentWeather) {
-      newState.currentWeather = newWeather;
-    }
+  const newState = {
+    ...gameState,
+    coins: gameState.coins + coinsEarned,
+    totalCoinsEarned: gameState.totalCoinsEarned + coinsEarned,
+    coinsEarnedThisRun: (gameState.coinsEarnedThisRun || 0) + coinsEarned,
+    totalTaps: gameState.totalTaps + 1,
+  };
 
-    setGameState(newState);
-    saveGame(newState);
-    localStorage.setItem("lastActiveTime", Date.now());
-  }, [gameState, lastTapTimes, hasBoost]);
+  if (newWeather !== gameState.currentWeather) {
+    newState.currentWeather = newWeather;
+  }
+
+  setGameState(newState);
+  saveGame(newState);
+  localStorage.setItem("lastActiveTime", Date.now());
+}, [gameState, lastTapTimes, hasBoost]);
 
   const handleUpgrade = useCallback(
     (type, multiplier = 1) => {
