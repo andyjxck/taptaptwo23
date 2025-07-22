@@ -824,7 +824,7 @@ const [lastDailyClaim, setLastDailyClaim] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
     const [showRequests, setShowRequests] = useState(false);
 const [playClick] = useSound("/sounds/click.wav");
-
+const [playUpgrade] = useSound("/sounds/upgrade.wav");
 // Load userId and pin from localStorage once on mount
 useEffect(() => {
   const storedUserId = localStorage.getItem("userId");
@@ -3519,83 +3519,87 @@ const handleTap = useCallback(() => {
   localStorage.setItem("lastActiveTime", Date.now());
 }, [gameState, lastTapTimes, hasBoost]);
 
-  const handleUpgrade = useCallback(
-    (type, multiplier = 1) => {
-      if (!UPGRADE_COSTS[type]) {
-        setNotification(`Unknown upgrade type: ${type}`);
-        return;
-      }
+const handleUpgrade = useCallback(
+  (type, multiplier = 1) => {
+    if (!UPGRADE_COSTS[type]) {
+      setNotification(`Unknown upgrade type: ${type}`);
+      return;
+    }
 
-      let state = { ...gameState };
-      let upgradesBought = 0;
+    let state = { ...gameState };
+    let upgradesBought = 0;
 
-      for (let i = 0; i < multiplier; i++) {
-        const upgradeKey = `${type}Upgrades`;
-        const currentLevel =
-          typeof state[upgradeKey] === "number" ? state[upgradeKey] : 0;
-        const cost = UPGRADE_COSTS[type](currentLevel);
+    for (let i = 0; i < multiplier; i++) {
+      const upgradeKey = `${type}Upgrades`;
+      const currentLevel =
+        typeof state[upgradeKey] === "number" ? state[upgradeKey] : 0;
+      const cost = UPGRADE_COSTS[type](currentLevel);
 
-        if (state.coins < cost) break;
+      if (state.coins < cost) break;
 
-        state.coins -= cost;
-        upgradesBought++;
+      // ✅ Play sound before upgrade is applied
+      playUpgrade();
 
-        switch (type) {
-          case "tapPower": {
-            const level = state.tapPowerUpgrades + 1;
-            const gain = 0.5 + level * 0.06;
-            state.tapPower = Math.round((state.tapPower + gain) * 10) / 10;
-            state.tapPowerUpgrades += 1;
-            break;
-          }
-          case "autoTapper": {
-            const level = state.autoTapperUpgrades + 1;
-            const gain = 1 + level * 1.2;
-            state.autoTapper = Math.round(state.autoTapper + gain);
-            state.autoTapperUpgrades += 1;
-            break;
-          }
-          case "critChance": {
-            const current = state.critChance || 0;
-            const level = state.critChanceUpgrades + 1;
-            const startValue = 5;
-            const maxLevel = 500;
-            const maxValue = 100;
-            const gainPerLevel = (maxValue - startValue) / maxLevel;
-            const newCritChance = startValue + gainPerLevel * level;
-            state.critChance = Math.min(
-              Math.max(current, Math.round(newCritChance * 100) / 100),
-              maxValue
-            );
-            state.critChanceUpgrades += 1;
-            break;
-          }
-          case "tapSpeedBonus": {
-            const level = state.tapSpeedBonusUpgrades + 1;
-            const startValue = level === 1 ? 2 : 0;
-            const gain = startValue + level * 0.1;
-            state.tapSpeedBonus =
-              Math.round((state.tapSpeedBonus + gain) * 10) / 10;
-            state.tapSpeedBonusUpgrades += 1;
-            break;
-          }
-          default:
-            setNotification("Unknown upgrade type!");
-            return;
+      state.coins -= cost;
+      upgradesBought++;
+
+      switch (type) {
+        case "tapPower": {
+          const level = state.tapPowerUpgrades + 1;
+          const gain = 0.5 + level * 0.06;
+          state.tapPower = Math.round((state.tapPower + gain) * 10) / 10;
+          state.tapPowerUpgrades += 1;
+          break;
         }
+        case "autoTapper": {
+          const level = state.autoTapperUpgrades + 1;
+          const gain = 1 + level * 1.2;
+          state.autoTapper = Math.round(state.autoTapper + gain);
+          state.autoTapperUpgrades += 1;
+          break;
+        }
+        case "critChance": {
+          const current = state.critChance || 0;
+          const level = state.critChanceUpgrades + 1;
+          const startValue = 5;
+          const maxLevel = 500;
+          const maxValue = 100;
+          const gainPerLevel = (maxValue - startValue) / maxLevel;
+          const newCritChance = startValue + gainPerLevel * level;
+          state.critChance = Math.min(
+            Math.max(current, Math.round(newCritChance * 100) / 100),
+            maxValue
+          );
+          state.critChanceUpgrades += 1;
+          break;
+        }
+        case "tapSpeedBonus": {
+          const level = state.tapSpeedBonusUpgrades + 1;
+          const startValue = level === 1 ? 2 : 0;
+          const gain = startValue + level * 0.1;
+          state.tapSpeedBonus =
+            Math.round((state.tapSpeedBonus + gain) * 10) / 10;
+          state.tapSpeedBonusUpgrades += 1;
+          break;
+        }
+        default:
+          setNotification("Unknown upgrade type!");
+          return;
       }
+    }
 
-      if (upgradesBought === 0) {
-        setNotification("Not enough coins!");
-        return;
-      }
+    if (upgradesBought === 0) {
+      setNotification("Not enough coins!");
+      return;
+    }
 
-      setGameState(state);
-      saveGame(state);
-      localStorage.setItem("lastActiveTime", Date.now());
-    },
-    [gameState, saveGame, setNotification]
-  );
+    setGameState(state);
+    saveGame(state);
+    localStorage.setItem("lastActiveTime", Date.now());
+  },
+  [gameState, saveGame, setNotification, playUpgrade]
+);
+
   const showFloatingNumber = useCallback((text, color = "#8B5CF6") => {
     const number = document.createElement("div");
     number.className = "floating-number";
