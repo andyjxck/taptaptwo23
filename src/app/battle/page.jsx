@@ -903,7 +903,6 @@ const fetchRoomStatus = async () => {
 };
 
 
-  
 const TopProfileBar = ({
   profileName,
   userId,
@@ -919,9 +918,9 @@ const TopProfileBar = ({
     }}
   >
     <div className="flex items-center justify-between max-w-6xl mx-auto">
-      {/* Left side - Profile info */}
-      <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center shadow-lg overflow-hidden">
+      {/* Left side - Profile icon and info */}
+      <div className="flex items-center space-x-3 min-w-0">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center shadow-lg overflow-hidden flex-shrink-0">
           {profileIcon ? (
             <img
               src={profileIcon}
@@ -932,23 +931,23 @@ const TopProfileBar = ({
             <i className="fas fa-user text-white text-sm"></i>
           )}
         </div>
-        <div className="hidden sm:block">
-          <div className="text-white font-bold text-sm">
+        {/* Info stacked vertically */}
+        <div className="flex flex-col min-w-0">
+          <div
+            className="text-white font-bold text-sm truncate"
+            title={`${profileName} ${userId ? `(${userId})` : ""}`}
+          >
             {profileName} {userId ? `(${userId})` : ""}
           </div>
-          <div className="text-white/70 text-xs">
-            <i className="fas fa-coins text-yellow-400 mr-1"></i>
-            {renownTokens} tokens
-          </div>
-        </div>
-      </div>
-
-      {/* Center - Stats (mobile hidden) */}
-      <div className="hidden md:flex items-center space-x-6">
-        <div className="text-center">
-          <div className="text-white/70 text-xs">Total Taps</div>
-          <div className="text-white font-bold text-sm">
-            {(allTimeTotalTaps|| 0).toLocaleString()}
+          <div className="flex items-center space-x-4 text-xs text-white/70 mt-1 flex-wrap">
+            <div className="flex items-center whitespace-nowrap">
+              <i className="fas fa-coins text-yellow-400 mr-1"></i>
+              <span>{renownTokens} tokens</span>
+            </div>
+            <div className="flex items-center whitespace-nowrap">
+              <i className="fas fa-hand-pointer text-blue-400 mr-1"></i>
+              <span>{(allTimeTotalTaps || 0).toLocaleString()} taps</span>
+            </div>
           </div>
         </div>
       </div>
@@ -958,7 +957,7 @@ const TopProfileBar = ({
         href="https://taptaptwo.co.uk"
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-purple-500/80 to-pink-500/80 text-white rounded-xl font-bold hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg backdrop-blur-xl border border-white/20 text-xs sm:text-sm"
+        className="flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-purple-500/80 to-pink-500/80 text-white rounded-xl font-bold hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg backdrop-blur-xl border border-white/20 text-xs sm:text-sm whitespace-nowrap"
         style={{
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
@@ -968,20 +967,6 @@ const TopProfileBar = ({
         <span className="hidden sm:inline">Return to</span>
         <span>Tap Tap: Two</span>
       </a>
-    </div>
-
-    {/* Mobile stats row */}
-    <div className="flex sm:hidden justify-center mt-2 pt-2 border-t border-white/10">
-      <div className="flex items-center space-x-4 text-xs">
-        <div className="text-white/70">
-          <i className="fas fa-coins text-yellow-400 mr-1"></i>
-          {renownTokens} tokens
-        </div>
-        <div className="text-white/70">
-          <i className="fas fa-hand-pointer text-blue-400 mr-1"></i>
-          {(allTimeTotalTaps|| 0).toLocaleString()} taps
-        </div>
-      </div>
     </div>
   </div>
 );
@@ -1301,18 +1286,22 @@ if (gamePhase === "lobby") {
   );
 }
 
-
 // Playing phase
 if (gamePhase === "playing") {
+  // Calculate score percentages for progress bar
+  const totalScore = (playerScore || 0) + (opponentScore || 0) || 1; // avoid div by zero
+  const playerPercent = ((playerScore || 0) / totalScore) * 100;
+  const opponentPercent = ((opponentScore || 0) / totalScore) * 100;
+
   return (
     <>
-     <TopProfileBar
-  profileName={profileName}
-  userId={userId}
-  profileIcon={profileIcon}
-  allTimeTotalTaps={allTimeTotalTaps}
-  renownTokens={renownTokens}
-/>
+      <TopProfileBar
+        profileName={profileName}
+        userId={userId}
+        profileIcon={profileIcon}
+        allTimeTotalTaps={allTimeTotalTaps}
+        renownTokens={renownTokens}
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex flex-col relative overflow-hidden pt-16">
         {/* Animated background */}
@@ -1330,95 +1319,120 @@ if (gamePhase === "playing") {
 
         {/* Game scoreboard */}
         <div
-          className="relative z-20 backdrop-blur-xl bg-white/10 border-b border-white/20 p-4 shadow-xl"
+          className="relative z-20 backdrop-blur-xl bg-white/10 border-b border-white/20 p-4 shadow-xl max-w-md mx-auto rounded-xl"
           style={{
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
           }}
         >
-          <div className="flex justify-between items-center max-w-sm mx-auto">
-            <div className="text-center flex-1">
-              <div className="text-white font-bold text-sm">{playerName}</div>
-              <div className="text-yellow-300 text-lg sm:text-xl font-bold">
-                {(playerScore|| 0).toLocaleString()}
-              </div>
+          {/* Scores + icons */}
+          <div className="flex justify-between items-center text-white font-bold text-sm mb-2 select-none">
+            <div className="flex items-center space-x-2">
+              <i className="fas fa-user text-yellow-400"></i>
+              <span>{playerName}</span>
             </div>
-
-            <div className="text-center px-4">
-        <div className="absolute top-16 left-1/2 transform -translate-x-1/2 z-50 text-white text-xl sm:text-2xl font-bold">
-  {formatTime(timeLeft)}
-</div>
-
-
-              <button
-                onClick={resetToStart}
-                className="px-3 py-1 bg-red-500/80 text-white text-xs rounded-full hover:bg-red-500 active:scale-95 transition-all duration-200 backdrop-blur-xl border border-white/20"
-                style={{
-                  backdropFilter: "blur(20px)",
-                  WebkitBackdropFilter: "blur(20px)",
-                }}
-              >
-                <i className="fas fa-times mr-1"></i>
-                Leave
-              </button>
-            </div>
-
-            <div className="text-center flex-1">
-              <div className="text-white font-bold text-sm">{opponentName}</div>
-              <div className="text-red-300 text-lg sm:text-xl font-bold">
-                {(opponentScore|| 0).toLocaleString()}
-              </div>
+            <div className="text-yellow-300 text-xl sm:text-2xl">
+              {(playerScore || 0).toLocaleString()}
             </div>
           </div>
+
+          <div className="flex justify-between items-center text-white font-bold text-sm mb-2 select-none">
+            <div className="flex items-center space-x-2">
+              <i className="fas fa-user-friends text-pink-400"></i>
+              <span>{opponentName}</span>
+            </div>
+            <div className="text-pink-300 text-xl sm:text-2xl">
+              {(opponentScore || 0).toLocaleString()}
+            </div>
+          </div>
+
+          {/* Progress bars */}
+          <div className="flex space-x-2 mt-2">
+            <div className="flex-1 bg-yellow-400/30 rounded-full h-3 relative overflow-hidden">
+              <div
+                className="bg-yellow-400 h-3 rounded-full transition-all duration-500"
+                style={{ width: `${playerPercent}%` }}
+              ></div>
+            </div>
+            <div className="flex-1 bg-pink-400/30 rounded-full h-3 relative overflow-hidden">
+              <div
+                className="bg-pink-400 h-3 rounded-full transition-all duration-500"
+                style={{ width: `${opponentPercent}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Timer centered above */}
+          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-50 text-white text-xl sm:text-2xl font-bold select-none">
+            {formatTime(timeLeft)}
+          </div>
+
+          {/* Leave button */}
+          <button
+            onClick={resetToStart}
+            className="absolute top-2 right-2 px-3 py-1 bg-red-500/80 text-white text-xs rounded-full hover:bg-red-500 active:scale-95 transition-all duration-200 backdrop-blur-xl border border-white/20"
+            style={{
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+            }}
+          >
+            <i className="fas fa-times mr-1"></i>
+            Leave
+          </button>
         </div>
 
         {/* Game area */}
         <div className="flex-1 relative flex items-center justify-center p-4">
           {/* Upgrade buttons in corners - mobile optimized */}
+
+          {/* Use functional updater on onClick to avoid stale closure */}
           <UpgradeButton
             title="Tap Power"
             level={tapPowerLevel}
             cost={getTapPowerCost()}
             description={`+${tapPower} per tap`}
-            onClick={upgradeTapPower}
+            onClick={() => upgradeTapPower()}
             disabled={playerScore < getTapPowerCost()}
             position="top-2 left-2 sm:top-4 sm:left-4"
             icon="💪"
+            glassy
           />
 
-         <UpgradeButton
-  title="Critical Hit"
-  level={critLevel}
-  cost={getCritCost()}
-  description={`${critChance}% crit chance`}
-  onClick={upgradeCritChance}
-  disabled={playerScore < getCritCost() || critChance >= 100}
-  position="top-2 right-2 sm:top-4 sm:right-4"
-  icon="⚡"
-/>
+          <UpgradeButton
+            title="Critical Hit"
+            level={critLevel}
+            cost={getCritCost()}
+            description={`${critChance}% crit chance`}
+            onClick={() => upgradeCritChance()}
+            disabled={playerScore < getCritCost() || critChance >= 100}
+            position="top-2 right-2 sm:top-4 sm:right-4"
+            icon="⚡"
+            glassy
+          />
 
-<UpgradeButton
-  title="Tap Speed"
-  level={tapSpeedLevel}
-  cost={getTapSpeedCost()}
-  description={`+${tapSpeedBonus}% bonus`}
-  onClick={upgradeTapSpeed}
-  disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
-  position="bottom-2 left-2 sm:bottom-4 sm:left-4"
-  icon="🚀"
-/>
+          <UpgradeButton
+            title="Tap Speed"
+            level={tapSpeedLevel}
+            cost={getTapSpeedCost()}
+            description={`+${tapSpeedBonus}% bonus`}
+            onClick={() => upgradeTapSpeed()}
+            disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
+            position="bottom-2 left-2 sm:bottom-4 sm:left-4"
+            icon="🚀"
+            glassy
+          />
 
-<UpgradeButton
-  title="Auto Tapper"
-  level={autoTapperLevel}
-  cost={getAutoTapperCost()}
-  description={`${autoTapper}/sec`}
-  onClick={upgradeAutoTapper}
-  disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
-  position="bottom-2 right-2 sm:bottom-4 sm:right-4"
-  icon="🤖"
-/>
-
+          <UpgradeButton
+            title="Auto Tapper"
+            level={autoTapperLevel}
+            cost={getAutoTapperCost()}
+            description={`${autoTapper}/sec`}
+            onClick={() => upgradeAutoTapper()}
+            disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
+            position="bottom-2 right-2 sm:bottom-4 sm:right-4"
+            icon="🤖"
+            glassy
+          />
 
           {/* Main tap button */}
           <div className="relative">
@@ -1497,6 +1511,7 @@ if (gamePhase === "playing") {
     </>
   );
 }
+
 
 // Finished phase
 if (gamePhase === "finished") {
