@@ -1329,14 +1329,6 @@ if (gamePhase === "playing") {
 
   return (
     <>
-      <TopProfileBar
-        profileName={profileName}
-        userId={userId}
-        profileIcon={profileIcon}
-        allTimeTotalTaps={allTimeTotalTaps}
-        renownTokens={renownTokens}
-      />
-
       <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex flex-col relative overflow-hidden pt-16">
         {/* Animated background */}
         <div className="absolute inset-0">
@@ -1499,48 +1491,50 @@ if (gamePhase === "playing") {
           icon="🤖"
           glassy
         />
+<div className="flex flex-1 items-center justify-center">
+  <button
+    onTouchStart={(e) => {
+      e.preventDefault();
+      handleTap();
+    }}
+    onMouseDown={(e) => {
+      e.preventDefault();
+      handleTap();
+    }}
+    className={`
+      w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 rounded-full 
+      bg-gradient-to-br from-orange-400 via-red-500 to-red-600
+      shadow-2xl hover:shadow-red-500/50 transition-all duration-200
+      text-white font-bold text-xl
+      ${
+        isAnimating
+          ? "scale-90"
+          : "scale-100 hover:scale-105 active:scale-95"
+      }
+      cursor-pointer border-4 border-white/30 backdrop-blur-xl
+      flex items-center justify-center
+    `}
+    style={{
+      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
+      boxShadow:
+        "0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
+    }}
+  >
+    <div className="text-center">
+      <i className="fas fa-hand-pointer text-4xl sm:text-5xl md:text-6xl mb-2 drop-shadow-lg"></i>
+      <div className="text-sm sm:text-base font-bold">
+        +{tapPower + Math.floor(tapPower * (tapSpeedBonus / 100))}
+      </div>
+      {critChance > 0 && (
+        <div className="text-xs text-yellow-200 font-bold">
+          {critChance}% crit
+        </div>
+      )}
+    </div>
+  </button>
+</div>
 
-        <button
-          onTouchStart={(e) => {
-            e.preventDefault();
-            handleTap();
-          }}
-          onMouseDown={(e) => {
-            e.preventDefault();
-            handleTap();
-          }}
-          className={`
-            w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 rounded-full 
-            bg-gradient-to-br from-orange-400 via-red-500 to-red-600
-            shadow-2xl hover:shadow-red-500/50 transition-all duration-200
-            text-white font-bold text-xl
-            ${
-              isAnimating
-                ? "scale-90"
-                : "scale-100 hover:scale-105 active:scale-95"
-            }
-            cursor-pointer border-4 border-white/30 backdrop-blur-xl
-            flex items-center justify-center
-          `}
-          style={{
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            boxShadow:
-              "0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
-          }}
-        >
-          <div className="text-center">
-            <i className="fas fa-hand-pointer text-4xl sm:text-5xl md:text-6xl mb-2 drop-shadow-lg"></i>
-            <div className="text-sm sm:text-base font-bold">
-              +{tapPower + Math.floor(tapPower * (tapSpeedBonus / 100))}
-            </div>
-            {critChance > 0 && (
-              <div className="text-xs text-yellow-200 font-bold">
-                {critChance}% crit
-              </div>
-            )}
-          </div>
-        </button>
 
         {/* Floating numbers */}
         {floatingNumbers.map((num) => (
