@@ -44,10 +44,16 @@ export async function POST(req) {
         .select('id, room_code')
         .single();
 
-      if (insertError || !createdRoom) {
-        console.error('Create Room Error:', insertError);
-        return new Response(JSON.stringify({ error: 'Failed to create battle room' }), { status: 500 });
-      }
+   if (insertError || !createdRoom) {
+  console.error('Create Room Insert Error:', insertError);
+  console.error('Insert Data:', {
+    room_code: roomCode,
+    player1_id: userId,
+    player1_ready: false,
+    player1_name: profileName,
+  });
+  return new Response(JSON.stringify({ error: insertError?.message || 'Failed to create battle room' }), { status: 500 });
+}
 
       return new Response(JSON.stringify({ roomId: createdRoom.id, roomCode: createdRoom.room_code }), { status: 200 });
     }
