@@ -173,9 +173,10 @@ export async function POST(req) {
     // FETCH PROFILE
     // ---------------------------
     if (action === 'fetchProfile') {
-      if (!userId) {
-        return new Response(JSON.stringify({ error: 'Missing userId' }), { status: 400 });
-      }
+      if (!userId || !profileName) {
+  return new Response(JSON.stringify({ error: 'Missing userId or profileName' }), { status: 400 });
+}
+
 
       const { data: profiles, error } = await supabase
         .from('game_saves')
