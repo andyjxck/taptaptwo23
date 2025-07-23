@@ -310,9 +310,12 @@ const handleTap = () => {
   if (isCrit) coinsEarned *= 2;
 
   // Update score differently for AI and Multiplayer modes:
-  if (gameMode === "ai") {
-    // Immediately update player score in AI mode for instant feedback
-    setPlayerScore(prev => prev + coinsEarned);
+if (gameMode === "ai") {
+  // Add coinsEarned to playerScore for instant feedback
+  setPlayerScore(prev => prev + coinsEarned);
+
+  // ALSO add coinsEarned to aiCoins for AI upgrades
+  setAiCoins(prev => prev + coinsEarned);
   } else {
     // Batch score updates in multiplayer mode to optimize performance
     scoreBatchRef.current += coinsEarned;
