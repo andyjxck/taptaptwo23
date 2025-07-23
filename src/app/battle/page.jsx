@@ -24,55 +24,22 @@ function MainComponent() {
   const [totalTapsInGame, setTotalTapsInGame] = React.useState(0);
 
 
-React.useEffect(() => {
-  if (timeLeft <= 0) {
-    // Determine winner and loser IDs
-    let winnerId = null;
-    let loserId = null;
-
-    if (playerScore > opponentScore) {
-      winnerId = userId;
-      loserId = opponentId;
-    } else if (playerScore < opponentScore) {
-      winnerId = opponentId;
-      loserId = userId;
-    } else {
-      // Tie case: assign as you want, here userId is winner by default
-      winnerId = userId;
-      loserId = opponentId;
+// Game timer effect
+  React.useEffect(() => {
+    let interval;
+    if (gamePhase === "playing" && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            setGamePhase("finished");
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     }
-
-    // Call backend to end game
-    fetch('/api/battle', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'end',
-        code: currentRoom,
-        winnerId,
-        loserId,
-        total_taps_ingame: totalTapsInGame,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.error) {
-          console.error('Error ending game:', data.error);
-        } else {
-          setGamePhase('finished');
-        }
-      })
-      .catch((err) => console.error('Failed to call end game:', err));
-
-    return; // stop further timer
-  }
-
-  const timerId = setInterval(() => {
-    setTimeLeft(prev => prev - 1);
-  }, 1000);
-
-  return () => clearInterval(timerId);
-}, [timeLeft]);
+    return () => clearInterval(interval);
+  }, [gamePhase, timeLeft]);
 
 const formatTime = (totalSeconds) => {
   const minutes = Math.floor(totalSeconds / 60);
