@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { supabase } from "@/utilities/supabaseClient";
 
 
@@ -178,73 +178,7 @@ useEffect(() => {
     return result;
   };
 
-  // This ref accumulates taps between backend calls
-  const tapBatchRef = useRef(0);
-
-  const handleTap = () => {
-    if (gamePhase !== "playing") return;
-
-    setIsAnimating(true);
-    setTimeout(() => setIsAnimating(false), 150);
-
-    let coinsEarned = tapPower;
-
-    // Apply tap speed bonus
-    coinsEarned += Math.floor(coinsEarned * (tapSpeedBonus / 100));
-
-    // Check for critical hit
-    const isCrit = Math.random() * 100 < critChance;
-    if (isCrit) {
-      coinsEarned *= 2;
-    }
-
-    // Update local state immediately
-    setPlayerScore(prev => prev + coinsEarned);
-    setTotalTapsInGame(prev => prev + 1);
-
-    // Add floating number animation
-    const floatingId = Date.now() + Math.random();
-    setFloatingNumbers(prev => [
-      ...prev,
-      {
-        id: floatingId,
-        value: coinsEarned,
-        isCrit,
-        x: Math.random() * 100 - 50,
-        y: Math.random() * 100 - 50,
-      },
-    ]);
-
-    setTimeout(() => {
-      setFloatingNumbers(prev => prev.filter(num => num.id !== floatingId));
-    }, 1000);
-
-    // Add coinsEarned to batch ref instead of sending immediately
-    tapBatchRef.current += coinsEarned;
-  };
-
-  // useEffect to send batched taps every 500ms
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (tapBatchRef.current > 0 && currentRoom && userId) {
-        fetch('/api/battle', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'updateTaps',
-            code: currentRoom,
-            userId: userId,
-            taps: tapBatchRef.current,
-          }),
-        }).catch(err => console.error('Error sending tap batch:', err));
-
-        tapBatchRef.current = 0; // reset batch after sending
-      }
-    }, 500);
-
-    return () => clearInterval(interval);
-  }, [currentRoom, userId]);
-
+  
   // Upgrade functions
   const upgradeTapPower = () => {
     const cost = getTapPowerCost();
