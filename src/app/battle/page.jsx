@@ -108,6 +108,8 @@ const [totalTapsInGame, setTotalTapsInGame] = React.useState(0);
   
 
 const loadProfile = async (userId) => {
+  console.log("loadProfile called with userId:", userId); // <-- Add this to confirm call
+
   try {
     const response = await fetch("/api/battle", {
       method: "POST",
@@ -118,11 +120,12 @@ const loadProfile = async (userId) => {
       }),
     });
 
-    // Try to parse the JSON response regardless of status
+    console.log("Fetch response received:", response);
+
     const data = await response.json().catch(() => null);
+    console.log("Parsed JSON data:", data);
 
     if (!response.ok) {
-      // If response not ok, show status and any error message from backend
       console.error(`Fetch failed with status ${response.status}`);
       if (data && data.error) {
         console.error("Backend error message:", data.error);
@@ -132,7 +135,6 @@ const loadProfile = async (userId) => {
       throw new Error(`Fetch failed with status ${response.status}`);
     }
 
-    // If no profile in the successful response, log backend error field
     if (!data.profile) {
       console.error("Backend returned no profile.");
       if (data && data.error) {
@@ -150,6 +152,7 @@ const loadProfile = async (userId) => {
     console.error("Profile load failed:", err);
   }
 };
+
 
 
 const testUserId = 1; // Replace 123 with a real ID from your DB
