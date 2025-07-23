@@ -276,7 +276,7 @@ useEffect(() => {
   };
 
   // Game flow functions
- const createRoom = async () => {
+const createRoom = async () => {
   const newRoomCode = generateRoomCode();
 
   try {
@@ -304,13 +304,17 @@ useEffect(() => {
     setGameMode('multiplayer');
     setOpponentName('Waiting for player...');
     setGamePhase('lobby');
+
+    // SET PLAYER NAME HERE
+    setPlayerName(profileName || `Player ${userId}`);
+
   } catch (error) {
     console.error('Error creating room:', error);
   }
 };
 
 
- const joinRoom = async () => {
+const joinRoom = async () => {
   if (roomCode.length !== 6) return;
 
   try {
@@ -336,13 +340,17 @@ useEffect(() => {
     setGameMode('multiplayer');
     setOpponentName('Player 2'); // Ideally fetch actual opponent name from backend
     setGamePhase('lobby');
-    fetchRoomStatus(); 
+    fetchRoomStatus();
+
+    // SET PLAYER NAME HERE
+    setPlayerName(profileName || `Player ${userId}`);
 
   } catch (err) {
     console.error('joinRoom error:', err);
     alert('Error joining room. See console.');
   }
 };
+
 
 
   const playAI = () => {
