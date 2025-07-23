@@ -24,6 +24,27 @@ export async function POST(req) {
     if (!action) {
       return new Response(JSON.stringify({ error: 'Missing action' }), { status: 400 });
     }
+if (action === 'saveProgress') {
+  const { userId, total_taps, renown_tokens } = body;
+
+  if (!userId || total_taps === undefined || renown_tokens === undefined) {
+    return new Response(JSON.stringify({ error: 'Missing parameters' }), { status: 400 });
+  }
+
+  const { error } = await supabase
+    .from('game_saves')
+    .update({
+      total_taps,
+      renown_tokens,
+    })
+    .eq('user_id', userId);
+
+  if (error) {
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+  }
+
+  return new Response(JSON.stringify({ success: true }), { status: 200 });
+}
 
     // ---------------------------
     // UPDATE AI STATS + PLAYER SCORE
