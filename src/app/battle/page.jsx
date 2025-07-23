@@ -563,6 +563,9 @@ const playAI = async () => {
   if (gameMode === "ai") {
     // No DB update for AI mode, just toggle local state:
     setIsPlayerReady((prev) => !prev);
+    
+    // If player is ready, start the AI game
+    setGamePhase("playing");
     return;
   }
 
@@ -597,7 +600,7 @@ const startGame = () => {
   setTimeLeft(gameDuration);
   setPlayerScore(0);
   setOpponentScore(0);
-  setTotalTapsInGame(0);    // Reset total taps for current game
+  setTotalTapsInGame(0); // Reset total taps for current game
   setUpgradesPurchased(0);
   setFloatingNumbers([]);
   setTapPower(1);
@@ -608,6 +611,18 @@ const startGame = () => {
   setTapSpeedLevel(0);
   setAutoTapper(0);
   setAutoTapperLevel(0);
+
+  // 🧠 Reset AI state
+  setAICoins(0);
+  setAITapPower(1);
+  setAITapSpeed(0);
+  setAIAutoTapper(0);
+  setAICritChance(0);
+  setAITapPowerLevel(1);
+  setAITapSpeedLevel(1);
+  setAIAutoTapperLevel(1);
+  setAICritLevel(1);
+
   fetchRoomStatus(); 
 };
 
@@ -617,7 +632,7 @@ const resetToStart = () => {
   setIsOpponentReady(false);
   setPlayerScore(0);
   setOpponentScore(0);
-  setTotalTapsInGame(0);  // Reset on reset too
+  setTotalTapsInGame(0);
   setTimeLeft(gameDuration);
   setCurrentRoom("");
   setRoomCode("");
@@ -632,8 +647,18 @@ const resetToStart = () => {
   setTapSpeedLevel(0);
   setAutoTapper(0);
   setAutoTapperLevel(0);
+
+  // 🧠 Reset AI state
+  setAICoins(0);
+  setAITapPower(1);
+  setAITapSpeed(0);
+  setAIAutoTapper(0);
+  setAICritChance(0);
+  setAITapPowerLevel(1);
+  setAITapSpeedLevel(1);
+  setAIAutoTapperLevel(1);
+  setAICritLevel(1);
 };
- 
   
 
 // Auto tapper effect without tapBatchRef
