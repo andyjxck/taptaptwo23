@@ -255,52 +255,101 @@ if (action === 'fetchProfile') {
       return new Response(JSON.stringify({ success: true }), { status: 200 });
     }
 
-    // ---------------------------
-    // END GAME
-    // ---------------------------
-    if (action === 'end') {
-      if (typeof total_taps_ingame !== 'number' || !winnerId || !loserId || !code) {
-        return new Response(
-          JSON.stringify({ error: 'Missing or invalid total_taps_ingame, winnerId, loserId, or code' }),
-          { status: 400 }
-        );
-      }
+  // ---------------------------
+// END GAME
+// ---------------------------
+if (action === 'end') {
+  if (
+    typeof total_taps_ingame !== 'number' ||
+    !winnerId ||
+    !loserId ||
+    !code ||
+    !playerScore ||
+    !opponentScore
+  ) {
+    return new Response(
+      JSON.stringify({ error: 'Missing or invalid parameters for end action' }),
+      { status: 400 }
+    );
+  }
 
-      const { error: updateBattleGamesError } = await supabase
-        .from('battle_games')
-        .update({ total_taps_ingame })
-        .eq('room_code', code);
+  // Update battle_games with total_taps_ingame
+  const { error: updateBattleGamesError } = await supabase
+    .from('battle_games')
+    .update({ total_taps_ingame })
+    .eq('room_code', code);
 
-      if (updateBattleGamesError) {
-        return new Response(JSON.stringify({ error: updateBattleGamesError.message }), { status: 500 });
-      }
+  if (updateBattleGamesError) {
+    return new Response(JSON.stringify({ error: updateBattleGamesError.message }), { status: 500 });
+  }
 
-      const { error: updateWinnerError } = await supabase
-        .from('game_saves')
-        .update({
-          total_taps: supabase.raw('total_taps + ?', [total_taps_ingame]),
-          renown_tokens: supabase.raw('renown_tokens + 10'),
-        })
-        .eq('user_id', winnerId);
+  // Determine if draw or win/lose for renown tokens
+  let winnerRenown = 10;
+  let loserRenown = 3;
+  if (playerScore === opponentScore) {
+    // Draw - both get 5 tokens
+    winnerRenown = 5;
+    loserRenown = 5;
+  }
 
-      if (updateWinnerError) {
-        return new Response(JSON.stringify({ error: updateWinnerError.message }), { status: 500 });
-      }
+  // Fetch current stats for winner
+  const { data: winnerStats, error: fetchWinnerError } = await supabase
+    .from('game_saves')
+    .select('total_taps, renown_tokens')
+    .eq('user_id', winnerId)
+    .single();
 
-      const { error: updateLoserError } = await supabase
-        .from('game_saves')
-        .update({
-          total_taps: supabase.raw('total_taps + ?', [total_taps_ingame]),
-          renown_tokens: supabase.raw('renown_tokens + 3'),
-        })
-        .eq('user_id', loserId);
+  if (fetchWinnerError) {
+    return new Response(JSON.stringify({ error: fetchWinnerError.message }), { status: 500 });
+  }
 
-      if (updateLoserError) {
-        return new Response(JSON.stringify({ error: updateLoserError.message }), { status: 500 });
-      }
+  // Fetch current stats for loser
+  const { data: loserStats, error: fetchLoserError } = await supabase
+    .from('game_saves')
+    .select('total_taps, renown_tokens')
+    .eq('user_id', loserId)
+    .single();
 
-      return new Response(JSON.stringify({ success: true }), { status: 200 });
-    }
+  if (fetchLoserError) {
+    return new Response(JSON.stringify({ error: fetchLoserError.message }), { status: 500 });
+  }
+
+  // Calculate new totals for winner
+  const newTotalTapsWinner = (winnerStats.total_taps || 0) + total_taps_ingame;
+  const newRenownTokensWinner = (winnerStats.renown_tokens || 0) + winnerRenown;
+
+  // Calculate new totals for loser
+  const newTotalTapsLoser = (loserStats.total_taps || 0) + total_taps_ingame;
+  const newRenownTokensLoser = (loserStats.renown_tokens || 0) + loserRenown;
+
+  // Update winner's totals
+  const { error: updateWinnerError } = await supabase
+    .from('game_saves')
+    .update({
+      total_taps: newTotalTapsWinner,
+      renown_tokens: newRenownTokensWinner,
+    })
+    .eq('user_id', winnerId);
+
+  if (updateWinnerError) {
+    return new Response(JSON.stringify({ error: updateWinnerError.message }), { status: 500 });
+  }
+
+  // Update loser's totals
+  const { error: updateLoserError } = await supabase
+    .from('game_saves')
+    .update({
+      total_taps: newTotalTapsLoser,
+      renown_tokens: newRenownTokensLoser,
+    })
+    .eq('user_id', loserId);
+
+  if (updateLoserError) {
+    return new Response(JSON.stringify({ error: updateLoserError.message }), { status: 500 });
+  }
+
+  return new Response(JSON.stringify({ success: true }), { status: 200 });
+}
 
     return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400 });
   } catch (error) {
