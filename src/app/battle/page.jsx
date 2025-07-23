@@ -368,7 +368,7 @@ const TopProfileBar = ({
         <div className="text-center">
           <div className="text-white/70 text-xs">Total Taps</div>
           <div className="text-white font-bold text-sm">
-            {allTimeTotalTaps.toLocaleString()}
+            {(allTimeTotalTaps|| 0).toLocaleString()}
           </div>
         </div>
       </div>
@@ -399,7 +399,7 @@ const TopProfileBar = ({
         </div>
         <div className="text-white/70">
           <i className="fas fa-hand-pointer text-blue-400 mr-1"></i>
-          {allTimeTotalTaps.toLocaleString()} taps
+          {(allTimeTotalTaps|| 0).toLocaleString()} taps
         </div>
       </div>
     </div>
@@ -755,7 +755,7 @@ if (gamePhase === "playing") {
             <div className="text-center flex-1">
               <div className="text-white font-bold text-sm">{playerName}</div>
               <div className="text-yellow-300 text-lg sm:text-xl font-bold">
-                {playerScore.toLocaleString()}
+                {(playerScore|| 0).toLocaleString()}
               </div>
             </div>
 
@@ -779,7 +779,7 @@ if (gamePhase === "playing") {
             <div className="text-center flex-1">
               <div className="text-white font-bold text-sm">{opponentName}</div>
               <div className="text-red-300 text-lg sm:text-xl font-bold">
-                {opponentScore.toLocaleString()}
+                {(opponentScore|| 0).toLocaleString()}
               </div>
             </div>
           </div>
@@ -958,13 +958,13 @@ if (gamePhase === "finished") {
               <div className="flex justify-between items-center mb-2">
                 <span className="font-bold">{playerName}</span>
                 <span className="text-yellow-300 font-bold">
-                  {playerScore.toLocaleString()}
+                  {playerScore|| 0).toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="font-bold">{opponentName}</span>
                 <span className="text-red-300 font-bold">
-                  {opponentScore.toLocaleString()}
+                  {(opponentScore|| 0).toLocaleString()}
                 </span>
               </div>
             </div>
@@ -990,7 +990,7 @@ if (gamePhase === "finished") {
               </div>
               <div className="flex justify-between">
                 <span>Coins Earned:</span>
-                <span className="font-bold">{playerScore.toLocaleString()}</span>
+                <span className="font-bold">{(playerScore|| 0).toLocaleString()}</span>
               </div>
               <div className="flex justify-between border-t border-white/20 pt-2 mt-2">
                 <span className="text-yellow-300">Tokens Earned:</span>
