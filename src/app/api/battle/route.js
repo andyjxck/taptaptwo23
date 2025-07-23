@@ -14,6 +14,21 @@ export async function POST(req) {
     }
 
     // userId might be required for many actions but not all, so check where needed
+if (action === "getRoomStatus") {
+  if (!code) {
+    return NextResponse.json({ error: "Missing room code" }, { status: 400 });
+  }
+
+  const rows = await sql`
+    SELECT * FROM battle_games WHERE room_code = ${code} LIMIT 1;
+  `;
+
+  if (!rows || rows.length === 0) {
+    return NextResponse.json({ error: "Room not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ room: rows[0] });
+}
 
     if (action === 'getTapsInGame') {
       try {
