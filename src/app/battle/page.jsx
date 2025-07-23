@@ -11,11 +11,6 @@ function MainComponent() {
   const [timeLeft, setTimeLeft] = React.useState(180);
   const [gameDuration, setGameDuration] = React.useState(180);
 
-  const startGameTimer = () => {
-  setGamePhase("playing"); // Change game phase to playing
-  setTimeLeft(180); // Set game time to 3 minutes (in seconds)
-};
-
   const [playerScore, setPlayerScore] = React.useState(0);
   const [opponentScore, setOpponentScore] = React.useState(0);
   const [totalTaps, setTotalTaps] = React.useState(0);
@@ -127,6 +122,11 @@ useEffect(() => {
   const [logoUrl, setLogoUrl] = React.useState("");
   const [logoLoading, setLogoLoading] = React.useState(false);
 
+    const startGameTimer = () => {
+  setGamePhase("playing"); // Change game phase to playing
+  setTimeLeft(180); // Set game time to 3 minutes (in seconds)
+};
+
   
   const loadProfile = async (id) => {
   try {
@@ -212,7 +212,7 @@ const floatingNumbersBatchRef = React.useRef([]);
 const lastAnimationTimeRef = React.useRef(0);
 
 const handleTap = () => {
-  if (gamePhase !== "playing") return;
+  if (gamePhase !== "playing") return; // Only allow taps when game is in 'playing' phase
 
   const now = Date.now();
   if (now - lastAnimationTimeRef.current > 150) {
@@ -260,7 +260,7 @@ React.useEffect(() => {
   const interval = setInterval(() => {
     if (scoreBatchRef.current > 0) {
       setPlayerScore(prev => prev + scoreBatchRef.current);
-      scoreBatchRef.current = 0;
+      scoreBatchRef.current = 0; // reset score batch
     }
   }, 100);
   return () => clearInterval(interval);
@@ -271,7 +271,7 @@ React.useEffect(() => {
   const interval = setInterval(() => {
     if (floatingNumbersBatchRef.current.length > 0) {
       setFloatingNumbers(prev => [...prev, ...floatingNumbersBatchRef.current]);
-      floatingNumbersBatchRef.current = [];
+      floatingNumbersBatchRef.current = []; // Reset floating numbers batch
     }
   }, 100);
   return () => clearInterval(interval);
@@ -299,7 +299,6 @@ React.useEffect(() => {
   return () => clearInterval(interval);
 }, [currentRoom, userId]);
 
-  
   // Upgrade functions
  const upgradeTapPower = () => {
   const cost = getTapPowerCost();
@@ -558,35 +557,22 @@ React.useEffect(() => {
   }
 }, [gamePhase, isPlayerReady, isOpponentReady]);
 
-  React.useEffect(() => {
-  if (countdown === null) return; // no countdown running
-
-  if (countdown === 0) {
-    // Countdown finished, start game
-    setGamePhase("playing");  // or whatever your playing phase name is
-    setCountdown(null);
-    startGameTimer();
-    return;
-  }
-
-  const timerId = setTimeout(() => setCountdown(countdown - 1), 1000);
-  return () => clearTimeout(timerId);
-}, [countdown]);
-
-  React.useEffect(() => {
-  if (countdown === null) return; // no countdown running
+React.useEffect(() => {
+  if (countdown === null) return; // No countdown running, exit early
 
   if (countdown === 0) {
     // Countdown finished, start the game
-    setGamePhase("playing");
-    setCountdown(null);
-    setTimeLeft(gameDuration); // reset timer to full duration (180 seconds)
+    setGamePhase("playing");  // Transition to playing phase
+    setTimeLeft(gameDuration); // Set the game timer to the full duration (180 seconds)
+    setCountdown(null);         // Clear the countdown state
+    startGameTimer();           // Call the function to start the game timer
     return;
   }
 
-  const timerId = setTimeout(() => setCountdown(countdown - 1), 1000);
-  return () => clearTimeout(timerId);
-}, [countdown, gameDuration, setGamePhase, setCountdown, setTimeLeft]);
+  const timerId = setTimeout(() => setCountdown(countdown - 1), 1000); // Decrement countdown every second
+  return () => clearTimeout(timerId); // Cleanup the timer on component unmount or when countdown changes
+}, [countdown, gameDuration]);
+
 
   
   // Update all-time total taps when game finishes
