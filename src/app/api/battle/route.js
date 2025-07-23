@@ -145,47 +145,68 @@ if (action === "getRoomStatus") {
         return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
       }
     }
-
-    if (action === 'ready') {
-      try {
-        if (!code || !userId) {
-          console.error('ready: Missing code or userId');
-          return NextResponse.json({ error: 'Missing code or userId' }, { status: 400 });
-        }
-
-        const roomRows = await sql`
-          SELECT * FROM battle_games WHERE room_code = ${code};
-        `;
-        console.log('ready SQL select result:', roomRows);
-
-        const room = roomRows[0];
-        if (!room) {
-          console.warn('ready: Room not found for code:', code);
-          return NextResponse.json({ error: 'Room not found' }, { status: 404 });
-        }
-
-        const isPlayer1 = room.player1_id === userId;
-        const playerColumn = isPlayer1 ? 'player1_ready' : 'player2_ready';
-
-        await sql`
-          UPDATE battle_games SET ${sql([playerColumn])} = true WHERE room_code = ${code};
-        `;
-        console.log('ready: Updated', playerColumn, 'to true for room_code:', code);
-
-        const updatedRows = await sql`
-          SELECT player1_ready, player2_ready FROM battle_games WHERE room_code = ${code};
-        `;
-        console.log('ready: Updated ready status:', updatedRows);
-
-        const updated = updatedRows[0];
-        const bothReady = updated.player1_ready && updated.player2_ready;
-
-        return NextResponse.json({ bothReady });
-      } catch (error) {
-        console.error('Error in ready:', error);
-        return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
-      }
+if (action === 'ready') {
+  try {
+    if (!code || !userId) {
+      return NextResponse.json({ error: 'Missing code or userId' }, { status: 400 });
     }
+
+    const roomRows = await sql`
+      SELECT * FROM battle_games WHERE room_code = ${code};
+    `;
+
+    const room = roomRows[0];
+    if (!room) {
+      return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+    }
+
+    const isPlayer1 = room.player1_id === userId;
+    const playerColumn = isPlayer1 ? 'player1_ready' : 'player2_ready';
+
+    await sql`
+      UPDATE battle_games SET ${sql([playerColumn])} = true WHERE room_code = ${code};
+    `;
+
+    const updatedRows = await sql`
+      SELECT player1_ready, player2_ready FROM battle_games WHERE room_code = ${code};
+    `;
+    const updated = updatedRows[0];
+
+    return NextResponse.json({ player1_ready: updated.player1_ready, player2_ready: updated.player2_ready });
+  } catch (error) {
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+    if (action === 'unready') {
+  try {
+    if (!code || !userId) {
+      return NextResponse.json({ error: 'Missing code or userId' }, { status: 400 });
+    }
+
+    const roomRows = await sql`
+      SELECT * FROM battle_games WHERE room_code = ${code};
+    `;
+
+    const room = roomRows[0];
+    if (!room) {
+      return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+    }
+
+    const isPlayer1 = room.player1_id === userId;
+    const playerColumn = isPlayer1 ? 'player1_ready' : 'player2_ready';
+
+    await sql`
+      UPDATE battle_games SET ${sql([playerColumn])} = false WHERE room_code = ${code};
+    `;
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+    
 
     if (action === 'end') {
       try {
