@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import React, { useEffect, useState, useRef } from "react";
 import { supabase } from "@/utilities/supabaseClient";
 export const revalidate = 0;
@@ -1700,4 +1700,3 @@ if (gamePhase === "playing") {
   return null;
 } // <== Make sure this closes the MainComponent function
 
-export default MainComponent;
