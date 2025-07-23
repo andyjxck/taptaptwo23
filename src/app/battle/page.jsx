@@ -797,19 +797,35 @@ React.useEffect(() => {
       let aiMultiplier = 1;
       if (aiDifficulty === "easy") aiMultiplier = 0.7;
       else if (aiDifficulty === "medium") aiMultiplier = 1;
-      else if (aiDifficulty === "hard") aiMultiplier = 1.4;
+      else if (aiDifficulty === "hard") aiMultiplier = 1.2;
 
-      const aiTaps = Math.floor((Math.random() * 4 + 2) * aiMultiplier);
-      const aiPower = Math.floor((Math.random() * 3 + 1) * aiMultiplier);
+      // Calculate base tap power with AI upgrades
+      const baseTapPower = aiTapPower || 1;
+      const tapSpeedBonus = aiTapSpeedBonus || 0; // percent
+      const critChance = aiCritChance || 0;
 
-      const coinsEarned = aiTaps * aiPower;
+      // Adjust tap power by speed bonus
+      const effectiveTapPower = baseTapPower + Math.floor(baseTapPower * (tapSpeedBonus / 100));
 
-      setOpponentScore(prev => prev + coinsEarned);
-      setAiCoins(prev => prev + coinsEarned);  // Add coins to AI for upgrades
+      // Calculate number of taps (scaled by difficulty multiplier)
+      const taps = Math.floor((Math.random() * 4 + 2) * aiMultiplier);
+
+      // Calculate total coins earned from taps
+      let totalCoins = 0;
+      for (let i = 0; i < taps; i++) {
+        // For each tap, check if crit occurs
+        const isCrit = Math.random() * 100 < critChance;
+        const tapValue = isCrit ? effectiveTapPower * 2 : effectiveTapPower; // crit doubles coins
+        totalCoins += tapValue;
+      }
+
+      setOpponentScore(prev => prev + totalCoins);
+      setAiCoins(prev => prev + totalCoins); // update AI coins for upgrades
     }, 1000);
   }
   return () => clearInterval(interval);
-}, [gamePhase, gameMode, aiDifficulty]);
+}, [gamePhase, gameMode, aiDifficulty, aiTapPower, aiTapSpeedBonus, aiCritChance]);
+
 
 React.useEffect(() => {
   if (gamePhase === "lobby" && isPlayerReady && isOpponentReady) {
