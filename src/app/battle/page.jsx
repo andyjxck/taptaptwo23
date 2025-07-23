@@ -343,7 +343,7 @@ useEffect(() => {
   const { data, error } = await supabase
     .from('battle_games')
     .select('*')
-    .eq('code', currentRoom)
+    .eq('game_code', currentRoom)
     .single();
 
   if (error || !data) return console.error(error || 'Room not found');
@@ -357,7 +357,7 @@ useEffect(() => {
   const { error: updateError } = await supabase
     .from('battle_games')
     .update(updateData)
-    .eq('code', currentRoom);
+    .eq('game_code', currentRoom);
 
   if (updateError) console.error(updateError);
 };
