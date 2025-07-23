@@ -275,39 +275,53 @@ React.useEffect(() => {
   console.log("Current gamePhase:", gamePhase);
 }, [gamePhase]);
 
-  React.useEffect(() => {
-  if (gamePhase === "finished") {
-    const winnerId = playerScore > opponentScore ? userId : opponentId;
-    const loserId = playerScore > opponentScore ? opponentId : userId;
-
-    fetch('/api/battle', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'end',
-        code: currentRoom,
-        winnerId,
-        loserId,
-        total_taps_ingame: totalTapsInGame,
-        playerScore,
-        opponentScore,
-      }),
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (!data.success) {
-          console.error('Error saving end game:', data.error);
-        }
-      })
-      .catch(console.error);
-  }
-}, [gamePhase]);
-
   
 React.useEffect(() => {
   console.log("Current gameMode:", gameMode);
 }, [gameMode]);
+  
+async function saveGameResults() {
+  if (!currentRoom || !userId || !opponentId) return;
 
+  const winnerId = playerScore > opponentScore ? userId : opponentId;
+  const loserId = playerScore > opponentScore ? opponentId : userId;
+
+  const body = {
+    action: "end",
+    code: currentRoom,
+    userId,
+    winnerId,
+    loserId,
+    total_taps_ingame: totalTapsInGame,
+    playerScore,
+    opponentScore,
+  };
+
+  try {
+    const res = await fetch("/api/battle", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      console.error("Failed to save game results:", err.error || "Unknown error");
+    } else {
+      console.log("Game results saved successfully");
+    }
+  } catch (error) {
+    console.error("Error saving game results:", error);
+  }
+}
+
+
+  React.useEffect(() => {
+  if (gamePhase === "finished") {
+    saveGameResults(); // call the backend save when game finishes
+  }
+}, [gamePhase]);
+
+  
 const formatTime = (totalSeconds) => {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
