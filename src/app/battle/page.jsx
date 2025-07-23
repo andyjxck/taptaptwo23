@@ -302,7 +302,7 @@ const upgradeAutoTapper = () => {
   if (playerScore >= cost && autoTapper < 50000) {
     setPlayerScore(prev => prev - cost);
     setAutoTapper(prev => Math.min(prev + 10 + Math.floor(autoTapperLevel * 1.2), 100000)); // growth scaling
-    setLevel(prev => prev + 1);
+    setAutoTapperLevel(prev => prev + 1);
     setUpgradesPurchased(prev => prev + 1);
   }
 };
