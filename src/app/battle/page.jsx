@@ -181,11 +181,12 @@ React.useEffect(() => {
     let newAutoTapperLvl = autoTapperLevel;
 
     // Try to buy upgrades if enough coins
-    if (coins >= tapPowerCost) {
+    if (newAiCoins >= tapPowerCost) {
       newAiCoins -= tapPowerCost;
       newTapPower = newTapPower + Math.floor(newTapPower * 0.2) + 2;
       newTapPowerLvl += 1;
       didUpgrade = true;
+      setOpponentScore(prev => prev - tapPowerCost); // Deduct from score
       console.log("✅ AI bought Tap Power. New Coins:", newAiCoins);
     }
 
@@ -194,6 +195,7 @@ React.useEffect(() => {
       newCritChance = Math.min(newCritChance + 2 + Math.floor(newCritLvl / 3), 100);
       newCritLvl += 1;
       didUpgrade = true;
+      setOpponentScore(prev => prev - critCost); // Deduct from score
       console.log("✅ AI bought Crit Chance. New Coins:", newAiCoins);
     }
 
@@ -202,6 +204,7 @@ React.useEffect(() => {
       newTapSpeedBonus = newTapSpeedBonus + 25 + Math.floor(newTapSpeedLvl * 1.3);
       newTapSpeedLvl += 1;
       didUpgrade = true;
+      setOpponentScore(prev => prev - tapSpeedCost); // Deduct from score
       console.log("✅ AI bought Tap Speed. New Coins:", newAiCoins);
     }
 
@@ -210,14 +213,11 @@ React.useEffect(() => {
       newAutoTapper = Math.min(newAutoTapper + 10 + Math.floor(newAutoTapperLvl * 1.2), 100000);
       newAutoTapperLvl += 1;
       didUpgrade = true;
+      setOpponentScore(prev => prev - autoTapperCost); // Deduct from score
       console.log("✅ AI bought Auto Tapper. New Coins:", newAiCoins);
     }
 
-    if (!didUpgrade) {
-      // No upgrade this tick
-      return;
-    }
-
+    if (!didUpgrade) return;
     if (isCancelled) return;
 
     // Update React state locally
@@ -231,7 +231,7 @@ React.useEffect(() => {
     setAiAutoTapper(newAutoTapper);
     setAiAutoTapperLevel(newAutoTapperLvl);
 
-    // Update database asynchronously with new AI stats
+    // Sync to DB
     await updateAIStatsInDB({
       roomCode: currentRoom,
       ai_coins: newAiCoins,
