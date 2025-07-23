@@ -105,6 +105,8 @@ const [totalTapsInGame, setTotalTapsInGame] = React.useState(0);
   }, 1000);
 };
 
+  
+
 const loadProfile = async (userId) => {
   try {
     const response = await fetch("/api/battle", {
@@ -133,12 +135,12 @@ const loadProfile = async (userId) => {
 };
 
 
+const testUserId = 1; // Replace 123 with a real ID from your DB
+
 React.useEffect(() => {
-  console.log("useEffect triggered with userId:", userId, "typeof:", typeof userId);
-  if (typeof userId === "number") {
-    loadProfile(userId);
-  }
-}, [userId]);
+  console.log("Test useEffect firing with hardcoded userId");
+  loadProfile(testUserId);
+}, []);
 
 
   // Upgrade functions
