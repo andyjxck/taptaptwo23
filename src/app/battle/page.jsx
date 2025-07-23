@@ -134,6 +134,7 @@ const loadProfile = async (userId) => {
 
 
 React.useEffect(() => {
+  console.log("useEffect triggered with userId:", userId, "typeof:", typeof userId);
   if (typeof userId === "number") {
     loadProfile(userId);
   }
