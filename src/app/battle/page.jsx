@@ -213,14 +213,39 @@ React.useEffect(() => {
     setGamePhase("lobby");
   };
 
-  const joinRoom = () => {
-    if (roomCode.length === 6) {
-      setCurrentRoom(roomCode.toUpperCase());
-      setGameMode("multiplayer");
-      setOpponentName("Player 2");
-      setGamePhase("lobby");
+ const joinRoom = async () => {
+  if (roomCode.length !== 6) return;
+
+  try {
+    const response = await fetch('/api/battle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'join',
+        code: roomCode.toUpperCase(),
+        userId: testUserId, // Replace with actual logged-in user ID
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(`Failed to join room: ${data.error || 'Unknown error'}`);
+      return;
     }
-  };
+
+    // Room joined successfully
+    setCurrentRoom(roomCode.toUpperCase());
+    setGameMode('multiplayer');
+    setOpponentName('Player 2'); // Ideally fetch actual opponent name from backend
+    setGamePhase('lobby');
+
+  } catch (err) {
+    console.error('joinRoom error:', err);
+    alert('Error joining room. See console.');
+  }
+};
+
 
   const playAI = () => {
     setGameMode("ai");
