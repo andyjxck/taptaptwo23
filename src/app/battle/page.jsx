@@ -657,6 +657,7 @@ const playAI = async () => {
       profileName: profileName || 'You',
       isAI: true, // optional flag for future
       aiDifficulty: aiDifficulty,
+      player_score: 0,
     }),
   });
 
