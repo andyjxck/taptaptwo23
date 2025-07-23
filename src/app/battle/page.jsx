@@ -288,7 +288,7 @@ async function saveGameProgress() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'saveProgress',    // You can create this in backend if you want, or reuse 'end'
-        userId: userId,
+          userId: parseInt(id, 10),
         total_taps: totalTapsInGame,
         renown_tokens: renownTokens,
         // Add other needed data if required (like currentRoom, scores)
