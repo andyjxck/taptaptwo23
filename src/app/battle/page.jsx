@@ -595,6 +595,53 @@ const createRoom = async () => {
   }
 };
 
+React.useEffect(() => {
+  if (gamePhase !== "finished") return;
+  if (!userId) return;
+
+  const applyRewards = async () => {
+    try {
+      // Fetch current saved data
+      const { data, error } = await supabase
+        .from('game_saves')
+        .select('total_taps, renown_tokens')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        console.error('Failed to fetch game_saves:', error.message);
+        return;
+      }
+
+      const currentTaps = data?.total_taps || 0;
+      const currentRenown = data?.renown_tokens || 0;
+
+      // Calculate new totals
+      const newTotalTaps = currentTaps + (totalTapsInGame || 0);
+      const newRenown = currentRenown + renownEarned;
+
+      // Update the database
+      const { error: updateError } = await supabase
+        .from('game_saves')
+        .update({
+          total_taps: newTotalTaps,
+          renown_tokens: newRenown,
+        })
+        .eq('user_id', userId);
+
+      if (updateError) {
+        console.error('Failed to update game_saves:', updateError.message);
+      } else {
+        console.log('✅ Rewards saved successfully!');
+      }
+    } catch (e) {
+      console.error('Unexpected error saving rewards:', e);
+    }
+  };
+
+  applyRewards();
+}, [gamePhase]); // Runs when gamePhase changes to 'finished'
+
 const joinRoom = async () => {
   if (roomCode.length !== 6) return;
 
@@ -1538,7 +1585,6 @@ if (gamePhase === "playing") {
     </>
   );
 }
-
 
 // Finished phase
 if (gamePhase === "finished") {
