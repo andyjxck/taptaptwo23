@@ -794,35 +794,31 @@ React.useEffect(() => {
  React.useEffect(() => {
   let interval;
   if (gamePhase === "playing" && gameMode === "ai") {
-    interval = setInterval(() => {
-      let aiMultiplier = 1;
-      if (aiDifficulty === "easy") aiMultiplier = 0.7;
-      else if (aiDifficulty === "medium") aiMultiplier = 1;
-      else if (aiDifficulty === "hard") aiMultiplier = 1.2;
+   interval = setInterval(() => {
+  console.log("⏱️ AI interval running");
 
-      // Calculate base tap power with AI upgrades
-      const baseTapPower = aiTapPower || 1;
-      const tapSpeedBonus = aiTapSpeedBonus || 0; // percent
-      const critChance = aiCritChance || 0;
+  let aiMultiplier = 1;
+  if (aiDifficulty === "easy") aiMultiplier = 0.7;
+  else if (aiDifficulty === "medium") aiMultiplier = 1;
+  else if (aiDifficulty === "hard") aiMultiplier = 1.2;
 
-      // Adjust tap power by speed bonus
-      const effectiveTapPower = baseTapPower + Math.floor(baseTapPower * (tapSpeedBonus / 100));
+  const baseTapPower = aiTapPower || 1;
+  const tapSpeedBonus = aiTapSpeedBonus || 0;
+  const critChance = aiCritChance || 0;
 
-      // Calculate number of taps (scaled by difficulty multiplier)
-      const taps = Math.floor((Math.random() * 4 + 2) * aiMultiplier);
+  const effectiveTapPower = baseTapPower + Math.floor(baseTapPower * (tapSpeedBonus / 100));
+  const taps = Math.floor((Math.random() * 4 + 2) * aiMultiplier);
 
-      // Calculate total coins earned from taps
-      let totalCoins = 0;
-      for (let i = 0; i < taps; i++) {
-        // For each tap, check if crit occurs
-        const isCrit = Math.random() * 100 < critChance;
-        const tapValue = isCrit ? effectiveTapPower * 2 : effectiveTapPower; // crit doubles coins
-        totalCoins += tapValue;
-      }
+  let totalCoins = 0;
+  for (let i = 0; i < taps; i++) {
+    const isCrit = Math.random() * 100 < critChance;
+    const tapValue = isCrit ? effectiveTapPower * 2 : effectiveTapPower;
+    totalCoins += tapValue;
+  }
 
-      setOpponentScore(prev => prev + totalCoins);
-      setAiCoins(prev => prev + totalCoins); // update AI coins for upgrades
-    }, 1000);
+  setOpponentScore(prev => prev + totalCoins);
+  setAiCoins(prev => prev + totalCoins);
+}, 1000);
   }
   return () => clearInterval(interval);
 }, [gamePhase, gameMode, aiDifficulty, aiTapPower, aiTapSpeedBonus, aiCritChance]);
