@@ -306,7 +306,6 @@ async function saveGameProgress() {
 
 // 2. Call saveGameProgress every 5 seconds while game is playing or finished
 React.useEffect(() => {
-  if (gamePhase === 'playing' || gamePhase === 'finished') {
     const interval = setInterval(() => {
       saveGameProgress();
     }, 5000); // every 5 seconds
