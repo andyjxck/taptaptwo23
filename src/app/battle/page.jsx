@@ -280,18 +280,19 @@ React.useEffect(() => {
   console.log("Current gameMode:", gameMode);
 }, [gameMode]);
   
-// 1. Save function to send data to backend
-async function saveGameProgress() {
+// Make sure userId is in your component state
+const [userId, setUserId] = React.useState(null); // or your actual userId state
+
+async function saveGameProgress(currentUserId) {
   try {
     const response = await fetch('/api/battle', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        action: 'saveProgress',    // You can create this in backend if you want, or reuse 'end'
-          userId: parseInt(id, 10),
+        action: 'saveProgress',
+        userId: currentUserId,   // Pass userId explicitly here
         total_taps: totalTapsInGame,
         renown_tokens: renownTokens,
-        // Add other needed data if required (like currentRoom, scores)
       }),
     });
 
@@ -303,13 +304,16 @@ async function saveGameProgress() {
     console.error('Save error:', error);
   }
 }
-React.useEffect(() => {
-  const interval = setInterval(() => {
-    saveGameProgress();
-  }, 5000); // every 5 seconds
 
-  return () => clearInterval(interval); // clean up on unmount
-}, []);
+React.useEffect(() => {
+  if (!userId) return; // Don't start interval if userId not set yet
+
+  const interval = setInterval(() => {
+    saveGameProgress(userId); // Pass userId from React state explicitly
+  }, 5000);
+
+  return () => clearInterval(interval);
+}, [userId]); // Re-run effect only when userId changes
 
 const formatTime = (totalSeconds) => {
   const minutes = Math.floor(totalSeconds / 60);
