@@ -172,24 +172,24 @@ export async function POST(req) {
     // ---------------------------
     // FETCH PROFILE
     // ---------------------------
-    if (action === 'fetchProfile') {
-      if (!userId || !profileName) {
-  return new Response(JSON.stringify({ error: 'Missing userId or profileName' }), { status: 400 });
+if (action === 'fetchProfile') {
+  if (!userId || !profileName) {
+    return new Response(JSON.stringify({ error: 'Missing userId or profileName' }), { status: 400 });
+  }
+
+  const { data: profiles, error } = await supabase
+    .from('game_saves')
+    .select('profile_name, profile_icon, total_taps, renown_tokens')
+    .eq('user_id', userId)
+    .limit(1);
+
+  if (error || !profiles || profiles.length === 0) {
+    return new Response(JSON.stringify({ error: 'Profile not found' }), { status: 404 });
+  }
+
+  return new Response(JSON.stringify({ profile: profiles[0] }), { status: 200 });
 }
 
-
-      const { data: profiles, error } = await supabase
-        .from('game_saves')
-        .select('profile_name, profile_icon, total_taps, renown_tokens')
-        .eq('user_id', userId)
-        .limit(1);
-
-      if (error || !profiles || profiles.length === 0) {
-        return new Response(JSON.stringify({ error: 'Profile not found' }), { status: 404 });
-      }
-
-      return new Response(JSON.stringify({ profile: profiles[0] }), { status: 200 });
-    }
 
     // ---------------------------
     // READY / UNREADY
