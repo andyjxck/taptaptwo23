@@ -653,7 +653,14 @@ if (gamePhase === "start") {
 if (gamePhase === "lobby") {
   return (
     <>
-      <TopProfileBar />
+    <TopProfileBar
+  profileName={profileName}
+  userId={userId}
+  profileIcon={profileIcon}
+  allTimeTotalTaps={allTimeTotalTaps}
+  renownTokens={renownTokens}
+/>
+
       <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4 pt-20 relative overflow-hidden">
         {/* Animated background */}
         <div className="absolute inset-0">
@@ -802,7 +809,14 @@ if (gamePhase === "lobby") {
 if (gamePhase === "playing") {
   return (
     <>
-      <TopProfileBar />
+     <TopProfileBar
+  profileName={profileName}
+  userId={userId}
+  profileIcon={profileIcon}
+  allTimeTotalTaps={allTimeTotalTaps}
+  renownTokens={renownTokens}
+/>
+
       <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex flex-col relative overflow-hidden pt-16">
         {/* Animated background */}
         <div className="absolute inset-0">
@@ -994,7 +1008,14 @@ if (gamePhase === "finished") {
 
   return (
     <>
-      <TopProfileBar />
+     <TopProfileBar
+  profileName={profileName}
+  userId={userId}
+  profileIcon={profileIcon}
+  allTimeTotalTaps={allTimeTotalTaps}
+  renownTokens={renownTokens}
+/>
+
       <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4 pt-20 relative overflow-hidden">
         {/* Animated background */}
         <div className="absolute inset-0">
