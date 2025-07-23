@@ -102,6 +102,7 @@ React.useEffect(() => { aiTapPowerRef.current = aiTapPower; }, [aiTapPower]);
   ai_tap_speed_level,
   ai_auto_tapper,
   ai_auto_tapper_level,
+  player_score,
 }) => {
   try {
     const res = await fetch('/api/battle', {
@@ -119,6 +120,7 @@ React.useEffect(() => { aiTapPowerRef.current = aiTapPower; }, [aiTapPower]);
         ai_tap_speed_level,
         ai_auto_tapper,
         ai_auto_tapper_level,
+        player_score,
       }),
     });
 
@@ -241,6 +243,7 @@ React.useEffect(() => {
       ai_tap_speed_level: newTapSpeedLvl,
       ai_auto_tapper: newAutoTapper,
       ai_auto_tapper_level: newAutoTapperLvl,
+      player_score,
     });
   }, upgradeInterval);
 
