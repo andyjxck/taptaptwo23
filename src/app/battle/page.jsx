@@ -12,14 +12,13 @@ function MainComponent() {
   const [showRules, setShowRules] = React.useState(false);
   const [gameMode, setGameMode] = React.useState(""); // 'ai' or 'multiplayer'
   const [aiDifficulty, setAiDifficulty] = React.useState("medium");
-const [playerName, setPlayerName] = React.useState("");
-const [userId, setUserId] = React.useState(null);
-const [profileName, setProfileName] = React.useState("");
-const [profileIcon, setProfileIcon] = React.useState("");
-const [allTimeTotalTaps, setAllTimeTotalTaps] = React.useState(0);
-const [renownTokens, setRenownTokens] = React.useState(0);
-const [totalTapsInGame, setTotalTapsInGame] = React.useState(0);
-
+  const [playerName, setPlayerName] = React.useState("");
+  const [userId, setUserId] = React.useState(null);
+  const [profileName, setProfileName] = React.useState("");
+  const [profileIcon, setProfileIcon] = React.useState("");
+  const [allTimeTotalTaps, setAllTimeTotalTaps] = React.useState(0);
+  const [renownTokens, setRenownTokens] = React.useState(0);
+  const [totalTapsInGame, setTotalTapsInGame] = React.useState(0);
 
   // Room and player management
   const [roomCode, setRoomCode] = React.useState("");
@@ -66,101 +65,100 @@ const [totalTapsInGame, setTotalTapsInGame] = React.useState(0);
     return result;
   };
 
- const handleTap = () => {
-  if (gamePhase !== "playing") return;
+  const handleTap = () => {
+    if (gamePhase !== "playing") return;
 
-  setIsAnimating(true);
-  setTimeout(() => setIsAnimating(false), 150);
+    setIsAnimating(true);
+    setTimeout(() => setIsAnimating(false), 150);
 
-  let coinsEarned = tapPower;
+    let coinsEarned = tapPower;
 
-  // Apply tap speed bonus
-  coinsEarned += Math.floor(coinsEarned * (tapSpeedBonus / 100));
+    // Apply tap speed bonus
+    coinsEarned += Math.floor(coinsEarned * (tapSpeedBonus / 100));
 
-  // Check for critical hit
-  const isCrit = Math.random() * 100 < critChance;
-  if (isCrit) {
-    coinsEarned *= 2;
-  }
-
-  setPlayerScore((prev) => prev + coinsEarned);
-  setTotalTapsInGame((prev) => prev + 1); // Fix here: increment totalTapsInGame
-
-  // Add floating number animation
-  const floatingId = Date.now() + Math.random();
-  setFloatingNumbers((prev) => [
-    ...prev,
-    {
-      id: floatingId,
-      value: coinsEarned,
-      isCrit: isCrit,
-      x: Math.random() * 100 - 50,
-      y: Math.random() * 100 - 50,
-    },
-  ]);
-
-  // Remove floating number after animation
-  setTimeout(() => {
-    setFloatingNumbers((prev) => prev.filter((num) => num.id !== floatingId));
-  }, 1000);
-};
-
-  
-
-const loadProfile = async (userId) => {
-  console.log("loadProfile called with userId:", userId); // <-- Add this to confirm call
-
-  try {
-    const response = await fetch("/api/battle", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "fetchProfile",
-        userId: parseInt(userId, 10),
-      }),
-    });
-
-    console.log("Fetch response received:", response);
-
-    const data = await response.json().catch(() => null);
-    console.log("Parsed JSON data:", data);
-
-    if (!response.ok) {
-      console.error(`Fetch failed with status ${response.status}`);
-      if (data && data.error) {
-        console.error("Backend error message:", data.error);
-      } else {
-        console.error("No backend error message available.");
-      }
-      throw new Error(`Fetch failed with status ${response.status}`);
+    // Check for critical hit
+    const isCrit = Math.random() * 100 < critChance;
+    if (isCrit) {
+      coinsEarned *= 2;
     }
 
-    if (!data.profile) {
-      console.error("Backend returned no profile.");
-      if (data && data.error) {
-        console.error("Backend error message:", data.error);
+    setPlayerScore((prev) => prev + coinsEarned);
+    setTotalTapsInGame((prev) => prev + 1);
+
+    // Add floating number animation
+    const floatingId = Date.now() + Math.random();
+    setFloatingNumbers((prev) => [
+      ...prev,
+      {
+        id: floatingId,
+        value: coinsEarned,
+        isCrit: isCrit,
+        x: Math.random() * 100 - 50,
+        y: Math.random() * 100 - 50,
+      },
+    ]);
+
+    // Remove floating number after animation
+    setTimeout(() => {
+      setFloatingNumbers((prev) => prev.filter((num) => num.id !== floatingId));
+    }, 1000);
+  };
+
+  const loadProfile = async (id) => {
+    console.log("loadProfile called with userId:", id);
+
+    try {
+      const response = await fetch("/api/battle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "fetchProfile",
+          userId: parseInt(id, 10),
+        }),
+      });
+
+      console.log("Fetch response received:", response);
+
+      const data = await response.json().catch(() => null);
+      console.log("Parsed JSON data:", data);
+
+      if (!response.ok) {
+        console.error(`Fetch failed with status ${response.status}`);
+        if (data && data.error) {
+          console.error("Backend error message:", data.error);
+        } else {
+          console.error("No backend error message available.");
+        }
+        throw new Error(`Fetch failed with status ${response.status}`);
       }
-      return;
+
+      if (!data.profile) {
+        console.error("Backend returned no profile.");
+        if (data && data.error) {
+          console.error("Backend error message:", data.error);
+        }
+        return;
+      }
+
+      setProfileName(data.profile.profile_name);
+      setLogoUrl(data.profile.profile_icon);
+      setAllTimeTotalTaps(data.profile.total_taps);
+      setRenownTokens(data.profile.renown_tokens);
+    } catch (err) {
+      console.error("Profile load failed:", err);
     }
+  };
 
-    setProfileName(data.profile.profile_name);
-    setLogoUrl(data.profile.profile_icon);
-    setAllTimeTotalTaps(data.profile.total_taps);
-    setRenownTokens(data.profile.renown_tokens);
-
-  } catch (err) {
-    console.error("Profile load failed:", err);
-  }
-};
-
-
-React.useEffect(() => {
-  const storedUserId = localStorage.getItem("userId");
-  if (storedUserId) {
-    loadProfile(parseInt(storedUserId, 10));
-  }
-}, []);
-
+  React.useEffect(() => {
+    const storedUserId = localStorage.getItem("userId");
+    if (storedUserId) {
+      setUserId(parseInt(storedUserId, 10));
+      loadProfile(storedUserId);
+    } else {
+      // No userId in localStorage, redirect to login
+      window.location.href = "/login";
+    }
+  }, []);
 
   // Upgrade functions
   const upgradeTapPower = () => {
