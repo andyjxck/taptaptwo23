@@ -1538,7 +1538,6 @@ if (gamePhase === "playing") {
                 {num.isCrit && " ⚡"}
               </div>
             ))}
-          </div>
         </div>
 
         <style jsx global>{`
