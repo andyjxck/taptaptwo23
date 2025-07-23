@@ -65,11 +65,11 @@ const getAiAutoTapperCost = () =>
   Math.floor(100 * Math.pow(1.45, aiAutoTapperLevelRef.current));
 
 React.useEffect(() => {
-  if (gamePhase !== "playing" || gameMode !== "ai") return;
-
   const upgradeInterval = 5000; // every 5 seconds
 
   const upgradeTimer = setInterval(() => {
+    if (gamePhase !== "playing" || gameMode !== "ai") return;
+
     setAiCoins((currentAiCoins) => {
       let coins = currentAiCoins;
       console.log("💰 AI Coins Before Upgrade:", coins);
@@ -99,12 +99,12 @@ React.useEffect(() => {
 
       const tapSpeedCost = Math.floor(50 * Math.pow(1.6, aiTapSpeedLevelRef.current));
       if (coins >= tapSpeedCost) {
+        coins -= tapSpeedCost;
         setAiTapSpeedBonus(prev => {
           console.log("🆙 Upgrading AI Tap Speed Bonus:", prev);
           return prev + 25 + Math.floor(aiTapSpeedLevelRef.current * 1.3);
         });
         setAiTapSpeedLevel(prev => prev + 1);
-        coins -= tapSpeedCost;
         console.log("✅ AI bought Tap Speed. New Coins:", coins);
       }
 
