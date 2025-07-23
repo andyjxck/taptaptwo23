@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import React, { useEffect, useState, useRef } from "react";
 import { supabase } from "@/utilities/supabaseClient";
 export const revalidate = 0;
