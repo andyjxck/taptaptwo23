@@ -1,7 +1,6 @@
-// app/api/battle/route.js
-
 import { NextResponse } from 'next/server';
 import { sql } from '../auth-handler/db';
+
 export async function POST(req) {
   try {
     const body = await req.json();
@@ -119,3 +118,4 @@ export async function POST(req) {
     console.error('API /api/battle error:', error);
     return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
   }
+} // <---- This closes the POST function
