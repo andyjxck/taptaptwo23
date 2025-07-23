@@ -181,15 +181,17 @@ useEffect(() => {
   const loadProfile = async (id) => {
     console.log("loadProfile called with userId:", id);
 
-    try {
-      const response = await fetch("/api/battle", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "fetchProfile",
-          userId: parseInt(id, 10),
-        }),
-      });
+  try {
+  const response = await fetch("/api/battle", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "fetchProfile",
+      userId: parseInt(id, 10),
+      profileName: profileName, // ✅ use the actual value
+    }),
+  });
+
 
       console.log("Fetch response received:", response);
 
@@ -285,7 +287,7 @@ const createRoom = async () => {
   const newRoomCode = generateRoomCode();
 
   try {
-    const res = await fetch('/api/battle', {
+    const res = await fetch('/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
