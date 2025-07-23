@@ -1584,117 +1584,120 @@ if (gamePhase === "playing") {
         </div>
   </>
 );
+  // Finished phase
+  if (gamePhase === "finished") {
+    const playerWon = playerScore > opponentScore;
+    const tie = playerScore === opponentScore;
+    const renownEarned = playerWon ? 10 : tie ? 5 : 3;
 
-// Finished phase
-if (gamePhase === "finished") {
-  const playerWon = playerScore > opponentScore;
-  const tie = playerScore === opponentScore;
-  const renownEarned = playerWon ? 10 : tie ? 5 : 3;
+    return (
+      <>
+        <TopProfileBar
+          profileName={profileName}
+          userId={userId}
+          profileIcon={profileIcon}
+          allTimeTotalTaps={allTimeTotalTaps}
+          renownTokens={renownTokens}
+        />
 
-  return (
-    <>
-     <TopProfileBar
-  profileName={profileName}
-  userId={userId}
-  profileIcon={profileIcon}
-  allTimeTotalTaps={allTimeTotalTaps}
-  renownTokens={renownTokens}
-/>
-
-      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4 pt-20 relative overflow-hidden">
-        {/* Animated background */}
-        <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
-          <div
-            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse"
-            style={{ animationDelay: "1s" }}
-          ></div>
-        </div>
-
-        <div
-          className="relative backdrop-blur-xl bg-white/10 rounded-3xl p-6 sm:p-8 border border-white/20 w-full max-w-sm text-center shadow-2xl"
-          style={{
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-          }}
-        >
-          <div className="text-4xl sm:text-5xl mb-4">
-            {playerWon ? "🎉" : tie ? "🤝" : "😢"}
-          </div>
-
-          <div className="text-xl sm:text-2xl font-bold mb-6 text-white">
-            {playerWon ? "Victory!" : tie ? "Tie Game!" : "Defeat!"}
-          </div>
-
-          <div className="space-y-3 mb-6 text-white">
-            <div className="text-lg font-bold">Final Score</div>
+        <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4 pt-20 relative overflow-hidden">
+          {/* Animated background */}
+          <div className="absolute inset-0">
+            <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
             <div
-              className="backdrop-blur-xl bg-white/10 rounded-2xl p-4 border border-white/20"
+              className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse"
+              style={{ animationDelay: "1s" }}
+            ></div>
+          </div>
+
+          <div
+            className="relative backdrop-blur-xl bg-white/10 rounded-3xl p-6 sm:p-8 border border-white/20 w-full max-w-sm text-center shadow-2xl"
+            style={{
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+            }}
+          >
+            <div className="text-4xl sm:text-5xl mb-4">
+              {playerWon ? "🎉" : tie ? "🤝" : "😢"}
+            </div>
+
+            <div className="text-xl sm:text-2xl font-bold mb-6 text-white">
+              {playerWon ? "Victory!" : tie ? "Tie Game!" : "Defeat!"}
+            </div>
+
+            <div className="space-y-3 mb-6 text-white">
+              <div className="text-lg font-bold">Final Score</div>
+              <div
+                className="backdrop-blur-xl bg-white/10 rounded-2xl p-4 border border-white/20"
+                style={{
+                  backdropFilter: "blur(20px)",
+                  WebkitBackdropFilter: "blur(20px)",
+                }}
+              >
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-bold">{playerName}</span>
+                  <span className="text-yellow-300 font-bold">
+                    {(playerScore || 0).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-bold">{opponentName}</span>
+                  <span className="text-red-300 font-bold">
+                    {(opponentScore || 0).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="backdrop-blur-xl bg-white/10 rounded-2xl p-4 mb-6 border border-white/20"
               style={{
                 backdropFilter: "blur(20px)",
                 WebkitBackdropFilter: "blur(20px)",
               }}
             >
-              <div className="flex justify-between items-center mb-2">
-                <span className="font-bold">{playerName}</span>
-                <span className="text-yellow-300 font-bold">
-                  {(playerScore|| 0).toLocaleString()}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-bold">{opponentName}</span>
-                <span className="text-red-300 font-bold">
-                  {(opponentScore|| 0).toLocaleString()}
-                </span>
-              </div>
-            </div>
-          </div>
-          
-
-          <div
-            className="backdrop-blur-xl bg-white/10 rounded-2xl p-4 mb-6 border border-white/20"
-            style={{
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-            }}
-          >
-            <div className="text-white font-bold mb-3">Battle Stats</div>
-            <div className="text-white/80 text-sm space-y-1">
-              <div className="flex justify-between">
-                <span>Total Taps:</span>
-                <span className="font-bold">{totalTapsInGame}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Upgrades:</span>
-                <span className="font-bold">{upgradesPurchased}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Coins Earned:</span>
-                <span className="font-bold">{(playerScore|| 0).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between border-t border-white/20 pt-2 mt-2">
-                <span className="text-yellow-300">Tokens Earned:</span>
-                <span className="text-yellow-300 font-bold">+{renownEarned}</span>
+              <div className="text-white font-bold mb-3">Battle Stats</div>
+              <div className="text-white/80 text-sm space-y-1">
+                <div className="flex justify-between">
+                  <span>Total Taps:</span>
+                  <span className="font-bold">{totalTapsInGame}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Upgrades:</span>
+                  <span className="font-bold">{upgradesPurchased}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Coins Earned:</span>
+                  <span className="font-bold">
+                    {(playerScore || 0).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between border-t border-white/20 pt-2 mt-2">
+                  <span className="text-yellow-300">Tokens Earned:</span>
+                  <span className="text-yellow-300 font-bold">+{renownEarned}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <button
-            onClick={resetToStart}
-            className="w-full px-6 py-4 bg-gradient-to-r from-blue-500/80 to-cyan-600/80 text-white rounded-2xl font-bold hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl backdrop-blur-xl border border-white/20"
-            style={{
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-            }}
-          >
-            <i className="fas fa-redo mr-2"></i>
-            Battle Again
-          </button>
+            <button
+              onClick={resetToStart}
+              className="w-full px-6 py-4 bg-gradient-to-r from-blue-500/80 to-cyan-600/80 text-white rounded-2xl font-bold hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl backdrop-blur-xl border border-white/20"
+              style={{
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+              }}
+            >
+              <i className="fas fa-redo mr-2"></i>
+              Battle Again
+            </button>
+          </div>
         </div>
-      </div>
-    </>
-  );
-}
-return null;
-}
+      </>
+    );
+  }
+
+  // fallback UI
+  return null;
+} // <== Make sure this closes the MainComponent function
+
 export default MainComponent;
