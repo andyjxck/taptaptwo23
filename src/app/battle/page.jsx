@@ -200,13 +200,17 @@ useEffect(() => {
 
   // This ref accumulates taps between backend calls
 const tapBatchRef = React.useRef(0);
+const lastAnimationTimeRef = React.useRef(0);
 
 const handleTap = () => {
   if (gamePhase !== "playing") return;
 
+const now = Date.now();
+if (now - lastAnimationTimeRef.current > 150) {
   setIsAnimating(true);
+  lastAnimationTimeRef.current = now;
   setTimeout(() => setIsAnimating(false), 150);
-
+}
   let coinsEarned = tapPower;
 
   // Apply tap speed bonus
