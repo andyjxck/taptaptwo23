@@ -117,11 +117,27 @@ const loadProfile = async (userId) => {
         userId: parseInt(userId, 10),
       }),
     });
-    if (!response.ok) throw new Error(`Status ${response.status}`);
 
-    const data = await response.json();
+    // Try to parse the JSON response regardless of status
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      // If response not ok, show status and any error message from backend
+      console.error(`Fetch failed with status ${response.status}`);
+      if (data && data.error) {
+        console.error("Backend error message:", data.error);
+      } else {
+        console.error("No backend error message available.");
+      }
+      throw new Error(`Fetch failed with status ${response.status}`);
+    }
+
+    // If no profile in the successful response, log backend error field
     if (!data.profile) {
-      console.error("Backend error:", data.error);
+      console.error("Backend returned no profile.");
+      if (data && data.error) {
+        console.error("Backend error message:", data.error);
+      }
       return;
     }
 
@@ -129,6 +145,7 @@ const loadProfile = async (userId) => {
     setLogoUrl(data.profile.profile_icon);
     setAllTimeTotalTaps(data.profile.total_taps);
     setRenownTokens(data.profile.renown_tokens);
+
   } catch (err) {
     console.error("Profile load failed:", err);
   }
