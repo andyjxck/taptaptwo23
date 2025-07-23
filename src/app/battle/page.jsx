@@ -349,25 +349,6 @@ const joinRoom = async () => {
   }
 };
 
-
-    // Room joined successfully
-    setCurrentRoom(roomCode.toUpperCase());
-    setGameMode('multiplayer');
-    setOpponentName('Player 2'); // Ideally fetch actual opponent name from backend
-    setGamePhase('lobby');
-    fetchRoomStatus();
-
-    // SET PLAYER NAME HERE
-    setPlayerName(profileName || `Player ${userId}`);
-
-  } catch (err) {
-    console.error('joinRoom error:', err);
-    alert('Error joining room. See console.');
-  }
-};
-
-
-
   const playAI = () => {
     setGameMode("ai");
     setOpponentName(`AI (${aiDifficulty})`);
