@@ -349,13 +349,17 @@ const joinRoom = async () => {
   }
 };
 
-  const playAI = () => {
-    setGameMode("ai");
-    setOpponentName(`AI (${aiDifficulty})`);
-    setCurrentRoom("AI_GAME");
-    setIsOpponentReady(true);
-    setGamePhase("lobby");
-  };
+const playAI = () => {
+  setGameMode("ai");
+  setOpponentName(`AI (${aiDifficulty})`);
+  setCurrentRoom("AI_GAME");
+  setIsOpponentReady(true);
+  setGamePhase("lobby");
+
+  // Add this line to set your player name in AI mode:
+  setPlayerName(profileName || "You");
+};
+
 
   const toggleReady = async () => {
   if (gameMode === "ai") {
