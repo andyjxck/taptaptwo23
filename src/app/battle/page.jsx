@@ -617,30 +617,26 @@ React.useEffect(() => {
   return () => clearInterval(interval);
 }, [gamePhase, autoTapper]);
 
-  // AI player simulation
-  React.useEffect(() => {
-    let interval;
-    if (gamePhase === "playing" && gameMode === "ai") {
-      interval = setInterval(() => {
-        let aiMultiplier = 1;
-        if (aiDifficulty === "easy") aiMultiplier = 0.7;
-        else if (aiDifficulty === "medium") aiMultiplier = 1;
-        else if (aiDifficulty === "hard") aiMultiplier = 1.4;
+ React.useEffect(() => {
+  let interval;
+  if (gamePhase === "playing" && gameMode === "ai") {
+    interval = setInterval(() => {
+      let aiMultiplier = 1;
+      if (aiDifficulty === "easy") aiMultiplier = 0.7;
+      else if (aiDifficulty === "medium") aiMultiplier = 1;
+      else if (aiDifficulty === "hard") aiMultiplier = 1.4;
 
-        const aiTaps = Math.floor((Math.random() * 4 + 2) * aiMultiplier);
-        const aiPower = Math.floor((Math.random() * 3 + 1) * aiMultiplier);
-        setOpponentScore((prev) => prev + aiTaps * aiPower);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [gamePhase, gameMode, aiDifficulty]);
+      const aiTaps = Math.floor((Math.random() * 4 + 2) * aiMultiplier);
+      const aiPower = Math.floor((Math.random() * 3 + 1) * aiMultiplier);
 
-  // Simulate opponent ready for AI after short delay
-  React.useEffect(() => {
-    if (gameMode === "ai" && gamePhase === "lobby") {
-      setIsOpponentReady(true);
-    }
-  }, [gameMode, gamePhase]);
+      const coinsEarned = aiTaps * aiPower;
+
+      setOpponentScore(prev => prev + coinsEarned);
+      setAiCoins(prev => prev + coinsEarned);  // Add coins to AI for upgrades
+    }, 1000);
+  }
+  return () => clearInterval(interval);
+}, [gamePhase, gameMode, aiDifficulty]);
 
 React.useEffect(() => {
   if (gamePhase === "lobby" && isPlayerReady && isOpponentReady) {
