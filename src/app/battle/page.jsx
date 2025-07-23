@@ -25,6 +25,57 @@ function MainComponent() {
   const [roomCode, setRoomCode] = React.useState("");
   const [currentRoom, setCurrentRoom] = React.useState("");
   const [opponentName, setOpponentName] = React.useState("Opponent");
+useEffect(() => {
+  if (!currentRoom || !userId) return;
+
+  const channel = supabase
+    .channel('room-sync')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'battle_games',
+        filter: `code=eq.${currentRoom}`,
+      },
+      async (payload) => {
+        console.log('Realtime update:', payload);
+
+        const { data } = await supabase
+          .from('battle_games')
+          .select('*')
+          .eq('code', currentRoom)
+          .single();
+
+        if (!data) return;
+
+        const opponentId =
+          data.player1_id === userId ? data.player2_id : data.player1_id;
+
+        setOpponentName(
+          data.player1_id === userId ? data.player2_name : data.player1_name
+        );
+
+        setIsOpponentReady(
+          data.player1_id === opponentId
+            ? data.player1_ready
+            : data.player2_ready
+        );
+
+        setIsPlayerReady(
+          data.player1_id === userId
+            ? data.player1_ready
+            : data.player2_ready
+        );
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [currentRoom, userId]);
+
   const [isPlayerReady, setIsPlayerReady] = React.useState(false);
   const [isOpponentReady, setIsOpponentReady] = React.useState(false);
 
@@ -284,10 +335,31 @@ function MainComponent() {
     setGamePhase("lobby");
   };
 
-  const toggleReady = () => {
-    setIsPlayerReady(!isPlayerReady);
-    fetchRoomStatus(); 
-  };
+  const toggleReady = async () => {
+  if (!currentRoom || !userId) return;
+
+  const { data, error } = await supabase
+    .from('battle_rooms')
+    .select('*')
+    .eq('code', currentRoom)
+    .single();
+
+  if (error || !data) return console.error(error || 'Room not found');
+
+  const isPlayer1 = data.player1_id === userId;
+
+  const updateData = isPlayer1
+    ? { player1_ready: !data.player1_ready }
+    : { player2_ready: !data.player2_ready };
+
+  const { error: updateError } = await supabase
+    .from('battle_rooms')
+    .update(updateData)
+    .eq('code', currentRoom);
+
+  if (updateError) console.error(updateError);
+};
+
 
  
 const startGame = () => {
