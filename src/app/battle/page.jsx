@@ -38,7 +38,7 @@ useEffect(() => {
         event: '*',
         schema: 'public',
         table: 'battle_games',
-        filter: `game_code=eq.${currentRoom}`,
+        filter: `room_code=eq.${currentRoom}`,
       },
       async (payload) => {
         console.log('Realtime update:', payload);
@@ -46,7 +46,7 @@ useEffect(() => {
         const { data } = await supabase
           .from('battle_games')
           .select('*')
-          .eq('game_code', currentRoom)
+          .eq('room_code', currentRoom)
           .single();
 
         if (!data) return;
@@ -343,7 +343,7 @@ useEffect(() => {
   const { data, error } = await supabase
     .from('battle_games')
     .select('*')
-    .eq('game_code', currentRoom)
+    .eq('room_code', currentRoom)
     .single();
 
   if (error || !data) return console.error(error || 'Room not found');
@@ -357,7 +357,7 @@ useEffect(() => {
   const { error: updateError } = await supabase
     .from('battle_games')
     .update(updateData)
-    .eq('game_code', currentRoom);
+    .eq('room_code', currentRoom);
 
   if (updateError) console.error(updateError);
 };
