@@ -169,14 +169,6 @@ if (action === 'join') {
 
   return new Response(JSON.stringify({ roomId: room.id, roomCode: code }), { status: 200 });
 }
-
-  if (updateError) {
-    return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
-  }
-
-  return new Response(JSON.stringify({ roomId: room.id, roomCode: code }), { status: 200 });
-}
-
     if (action === 'ready' || action === 'unready') {
       if (!code || !userId) {
         return new Response(JSON.stringify({ error: 'Missing code or userId' }), { status: 400 });
