@@ -303,18 +303,14 @@ async function saveGameProgress() {
     console.error('Save error:', error);
   }
 }
-
-// 2. Call saveGameProgress every 5 seconds while game is playing or finished
 React.useEffect(() => {
-    const interval = setInterval(() => {
-      saveGameProgress();
-    }, 5000); // every 5 seconds
+  const interval = setInterval(() => {
+    saveGameProgress();
+  }, 5000); // every 5 seconds
 
-    return () => clearInterval(interval); // clean up on unmount or phase change
-  }
-}, [gamePhase, totalTapsInGame, renownTokens]);
+  return () => clearInterval(interval); // clean up on unmount
+}, []);
 
-  
 const formatTime = (totalSeconds) => {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
