@@ -472,22 +472,8 @@ const resetToStart = () => {
   setAutoTapper(0);
   setAutoTapperLevel(0);
 };
-  // Game timer effect
-  React.useEffect(() => {
-    let interval;
-    if (gamePhase === "playing" && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            setGamePhase("finished");
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [gamePhase, timeLeft]);
+ 
+  
 
   // Auto tapper effect
   React.useEffect(() => {
