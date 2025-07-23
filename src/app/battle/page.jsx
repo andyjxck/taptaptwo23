@@ -7,6 +7,12 @@ export const dynamic = "force-client";
 
 
 function MainComponent() {
+  const totalScore =
+  playerScore + (gameMode === "ai" ? (aiCoins || 0) : (opponentScore || 0)) || 1;
+
+const playerPercent = Math.round((playerScore / totalScore) * 100);
+const opponentPercent = 100 - playerPercent;
+
   // Game phases: 'start', 'lobby', 'ready', 'playing', 'finished'
   const [countdown, setCountdown] = React.useState(null); // null means no countdown active
   const [gamePhase, setGamePhase] = React.useState("start");
@@ -1317,69 +1323,77 @@ if (gamePhase === "playing") {
           ></div>
         </div>
 
-        {/* Game scoreboard */}
-        <div
-          className="relative z-20 backdrop-blur-xl bg-white/10 border-b border-white/20 p-4 shadow-xl max-w-md mx-auto rounded-xl"
-          style={{
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-          }}
-        >
-          {/* Scores + icons */}
-          <div className="flex justify-between items-center text-white font-bold text-sm mb-2 select-none">
-            <div className="flex items-center space-x-2">
-              <i className="fas fa-user text-yellow-400"></i>
-              <span>{playerName}</span>
-            </div>
-            <div className="text-yellow-300 text-xl sm:text-2xl">
-              {(playerScore || 0).toLocaleString()}
-            </div>
-          </div>
+      {/* Game scoreboard */}
+<div
+  className="relative z-20 backdrop-blur-xl bg-white/10 border-b border-white/20 p-4 shadow-xl max-w-md mx-auto rounded-xl flex flex-col"
+  style={{
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
+  }}
+>
+  {/* Names + scores/coins row */}
+  <div className="flex justify-between items-center text-white font-bold text-sm select-none mb-2">
+    {/* Player 1 */}
+    <div className="flex items-center space-x-2">
+      <i className="fas fa-user text-yellow-400"></i>
+      <span>{playerName}</span>
+    </div>
+    <div className="text-yellow-300 text-xl sm:text-2xl">
+      {(playerScore || 0).toLocaleString()}
+    </div>
+  </div>
 
-          <div className="flex justify-between items-center text-white font-bold text-sm mb-2 select-none">
-            <div className="flex items-center space-x-2">
-              <i className="fas fa-user-friends text-pink-400"></i>
-              <span>{opponentName}</span>
-            </div>
-            <div className="text-pink-300 text-xl sm:text-2xl">
-              {(opponentScore || 0).toLocaleString()}
-            </div>
-          </div>
+  {/* Player 2 or AI */}
+  <div className="flex justify-between items-center text-white font-bold text-sm select-none mb-2">
+    <div className="flex items-center space-x-2">
+      <i
+        className={
+          gameMode === "ai"
+            ? "fas fa-robot text-pink-400"
+            : "fas fa-user-friends text-pink-400"
+        }
+      ></i>
+      <span>{opponentName}</span>
+    </div>
+    <div className="text-pink-300 text-xl sm:text-2xl">
+      {gameMode === "ai"
+        ? (aiCoins || 0).toLocaleString()
+        : (opponentScore || 0).toLocaleString()}
+    </div>
+  </div>
 
-          {/* Progress bars */}
-          <div className="flex space-x-2 mt-2">
-            <div className="flex-1 bg-yellow-400/30 rounded-full h-3 relative overflow-hidden">
-              <div
-                className="bg-yellow-400 h-3 rounded-full transition-all duration-500"
-                style={{ width: `${playerPercent}%` }}
-              ></div>
-            </div>
-            <div className="flex-1 bg-pink-400/30 rounded-full h-3 relative overflow-hidden">
-              <div
-                className="bg-pink-400 h-3 rounded-full transition-all duration-500"
-                style={{ width: `${opponentPercent}%` }}
-              ></div>
-            </div>
-          </div>
+  {/* Battle progress bar */}
+  <div className="relative w-full h-5 rounded-full bg-gray-800 overflow-hidden mt-3 select-none">
+    <div
+      className="absolute left-0 top-0 bottom-0 bg-yellow-400 transition-all duration-500"
+      style={{ width: `${playerPercent}%` }}
+    ></div>
+    <div
+      className="absolute right-0 top-0 bottom-0 bg-pink-400 transition-all duration-500"
+      style={{ width: `${opponentPercent}%` }}
+    ></div>
+  </div>
 
-          {/* Timer centered above */}
-          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-50 text-white text-xl sm:text-2xl font-bold select-none">
-            {formatTime(timeLeft)}
-          </div>
+  {/* Timer and Leave button container */}
+  <div className="flex justify-between items-center mt-3">
+    {/* Timer */}
+    <div className="text-white text-xl sm:text-2xl font-bold select-none">
+      {formatTime(timeLeft)}
+    </div>
 
-          {/* Leave button */}
-          <button
-            onClick={resetToStart}
-            className="absolute top-2 right-2 px-3 py-1 bg-red-500/80 text-white text-xs rounded-full hover:bg-red-500 active:scale-95 transition-all duration-200 backdrop-blur-xl border border-white/20"
-            style={{
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-            }}
-          >
-            <i className="fas fa-times mr-1"></i>
-            Leave
-          </button>
-        </div>
+    {/* Leave button */}
+    <button
+      onClick={resetToStart}
+      className="px-4 py-1 bg-red-500/80 text-white text-sm rounded-full hover:bg-red-500 active:scale-95 transition-all duration-200 backdrop-blur-xl border border-white/20"
+      style={{
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+      }}
+    >
+      <i className="fas fa-times mr-1"></i> Leave
+    </button>
+  </div>
+  </div>
 
         {/* Game area */}
         <div className="flex-1 relative flex items-center justify-center p-4">
