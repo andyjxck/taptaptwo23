@@ -277,8 +277,8 @@ React.useEffect(() => {
 
   React.useEffect(() => {
   if (gamePhase === "finished") {
-    const winnerId = playerScore > opponentScore ? userId : opponentUserId;
-    const loserId = playerScore > opponentScore ? opponentUserId : userId;
+    const winnerId = playerScore > opponentScore ? userId : opponentId;
+    const loserId = playerScore > opponentScore ? opponentId : userId;
 
     fetch('/api/battle', {
       method: 'POST',
