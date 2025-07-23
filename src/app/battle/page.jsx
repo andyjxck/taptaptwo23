@@ -621,7 +621,6 @@ const joinRoom = async () => {
 };
 
 const playAI = async () => {
-  // Generate unique AI room code like "AI4X2B9"
   const generateAIRoomCode = () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let result = "AI";
@@ -633,44 +632,37 @@ const playAI = async () => {
 
   const newRoomCode = generateAIRoomCode();
 
-  const { error } = await supabase
-    .from('battle_games')
-    .insert([{
-      room_code: newRoomCode,
-      player1_id: userId,
-      player2_id: 0,
-      player1_name: profileName || "You",
-      player2_name: `AI (${aiDifficulty})`,
-      player1_ready: true,
-      player2_ready: true,
-      status: 'active',
-      player1_score: 0,
-      player2_score: 0,
+  try {
+    const res = await fetch('/api/battle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'create',
+        userId,
+        profileName,
+        code: newRoomCode,
+        isAI: true,
+        aiDifficulty,
+      }),
+    });
 
-      // Initialize AI stats here:
-      ai_coins: 0,
-      ai_tap_power: 1,
-      ai_tap_power_level: 1,
-      ai_crit_chance: 0,
-      ai_crit_level: 0,
-      ai_tap_speed_bonus: 0,
-      ai_tap_speed_level: 0,
-      ai_auto_tapper: 0,
-      ai_auto_tapper_level: 0,
-    }]);
+    if (!res.ok) {
+      const errorData = await res.json();
+      console.error('Failed to create AI room:', errorData.error);
+      return;
+    }
 
-  if (error) {
-    console.error("Failed to create AI room:", error.message);
-    return;
+    setGameMode("ai");
+    setOpponentName(`AI (${aiDifficulty})`);
+    setCurrentRoom(newRoomCode);
+    setIsOpponentReady(true);
+    setIsPlayerReady(true);
+    setGamePhase("lobby");
+    setPlayerName(profileName || "You");
+
+  } catch (error) {
+    console.error("Error creating AI room:", error);
   }
-
-  setGameMode("ai");
-  setOpponentName(`AI (${aiDifficulty})`);
-  setCurrentRoom(newRoomCode);
-  setIsOpponentReady(true);
-  setIsPlayerReady(true);
-  setGamePhase("lobby");
-  setPlayerName(profileName || "You");
 };
 
   const toggleReady = async () => {
@@ -771,6 +763,7 @@ const resetToStart = () => {
   setAiAutoTapperLevel(1);
   setAiCritLevel(0);
 };
+  
 
 
 // Auto tapper effect without tapBatchRef
