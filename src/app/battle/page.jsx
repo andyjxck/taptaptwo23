@@ -1695,8 +1695,11 @@ if (gamePhase === "playing") {
       </>
     );
   }
+}
 
   // fallback UI
   return null;
 } // <== Make sure this closes the MainComponent function
+
+export default MainComponent;
 
