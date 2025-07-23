@@ -16,6 +16,7 @@ function MainComponent() {
   const [gameMode, setGameMode] = React.useState(""); // 'ai' or 'multiplayer'
   const [aiDifficulty, setAiDifficulty] = React.useState("medium");
   const [playerName, setPlayerName] = React.useState("");
+  const [opponentId, setOpponentId] = React.useState(null);
   const [userId, setUserId] = React.useState(null);
   const [profileName, setProfileName] = React.useState("");
   const [profileIcon, setProfileIcon] = React.useState("");
@@ -59,15 +60,12 @@ useEffect(() => {
     .on(
       'postgres_changes',
       {
-        event: '*',  // listen to INSERT, UPDATE, DELETE (or use 'UPDATE' only)
+        event: '*',
         schema: 'public',
         table: 'battle_games',
         filter: `room_code=eq.${currentRoom}`,
       },
       async (payload) => {
-        console.log('Realtime update:', payload);
-
-        // Fetch latest room data
         const { data, error } = await supabase
           .from('battle_games')
           .select('*')
@@ -81,19 +79,23 @@ useEffect(() => {
 
         const amPlayer1 = data.player1_id === userId;
 
-        // Set playerScore and opponentScore based on who you are
         setPlayerScore(amPlayer1 ? data.player1_score : data.player2_score);
         setOpponentScore(amPlayer1 ? data.player2_score : data.player1_score);
-
-        // Update opponent name (optional)
         setOpponentName(amPlayer1 ? data.player2_name || 'Opponent' : data.player1_name || 'Opponent');
 
-        // Update ready states if needed
+        // HERE - set opponentId properly
+        setOpponentId(amPlayer1 ? data.player2_id : data.player1_id);
+
         setIsPlayerReady(amPlayer1 ? data.player1_ready : data.player2_ready);
         setIsOpponentReady(amPlayer1 ? data.player2_ready : data.player1_ready);
       }
     )
     .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [currentRoom, userId]);
 
   return () => {
     supabase.removeChannel(channel);
