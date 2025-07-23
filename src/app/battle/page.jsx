@@ -958,7 +958,7 @@ if (gamePhase === "finished") {
               <div className="flex justify-between items-center mb-2">
                 <span className="font-bold">{playerName}</span>
                 <span className="text-yellow-300 font-bold">
-                  {playerScore|| 0).toLocaleString()}
+                  {(playerScore|| 0).toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between items-center">
