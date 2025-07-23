@@ -22,58 +22,80 @@ export async function POST(req) {
     if (!action) {
       return new Response(JSON.stringify({ error: 'Missing action' }), { status: 400 });
     }
-if (action === 'updateAIStats') {
-  if (!code) {
-    return new Response(JSON.stringify({ error: 'Missing room code' }), { status: 400 });
-  }
-  
-  const {
-    ai_coins,
-    ai_tap_power,
-    ai_tap_power_level,
-    ai_crit_chance,
-    ai_crit_level,
-    ai_tap_speed_bonus,
-    ai_tap_speed_level,
-    ai_auto_tapper,
-    ai_auto_tapper_level,
-  } = body;
+// Inside updateAIStats
 
-  if (
-    ai_coins === undefined ||
-    ai_tap_power === undefined ||
-    ai_tap_power_level === undefined ||
-    ai_crit_chance === undefined ||
-    ai_crit_level === undefined ||
-    ai_tap_speed_bonus === undefined ||
-    ai_tap_speed_level === undefined ||
-    ai_auto_tapper === undefined ||
-    ai_auto_tapper_level === undefined
-  ) {
-    return new Response(JSON.stringify({ error: 'Missing AI stats parameters' }), { status: 400 });
-  }
+const {
+  ai_coins,
+  ai_tap_power,
+  ai_tap_power_level,
+  ai_crit_chance,
+  ai_crit_level,
+  ai_tap_speed_bonus,
+  ai_tap_speed_level,
+  ai_auto_tapper,
+  ai_auto_tapper_level,
+  player_score,
+} = body;
 
-  const { error } = await supabase
-    .from('battle_games')
-    .update({
-      ai_coins,
-      ai_tap_power,
-      ai_tap_power_level,
-      ai_crit_chance,
-      ai_crit_level,
-      ai_tap_speed_bonus,
-      ai_tap_speed_level,
-      ai_auto_tapper,
-      ai_auto_tapper_level,
-    })
-    .eq('room_code', code);
-
-  if (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
-  }
-
-  return new Response(JSON.stringify({ success: true }), { status: 200 });
+// Check for missing required fields
+if (
+  ai_coins === undefined ||
+  ai_tap_power === undefined ||
+  ai_tap_power_level === undefined ||
+  ai_crit_chance === undefined ||
+  ai_crit_level === undefined ||
+  ai_tap_speed_bonus === undefined ||
+  ai_tap_speed_level === undefined ||
+  ai_auto_tapper === undefined ||
+  ai_auto_tapper_level === undefined ||
+  player_score === undefined
+) {
+  return new Response(JSON.stringify({ error: 'Missing AI stats or player_score' }), { status: 400 });
 }
+
+// Fetch room info
+const { data: roomData, error: roomError } = await supabase
+  .from('battle_games')
+  .select('player1_id, player2_id')
+  .eq('room_code', code)
+  .single();
+
+if (roomError || !roomData) {
+  return new Response(JSON.stringify({ error: roomError?.message || 'Room not found' }), { status: 404 });
+}
+
+const updates = {
+  ai_coins,
+  ai_tap_power,
+  ai_tap_power_level,
+  ai_crit_chance,
+  ai_crit_level,
+  ai_tap_speed_bonus,
+  ai_tap_speed_level,
+  ai_auto_tapper,
+  ai_auto_tapper_level,
+};
+
+// Update player score in correct column
+if (roomData.player1_id === userId) {
+  updates.player1_score = player_score;
+} else if (roomData.player2_id === userId) {
+  updates.player2_score = player_score;
+} else {
+  return new Response(JSON.stringify({ error: 'User not part of the room' }), { status: 400 });
+}
+
+const { error: updateError } = await supabase
+  .from('battle_games')
+  .update(updates)
+  .eq('room_code', code);
+
+if (updateError) {
+  return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
+}
+
+return new Response(JSON.stringify({ success: true }), { status: 200 });
+
 
     // ---------------------------
     // CREATE ROOM
