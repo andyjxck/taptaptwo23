@@ -17,85 +17,92 @@ export async function POST(req) {
       winnerId,
       loserId,
       total_taps_ingame,
+      playerScore,
+      opponentScore,
     } = body;
 
     if (!action) {
       return new Response(JSON.stringify({ error: 'Missing action' }), { status: 400 });
     }
-// Inside updateAIStats
 
-const {
-  ai_coins,
-  ai_tap_power,
-  ai_tap_power_level,
-  ai_crit_chance,
-  ai_crit_level,
-  ai_tap_speed_bonus,
-  ai_tap_speed_level,
-  ai_auto_tapper,
-  ai_auto_tapper_level,
-  player_score,
-} = body;
+    // ---------------------------
+    // UPDATE AI STATS + PLAYER SCORE
+    // ---------------------------
+    if (action === 'updateAIStats') {
+      if (!code) {
+        return new Response(JSON.stringify({ error: 'Missing room code' }), { status: 400 });
+      }
 
-// Check for missing required fields
-if (
-  ai_coins === undefined ||
-  ai_tap_power === undefined ||
-  ai_tap_power_level === undefined ||
-  ai_crit_chance === undefined ||
-  ai_crit_level === undefined ||
-  ai_tap_speed_bonus === undefined ||
-  ai_tap_speed_level === undefined ||
-  ai_auto_tapper === undefined ||
-  ai_auto_tapper_level === undefined ||
-  player_score === undefined
-) {
-  return new Response(JSON.stringify({ error: 'Missing AI stats or player_score' }), { status: 400 });
-}
+      const {
+        ai_coins,
+        ai_tap_power,
+        ai_tap_power_level,
+        ai_crit_chance,
+        ai_crit_level,
+        ai_tap_speed_bonus,
+        ai_tap_speed_level,
+        ai_auto_tapper,
+        ai_auto_tapper_level,
+        player_score,
+      } = body;
 
-// Fetch room info
-const { data: roomData, error: roomError } = await supabase
-  .from('battle_games')
-  .select('player1_id, player2_id')
-  .eq('room_code', code)
-  .single();
+      if (
+        ai_coins === undefined ||
+        ai_tap_power === undefined ||
+        ai_tap_power_level === undefined ||
+        ai_crit_chance === undefined ||
+        ai_crit_level === undefined ||
+        ai_tap_speed_bonus === undefined ||
+        ai_tap_speed_level === undefined ||
+        ai_auto_tapper === undefined ||
+        ai_auto_tapper_level === undefined ||
+        player_score === undefined ||
+        !userId
+      ) {
+        return new Response(JSON.stringify({ error: 'Missing AI stats or player_score or userId' }), { status: 400 });
+      }
 
-if (roomError || !roomData) {
-  return new Response(JSON.stringify({ error: roomError?.message || 'Room not found' }), { status: 404 });
-}
+      const { data: roomData, error: roomError } = await supabase
+        .from('battle_games')
+        .select('player1_id, player2_id')
+        .eq('room_code', code)
+        .single();
 
-const updates = {
-  ai_coins,
-  ai_tap_power,
-  ai_tap_power_level,
-  ai_crit_chance,
-  ai_crit_level,
-  ai_tap_speed_bonus,
-  ai_tap_speed_level,
-  ai_auto_tapper,
-  ai_auto_tapper_level,
-};
+      if (roomError || !roomData) {
+        return new Response(JSON.stringify({ error: roomError?.message || 'Room not found' }), { status: 404 });
+      }
 
-// Update player score in correct column
-if (roomData.player1_id === userId) {
-  updates.player1_score = player_score;
-} else if (roomData.player2_id === userId) {
-  updates.player2_score = player_score;
-} else {
-  return new Response(JSON.stringify({ error: 'User not part of the room' }), { status: 400 });
-}
+      const updates = {
+        ai_coins,
+        ai_tap_power,
+        ai_tap_power_level,
+        ai_crit_chance,
+        ai_crit_level,
+        ai_tap_speed_bonus,
+        ai_tap_speed_level,
+        ai_auto_tapper,
+        ai_auto_tapper_level,
+      };
 
-const { error: updateError } = await supabase
-  .from('battle_games')
-  .update(updates)
-  .eq('room_code', code);
+      if (roomData.player1_id === userId) {
+        updates.player1_score = player_score;
+      } else if (roomData.player2_id === userId) {
+        updates.player2_score = player_score;
+      } else {
+        return new Response(JSON.stringify({ error: 'User not part of the room' }), { status: 400 });
+      }
 
-if (updateError) {
-  return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
-}
+      const { error: updateError } = await supabase
+        .from('battle_games')
+        .update(updates)
+        .eq('room_code', code);
 
-return new Response(JSON.stringify({ success: true }), { status: 200 });
+      if (updateError) {
+        return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
+      }
 
+      return new Response(JSON.stringify({ success: true }), { status: 200 });
+    }
 
     // ---------------------------
     // CREATE ROOM
@@ -118,16 +125,16 @@ return new Response(JSON.stringify({ success: true }), { status: 200 });
         .select('id, room_code')
         .single();
 
-   if (insertError || !createdRoom) {
-  console.error('Create Room Insert Error:', insertError);
-  console.error('Insert Data:', {
-    room_code: roomCode,
-    player1_id: userId,
-    player1_ready: false,
-    player1_name: profileName,
-  });
-  return new Response(JSON.stringify({ error: insertError?.message || 'Failed to create battle room' }), { status: 500 });
-}
+      if (insertError || !createdRoom) {
+        console.error('Create Room Insert Error:', insertError);
+        console.error('Insert Data:', {
+          room_code: roomCode,
+          player1_id: userId,
+          player1_ready: false,
+          player1_name: profileName,
+        });
+        return new Response(JSON.stringify({ error: insertError?.message || 'Failed to create battle room' }), { status: 500 });
+      }
 
       return new Response(JSON.stringify({ roomId: createdRoom.id, roomCode: createdRoom.room_code }), { status: 200 });
     }
@@ -252,25 +259,23 @@ return new Response(JSON.stringify({ success: true }), { status: 200 });
     // ---------------------------
     // FETCH PROFILE
     // ---------------------------
-if (action === 'fetchProfile') {
-  if (!userId) {
-    return new Response(JSON.stringify({ error: 'Missing userId' }), { status: 400 });
-  }
+    if (action === 'fetchProfile') {
+      if (!userId) {
+        return new Response(JSON.stringify({ error: 'Missing userId' }), { status: 400 });
+      }
 
-  const { data: profiles, error } = await supabase
-    .from('game_saves')
-    .select('user_id, profile_name, profile_icon, total_taps, renown_tokens')
-    .eq('user_id', userId)
-    .limit(1);
+      const { data: profiles, error } = await supabase
+        .from('game_saves')
+        .select('user_id, profile_name, profile_icon, total_taps, renown_tokens')
+        .eq('user_id', userId)
+        .limit(1);
 
-  if (error || !profiles || profiles.length === 0) {
-    return new Response(JSON.stringify({ error: 'Profile not found' }), { status: 404 });
-  }
+      if (error || !profiles || profiles.length === 0) {
+        return new Response(JSON.stringify({ error: 'Profile not found' }), { status: 404 });
+      }
 
-  return new Response(JSON.stringify({ profile: profiles[0] }), { status: 200 });
-}
-
-
+      return new Response(JSON.stringify({ profile: profiles[0] }), { status: 200 });
+    }
 
     // ---------------------------
     // READY / UNREADY
@@ -329,103 +334,95 @@ if (action === 'fetchProfile') {
       return new Response(JSON.stringify({ success: true }), { status: 200 });
     }
 
-  // ---------------------------
-// END GAME
-// ---------------------------
-if (action === 'end') {
-  if (
-    typeof total_taps_ingame !== 'number' ||
-    !winnerId ||
-    !loserId ||
-    !code ||
-    !playerScore ||
-    !opponentScore
-  ) {
-    return new Response(
-      JSON.stringify({ error: 'Missing or invalid parameters for end action' }),
-      { status: 400 }
-    );
-  }
+    // ---------------------------
+    // END GAME
+    // ---------------------------
+    if (action === 'end') {
+      if (
+        typeof total_taps_ingame !== 'number' ||
+        !winnerId ||
+        !loserId ||
+        !code ||
+        playerScore === undefined ||
+        opponentScore === undefined
+      ) {
+        return new Response(
+          JSON.stringify({ error: 'Missing or invalid parameters for end action' }),
+          { status: 400 }
+        );
+      }
 
-  // Update battle_games with total_taps_ingame
-  const { error: updateBattleGamesError } = await supabase
-    .from('battle_games')
-    .update({ total_taps_ingame })
-    .eq('room_code', code);
+      const { error: updateBattleGamesError } = await supabase
+        .from('battle_games')
+        .update({ total_taps_ingame })
+        .eq('room_code', code);
 
-  if (updateBattleGamesError) {
-    return new Response(JSON.stringify({ error: updateBattleGamesError.message }), { status: 500 });
-  }
+      if (updateBattleGamesError) {
+        return new Response(JSON.stringify({ error: updateBattleGamesError.message }), { status: 500 });
+      }
 
-  // Determine if draw or win/lose for renown tokens
-  let winnerRenown = 10;
-  let loserRenown = 3;
-  if (playerScore === opponentScore) {
-    // Draw - both get 5 tokens
-    winnerRenown = 5;
-    loserRenown = 5;
-  }
+      let winnerRenown = 10;
+      let loserRenown = 3;
+      if (playerScore === opponentScore) {
+        winnerRenown = 5;
+        loserRenown = 5;
+      }
 
-  // Fetch current stats for winner
-  const { data: winnerStats, error: fetchWinnerError } = await supabase
-    .from('game_saves')
-    .select('total_taps, renown_tokens')
-    .eq('user_id', winnerId)
-    .single();
+      const { data: winnerStats, error: fetchWinnerError } = await supabase
+        .from('game_saves')
+        .select('total_taps, renown_tokens')
+        .eq('user_id', winnerId)
+        .single();
 
-  if (fetchWinnerError) {
-    return new Response(JSON.stringify({ error: fetchWinnerError.message }), { status: 500 });
-  }
+      if (fetchWinnerError) {
+        return new Response(JSON.stringify({ error: fetchWinnerError.message }), { status: 500 });
+      }
 
-  // Fetch current stats for loser
-  const { data: loserStats, error: fetchLoserError } = await supabase
-    .from('game_saves')
-    .select('total_taps, renown_tokens')
-    .eq('user_id', loserId)
-    .single();
+      const { data: loserStats, error: fetchLoserError } = await supabase
+        .from('game_saves')
+        .select('total_taps, renown_tokens')
+        .eq('user_id', loserId)
+        .single();
 
-  if (fetchLoserError) {
-    return new Response(JSON.stringify({ error: fetchLoserError.message }), { status: 500 });
-  }
+      if (fetchLoserError) {
+        return new Response(JSON.stringify({ error: fetchLoserError.message }), { status: 500 });
+      }
 
-  // Calculate new totals for winner
-  const newTotalTapsWinner = (winnerStats.total_taps || 0) + total_taps_ingame;
-  const newRenownTokensWinner = (winnerStats.renown_tokens || 0) + winnerRenown;
+      const newTotalTapsWinner = (winnerStats.total_taps || 0) + total_taps_ingame;
+      const newRenownTokensWinner = (winnerStats.renown_tokens || 0) + winnerRenown;
 
-  // Calculate new totals for loser
-  const newTotalTapsLoser = (loserStats.total_taps || 0) + total_taps_ingame;
-  const newRenownTokensLoser = (loserStats.renown_tokens || 0) + loserRenown;
+      const newTotalTapsLoser = (loserStats.total_taps || 0) + total_taps_ingame;
+      const newRenownTokensLoser = (loserStats.renown_tokens || 0) + loserRenown;
 
-  // Update winner's totals
-  const { error: updateWinnerError } = await supabase
-    .from('game_saves')
-    .update({
-      total_taps: newTotalTapsWinner,
-      renown_tokens: newRenownTokensWinner,
-    })
-    .eq('user_id', winnerId);
+      const { error: updateWinnerError } = await supabase
+        .from('game_saves')
+        .update({
+          total_taps: newTotalTapsWinner,
+          renown_tokens: newRenownTokensWinner,
+        })
+        .eq('user_id', winnerId);
 
-  if (updateWinnerError) {
-    return new Response(JSON.stringify({ error: updateWinnerError.message }), { status: 500 });
-  }
+      if (updateWinnerError) {
+        return new Response(JSON.stringify({ error: updateWinnerError.message }), { status: 500 });
+      }
 
-  // Update loser's totals
-  const { error: updateLoserError } = await supabase
-    .from('game_saves')
-    .update({
-      total_taps: newTotalTapsLoser,
-      renown_tokens: newRenownTokensLoser,
-    })
-    .eq('user_id', loserId);
+      const { error: updateLoserError } = await supabase
+        .from('game_saves')
+        .update({
+          total_taps: newTotalTapsLoser,
+          renown_tokens: newRenownTokensLoser,
+        })
+        .eq('user_id', loserId);
 
-  if (updateLoserError) {
-    return new Response(JSON.stringify({ error: updateLoserError.message }), { status: 500 });
-  }
+      if (updateLoserError) {
+        return new Response(JSON.stringify({ error: updateLoserError.message }), { status: 500 });
+      }
 
-  return new Response(JSON.stringify({ success: true }), { status: 200 });
-}
+      return new Response(JSON.stringify({ success: true }), { status: 200 });
+    }
 
     return new Response(JSON.stringify({ error: 'Invalid action' }), { status: 400 });
+
   } catch (error) {
     console.error('API /api/battle error:', error);
     return new Response(JSON.stringify({ error: error.message || 'Internal Server Error' }), { status: 500 });
