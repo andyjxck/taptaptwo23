@@ -118,22 +118,22 @@ if (action === 'create') {
 
   const { data: createdRoom, error } = await supabase
     .from('battle_games')
-    .insert([{ 
-      room_code: roomCode, 
-      player1_id: userId, 
+    .insert([{
+      room_code: roomCode,
+      player1_id: userId,
       player1_ready: false,
-      player1_name: profileName  // ✅ store player 1 name
+      player1_name: profileName, // ✅ this line is required now
     }])
     .select('id, room_code')
     .single();
 
   if (error || !createdRoom) {
+    console.error(error); // ✅ log error for debugging
     return new Response(JSON.stringify({ error: 'Failed to create battle room' }), { status: 500 });
   }
 
   return new Response(JSON.stringify({ roomId: createdRoom.id, roomCode: createdRoom.room_code }), { status: 200 });
 }
-
 if (action === 'join') {
   if (!code || !userId || !profileName) {
     return new Response(JSON.stringify({ error: 'Missing code, userId, or profileName' }), { status: 400 });
@@ -155,12 +155,20 @@ if (action === 'join') {
 
   const { error: updateError } = await supabase
     .from('battle_games')
-    .update({ 
-      player2_id: userId, 
+    .update({
+      player2_id: userId,
       player2_ready: false,
-      player2_name: profileName  // ✅ store player 2 name
+      player2_name: profileName, // ✅ also store opponent name
     })
     .eq('room_code', code);
+
+  if (updateError) {
+    console.error(updateError); // ✅ log for debugging
+    return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
+  }
+
+  return new Response(JSON.stringify({ roomId: room.id, roomCode: code }), { status: 200 });
+}
 
   if (updateError) {
     return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
