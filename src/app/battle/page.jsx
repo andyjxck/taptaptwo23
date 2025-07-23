@@ -312,6 +312,13 @@ React.useEffect(() => {
   return () => clearInterval(interval);
 }, [userId]); // Re-run effect only when userId changes
 
+  React.useEffect(() => {
+  if (gamePhase === 'finished' && userId) {
+    saveGameProgress(userId);
+  }
+}, [gamePhase, userId]);
+
+
 const formatTime = (totalSeconds) => {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
