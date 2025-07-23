@@ -97,12 +97,6 @@ useEffect(() => {
   };
 }, [currentRoom, userId]);
 
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}, [currentRoom, userId]);
-
-
   const [isPlayerReady, setIsPlayerReady] = React.useState(false);
   const [isOpponentReady, setIsOpponentReady] = React.useState(false);
 
