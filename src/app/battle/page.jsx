@@ -358,7 +358,8 @@ useEffect(() => {
     body: JSON.stringify({
       action: "fetchProfile",
       userId: parseInt(id, 10),
-      profileName: profileName, // ✅ use the actual value
+      profileName: profileName,
+      player_score: 0,// ✅ use the actual value
     }),
   });
 
@@ -657,7 +658,6 @@ const playAI = async () => {
       profileName: profileName || 'You',
       isAI: true, // optional flag for future
       aiDifficulty: aiDifficulty,
-      player_score: 0,
     }),
   });
 
