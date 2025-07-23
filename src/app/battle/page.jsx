@@ -7,8 +7,8 @@ import { supabase } from "@/utilities/supabaseClient";
 function MainComponent() {
   // Game phases: 'start', 'lobby', 'ready', 'playing', 'finished'
   const [gamePhase, setGamePhase] = React.useState("start");
-  const [timeLeft, setTimeLeft] = React.useState(300);
-  const [gameDuration, setGameDuration] = React.useState(300);
+  const [timeLeft, setTimeLeft] = React.useState(180);
+  const [gameDuration, setGameDuration] = React.useState(180);
   const [playerScore, setPlayerScore] = React.useState(0);
   const [opponentScore, setOpponentScore] = React.useState(0);
   const [totalTaps, setTotalTaps] = React.useState(0);
@@ -23,6 +23,23 @@ function MainComponent() {
   const [renownTokens, setRenownTokens] = React.useState(0);
   const [totalTapsInGame, setTotalTapsInGame] = React.useState(0);
 
+
+// Timer countdown effect (optional example)
+React.useEffect(() => {
+  if (timeLeft <= 0) return;
+
+  const timerId = setInterval(() => {
+    setTimeLeft(prev => prev - 1);
+  }, 1000);
+
+  return () => clearInterval(timerId);
+}, [timeLeft]);
+
+const formatTime = (totalSeconds) => {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
   // Room and player management
   const [roomCode, setRoomCode] = React.useState("");
   const [currentRoom, setCurrentRoom] = React.useState("");
@@ -1028,9 +1045,10 @@ if (gamePhase === "playing") {
             </div>
 
             <div className="text-center px-4">
-              <div className="text-white text-xl sm:text-2xl font-bold mb-1">
-                {timeLeft}s
-              </div>
+        <div className="text-white text-xl sm:text-2xl font-bold mb-1">
+  {formatTime(timeLeft)}
+</div>
+
               <button
                 onClick={resetToStart}
                 className="px-3 py-1 bg-red-500/80 text-white text-xs rounded-full hover:bg-red-500 active:scale-95 transition-all duration-200 backdrop-blur-xl border border-white/20"
