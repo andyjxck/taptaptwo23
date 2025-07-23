@@ -154,12 +154,11 @@ const loadProfile = async (userId) => {
 };
 
 
-
-const testUserId = 1; // Replace 123 with a real ID from your DB
-
 React.useEffect(() => {
-  console.log("Test useEffect firing with hardcoded userId");
-  loadProfile(testUserId);
+  const storedUserId = localStorage.getItem("userId");
+  if (storedUserId) {
+    loadProfile(parseInt(storedUserId, 10));
+  }
 }, []);
 
 
