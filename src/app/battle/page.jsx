@@ -29,7 +29,32 @@ function MainComponent() {
   const [totalTapsInGame, setTotalTapsInGame] = React.useState(0);
 // AI coins state (start low)
 const [aiCoins, setAiCoins] = React.useState(0);
+ const [isPlayerReady, setIsPlayerReady] = React.useState(false);
+  const [isOpponentReady, setIsOpponentReady] = React.useState(false);
 
+  // Player upgrades
+  const [tapPower, setTapPower] = React.useState(1);
+  const [tapPowerLevel, setTapPowerLevel] = React.useState(1);
+  const [critChance, setCritChance] = React.useState(0);
+  const [critLevel, setCritLevel] = React.useState(0);
+  const [tapSpeedBonus, setTapSpeedBonus] = React.useState(0);
+  const [tapSpeedLevel, setTapSpeedLevel] = React.useState(0);
+  const [autoTapper, setAutoTapper] = React.useState(0);
+  const [autoTapperLevel, setAutoTapperLevel] = React.useState(0);
+
+  const [isAnimating, setIsAnimating] = React.useState(false);
+  const [upgradesPurchased, setUpgradesPurchased] = React.useState(0);
+  const [floatingNumbers, setFloatingNumbers] = React.useState([]);
+
+  // Profile data
+
+  // Logo state
+  const [logoUrl, setLogoUrl] = React.useState("");
+  const [logoLoading, setLogoLoading] = React.useState(false);
+  // Room and player management
+  const [roomCode, setRoomCode] = React.useState("");
+  const [currentRoom, setCurrentRoom] = React.useState("");
+  const [opponentName, setOpponentName] = React.useState("Opponent");
 // AI upgrades levels (start low)
 const [aiTapPower, setAiTapPower] = React.useState(1);
 const [aiTapPowerLevel, setAiTapPowerLevel] = React.useState(1);
@@ -251,10 +276,6 @@ const formatTime = (totalSeconds) => {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
 
-  // Room and player management
-  const [roomCode, setRoomCode] = React.useState("");
-  const [currentRoom, setCurrentRoom] = React.useState("");
-  const [opponentName, setOpponentName] = React.useState("Opponent");
 useEffect(() => {
   if (!currentRoom || !userId) return;
 
@@ -312,28 +333,7 @@ useEffect(() => {
 }, [currentRoom, userId, gameMode]);
 
 
-  const [isPlayerReady, setIsPlayerReady] = React.useState(false);
-  const [isOpponentReady, setIsOpponentReady] = React.useState(false);
-
-  // Player upgrades
-  const [tapPower, setTapPower] = React.useState(1);
-  const [tapPowerLevel, setTapPowerLevel] = React.useState(1);
-  const [critChance, setCritChance] = React.useState(0);
-  const [critLevel, setCritLevel] = React.useState(0);
-  const [tapSpeedBonus, setTapSpeedBonus] = React.useState(0);
-  const [tapSpeedLevel, setTapSpeedLevel] = React.useState(0);
-  const [autoTapper, setAutoTapper] = React.useState(0);
-  const [autoTapperLevel, setAutoTapperLevel] = React.useState(0);
-
-  const [isAnimating, setIsAnimating] = React.useState(false);
-  const [upgradesPurchased, setUpgradesPurchased] = React.useState(0);
-  const [floatingNumbers, setFloatingNumbers] = React.useState([]);
-
-  // Profile data
-
-  // Logo state
-  const [logoUrl, setLogoUrl] = React.useState("");
-  const [logoLoading, setLogoLoading] = React.useState(false);
+ 
 
     const startGameTimer = () => {
   setGamePhase("playing"); // Change game phase to playing
