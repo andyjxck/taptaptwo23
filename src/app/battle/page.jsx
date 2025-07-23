@@ -8,7 +8,7 @@ function MainComponent() {
   // Game phases: 'start', 'lobby', 'ready', 'playing', 'finished'
   const [gamePhase, setGamePhase] = React.useState("start");
   const [timeLeft, setTimeLeft] = React.useState(300);
-  const [gameDuration, setGameDuration] = React.useState(30);
+  const [gameDuration, setGameDuration] = React.useState(300);
   const [playerScore, setPlayerScore] = React.useState(0);
   const [opponentScore, setOpponentScore] = React.useState(0);
   const [totalTaps, setTotalTaps] = React.useState(0);
@@ -277,6 +277,11 @@ useEffect(() => {
 
   // Game flow functions
 const createRoom = async () => {
+  if (!userId || !profileName) {
+  console.error("Missing userId or profileName", { userId, profileName });
+  return;
+}
+
   const newRoomCode = generateRoomCode();
 
   try {
