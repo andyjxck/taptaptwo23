@@ -459,7 +459,6 @@ useEffect(() => {
   };
 // Batching refs
 const scoreBatchRef = React.useRef(0);
-const floatingNumbersBatchRef = React.useRef([]);
 const lastAnimationTimeRef = React.useRef(0);
 
 const handleTap = () => {
@@ -478,15 +477,11 @@ const handleTap = () => {
   const isCrit = Math.random() * 100 < critChance;
   if (isCrit) coinsEarned *= 2;
 
-  // Update score differently for AI and Multiplayer modes:
-if (gameMode === "ai") {
-  // Add coinsEarned to playerScore for instant feedback
-  setPlayerScore(prev => prev + coinsEarned);
+  if (gameMode === "ai") {
+    setPlayerScore(prev => prev + coinsEarned);
   } else {
-    // Batch score updates in multiplayer mode to optimize performance
     scoreBatchRef.current += coinsEarned;
 
-    // Send tap immediately to backend for multiplayer mode
     if (currentRoom && userId) {
       fetch('/api/battle', {
         method: 'POST',
@@ -503,37 +498,28 @@ if (gameMode === "ai") {
 
   setTotalTapsInGame(prev => prev + 1);
 
-  const floatingId = now + Math.random();
-  floatingNumbersBatchRef.current.push({
-    id: floatingId,
-    value: coinsEarned,
-    isCrit,
-    x: Math.random() * 100 - 50,
-    y: Math.random() * 100 - 50,
-  });
+  // Spawn floating number immediately (unbatched)
+  const id = now + Math.random();
+  const value = coinsEarned;
+  const x = Math.random() * 100 - 50;
+  const y = Math.random() * 100 - 50;
+
+  setFloatingNumbers(prev => [
+    ...prev,
+    { id, value, isCrit, x, y }
+  ]);
 
   setTimeout(() => {
-    setFloatingNumbers(prev => prev.filter(num => num.id !== floatingId));
+    setFloatingNumbers(prev => prev.filter(num => num.id !== id));
   }, 1000);
 };
 
-// Flush batched player score updates every 100ms (only relevant for multiplayer)
+// Flush batched player score updates every 100ms (only multiplayer)
 React.useEffect(() => {
   const interval = setInterval(() => {
     if (scoreBatchRef.current > 0) {
       setPlayerScore(prev => prev + scoreBatchRef.current);
-      scoreBatchRef.current = 0; // reset score batch
-    }
-  }, 100);
-  return () => clearInterval(interval);
-}, []);
-
-// Flush batched floating numbers every 100ms
-React.useEffect(() => {
-  const interval = setInterval(() => {
-    if (floatingNumbersBatchRef.current.length > 0) {
-      setFloatingNumbers(prev => [...prev, ...floatingNumbersBatchRef.current]);
-      floatingNumbersBatchRef.current = []; // Reset floating numbers batch
+      scoreBatchRef.current = 0;
     }
   }, 100);
   return () => clearInterval(interval);
@@ -1491,42 +1477,48 @@ if (gamePhase === "playing") {
             glassy
           />
 
-          {/* Main tap button */}
-          <div className="relative">
-            <button
-              onClick={handleTap}
-              className={`
-                w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 rounded-full 
-                bg-gradient-to-br from-orange-400 via-red-500 to-red-600
-                shadow-2xl hover:shadow-red-500/50 transition-all duration-200
-                text-white font-bold text-xl
-                ${
-                  isAnimating
-                    ? "scale-90"
-                    : "scale-100 hover:scale-105 active:scale-95"
-                }
-                cursor-pointer border-4 border-white/30 backdrop-blur-xl
-                flex items-center justify-center
-              `}
-              style={{
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-                boxShadow:
-                  "0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
-              }}
-            >
-              <div className="text-center">
-                <i className="fas fa-hand-pointer text-4xl sm:text-5xl md:text-6xl mb-2 drop-shadow-lg"></i>
-                <div className="text-sm sm:text-base font-bold">
-                  +{tapPower + Math.floor(tapPower * (tapSpeedBonus / 100))}
-                </div>
-                {critChance > 0 && (
-                  <div className="text-xs text-yellow-200 font-bold">
-                    {critChance}% crit
-                  </div>
-                )}
-              </div>
-            </button>
+    <button
+  onTouchStart={(e) => {
+    e.preventDefault();
+    handleTap();
+  }}
+  onMouseDown={(e) => {
+    e.preventDefault();
+    handleTap();
+  }}
+  className={`
+    w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 rounded-full 
+    bg-gradient-to-br from-orange-400 via-red-500 to-red-600
+    shadow-2xl hover:shadow-red-500/50 transition-all duration-200
+    text-white font-bold text-xl
+    ${
+      isAnimating
+        ? "scale-90"
+        : "scale-100 hover:scale-105 active:scale-95"
+    }
+    cursor-pointer border-4 border-white/30 backdrop-blur-xl
+    flex items-center justify-center
+  `}
+  style={{
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
+    boxShadow:
+      "0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
+  }}
+>
+  <div className="text-center">
+    <i className="fas fa-hand-pointer text-4xl sm:text-5xl md:text-6xl mb-2 drop-shadow-lg"></i>
+    <div className="text-sm sm:text-base font-bold">
+      +{tapPower + Math.floor(tapPower * (tapSpeedBonus / 100))}
+    </div>
+    {critChance > 0 && (
+      <div className="text-xs text-yellow-200 font-bold">
+        {critChance}% crit
+      </div>
+    )}
+  </div>
+</button>
+
 
             {/* Floating numbers */}
             {floatingNumbers.map((num) => (
