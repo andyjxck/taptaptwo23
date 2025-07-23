@@ -502,6 +502,19 @@ React.useEffect(() => {
     setRenownTokens((prev) => prev + renownEarned);
   }
 }, [gamePhase, playerScore, opponentScore, totalTapsInGame]);
+const fetchTotalTapsInGame = async (roomCode) => {
+  const res = await fetch('/api/battle', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'getTapsInGame', code: roomCode }),
+  });
+  const data = await res.json();
+  if (res.ok) {
+    setTotalTapsInGame(data.totalTapsInGame || 0);
+  } else {
+    console.error('Failed to fetch total taps:', data.error);
+  }
+};
 
 const fetchRoomStatus = async () => {
   if (!currentRoom) return;
@@ -1221,7 +1234,7 @@ if (gamePhase === "finished") {
             <div className="text-white/80 text-sm space-y-1">
               <div className="flex justify-between">
                 <span>Total Taps:</span>
-                <span className="font-bold">{totalTaps}</span>
+                <span className="font-bold">{totalTapsInGame}</span>
               </div>
               <div className="flex justify-between">
                 <span>Upgrades:</span>
