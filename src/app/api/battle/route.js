@@ -25,7 +25,7 @@ export async function POST(req) {
       return new Response(JSON.stringify({ error: 'Missing action' }), { status: 400 });
     }
 if (action === 'saveProgress') {
-  const { userId, total_taps, renown_tokens } = body;
+  const { total_taps, renown_tokens } = body;
 
   if (!userId || total_taps === undefined || renown_tokens === undefined) {
     return new Response(JSON.stringify({ error: 'Missing parameters' }), { status: 400 });
