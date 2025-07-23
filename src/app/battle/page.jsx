@@ -246,7 +246,7 @@ function MainComponent() {
       body: JSON.stringify({
         action: 'join',
         code: roomCode.toUpperCase(),
-        userId: testUserId, // Replace with actual logged-in user ID
+        userId: userId, // Replace with actual logged-in user ID
       }),
     });
 
