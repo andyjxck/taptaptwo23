@@ -355,6 +355,12 @@ useEffect(() => {
   };
 
   const toggleReady = async () => {
+  if (gameMode === "ai") {
+    // No DB update for AI mode, just toggle local state:
+    setIsPlayerReady((prev) => !prev);
+    return;
+  }
+
   if (!currentRoom || !userId) return;
 
   const { data, error } = await supabase
