@@ -1695,6 +1695,6 @@ if (gamePhase === "finished") {
     </>
   );
 }
-return null
+return null;
 }
 export default MainComponent;
