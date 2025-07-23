@@ -178,9 +178,7 @@ useEffect(() => {
   }
 };
 
-  const loadProfile = async (id) => {
-    console.log("loadProfile called with userId:", id);
-
+  const loadProfile = async (id) => 
   try {
   const response = await fetch("/api/battle", {
     method: "POST",
@@ -192,6 +190,7 @@ useEffect(() => {
     }),
   });
 
+  console.log("loadProfile called with userId:", id);
 
       console.log("Fetch response received:", response);
 
