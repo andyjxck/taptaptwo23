@@ -285,7 +285,7 @@ const createRoom = async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'create',
-        userId: userId,  // Your current user's ID from state/context
+        userId: userId,
         code: newRoomCode,
       }),
     });
@@ -293,26 +293,24 @@ const createRoom = async () => {
     if (!res.ok) {
       const err = await res.json();
       console.error('Failed to create room:', err.error);
-      return; // Optionally handle error UI
+      return;
     }
 
     const data = await res.json();
-    console.log('Room created:', data);
-
-    // Use returned roomCode and/or roomId if needed
     setCurrentRoom(data.roomCode || newRoomCode);
     setGameMode('multiplayer');
-    setOpponentName('Waiting for player...');
     setGamePhase('lobby');
 
-    // SET PLAYER NAME HERE
+    // Set your own player name
     setPlayerName(profileName || `Player ${userId}`);
+
+    // Fetch opponent name (should be empty for new room)
+    setOpponentName('Waiting for player...');
 
   } catch (error) {
     console.error('Error creating room:', error);
   }
 };
-
 
 const joinRoom = async () => {
   if (roomCode.length !== 6) return;
@@ -324,7 +322,7 @@ const joinRoom = async () => {
       body: JSON.stringify({
         action: 'join',
         code: roomCode.toUpperCase(),
-        userId: userId, // Replace with actual logged-in user ID
+        userId: userId,
       }),
     });
 
@@ -334,6 +332,23 @@ const joinRoom = async () => {
       alert(`Failed to join room: ${data.error || 'Unknown error'}`);
       return;
     }
+
+    setCurrentRoom(roomCode.toUpperCase());
+    setGameMode('multiplayer');
+    setGamePhase('lobby');
+
+    // Set your own player name
+    setPlayerName(profileName || `Player ${userId}`);
+
+    // Now fetch the room info to get opponent name
+    await fetchRoomStatus();
+
+  } catch (err) {
+    console.error('joinRoom error:', err);
+    alert('Error joining room. See console.');
+  }
+};
+
 
     // Room joined successfully
     setCurrentRoom(roomCode.toUpperCase());
@@ -507,21 +522,21 @@ React.useEffect(() => {
   }
 }, [gamePhase, playerScore, opponentScore, totalTapsInGame]);
 
-  const fetchRoomStatus = async () => {
+const fetchRoomStatus = async () => {
   if (!currentRoom) return;
 
   try {
-    const res = await fetch("/api/battle", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const res = await fetch('/api/battle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        action: "getRoomStatus",
+        action: 'getRoomStatus',
         code: currentRoom,
       }),
     });
 
     if (!res.ok) {
-      console.error("Failed to fetch room status");
+      console.error('Failed to fetch room status');
       return;
     }
 
@@ -535,10 +550,13 @@ React.useEffect(() => {
       setIsOpponentReady(amPlayer1 ? room.player2_ready : room.player1_ready);
       setPlayerScore(amPlayer1 ? room.player1_score : room.player2_score);
       setOpponentScore(amPlayer1 ? room.player2_score : room.player1_score);
-      setOpponentName(amPlayer1 ? room.player2_name || "Opponent" : room.player1_name || "Opponent");
+
+      // Set player and opponent names from backend data
+      setPlayerName(amPlayer1 ? (room.player1_name || `Player ${userId}`) : (room.player2_name || `Player ${userId}`));
+      setOpponentName(amPlayer1 ? (room.player2_name || 'Opponent') : (room.player1_name || 'Opponent'));
     }
   } catch (err) {
-    console.error("Polling error:", err);
+    console.error('Polling error:', err);
   }
 };
 
