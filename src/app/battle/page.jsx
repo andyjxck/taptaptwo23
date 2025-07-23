@@ -280,46 +280,40 @@ React.useEffect(() => {
   console.log("Current gameMode:", gameMode);
 }, [gameMode]);
   
-async function saveGameResults() {
-  if (!currentRoom || !userId || !opponentId) return;
-
-  const winnerId = playerScore > opponentScore ? userId : opponentId;
-  const loserId = playerScore > opponentScore ? opponentId : userId;
-
-  const body = {
-    action: "end",
-    code: currentRoom,
-    userId,
-    winnerId,
-    loserId,
-    total_taps_ingame: totalTapsInGame,
-    playerScore,
-    opponentScore,
-  };
-
+// 1. Save function to send data to backend
+async function saveGameProgress() {
   try {
-    const res = await fetch("/api/battle", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+    const response = await fetch('/api/battle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'saveProgress',    // You can create this in backend if you want, or reuse 'end'
+        userId,
+        total_taps: totalTapsInGame,
+        renown_tokens: renownTokens,
+        // Add other needed data if required (like currentRoom, scores)
+      }),
     });
-    if (!res.ok) {
-      const err = await res.json();
-      console.error("Failed to save game results:", err.error || "Unknown error");
-    } else {
-      console.log("Game results saved successfully");
+
+    const result = await response.json();
+    if (!response.ok) {
+      console.error('Save failed:', result.error);
     }
   } catch (error) {
-    console.error("Error saving game results:", error);
+    console.error('Save error:', error);
   }
 }
 
+// 2. Call saveGameProgress every 5 seconds while game is playing or finished
+React.useEffect(() => {
+  if (gamePhase === 'playing' || gamePhase === 'finished') {
+    const interval = setInterval(() => {
+      saveGameProgress();
+    }, 5000); // every 5 seconds
 
-  React.useEffect(() => {
-  if (gamePhase === "finished") {
-    saveGameResults(); // call the backend save when game finishes
+    return () => clearInterval(interval); // clean up on unmount or phase change
   }
-}, [gamePhase]);
+}, [gamePhase, totalTapsInGame, renownTokens]);
 
   
 const formatTime = (totalSeconds) => {
