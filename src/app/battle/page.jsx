@@ -7,8 +7,8 @@ import { supabase } from "@/utilities/supabaseClient";
 function MainComponent() {
   // Game phases: 'start', 'lobby', 'ready', 'playing', 'finished'
   const [gamePhase, setGamePhase] = React.useState("start");
-  const [timeLeft, setTimeLeft] = React.useState(180);
-  const [gameDuration, setGameDuration] = React.useState(180);
+  const [timeLeft, setTimeLeft] = React.useState(30);
+  const [gameDuration, setGameDuration] = React.useState(30);
   const [playerScore, setPlayerScore] = React.useState(0);
   const [opponentScore, setOpponentScore] = React.useState(0);
   const [totalTaps, setTotalTaps] = React.useState(0);
@@ -24,9 +24,48 @@ function MainComponent() {
   const [totalTapsInGame, setTotalTapsInGame] = React.useState(0);
 
 
-// Timer countdown effect (optional example)
 React.useEffect(() => {
-  if (timeLeft <= 0) return;
+  if (timeLeft <= 0) {
+    // Determine winner and loser IDs
+    let winnerId = null;
+    let loserId = null;
+
+    if (playerScore > opponentScore) {
+      winnerId = userId;
+      loserId = opponentId;
+    } else if (playerScore < opponentScore) {
+      winnerId = opponentId;
+      loserId = userId;
+    } else {
+      // Tie case: assign as you want, here userId is winner by default
+      winnerId = userId;
+      loserId = opponentId;
+    }
+
+    // Call backend to end game
+    fetch('/api/battle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'end',
+        code: currentRoom,
+        winnerId,
+        loserId,
+        total_taps_ingame: totalTapsInGame,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) {
+          console.error('Error ending game:', data.error);
+        } else {
+          setGamePhase('finished');
+        }
+      })
+      .catch((err) => console.error('Failed to call end game:', err));
+
+    return; // stop further timer
+  }
 
   const timerId = setInterval(() => {
     setTimeLeft(prev => prev - 1);
@@ -40,6 +79,7 @@ const formatTime = (totalSeconds) => {
   const seconds = totalSeconds % 60;
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
+
   // Room and player management
   const [roomCode, setRoomCode] = React.useState("");
   const [currentRoom, setCurrentRoom] = React.useState("");
@@ -179,11 +219,11 @@ useEffect(() => {
 
   // Calculate upgrade costs (1.3x multiplier)
   const getTapPowerCost = () =>
-    Math.floor(10 * Math.pow(1.1, tapPowerLevel - 1));
-  const getCritCost = () => Math.floor(25 * Math.pow(1.15, critLevel));
-  const getTapSpeedCost = () => Math.floor(50 * Math.pow(1.16, tapSpeedLevel));
+    Math.floor(10 * Math.pow(1.3, tapPowerLevel - 1));
+  const getCritCost = () => Math.floor(25 * Math.pow(1.4, critLevel));
+  const getTapSpeedCost = () => Math.floor(50 * Math.pow(1.6, tapSpeedLevel));
   const getAutoTapperCost = () =>
-    Math.floor(100 * Math.pow(1.2, autoTapperLevel));
+    Math.floor(100 * Math.pow(1.45, autoTapperLevel));
 
   // Generate random room code
   const generateRoomCode = () => {
@@ -268,7 +308,7 @@ React.useEffect(() => {
   const cost = getTapPowerCost();
   if (playerScore >= cost) {
     setPlayerScore(prev => prev - cost);
-    setTapPower(prev => prev + Math.floor(prev * 0.35) + 2); // +35% +2
+    setTapPower(prev => prev + Math.floor(prev * 0.2) + 2); // +35% +2
     setTapPowerLevel(prev => prev + 1);
     setUpgradesPurchased(prev => prev + 1);
   }
@@ -278,7 +318,7 @@ const upgradeCritChance = () => {
   const cost = getCritCost();
   if (playerScore >= cost && critChance < 100) {
     setPlayerScore(prev => prev - cost);
-    setCritChance(prev => Math.min(prev + 5 + Math.floor(critLevel / 3), 100)); // +5%, scaling slightly
+    setCritChance(prev => Math.min(prev + 2 + Math.floor(critLevel / 3), 100)); // +5%, scaling slightly
     setCritLevel(prev => prev + 1);
     setUpgradesPurchased(prev => prev + 1);
   }
@@ -288,7 +328,7 @@ const upgradeTapSpeed = () => {
   const cost = getTapSpeedCost();
   if (playerScore >= cost) {
     setPlayerScore(prev => prev - cost);
-    setTapSpeedBonus(prev => prev + 25 + Math.floor(tapSpeedLevel * 1.5)); // scales faster
+    setTapSpeedBonus(prev => prev + 25 + Math.floor(tapSpeedLevel * 1.3)); // scales faster
     setTapSpeedLevel(prev => prev + 1);
     setUpgradesPurchased(prev => prev + 1);
   }
@@ -298,8 +338,8 @@ const upgradeAutoTapper = () => {
   const cost = getAutoTapperCost();
   if (playerScore >= cost && autoTapper < 50000) {
     setPlayerScore(prev => prev - cost);
-    setAutoTapper(prev => Math.min(prev + 10 + Math.floor(autoTapperLevel * 1.5), 50000)); // growth scaling
-    setAutoTapperLevel(prev => prev + 1);
+    setAutoTapper(prev => Math.min(prev + 10 + Math.floor(autoTapperLevel * 1.2), 100000)); // growth scaling
+    setLevel(prev => prev + 1);
     setUpgradesPurchased(prev => prev + 1);
   }
 };
@@ -1077,40 +1117,39 @@ if (gamePhase === "playing") {
             icon="💪"
           />
 
-          <UpgradeButton
-            title="Critical Hit"
-            level={critLevel}
-            cost={getCritCost()}
-            description={`${critChance}% crit chance`}
-            onClick={upgradeCritChance}
-            disabled={playerScore < getCritCost()}
-            maxLevel={20}
-            position="top-2 right-2 sm:top-4 sm:right-4"
-            icon="⚡"
-          />
+         <UpgradeButton
+  title="Critical Hit"
+  level={critLevel}
+  cost={getCritCost()}
+  description={`${critChance}% crit chance`}
+  onClick={upgradeCritChance}
+  disabled={playerScore < getCritCost() || critChance >= 100}
+  position="top-2 right-2 sm:top-4 sm:right-4"
+  icon="⚡"
+/>
 
-          <UpgradeButton
-            title="Tap Speed"
-            level={tapSpeedLevel}
-            cost={getTapSpeedCost()}
-            description={`+${tapSpeedBonus}% bonus`}
-            onClick={upgradeTapSpeed}
-            disabled={playerScore < getTapSpeedCost()}
-            position="bottom-2 left-2 sm:bottom-4 sm:left-4"
-            icon="🚀"
-          />
+<UpgradeButton
+  title="Tap Speed"
+  level={tapSpeedLevel}
+  cost={getTapSpeedCost()}
+  description={`+${tapSpeedBonus}% bonus`}
+  onClick={upgradeTapSpeed}
+  disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
+  position="bottom-2 left-2 sm:bottom-4 sm:left-4"
+  icon="🚀"
+/>
 
-          <UpgradeButton
-            title="Auto Tapper"
-            level={autoTapperLevel}
-            cost={getAutoTapperCost()}
-            description={`${autoTapper}/sec`}
-            onClick={upgradeAutoTapper}
-            disabled={playerScore < getAutoTapperCost()}
-            maxLevel={20}
-            position="bottom-2 right-2 sm:bottom-4 sm:right-4"
-            icon="🤖"
-          />
+<UpgradeButton
+  title="Auto Tapper"
+  level={autoTapperLevel}
+  cost={getAutoTapperCost()}
+  description={`${autoTapper}/sec`}
+  onClick={upgradeAutoTapper}
+  disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
+  position="bottom-2 right-2 sm:bottom-4 sm:right-4"
+  icon="🤖"
+/>
+
 
           {/* Main tap button */}
           <div className="relative">
@@ -1194,7 +1233,7 @@ if (gamePhase === "playing") {
 if (gamePhase === "finished") {
   const playerWon = playerScore > opponentScore;
   const tie = playerScore === opponentScore;
-  const renownEarned = playerWon ? 5 : tie ? 3 : 1;
+  const renownEarned = playerWon ? 10 : tie ? 5 : 3;
 
   return (
     <>
