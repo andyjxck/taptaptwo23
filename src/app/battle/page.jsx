@@ -16,8 +16,8 @@ const opponentPercent = 100 - playerPercent;
   // Game phases: 'start', 'lobby', 'ready', 'playing', 'finished'
   const [countdown, setCountdown] = React.useState(null); // null means no countdown active
   const [gamePhase, setGamePhase] = React.useState("start");
-  const [timeLeft, setTimeLeft] = React.useState(300);
-  const [gameDuration, setGameDuration] = React.useState(300);
+  const [timeLeft, setTimeLeft] = React.useState(180);
+  const [gameDuration, setGameDuration] = React.useState(180);
 
   const [playerScore, setPlayerScore] = React.useState(0);
   const [opponentScore, setOpponentScore] = React.useState(0);
@@ -376,7 +376,7 @@ useEffect(() => {
 
     const startGameTimer = () => {
   setGamePhase("playing"); // Change game phase to playing
-  setTimeLeft(300); // Set game time to 3 minutes (in seconds)
+  setTimeLeft(180); // Set game time to 3 minutes (in seconds)
 };
 
   
