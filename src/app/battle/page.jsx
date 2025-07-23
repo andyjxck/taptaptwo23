@@ -54,6 +54,51 @@ React.useEffect(() => { aiTapSpeedLevelRef.current = aiTapSpeedLevel; }, [aiTapS
 React.useEffect(() => { aiAutoTapperLevelRef.current = aiAutoTapperLevel; }, [aiAutoTapperLevel]);
 React.useEffect(() => { aiAutoTapperRef.current = aiAutoTapper; }, [aiAutoTapper]);
 
+  const updateAIStatsInDB = async ({
+  roomCode,
+  ai_coins,
+  ai_tap_power,
+  ai_tap_power_level,
+  ai_crit_chance,
+  ai_crit_level,
+  ai_tap_speed_bonus,
+  ai_tap_speed_level,
+  ai_auto_tapper,
+  ai_auto_tapper_level,
+}) => {
+  try {
+    const res = await fetch('/api/battle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'updateAIStats',
+        code: roomCode,
+        ai_coins,
+        ai_tap_power,
+        ai_tap_power_level,
+        ai_crit_chance,
+        ai_crit_level,
+        ai_tap_speed_bonus,
+        ai_tap_speed_level,
+        ai_auto_tapper,
+        ai_auto_tapper_level,
+      }),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      console.error('Failed to update AI stats:', errorData.error);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error('Error updating AI stats:', err);
+    return false;
+  }
+};
+
+  
  // AI Upgrade Cost Functions (use refs inside the effect)
 const getAiTapPowerCost = () =>
   Math.floor(10 * Math.pow(aiTapPowerLevelRef.current - 1, 1.3) || 10 * Math.pow(1.3, aiTapPowerLevelRef.current - 1));
@@ -64,10 +109,10 @@ const getAiTapSpeedCost = () =>
 const getAiAutoTapperCost = () =>
   Math.floor(100 * Math.pow(1.45, aiAutoTapperLevelRef.current));
 React.useEffect(() => {
-  if (gamePhase !== "playing" || gameMode !== "ai") return;
+  if (gamePhase !== "playing" || gameMode !== "ai" || !currentRoom) return;
 
   const upgradeInterval = 5000; // every 5 seconds
-  let isCancelled = false; // to cancel async updates on unmount
+  let isCancelled = false;
 
   const upgradeTimer = setInterval(async () => {
     // Read current state from refs
@@ -130,7 +175,7 @@ React.useEffect(() => {
     }
 
     if (!didUpgrade) {
-      // No upgrade this tick, just return
+      // No upgrade this tick
       return;
     }
 
@@ -147,29 +192,19 @@ React.useEffect(() => {
     setAiAutoTapper(newAutoTapper);
     setAiAutoTapperLevel(newAutoTapperLvl);
 
-    // Update database with new AI stats
-    try {
-      const { error } = await supabase
-        .from("battle_games")
-        .update({
-          ai_coins: newAiCoins,
-          ai_tap_power: newTapPower,
-          ai_tap_power_level: newTapPowerLvl,
-          ai_crit_chance: newCritChance,
-          ai_crit_level: newCritLvl,
-          ai_tap_speed_bonus: newTapSpeedBonus,
-          ai_tap_speed_level: newTapSpeedLvl,
-          ai_auto_tapper: newAutoTapper,
-          ai_auto_tapper_level: newAutoTapperLvl,
-        })
-        .eq("room_code", currentRoom);
-
-      if (error) {
-        console.error("Failed to update AI stats:", error.message);
-      }
-    } catch (err) {
-      console.error("Unexpected error updating AI stats:", err);
-    }
+    // Update database asynchronously with new AI stats
+    await updateAIStatsInDB({
+      roomCode: currentRoom,
+      ai_coins: newAiCoins,
+      ai_tap_power: newTapPower,
+      ai_tap_power_level: newTapPowerLvl,
+      ai_crit_chance: newCritChance,
+      ai_crit_level: newCritLvl,
+      ai_tap_speed_bonus: newTapSpeedBonus,
+      ai_tap_speed_level: newTapSpeedLvl,
+      ai_auto_tapper: newAutoTapper,
+      ai_auto_tapper_level: newAutoTapperLvl,
+    });
   }, upgradeInterval);
 
   return () => {
@@ -177,8 +212,6 @@ React.useEffect(() => {
     clearInterval(upgradeTimer);
   };
 }, [gamePhase, gameMode, currentRoom]);
-
-
 
 
 // Game timer effect
