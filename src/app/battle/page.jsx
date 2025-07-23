@@ -204,14 +204,13 @@ useEffect(() => {
     }
     return result;
   };
-
 // Batching refs
 const scoreBatchRef = React.useRef(0);
 const floatingNumbersBatchRef = React.useRef([]);
 const lastAnimationTimeRef = React.useRef(0);
 
 const handleTap = () => {
-  if (gamePhase !== "playing") return; // Only allow taps when game is in 'playing' phase
+  if (gamePhase !== "playing") return;
 
   const now = Date.now();
   if (now - lastAnimationTimeRef.current > 150) {
@@ -221,21 +220,36 @@ const handleTap = () => {
   }
 
   let coinsEarned = tapPower;
-
-  // Apply tap speed bonus
   coinsEarned += Math.floor(coinsEarned * (tapSpeedBonus / 100));
 
-  // Check for critical hit
   const isCrit = Math.random() * 100 < critChance;
-  if (isCrit) {
-    coinsEarned *= 2;
+  if (isCrit) coinsEarned *= 2;
+
+  // Update score differently for AI and Multiplayer modes:
+  if (gameMode === "ai") {
+    // Immediately update player score in AI mode for instant feedback
+    setPlayerScore(prev => prev + coinsEarned);
+  } else {
+    // Batch score updates in multiplayer mode to optimize performance
+    scoreBatchRef.current += coinsEarned;
+
+    // Send tap immediately to backend for multiplayer mode
+    if (currentRoom && userId) {
+      fetch('/api/battle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'updateTaps',
+          code: currentRoom,
+          userId: userId,
+          taps: coinsEarned,
+        }),
+      }).catch(err => console.error('Error sending tap:', err));
+    }
   }
 
-  // Update score batch (this will be flushed separately)
-  scoreBatchRef.current += coinsEarned;
   setTotalTapsInGame(prev => prev + 1);
 
-  // Batch floating number creation
   const floatingId = now + Math.random();
   floatingNumbersBatchRef.current.push({
     id: floatingId,
@@ -248,24 +262,9 @@ const handleTap = () => {
   setTimeout(() => {
     setFloatingNumbers(prev => prev.filter(num => num.id !== floatingId));
   }, 1000);
-
-  // Immediately send the tap to the backend ONLY if not AI mode
-  if (gameMode !== "ai" && currentRoom && userId) {
-    fetch('/api/battle', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'updateTaps',
-        code: currentRoom,
-        userId: userId,
-        taps: coinsEarned, // Send the current tap value immediately
-      }),
-    }).catch(err => console.error('Error sending tap:', err));
-  }
 };
 
-
-// Flush batched player score updates every 100ms
+// Flush batched player score updates every 100ms (only relevant for multiplayer)
 React.useEffect(() => {
   const interval = setInterval(() => {
     if (scoreBatchRef.current > 0) {
