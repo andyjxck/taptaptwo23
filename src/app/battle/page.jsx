@@ -249,8 +249,8 @@ const handleTap = () => {
     setFloatingNumbers(prev => prev.filter(num => num.id !== floatingId));
   }, 1000);
 
-  // Immediately send the tap to the backend
-  if (currentRoom && userId) {
+  // Immediately send the tap to the backend ONLY if not AI mode
+  if (gameMode !== "ai" && currentRoom && userId) {
     fetch('/api/battle', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -263,6 +263,7 @@ const handleTap = () => {
     }).catch(err => console.error('Error sending tap:', err));
   }
 };
+
 
 // Flush batched player score updates every 100ms
 React.useEffect(() => {
