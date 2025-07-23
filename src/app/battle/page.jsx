@@ -214,7 +214,7 @@ React.useEffect(() => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'create',
-        userId: currentUserId,  // Your current user's ID from state/context
+        userId: userId,  // Your current user's ID from state/context
         code: newRoomCode,
       }),
     });
