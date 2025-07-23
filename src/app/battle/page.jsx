@@ -37,7 +37,7 @@ useEffect(() => {
         event: '*',
         schema: 'public',
         table: 'battle_games',
-        filter: `code=eq.${currentRoom}`,
+        filter: `game_code=eq.${currentRoom}`,
       },
       async (payload) => {
         console.log('Realtime update:', payload);
