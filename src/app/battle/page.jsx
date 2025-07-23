@@ -206,7 +206,6 @@ useEffect(() => {
   };
 
 // Batching refs
-const tapBatchRef = React.useRef(0);
 const scoreBatchRef = React.useRef(0);
 const floatingNumbersBatchRef = React.useRef([]);
 const lastAnimationTimeRef = React.useRef(0);
@@ -232,7 +231,7 @@ const handleTap = () => {
     coinsEarned *= 2;
   }
 
-  // Batch player score update
+  // Update score batch (this will be flushed separately)
   scoreBatchRef.current += coinsEarned;
   setTotalTapsInGame(prev => prev + 1);
 
@@ -247,12 +246,22 @@ const handleTap = () => {
   });
 
   setTimeout(() => {
-    // Remove floating number after 1 second
     setFloatingNumbers(prev => prev.filter(num => num.id !== floatingId));
   }, 1000);
 
-  // Add coinsEarned to backend batch
-  tapBatchRef.current += coinsEarned;
+  // Immediately send the tap to the backend
+  if (currentRoom && userId) {
+    fetch('/api/battle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'updateTaps',
+        code: currentRoom,
+        userId: userId,
+        taps: coinsEarned, // Send the current tap value immediately
+      }),
+    }).catch(err => console.error('Error sending tap:', err));
+  }
 };
 
 // Flush batched player score updates every 100ms
@@ -277,27 +286,6 @@ React.useEffect(() => {
   return () => clearInterval(interval);
 }, []);
 
-// Send batched taps to backend every 500ms (your existing code)
-React.useEffect(() => {
-  const interval = setInterval(() => {
-    if (tapBatchRef.current > 0 && currentRoom && userId) {
-      fetch('/api/battle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'updateTaps',
-          code: currentRoom,
-          userId: userId,
-          taps: tapBatchRef.current,
-        }),
-      }).catch(err => console.error('Error sending tap batch:', err));
-
-      tapBatchRef.current = 0; // reset batch after sending
-    }
-  }, 500);
-
-  return () => clearInterval(interval);
-}, [currentRoom, userId]);
 
   // Upgrade functions
  const upgradeTapPower = () => {
