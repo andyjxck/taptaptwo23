@@ -45,7 +45,7 @@ useEffect(() => {
         const { data } = await supabase
           .from('battle_games')
           .select('*')
-          .eq('code', currentRoom)
+          .eq('game_code', currentRoom)
           .single();
 
         if (!data) return;
