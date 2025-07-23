@@ -198,19 +198,22 @@ useEffect(() => {
     return result;
   };
 
-  // This ref accumulates taps between backend calls
+// Batching refs
 const tapBatchRef = React.useRef(0);
+const scoreBatchRef = React.useRef(0);
+const floatingNumbersBatchRef = React.useRef([]);
 const lastAnimationTimeRef = React.useRef(0);
 
 const handleTap = () => {
   if (gamePhase !== "playing") return;
 
-const now = Date.now();
-if (now - lastAnimationTimeRef.current > 150) {
-  setIsAnimating(true);
-  lastAnimationTimeRef.current = now;
-  setTimeout(() => setIsAnimating(false), 150);
-}
+  const now = Date.now();
+  if (now - lastAnimationTimeRef.current > 150) {
+    setIsAnimating(true);
+    lastAnimationTimeRef.current = now;
+    setTimeout(() => setIsAnimating(false), 150);
+  }
+
   let coinsEarned = tapPower;
 
   // Apply tap speed bonus
@@ -222,32 +225,52 @@ if (now - lastAnimationTimeRef.current > 150) {
     coinsEarned *= 2;
   }
 
-  // Update local state immediately
-  setPlayerScore(prev => prev + coinsEarned);
+  // Batch player score update
+  scoreBatchRef.current += coinsEarned;
   setTotalTapsInGame(prev => prev + 1);
 
-  // Add floating number animation
-  const floatingId = Date.now() + Math.random();
-  setFloatingNumbers(prev => [
-    ...prev,
-    {
-      id: floatingId,
-      value: coinsEarned,
-      isCrit,
-      x: Math.random() * 100 - 50,
-      y: Math.random() * 100 - 50,
-    },
-  ]);
+  // Batch floating number creation
+  const floatingId = now + Math.random();
+  floatingNumbersBatchRef.current.push({
+    id: floatingId,
+    value: coinsEarned,
+    isCrit,
+    x: Math.random() * 100 - 50,
+    y: Math.random() * 100 - 50,
+  });
 
   setTimeout(() => {
+    // Remove floating number after 1 second
     setFloatingNumbers(prev => prev.filter(num => num.id !== floatingId));
   }, 1000);
 
-  // Add coinsEarned to batch ref instead of sending immediately
+  // Add coinsEarned to backend batch
   tapBatchRef.current += coinsEarned;
 };
 
-// useEffect to send batched taps every 500ms
+// Flush batched player score updates every 100ms
+React.useEffect(() => {
+  const interval = setInterval(() => {
+    if (scoreBatchRef.current > 0) {
+      setPlayerScore(prev => prev + scoreBatchRef.current);
+      scoreBatchRef.current = 0;
+    }
+  }, 100);
+  return () => clearInterval(interval);
+}, []);
+
+// Flush batched floating numbers every 100ms
+React.useEffect(() => {
+  const interval = setInterval(() => {
+    if (floatingNumbersBatchRef.current.length > 0) {
+      setFloatingNumbers(prev => [...prev, ...floatingNumbersBatchRef.current]);
+      floatingNumbersBatchRef.current = [];
+    }
+  }, 100);
+  return () => clearInterval(interval);
+}, []);
+
+// Send batched taps to backend every 500ms (your existing code)
 React.useEffect(() => {
   const interval = setInterval(() => {
     if (tapBatchRef.current > 0 && currentRoom && userId) {
@@ -536,7 +559,7 @@ React.useEffect(() => {
     setAllTimeTotalTaps((prev) => prev + totalTapsInGame);  // Use totalTapsInGame here
     const playerWon = playerScore > opponentScore;
     const tie = playerScore === opponentScore;
-    const renownEarned = playerWon ? 5 : tie ? 3 : 1;
+    const renownEarned = playerWon ? 10 : tie ? 5 : 3;
     setRenownTokens((prev) => prev + renownEarned);
   }
 }, [gamePhase, playerScore, opponentScore, totalTapsInGame]);
