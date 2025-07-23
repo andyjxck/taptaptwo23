@@ -287,7 +287,7 @@ const createRoom = async () => {
         action: 'create',
         userId: userId,
         code: newRoomCode,
-        profileName,   
+        profileName: profileName,   
       }),
     });
 
@@ -324,7 +324,7 @@ const joinRoom = async () => {
         action: 'join',
         code: roomCode.toUpperCase(),
         userId: userId,
-         profileName,   
+         profileName: profileName,   
       }),
     });
 
