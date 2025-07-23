@@ -148,6 +148,14 @@ React.useEffect(() => {
     return () => clearInterval(interval);
   }, [gamePhase, timeLeft]);
 
+  React.useEffect(() => {
+  console.log("Current gamePhase:", gamePhase);
+}, [gamePhase]);
+
+React.useEffect(() => {
+  console.log("Current gameMode:", gameMode);
+}, [gameMode]);
+
 const formatTime = (totalSeconds) => {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
