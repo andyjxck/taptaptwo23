@@ -22,6 +22,58 @@ export async function POST(req) {
     if (!action) {
       return new Response(JSON.stringify({ error: 'Missing action' }), { status: 400 });
     }
+if (action === 'updateAIStats') {
+  if (!code) {
+    return new Response(JSON.stringify({ error: 'Missing room code' }), { status: 400 });
+  }
+  
+  const {
+    ai_coins,
+    ai_tap_power,
+    ai_tap_power_level,
+    ai_crit_chance,
+    ai_crit_level,
+    ai_tap_speed_bonus,
+    ai_tap_speed_level,
+    ai_auto_tapper,
+    ai_auto_tapper_level,
+  } = body;
+
+  if (
+    ai_coins === undefined ||
+    ai_tap_power === undefined ||
+    ai_tap_power_level === undefined ||
+    ai_crit_chance === undefined ||
+    ai_crit_level === undefined ||
+    ai_tap_speed_bonus === undefined ||
+    ai_tap_speed_level === undefined ||
+    ai_auto_tapper === undefined ||
+    ai_auto_tapper_level === undefined
+  ) {
+    return new Response(JSON.stringify({ error: 'Missing AI stats parameters' }), { status: 400 });
+  }
+
+  const { error } = await supabase
+    .from('battle_games')
+    .update({
+      ai_coins,
+      ai_tap_power,
+      ai_tap_power_level,
+      ai_crit_chance,
+      ai_crit_level,
+      ai_tap_speed_bonus,
+      ai_tap_speed_level,
+      ai_auto_tapper,
+      ai_auto_tapper_level,
+    })
+    .eq('room_code', code);
+
+  if (error) {
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+  }
+
+  return new Response(JSON.stringify({ success: true }), { status: 200 });
+}
 
     // ---------------------------
     // CREATE ROOM
