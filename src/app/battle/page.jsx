@@ -410,17 +410,47 @@ const joinRoom = async () => {
   }
 };
 
-const playAI = () => {
+const playAI = async () => {
+  // Generate unique AI room code like "AI4X2B9"
+  const generateAIRoomCode = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let result = "AI";
+    for (let i = 0; i < 4; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
+  const newRoomCode = generateAIRoomCode();
+
+  const { error } = await supabase
+    .from('battle_games')
+    .insert([{
+      room_code: newRoomCode,
+      player1_id: userId,
+      player2_id: 'AI_PLAYER',
+      player1_name: profileName || "You",
+      player2_name: `AI (${aiDifficulty})`,
+      player1_ready: true,
+      player2_ready: true,
+      status: 'active',
+      player1_score: 0,
+      player2_score: 0,
+    }]);
+
+  if (error) {
+    console.error("Failed to create AI room:", error.message);
+    return;
+  }
+
   setGameMode("ai");
   setOpponentName(`AI (${aiDifficulty})`);
-  setCurrentRoom("AI_GAME");
+  setCurrentRoom(newRoomCode);
   setIsOpponentReady(true);
+  setIsPlayerReady(true);
   setGamePhase("lobby");
-
-  // Add this line to set your player name in AI mode:
   setPlayerName(profileName || "You");
 };
-
 
   const toggleReady = async () => {
   if (gameMode === "ai") {
