@@ -279,9 +279,6 @@ React.useEffect(() => {
 React.useEffect(() => {
   console.log("Current gameMode:", gameMode);
 }, [gameMode]);
-  
-// Make sure userId is in your component state
-const [userId, setUserId] = React.useState(null); // or your actual userId state
 
 async function saveGameProgress(currentUserId) {
   try {
