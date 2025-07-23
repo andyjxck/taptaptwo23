@@ -6,9 +6,10 @@ import { supabase } from "@/utilities/supabaseClient";
 
 function MainComponent() {
   // Game phases: 'start', 'lobby', 'ready', 'playing', 'finished'
+  const [countdown, setCountdown] = React.useState(null); // null means no countdown active
   const [gamePhase, setGamePhase] = React.useState("start");
-  const [timeLeft, setTimeLeft] = React.useState(30);
-  const [gameDuration, setGameDuration] = React.useState(30);
+  const [timeLeft, setTimeLeft] = React.useState(180);
+  const [gameDuration, setGameDuration] = React.useState(180);
   const [playerScore, setPlayerScore] = React.useState(0);
   const [opponentScore, setOpponentScore] = React.useState(0);
   const [totalTaps, setTotalTaps] = React.useState(0);
@@ -462,7 +463,6 @@ const playAI = () => {
 
  
 const startGame = () => {
-  setShowRules(false);
   setGamePhase("playing");
   setTimeLeft(gameDuration);
   setPlayerScore(0);
@@ -546,13 +546,43 @@ React.useEffect(() => {
     }
   }, [gameMode, gamePhase]);
 
-  // Auto-start game when both players ready
-  React.useEffect(() => {
-    if (gamePhase === "lobby" && isPlayerReady && isOpponentReady) {
-      setShowRules(true);
-    }
-  }, [gamePhase, isPlayerReady, isOpponentReady]);
+React.useEffect(() => {
+  if (gamePhase === "lobby" && isPlayerReady && isOpponentReady) {
+    setCountdown(3); // start countdown at 3 seconds
+  }
+}, [gamePhase, isPlayerReady, isOpponentReady]);
 
+  React.useEffect(() => {
+  if (countdown === null) return; // no countdown running
+
+  if (countdown === 0) {
+    // Countdown finished, start game
+    setGamePhase("playing");  // or whatever your playing phase name is
+    setCountdown(null);
+    startGameTimer();
+    return;
+  }
+
+  const timerId = setTimeout(() => setCountdown(countdown - 1), 1000);
+  return () => clearTimeout(timerId);
+}, [countdown]);
+
+  React.useEffect(() => {
+  if (countdown === null) return; // no countdown running
+
+  if (countdown === 0) {
+    // Countdown finished, start the game
+    setGamePhase("playing");
+    setCountdown(null);
+    setTimeLeft(gameDuration); // reset timer to full duration (180 seconds)
+    return;
+  }
+
+  const timerId = setTimeout(() => setCountdown(countdown - 1), 1000);
+  return () => clearTimeout(timerId);
+}, [countdown, gameDuration, setGamePhase, setCountdown, setTimeLeft]);
+
+  
   // Update all-time total taps when game finishes
 React.useEffect(() => {
   if (gamePhase === "finished") {
@@ -871,13 +901,13 @@ if (gamePhase === "start") {
 if (gamePhase === "lobby") {
   return (
     <>
-    <TopProfileBar
-  profileName={profileName}
-  userId={userId}
-  profileIcon={profileIcon}
-  allTimeTotalTaps={allTimeTotalTaps}
-  renownTokens={renownTokens}
-/>
+      <TopProfileBar
+        profileName={profileName}
+        userId={userId}
+        profileIcon={profileIcon}
+        allTimeTotalTaps={allTimeTotalTaps}
+        renownTokens={renownTokens}
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4 pt-20 relative overflow-hidden">
         {/* Animated background */}
@@ -896,15 +926,23 @@ if (gamePhase === "lobby") {
             WebkitBackdropFilter: "blur(20px)",
           }}
         >
+          {/* Room Info */}
           <div className="text-center mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
-              Room: {currentRoom}
-            </h2>
-            <p className="text-white/70 text-sm">
-              Waiting for players to ready up
-            </p>
+            {countdown !== null ? (
+              <h2 className="text-3xl text-white">Starting in {countdown}...</h2>
+            ) : (
+              <>
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
+                  Room: {currentRoom}
+                </h2>
+                <p className="text-white/70 text-sm">
+                  Waiting for players to ready up
+                </p>
+              </>
+            )}
           </div>
 
+          {/* Players Ready Status */}
           <div className="space-y-3 mb-6">
             <div
               className={`p-4 rounded-2xl backdrop-blur-xl border border-white/20 transition-all duration-300 ${
@@ -949,22 +987,41 @@ if (gamePhase === "lobby") {
             </div>
           </div>
 
+          {/* --- RULES SECTION --- */}
+          <div
+            className="bg-white/10 backdrop-blur-xl rounded-3xl p-4 mb-6 border border-white/20 text-white/80 space-y-2 text-sm leading-relaxed"
+            style={{
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+            }}
+          >
+            <h2 className="text-lg font-bold text-white mb-2 text-center">Game Rules</h2>
+            <p>• Tap the main button to earn coins</p>
+            <p>• Use coins to buy upgrades during the game</p>
+            <p>• 💪 Tap Power: +1 coin per tap per level</p>
+            <p>• ⚡ Crit Chance: 5% chance to double coins</p>
+            <p>• 🚀 Tap Speed: +25% bonus coins per tap</p>
+            <p>• 🤖 Auto Tapper: +10 coins per second</p>
+            <p>• Player with most coins when time runs out wins!</p>
+            <p>• Winner earns 5 tokens, loser earns 1</p>
+          </div>
+
+          {/* Buttons */}
           <div className="space-y-3">
             <button
               onClick={toggleReady}
+              disabled={countdown !== null}  // Disable button during countdown
               className={`w-full px-6 py-4 rounded-2xl font-bold transition-all duration-300 shadow-xl backdrop-blur-xl border border-white/20 ${
                 isPlayerReady
                   ? "bg-gradient-to-r from-red-500/80 to-red-600/80 text-white hover:scale-105 active:scale-95"
                   : "bg-gradient-to-r from-green-500/80 to-green-600/80 text-white hover:scale-105 active:scale-95"
-              }`}
+              } ${countdown !== null ? "opacity-50 cursor-not-allowed" : ""}`}
               style={{
                 backdropFilter: "blur(20px)",
                 WebkitBackdropFilter: "blur(20px)",
               }}
             >
-              <i
-                className={`fas ${isPlayerReady ? "fa-times" : "fa-check"} mr-2`}
-              ></i>
+              <i className={`fas ${isPlayerReady ? "fa-times" : "fa-check"} mr-2`}></i>
               {isPlayerReady ? "Cancel Ready" : "Ready Up!"}
             </button>
 
@@ -982,47 +1039,11 @@ if (gamePhase === "lobby") {
           </div>
         </div>
       </div>
-
-      {/* Rules Modal */}
-      {showRules && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div
-            className="bg-white/10 backdrop-blur-xl rounded-3xl p-6 sm:p-8 max-w-sm w-full border border-white/20 shadow-2xl"
-            style={{
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-            }}
-          >
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 text-center">
-              Game Rules
-            </h2>
-            <div className="text-white/80 space-y-2 text-sm leading-relaxed">
-              <p>• Tap the main button to earn coins</p>
-              <p>• Use coins to buy upgrades during the game</p>
-              <p>• 💪 Tap Power: +1 coin per tap per level</p>
-              <p>• ⚡ Crit Chance: 5% chance to double coins</p>
-              <p>• 🚀 Tap Speed: +25% bonus coins per tap</p>
-              <p>• 🤖 Auto Tapper: +10 coins per second</p>
-              <p>• Player with most coins when time runs out wins!</p>
-              <p>• Winner earns 5 tokens, loser earns 1</p>
-            </div>
-            <button
-              onClick={startGame}
-              className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-green-500/80 to-green-600/80 text-white rounded-2xl font-bold hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl backdrop-blur-xl border border-white/20"
-              style={{
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-              }}
-            >
-              <i className="fas fa-play mr-2"></i>
-              Start Battle!
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 }
+
+
 // Playing phase
 if (gamePhase === "playing") {
   return (
