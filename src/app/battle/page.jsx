@@ -10,6 +10,12 @@ function MainComponent() {
   const [gamePhase, setGamePhase] = React.useState("start");
   const [timeLeft, setTimeLeft] = React.useState(180);
   const [gameDuration, setGameDuration] = React.useState(180);
+
+  const startGameTimer = () => {
+  setGamePhase("playing"); // Change game phase to playing
+  setTimeLeft(180); // Set game time to 3 minutes (in seconds)
+};
+
   const [playerScore, setPlayerScore] = React.useState(0);
   const [opponentScore, setOpponentScore] = React.useState(0);
   const [totalTaps, setTotalTaps] = React.useState(0);
