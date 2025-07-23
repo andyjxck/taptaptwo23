@@ -7,7 +7,7 @@ import { supabase } from "@/utilities/supabaseClient";
 function MainComponent() {
   // Game phases: 'start', 'lobby', 'ready', 'playing', 'finished'
   const [gamePhase, setGamePhase] = React.useState("start");
-  const [timeLeft, setTimeLeft] = React.useState(30);
+  const [timeLeft, setTimeLeft] = React.useState(300);
   const [gameDuration, setGameDuration] = React.useState(30);
   const [playerScore, setPlayerScore] = React.useState(0);
   const [opponentScore, setOpponentScore] = React.useState(0);
