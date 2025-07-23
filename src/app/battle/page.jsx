@@ -25,7 +25,80 @@ function MainComponent() {
   const [allTimeTotalTaps, setAllTimeTotalTaps] = React.useState(0);
   const [renownTokens, setRenownTokens] = React.useState(0);
   const [totalTapsInGame, setTotalTapsInGame] = React.useState(0);
+// AI coins state (start low)
+const [aiCoins, setAiCoins] = React.useState(0);
 
+// AI upgrades levels (start low)
+const [aiTapPower, setAiTapPower] = React.useState(1);
+const [aiTapPowerLevel, setAiTapPowerLevel] = React.useState(1);
+
+const [aiCritChance, setAiCritChance] = React.useState(0);
+const [aiCritLevel, setAiCritLevel] = React.useState(0);
+
+const [aiTapSpeedBonus, setAiTapSpeedBonus] = React.useState(0);
+const [aiTapSpeedLevel, setAiTapSpeedLevel] = React.useState(0);
+  const [aiAutoTapper, setAiAutoTapper] = React.useState(0);
+const [aiAutoTapperLevel, setAiAutoTapperLevel] = React.useState(1);
+
+  
+// AI Upgrade Cost Functions (paste these together with the React.useEffect below)
+const getAiTapPowerCost = () =>
+  Math.floor(10 * Math.pow(1.3, aiTapPowerLevel - 1));
+const getAiCritCost = () => Math.floor(25 * Math.pow(1.4, aiCritLevel));
+const getAiTapSpeedCost = () => Math.floor(50 * Math.pow(1.6, aiTapSpeedLevel));
+const getAiAutoTapperCost = () =>
+  Math.floor(100 * Math.pow(1.45, aiAutoTapperLevel));
+React.useEffect(() => {
+  if (gamePhase !== "playing" || gameMode !== "ai") return;
+
+  const upgradeInterval = 5000; // 5 seconds
+
+  const upgradeTimer = setInterval(() => {
+    // Upgrade AI Tap Power if affordable
+    const tapPowerCost = getAiTapPowerCost();
+    if (aiCoins >= tapPowerCost) {
+      setAiCoins(prev => prev - tapPowerCost);
+      setAiTapPower(prev => prev + Math.floor(prev * 0.2) + 2);
+      setAiTapPowerLevel(prev => prev + 1);
+    }
+
+    // Upgrade AI Crit Chance if affordable and not maxed
+    const critCost = getAiCritCost();
+    if (aiCoins >= critCost && aiCritChance < 100) {
+      setAiCoins(prev => prev - critCost);
+      setAiCritChance(prev => Math.min(prev + 2 + Math.floor(aiCritLevel / 3), 100));
+      setAiCritLevel(prev => prev + 1);
+    }
+
+    // Upgrade AI Tap Speed if affordable
+    const tapSpeedCost = getAiTapSpeedCost();
+    if (aiCoins >= tapSpeedCost) {
+      setAiCoins(prev => prev - tapSpeedCost);
+      setAiTapSpeedBonus(prev => prev + 25 + Math.floor(aiTapSpeedLevel * 1.3));
+      setAiTapSpeedLevel(prev => prev + 1);
+    }
+
+    // Upgrade AI Auto Tapper if affordable and not maxed
+    const autoTapperCost = getAiAutoTapperCost();
+    if (aiCoins >= autoTapperCost && aiAutoTapper < 50000) {
+      setAiCoins(prev => prev - autoTapperCost);
+      setAiAutoTapper(prev => Math.min(prev + 10 + Math.floor(aiAutoTapperLevel * 1.2), 100000));
+      setAiAutoTapperLevel(prev => prev + 1);
+    }
+  }, upgradeInterval);
+
+  return () => clearInterval(upgradeTimer);
+}, [
+  gamePhase,
+  gameMode,
+  aiCoins,
+  aiTapPowerLevel,
+  aiCritLevel,
+  aiTapSpeedLevel,
+  aiAutoTapperLevel,
+  aiCritChance,
+  aiAutoTapper,
+]);
 
 // Game timer effect
   React.useEffect(() => {
