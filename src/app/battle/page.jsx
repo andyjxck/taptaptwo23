@@ -286,7 +286,7 @@ const createRoom = async () => {
   const newRoomCode = generateRoomCode();
 
   try {
-    const res = await fetch('/', {
+    const res = await fetch('/api/battle', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
