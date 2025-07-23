@@ -205,13 +205,39 @@ React.useEffect(() => {
   };
 
   // Game flow functions
-  const createRoom = () => {
-    const newRoomCode = generateRoomCode();
-    setCurrentRoom(newRoomCode);
-    setGameMode("multiplayer");
-    setOpponentName("Waiting for player...");
-    setGamePhase("lobby");
-  };
+ const createRoom = async () => {
+  const newRoomCode = generateRoomCode();
+
+  try {
+    const res = await fetch('/api/battle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'create',
+        userId: currentUserId,  // Your current user's ID from state/context
+        code: newRoomCode,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      console.error('Failed to create room:', err.error);
+      return; // Optionally handle error UI
+    }
+
+    const data = await res.json();
+    console.log('Room created:', data);
+
+    // Use returned roomCode and/or roomId if needed
+    setCurrentRoom(data.roomCode || newRoomCode);
+    setGameMode('multiplayer');
+    setOpponentName('Waiting for player...');
+    setGamePhase('lobby');
+  } catch (error) {
+    console.error('Error creating room:', error);
+  }
+};
+
 
  const joinRoom = async () => {
   if (roomCode.length !== 6) return;
