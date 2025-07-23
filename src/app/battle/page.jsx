@@ -178,7 +178,7 @@ useEffect(() => {
   }
 };
 
-  const loadProfile = async (id) => 
+  const loadProfile = async (id) => {
   try {
   const response = await fetch("/api/battle", {
     method: "POST",
