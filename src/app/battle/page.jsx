@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import { supabase } from "@/utilities/supabaseClient";
 
 
+
 function MainComponent() {
   // Game phases: 'start', 'lobby', 'ready', 'playing', 'finished'
   const [gamePhase, setGamePhase] = React.useState("start");
