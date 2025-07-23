@@ -346,7 +346,7 @@ useEffect(() => {
 
     const startGameTimer = () => {
   setGamePhase("playing"); // Change game phase to playing
-  setTimeLeft(180); // Set game time to 3 minutes (in seconds)
+  setTimeLeft(10); // Set game time to 3 minutes (in seconds)
 };
 
   
