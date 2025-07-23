@@ -279,7 +279,7 @@ if (action === 'fetchProfile') {
         .from('game_saves')
         .update({
           total_taps: supabase.raw('total_taps + ?', [total_taps_ingame]),
-          renown_tokens: supabase.raw('renown_tokens + 5'),
+          renown_tokens: supabase.raw('renown_tokens + 10'),
         })
         .eq('user_id', winnerId);
 
@@ -291,7 +291,7 @@ if (action === 'fetchProfile') {
         .from('game_saves')
         .update({
           total_taps: supabase.raw('total_taps + ?', [total_taps_ingame]),
-          renown_tokens: supabase.raw('renown_tokens + 1'),
+          renown_tokens: supabase.raw('renown_tokens + 3'),
         })
         .eq('user_id', loserId);
 
