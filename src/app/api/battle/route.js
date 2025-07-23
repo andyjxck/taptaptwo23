@@ -31,16 +31,32 @@ if (action === 'saveProgress') {
     return new Response(JSON.stringify({ error: 'Missing parameters' }), { status: 400 });
   }
 
-  const { error } = await supabase
+  // 1. Fetch existing stats
+  const { data: existing, error: fetchError } = await supabase
+    .from('game_saves')
+    .select('total_taps, renown_tokens')
+    .eq('user_id', userId)
+    .single();
+
+  if (fetchError || !existing) {
+    return new Response(JSON.stringify({ error: fetchError?.message || 'User not found' }), { status: 500 });
+  }
+
+  // 2. Add new values to old ones
+  const updatedTotalTaps = (existing.total_taps || 0) + total_taps;
+  const updatedRenownTokens = (existing.renown_tokens || 0) + renown_tokens;
+
+  // 3. Save updated totals
+  const { error: updateError } = await supabase
     .from('game_saves')
     .update({
-      total_taps,
-      renown_tokens,
+      total_taps: updatedTotalTaps,
+      renown_tokens: updatedRenownTokens,
     })
     .eq('user_id', userId);
 
-  if (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+  if (updateError) {
+    return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
   }
 
   return new Response(JSON.stringify({ success: true }), { status: 200 });
