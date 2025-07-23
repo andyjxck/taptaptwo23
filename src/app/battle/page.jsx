@@ -1422,7 +1422,7 @@ if (gamePhase === "playing") {
       <i className="fas fa-times mr-1"></i> Leave
     </button>
   </div>
-  </div>
+
 
 {/* Upgrade buttons */}
     <UpgradeButton
@@ -1534,6 +1534,7 @@ if (gamePhase === "playing") {
       <div className="text-center">
         <i className="fas fa-hand-pointer text-4xl sm:text-5xl md:text-6xl mb-2 drop-shadow-lg"></i>
         <div className="text-sm sm:text-base font-bold">
+      
           +{tapPower + Math.floor(tapPower * (tapSpeedBonus / 100))}
         </div>
         {critChance > 0 && (
@@ -1577,7 +1578,8 @@ if (gamePhase === "playing") {
           transform: translate(-50%, -50%) translateY(-100px) scale(0.8);
         }
       }
-    `}</style>
+    `}
+    </style>
   </>
 );
 
