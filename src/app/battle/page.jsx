@@ -1,5 +1,6 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
+
 
 function MainComponent() {
   // Game phases: 'start', 'lobby', 'ready', 'playing', 'finished'
