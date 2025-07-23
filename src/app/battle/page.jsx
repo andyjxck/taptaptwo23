@@ -340,7 +340,7 @@ useEffect(() => {
   if (!currentRoom || !userId) return;
 
   const { data, error } = await supabase
-    .from('battle_rooms')
+    .from('battle_games')
     .select('*')
     .eq('code', currentRoom)
     .single();
@@ -354,7 +354,7 @@ useEffect(() => {
     : { player2_ready: !data.player2_ready };
 
   const { error: updateError } = await supabase
-    .from('battle_rooms')
+    .from('battle_games')
     .update(updateData)
     .eq('code', currentRoom);
 
