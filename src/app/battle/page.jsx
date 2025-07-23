@@ -47,6 +47,9 @@ const aiCritLevelRef = React.useRef(aiCritLevel);
 const aiTapPowerLevelRef = React.useRef(aiTapPowerLevel);
 const aiTapSpeedLevelRef = React.useRef(aiTapSpeedLevel);
 const aiAutoTapperLevelRef = React.useRef(aiAutoTapperLevel);
+  const aiTapPowerRef = React.useRef(aiTapPower);
+  const aiTapSpeedBonus = React.useRef(aiTapPower);
+
 const aiAutoTapperRef = React.useRef(aiAutoTapper);
 React.useEffect(() => { aiCoinsRef.current = aiCoins; }, [aiCoins]);
 React.useEffect(() => { aiCritChanceRef.current = aiCritChance; }, [aiCritChance]);
@@ -55,7 +58,8 @@ React.useEffect(() => { aiTapPowerLevelRef.current = aiTapPowerLevel; }, [aiTapP
 React.useEffect(() => { aiTapSpeedLevelRef.current = aiTapSpeedLevel; }, [aiTapSpeedLevel]);
 React.useEffect(() => { aiAutoTapperLevelRef.current = aiAutoTapperLevel; }, [aiAutoTapperLevel]);
 React.useEffect(() => { aiAutoTapperRef.current = aiAutoTapper; }, [aiAutoTapper]);
-
+React.useEffect(() => { aiTapSpeedBonus.current = aiTapSpeedBonus; }, [aiTapSpeedBonus]);
+React.useEffect(() => { aiTapPower.current = aiTapPower; }, [aiTapPower]);
   const updateAIStatsInDB = async ({
   roomCode,
   ai_coins,
