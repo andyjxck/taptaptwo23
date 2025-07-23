@@ -101,6 +101,62 @@ useEffect(() => {
   const [logoLoading, setLogoLoading] = React.useState(false);
 
   
+  const loadProfile = async (id) => {
+  try {
+  const response = await fetch("/api/battle", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "fetchProfile",
+      userId: parseInt(id, 10),
+      profileName: profileName, // ✅ use the actual value
+    }),
+  });
+
+  console.log("loadProfile called with userId:", id);
+
+      console.log("Fetch response received:", response);
+
+      const data = await response.json().catch(() => null);
+      console.log("Parsed JSON data:", data);
+
+      if (!response.ok) {
+        console.error(`Fetch failed with status ${response.status}`);
+        if (data && data.error) {
+          console.error("Backend error message:", data.error);
+        } else {
+          console.error("No backend error message available.");
+        }
+        throw new Error(`Fetch failed with status ${response.status}`);
+      }
+
+      if (!data.profile) {
+        console.error("Backend returned no profile.");
+        if (data && data.error) {
+          console.error("Backend error message:", data.error);
+        }
+        return;
+      }
+
+      setProfileName(data.profile.profile_name);
+      setLogoUrl(data.profile.profile_icon);
+      setAllTimeTotalTaps(data.profile.total_taps);
+      setRenownTokens(data.profile.renown_tokens);
+    } catch (err) {
+      console.error("Profile load failed:", err);
+    }
+  };
+
+  React.useEffect(() => {
+    const storedUserId = localStorage.getItem("userId");
+    if (storedUserId) {
+      setUserId(parseInt(storedUserId, 10));
+      loadProfile(storedUserId);
+    } else {
+      // No userId in localStorage, redirect to login
+      window.location.href = "/login";
+    }
+  }, []);
 
   
 
@@ -178,62 +234,6 @@ useEffect(() => {
   }
 };
 
-  const loadProfile = async (id) => {
-  try {
-  const response = await fetch("/api/battle", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action: "fetchProfile",
-      userId: parseInt(id, 10),
-      profileName: profileName, // ✅ use the actual value
-    }),
-  });
-
-  console.log("loadProfile called with userId:", id);
-
-      console.log("Fetch response received:", response);
-
-      const data = await response.json().catch(() => null);
-      console.log("Parsed JSON data:", data);
-
-      if (!response.ok) {
-        console.error(`Fetch failed with status ${response.status}`);
-        if (data && data.error) {
-          console.error("Backend error message:", data.error);
-        } else {
-          console.error("No backend error message available.");
-        }
-        throw new Error(`Fetch failed with status ${response.status}`);
-      }
-
-      if (!data.profile) {
-        console.error("Backend returned no profile.");
-        if (data && data.error) {
-          console.error("Backend error message:", data.error);
-        }
-        return;
-      }
-
-      setProfileName(data.profile.profile_name);
-      setLogoUrl(data.profile.profile_icon);
-      setAllTimeTotalTaps(data.profile.total_taps);
-      setRenownTokens(data.profile.renown_tokens);
-    } catch (err) {
-      console.error("Profile load failed:", err);
-    }
-  };
-
-  React.useEffect(() => {
-    const storedUserId = localStorage.getItem("userId");
-    if (storedUserId) {
-      setUserId(parseInt(storedUserId, 10));
-      loadProfile(storedUserId);
-    } else {
-      // No userId in localStorage, redirect to login
-      window.location.href = "/login";
-    }
-  }, []);
 
   // Upgrade functions
   const upgradeTapPower = () => {
