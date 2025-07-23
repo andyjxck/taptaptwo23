@@ -12,6 +12,38 @@ export async function POST(req) {
       console.error('Missing action in request body');
       return NextResponse.json({ error: 'Missing action' }, { status: 400 });
     }
+if (action === 'updateTaps') {
+  if (!code || !userId || typeof taps !== 'number') {
+    return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
+  }
+
+  try {
+    // Get the battle room data
+    const roomRows = await sql`
+      SELECT * FROM battle_games WHERE room_code = ${code};
+    `;
+
+    if (!roomRows || roomRows.length === 0) {
+      return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+    }
+
+    const room = roomRows[0];
+    const isPlayer1 = room.player1_id === userId;
+    const scoreColumn = isPlayer1 ? 'player1_score' : 'player2_score';
+
+    // Update the player's score by adding taps
+    await sql`
+      UPDATE battle_games
+      SET ${sql([scoreColumn])} = ${sql([scoreColumn])} + ${taps}
+      WHERE room_code = ${code};
+    `;
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error updating taps:', error);
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+  }
+}
 
     // userId might be required for many actions but not all, so check where needed
 if (action === "getRoomStatus") {
