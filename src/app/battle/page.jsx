@@ -902,7 +902,7 @@ if (gamePhase === "lobby") {
           </div>
         </div>
       </div>
-
+                       }}
 
       {/* Rules Modal */}
       {showRules && (
