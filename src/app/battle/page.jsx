@@ -16,8 +16,8 @@ const opponentPercent = 100 - playerPercent;
   // Game phases: 'start', 'lobby', 'ready', 'playing', 'finished'
   const [countdown, setCountdown] = React.useState(null); // null means no countdown active
   const [gamePhase, setGamePhase] = React.useState("start");
-  const [timeLeft, setTimeLeft] = React.useState(10);
-  const [gameDuration, setGameDuration] = React.useState(10);
+  const [timeLeft, setTimeLeft] = React.useState(300);
+  const [gameDuration, setGameDuration] = React.useState(300);
 
   const [playerScore, setPlayerScore] = React.useState(0);
   const [opponentScore, setOpponentScore] = React.useState(0);
@@ -302,16 +302,6 @@ async function saveGameProgress(currentUserId) {
   }
 }
 
-React.useEffect(() => {
-  if (!userId) return; // Don't start interval if userId not set yet
-
-  const interval = setInterval(() => {
-    saveGameProgress(userId); // Pass userId from React state explicitly
-  }, 5000);
-
-  return () => clearInterval(interval);
-}, [userId]); // Re-run effect only when userId changes
-
   React.useEffect(() => {
   if (gamePhase === 'finished' && userId) {
     saveGameProgress(userId);
@@ -386,7 +376,7 @@ useEffect(() => {
 
     const startGameTimer = () => {
   setGamePhase("playing"); // Change game phase to playing
-  setTimeLeft(10); // Set game time to 3 minutes (in seconds)
+  setTimeLeft(300); // Set game time to 3 minutes (in seconds)
 };
 
   
