@@ -49,45 +49,8 @@ function MainComponent() {
   const [logoLoading, setLogoLoading] = React.useState(false);
 
   
-  useEffect(() => {
-    if (!currentRoom) return; // No room to poll
 
-    const intervalId = setInterval(async () => {
-      try {
-        const res = await fetch("/api/battle", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "getRoomStatus",
-            code: currentRoom,
-          }),
-        });
-
-        if (!res.ok) {
-          console.error("Failed to fetch room status");
-          return;
-        }
-
-        const data = await res.json();
-
-        // Assuming data has the battle_games row info:
-        if (data.room) {
-          const room = data.room;
-          const amPlayer1 = room.player1_id === userId;
-
-          setIsPlayerReady(amPlayer1 ? room.player1_ready : room.player2_ready);
-          setIsOpponentReady(amPlayer1 ? room.player2_ready : room.player1_ready);
-          setPlayerScore(amPlayer1 ? room.player1_score : room.player2_score);
-          setOpponentScore(amPlayer1 ? room.player2_score : room.player1_score);
-          setOpponentName(amPlayer1 ? room.player2_name || "Opponent" : room.player1_name || "Opponent");
-        }
-      } catch (err) {
-        console.error("Polling error:", err);
-      }
-    }, 2000); // every 2 seconds
-
-    return () => clearInterval(intervalId);
-  }, [currentRoom, userId]);
+  
 
   // Calculate upgrade costs (1.3x multiplier)
   const getTapPowerCost = () =>
@@ -304,6 +267,7 @@ function MainComponent() {
     setGameMode('multiplayer');
     setOpponentName('Player 2'); // Ideally fetch actual opponent name from backend
     setGamePhase('lobby');
+    fetchRoomStatus(); 
 
   } catch (err) {
     console.error('joinRoom error:', err);
@@ -322,6 +286,7 @@ function MainComponent() {
 
   const toggleReady = () => {
     setIsPlayerReady(!isPlayerReady);
+    fetchRoomStatus(); 
   };
 
  
@@ -342,6 +307,7 @@ const startGame = () => {
   setTapSpeedLevel(0);
   setAutoTapper(0);
   setAutoTapperLevel(0);
+  fetchRoomStatus(); 
 };
 
 const resetToStart = () => {
@@ -437,6 +403,42 @@ React.useEffect(() => {
   }
 }, [gamePhase, playerScore, opponentScore, totalTapsInGame]);
 
+  const fetchRoomStatus = async () => {
+  if (!currentRoom) return;
+
+  try {
+    const res = await fetch("/api/battle", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "getRoomStatus",
+        code: currentRoom,
+      }),
+    });
+
+    if (!res.ok) {
+      console.error("Failed to fetch room status");
+      return;
+    }
+
+    const data = await res.json();
+
+    if (data.room) {
+      const room = data.room;
+      const amPlayer1 = room.player1_id === userId;
+
+      setIsPlayerReady(amPlayer1 ? room.player1_ready : room.player2_ready);
+      setIsOpponentReady(amPlayer1 ? room.player2_ready : room.player1_ready);
+      setPlayerScore(amPlayer1 ? room.player1_score : room.player2_score);
+      setOpponentScore(amPlayer1 ? room.player2_score : room.player1_score);
+      setOpponentName(amPlayer1 ? room.player2_name || "Opponent" : room.player1_name || "Opponent");
+    }
+  } catch (err) {
+    console.error("Polling error:", err);
+  }
+};
+
+  
 const TopProfileBar = ({
   profileName,
   userId,
