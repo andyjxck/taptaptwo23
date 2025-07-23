@@ -10,15 +10,23 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    if (action === 'getTapsInGame') {
-      const { rows } = await sql`
-        SELECT total_taps_ingame FROM battle_games WHERE room_code = ${code};
-      `;
-      if (rows.length === 0) {
-        return NextResponse.json({ error: 'Room not found' }, { status: 404 });
-      }
-      return NextResponse.json({ totalTapsInGame: rows[0].total_taps_ingame });
+  if (action === 'getTapsInGame') {
+  try {
+    const { rows } = await sql`
+      SELECT total_taps_ingame FROM battle_games WHERE room_code = ${code};
+    `;
+
+    if (rows.length === 0) {
+      return NextResponse.json({ error: 'Room not found' }, { status: 404 });
     }
+
+    return NextResponse.json({ totalTapsInGame: rows[0].total_taps_ingame });
+  } catch (error) {
+    console.error('Error in getTapsInGame:', error);
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+  }
+}
+
 
     if (action === 'fetchProfile') {
       if (!userId) {
