@@ -63,70 +63,120 @@ const getAiTapSpeedCost = () =>
   Math.floor(50 * Math.pow(1.6, aiTapSpeedLevelRef.current));
 const getAiAutoTapperCost = () =>
   Math.floor(100 * Math.pow(1.45, aiAutoTapperLevelRef.current));
-
 React.useEffect(() => {
+  if (gamePhase !== "playing" || gameMode !== "ai") return;
+
   const upgradeInterval = 5000; // every 5 seconds
+  let isCancelled = false; // to cancel async updates on unmount
 
-  const upgradeTimer = setInterval(() => {
-    if (gamePhase !== "playing" || gameMode !== "ai") return;
+  const upgradeTimer = setInterval(async () => {
+    // Read current state from refs
+    let coins = aiCoinsRef.current;
+    let tapPowerLevel = aiTapPowerLevelRef.current;
+    let critLevel = aiCritLevelRef.current;
+    let tapSpeedLevel = aiTapSpeedLevelRef.current;
+    let autoTapperLevel = aiAutoTapperLevelRef.current;
 
-    setAiCoins((currentAiCoins) => {
-      let coins = currentAiCoins;
-      console.log("💰 AI Coins Before Upgrade:", coins);
+    let didUpgrade = false;
 
-      const tapPowerCost = Math.floor(10 * Math.pow(1.3, aiTapPowerLevelRef.current - 1));
-      if (coins >= tapPowerCost) {
-        coins -= tapPowerCost;
-        setAiTapPower(prev => {
-          console.log("🆙 Upgrading AI Tap Power:", prev, "->", prev + Math.floor(prev * 0.2) + 2);
-          return prev + Math.floor(prev * 0.2) + 2;
-        });
-        setAiTapPowerLevel(prev => prev + 1);
-        console.log("✅ AI bought Tap Power. New Coins:", coins);
+    // Costs
+    const tapPowerCost = Math.floor(10 * Math.pow(1.3, tapPowerLevel - 1));
+    const critCost = Math.floor(25 * Math.pow(1.4, critLevel));
+    const tapSpeedCost = Math.floor(50 * Math.pow(1.6, tapSpeedLevel));
+    const autoTapperCost = Math.floor(100 * Math.pow(1.45, autoTapperLevel));
+
+    // Clone new stats to update
+    let newAiCoins = coins;
+    let newTapPower = aiTapPowerRef.current;
+    let newTapPowerLvl = tapPowerLevel;
+    let newCritChance = aiCritChanceRef.current;
+    let newCritLvl = critLevel;
+    let newTapSpeedBonus = aiTapSpeedBonusRef.current;
+    let newTapSpeedLvl = tapSpeedLevel;
+    let newAutoTapper = aiAutoTapperRef.current;
+    let newAutoTapperLvl = autoTapperLevel;
+
+    // Try to buy upgrades if enough coins
+    if (coins >= tapPowerCost) {
+      newAiCoins -= tapPowerCost;
+      newTapPower = newTapPower + Math.floor(newTapPower * 0.2) + 2;
+      newTapPowerLvl += 1;
+      didUpgrade = true;
+      console.log("✅ AI bought Tap Power. New Coins:", newAiCoins);
+    }
+
+    if (newAiCoins >= critCost && newCritChance < 100) {
+      newAiCoins -= critCost;
+      newCritChance = Math.min(newCritChance + 2 + Math.floor(newCritLvl / 3), 100);
+      newCritLvl += 1;
+      didUpgrade = true;
+      console.log("✅ AI bought Crit Chance. New Coins:", newAiCoins);
+    }
+
+    if (newAiCoins >= tapSpeedCost) {
+      newAiCoins -= tapSpeedCost;
+      newTapSpeedBonus = newTapSpeedBonus + 25 + Math.floor(newTapSpeedLvl * 1.3);
+      newTapSpeedLvl += 1;
+      didUpgrade = true;
+      console.log("✅ AI bought Tap Speed. New Coins:", newAiCoins);
+    }
+
+    if (newAiCoins >= autoTapperCost && newAutoTapper < 50000) {
+      newAiCoins -= autoTapperCost;
+      newAutoTapper = Math.min(newAutoTapper + 10 + Math.floor(newAutoTapperLvl * 1.2), 100000);
+      newAutoTapperLvl += 1;
+      didUpgrade = true;
+      console.log("✅ AI bought Auto Tapper. New Coins:", newAiCoins);
+    }
+
+    if (!didUpgrade) {
+      // No upgrade this tick, just return
+      return;
+    }
+
+    if (isCancelled) return;
+
+    // Update React state locally
+    setAiCoins(newAiCoins);
+    setAiTapPower(newTapPower);
+    setAiTapPowerLevel(newTapPowerLvl);
+    setAiCritChance(newCritChance);
+    setAiCritLevel(newCritLvl);
+    setAiTapSpeedBonus(newTapSpeedBonus);
+    setAiTapSpeedLevel(newTapSpeedLvl);
+    setAiAutoTapper(newAutoTapper);
+    setAiAutoTapperLevel(newAutoTapperLvl);
+
+    // Update database with new AI stats
+    try {
+      const { error } = await supabase
+        .from("battle_games")
+        .update({
+          ai_coins: newAiCoins,
+          ai_tap_power: newTapPower,
+          ai_tap_power_level: newTapPowerLvl,
+          ai_crit_chance: newCritChance,
+          ai_crit_level: newCritLvl,
+          ai_tap_speed_bonus: newTapSpeedBonus,
+          ai_tap_speed_level: newTapSpeedLvl,
+          ai_auto_tapper: newAutoTapper,
+          ai_auto_tapper_level: newAutoTapperLvl,
+        })
+        .eq("room_code", currentRoom);
+
+      if (error) {
+        console.error("Failed to update AI stats:", error.message);
       }
-
-      const critCost = Math.floor(25 * Math.pow(1.4, aiCritLevelRef.current));
-      if (coins >= critCost && aiCritChanceRef.current < 100) {
-        coins -= critCost;
-        setAiCritChance(prev => {
-          const newChance = Math.min(prev + 2 + Math.floor(aiCritLevelRef.current / 3), 100);
-          console.log("🆙 Upgrading AI Crit Chance:", prev, "->", newChance);
-          return newChance;
-        });
-        setAiCritLevel(prev => prev + 1);
-        console.log("✅ AI bought Crit Chance. New Coins:", coins);
-      }
-
-      const tapSpeedCost = Math.floor(50 * Math.pow(1.6, aiTapSpeedLevelRef.current));
-      if (coins >= tapSpeedCost) {
-        coins -= tapSpeedCost;
-        setAiTapSpeedBonus(prev => {
-          console.log("🆙 Upgrading AI Tap Speed Bonus:", prev);
-          return prev + 25 + Math.floor(aiTapSpeedLevelRef.current * 1.3);
-        });
-        setAiTapSpeedLevel(prev => prev + 1);
-        console.log("✅ AI bought Tap Speed. New Coins:", coins);
-      }
-
-      const autoTapperCost = Math.floor(100 * Math.pow(1.45, aiAutoTapperLevelRef.current));
-      if (coins >= autoTapperCost && aiAutoTapperRef.current < 50000) {
-        coins -= autoTapperCost;
-        setAiAutoTapper(prev => {
-          const newAuto = Math.min(prev + 10 + Math.floor(aiAutoTapperLevelRef.current * 1.2), 100000);
-          console.log("🆙 Upgrading AI AutoTapper:", prev, "->", newAuto);
-          return newAuto;
-        });
-        setAiAutoTapperLevel(prev => prev + 1);
-        console.log("✅ AI bought Auto Tapper. New Coins:", coins);
-      }
-
-      console.log("💰 AI Coins After Upgrade:", coins);
-      return coins;
-    });
+    } catch (err) {
+      console.error("Unexpected error updating AI stats:", err);
+    }
   }, upgradeInterval);
 
-  return () => clearInterval(upgradeTimer);
-}, [gamePhase, gameMode]);
+  return () => {
+    isCancelled = true;
+    clearInterval(upgradeTimer);
+  };
+}, [gamePhase, gameMode, currentRoom]);
 
 
 
@@ -196,12 +246,23 @@ useEffect(() => {
         setPlayerScore(amPlayer1 ? data.player1_score : data.player2_score);
         setOpponentScore(amPlayer1 ? data.player2_score : data.player1_score);
         setOpponentName(amPlayer1 ? data.player2_name || 'Opponent' : data.player1_name || 'Opponent');
-
-        // HERE - set opponentId properly
         setOpponentId(amPlayer1 ? data.player2_id : data.player1_id);
 
         setIsPlayerReady(amPlayer1 ? data.player1_ready : data.player2_ready);
         setIsOpponentReady(amPlayer1 ? data.player2_ready : data.player1_ready);
+
+        // AI state updates
+        if (gameMode === 'ai' && amPlayer1) {
+          setAiCoins(data.ai_coins || 0);
+          setAiTapPower(data.ai_tap_power || 1);
+          setAiTapPowerLevel(data.ai_tap_power_level || 1);
+          setAiCritChance(data.ai_crit_chance || 0);
+          setAiCritLevel(data.ai_crit_level || 0);
+          setAiTapSpeedBonus(data.ai_tap_speed_bonus || 0);
+          setAiTapSpeedLevel(data.ai_tap_speed_level || 0);
+          setAiAutoTapper(data.ai_auto_tapper || 0);
+          setAiAutoTapperLevel(data.ai_auto_tapper_level || 1);
+        }
       }
     )
     .subscribe();
@@ -209,7 +270,8 @@ useEffect(() => {
   return () => {
     supabase.removeChannel(channel);
   };
-}, [currentRoom, userId]);
+}, [currentRoom, userId, gameMode]);
+
 
   const [isPlayerReady, setIsPlayerReady] = React.useState(false);
   const [isOpponentReady, setIsOpponentReady] = React.useState(false);
@@ -551,6 +613,17 @@ const playAI = async () => {
       status: 'active',
       player1_score: 0,
       player2_score: 0,
+
+      // Initialize AI stats here:
+      ai_coins: 0,
+      ai_tap_power: 1,
+      ai_tap_power_level: 1,
+      ai_crit_chance: 0,
+      ai_crit_level: 0,
+      ai_tap_speed_bonus: 0,
+      ai_tap_speed_level: 0,
+      ai_auto_tapper: 0,
+      ai_auto_tapper_level: 0,
     }]);
 
   if (error) {
@@ -601,14 +674,12 @@ const playAI = async () => {
   if (updateError) console.error(updateError);
 };
 
-
- 
 const startGame = () => {
   setGamePhase("playing");
   setTimeLeft(gameDuration);
   setPlayerScore(0);
   setOpponentScore(0);
-  setTotalTapsInGame(0); // Reset total taps for current game
+  setTotalTapsInGame(0);
   setUpgradesPurchased(0);
   setFloatingNumbers([]);
   setTapPower(1);
@@ -621,15 +692,15 @@ const startGame = () => {
   setAutoTapperLevel(0);
 
   // 🧠 Reset AI state
-  setAICoins(0);
-  setAITapPower(1);
-  setAITapSpeed(0);
-  setAIAutoTapper(0);
-  setAICritChance(0);
-  setAITapPowerLevel(1);
-  setAITapSpeedLevel(1);
-  setAIAutoTapperLevel(1);
-  setAICritLevel(1);
+  setAiCoins(0);
+  setAiTapPower(1);
+  setAiTapSpeedBonus(0);
+  setAiAutoTapper(0);
+  setAiCritChance(0);
+  setAiTapPowerLevel(1);
+  setAiTapSpeedLevel(0);
+  setAiAutoTapperLevel(1);
+  setAiCritLevel(0);
 
   fetchRoomStatus(); 
 };
@@ -657,17 +728,17 @@ const resetToStart = () => {
   setAutoTapperLevel(0);
 
   // 🧠 Reset AI state
-  setAICoins(0);
-  setAITapPower(1);
-  setAITapSpeed(0);
-  setAIAutoTapper(0);
-  setAICritChance(0);
-  setAITapPowerLevel(1);
-  setAITapSpeedLevel(1);
-  setAIAutoTapperLevel(1);
-  setAICritLevel(1);
+  setAiCoins(0);
+  setAiTapPower(1);
+  setAiTapSpeedBonus(0);
+  setAiAutoTapper(0);
+  setAiCritChance(0);
+  setAiTapPowerLevel(1);
+  setAiTapSpeedLevel(0);
+  setAiAutoTapperLevel(1);
+  setAiCritLevel(0);
 };
-  
+
 
 // Auto tapper effect without tapBatchRef
 React.useEffect(() => {
@@ -782,14 +853,26 @@ const fetchRoomStatus = async () => {
       setPlayerScore(amPlayer1 ? room.player1_score : room.player2_score);
       setOpponentScore(amPlayer1 ? room.player2_score : room.player1_score);
 
-      // Set player and opponent names from backend data
       setPlayerName(amPlayer1 ? (room.player1_name || `Player ${userId}`) : (room.player2_name || `Player ${userId}`));
       setOpponentName(amPlayer1 ? (room.player2_name || 'Opponent') : (room.player1_name || 'Opponent'));
+
+      if (gameMode === "ai") {
+        setAiCoins(room.ai_coins || 0);
+        setAiTapPower(room.ai_tap_power || 1);
+        setAiTapPowerLevel(room.ai_tap_power_level || 1);
+        setAiCritChance(room.ai_crit_chance || 0);
+        setAiCritLevel(room.ai_crit_level || 0);
+        setAiTapSpeedBonus(room.ai_tap_speed_bonus || 0);
+        setAiTapSpeedLevel(room.ai_tap_speed_level || 0);
+        setAiAutoTapper(room.ai_auto_tapper || 0);
+        setAiAutoTapperLevel(room.ai_auto_tapper_level || 1);
+      }
     }
   } catch (err) {
     console.error('Polling error:', err);
   }
 };
+
 
   
 const TopProfileBar = ({
