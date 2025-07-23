@@ -632,38 +632,35 @@ const playAI = async () => {
 
   const newRoomCode = generateAIRoomCode();
 
-  try {
-    const res = await fetch('/api/battle', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'create',
-        userId,
-        profileName,
-        code: newRoomCode,
-        isAI: true,
-        aiDifficulty,
-      }),
-    });
+  const response = await fetch('/api/battle', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'create',
+      code: newRoomCode,
+      userId: userId,
+      profileName: profileName || 'You',
+      isAI: true, // optional flag for future
+      aiDifficulty: aiDifficulty,
+    }),
+  });
 
-    if (!res.ok) {
-      const errorData = await res.json();
-      console.error('Failed to create AI room:', errorData.error);
-      return;
-    }
+  const data = await response.json();
 
-    setGameMode("ai");
-    setOpponentName(`AI (${aiDifficulty})`);
-    setCurrentRoom(newRoomCode);
-    setIsOpponentReady(true);
-    setIsPlayerReady(true);
-    setGamePhase("lobby");
-    setPlayerName(profileName || "You");
-
-  } catch (error) {
-    console.error("Error creating AI room:", error);
+  if (!response.ok) {
+    console.error("AI room creation failed:", data?.error);
+    return;
   }
+
+  setGameMode("ai");
+  setOpponentName(`AI (${aiDifficulty})`);
+  setCurrentRoom(newRoomCode);
+  setIsOpponentReady(true);
+  setIsPlayerReady(true);
+  setGamePhase("lobby");
+  setPlayerName(profileName || "You");
 };
+
 
   const toggleReady = async () => {
   if (gameMode === "ai") {
