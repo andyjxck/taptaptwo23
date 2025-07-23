@@ -1424,166 +1424,162 @@ if (gamePhase === "playing") {
   </div>
   </div>
 
-        {/* Game area */}
-       <UpgradeButton
-  title="Tap Power"
-  level={tapPowerLevel}
-  cost={getTapPowerCost()}
-  description={`+${tapPower} per tap`}
-  onTouchStart={(e) => {
-    e.preventDefault();
-    upgradeTapPower();
-  }}
-  onMouseDown={(e) => {
-    e.preventDefault();
-    upgradeTapPower();
-  }}
-  disabled={playerScore < getTapPowerCost()}
-  position="top-2 left-2 sm:top-4 sm:left-4"
-  icon="💪"
-  glassy
-/>
+{/* Upgrade buttons */}
+    <UpgradeButton
+      title="Tap Power"
+      level={tapPowerLevel}
+      cost={getTapPowerCost()}
+      description={`+${tapPower} per tap`}
+      onTouchStart={(e) => {
+        e.preventDefault();
+        upgradeTapPower();
+      }}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        upgradeTapPower();
+      }}
+      disabled={playerScore < getTapPowerCost()}
+      position="top-2 left-2 sm:top-4 sm:left-4"
+      icon="💪"
+      glassy
+    />
 
-<UpgradeButton
-  title="Critical Hit"
-  level={critLevel}
-  cost={getCritCost()}
-  description={`${critChance}% crit chance`}
-  onTouchStart={(e) => {
-    e.preventDefault();
-    upgradeCritChance();
-  }}
-  onMouseDown={(e) => {
-    e.preventDefault();
-    upgradeCritChance();
-  }}
-  disabled={playerScore < getCritCost() || critChance >= 100}
-  position="top-2 right-2 sm:top-4 sm:right-4"
-  icon="⚡"
-  glassy
-/>
+    <UpgradeButton
+      title="Critical Hit"
+      level={critLevel}
+      cost={getCritCost()}
+      description={`${critChance}% crit chance`}
+      onTouchStart={(e) => {
+        e.preventDefault();
+        upgradeCritChance();
+      }}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        upgradeCritChance();
+      }}
+      disabled={playerScore < getCritCost() || critChance >= 100}
+      position="top-2 right-2 sm:top-4 sm:right-4"
+      icon="⚡"
+      glassy
+    />
 
-<UpgradeButton
-  title="Tap Speed"
-  level={tapSpeedLevel}
-  cost={getTapSpeedCost()}
-  description={`+${tapSpeedBonus}% bonus`}
-  onTouchStart={(e) => {
-    e.preventDefault();
-    upgradeTapSpeed();
-  }}
-  onMouseDown={(e) => {
-    e.preventDefault();
-    upgradeTapSpeed();
-  }}
-  disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
-  position="bottom-2 left-2 sm:bottom-4 sm:left-4"
-  icon="🚀"
-  glassy
-/>
+    <UpgradeButton
+      title="Tap Speed"
+      level={tapSpeedLevel}
+      cost={getTapSpeedCost()}
+      description={`+${tapSpeedBonus}% bonus`}
+      onTouchStart={(e) => {
+        e.preventDefault();
+        upgradeTapSpeed();
+      }}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        upgradeTapSpeed();
+      }}
+      disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
+      position="bottom-2 left-2 sm:bottom-4 sm:left-4"
+      icon="🚀"
+      glassy
+    />
 
-<UpgradeButton
-  title="Auto Tapper"
-  level={autoTapperLevel}
-  cost={getAutoTapperCost()}
-  description={`${autoTapper}/sec`}
-  onTouchStart={(e) => {
-    e.preventDefault();
-    upgradeAutoTapper();
-  }}
-  onMouseDown={(e) => {
-    e.preventDefault();
-    upgradeAutoTapper();
-  }}
-  disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
-  position="bottom-2 right-2 sm:bottom-4 sm:right-4"
-  icon="🤖"
-  glassy
-/>
+    <UpgradeButton
+      title="Auto Tapper"
+      level={autoTapperLevel}
+      cost={getAutoTapperCost()}
+      description={`${autoTapper}/sec`}
+      onTouchStart={(e) => {
+        e.preventDefault();
+        upgradeAutoTapper();
+      }}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        upgradeAutoTapper();
+      }}
+      disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
+      position="bottom-2 right-2 sm:bottom-4 sm:right-4"
+      icon="🤖"
+      glassy
+    />
 
-
+    {/* Tap button */}
     <button
-  onTouchStart={(e) => {
-    e.preventDefault();
-    handleTap();
-  }}
-  onMouseDown={(e) => {
-    e.preventDefault();
-    handleTap();
-  }}
-  className={`
-    w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 rounded-full 
-    bg-gradient-to-br from-orange-400 via-red-500 to-red-600
-    shadow-2xl hover:shadow-red-500/50 transition-all duration-200
-    text-white font-bold text-xl
-    ${
-      isAnimating
-        ? "scale-90"
-        : "scale-100 hover:scale-105 active:scale-95"
-    }
-    cursor-pointer border-4 border-white/30 backdrop-blur-xl
-    flex items-center justify-center
-  `}
-  style={{
-    backdropFilter: "blur(20px)",
-    WebkitBackdropFilter: "blur(20px)",
-    boxShadow:
-      "0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
-  }}
->
-  <div className="text-center">
-    <i className="fas fa-hand-pointer text-4xl sm:text-5xl md:text-6xl mb-2 drop-shadow-lg"></i>
-    <div className="text-sm sm:text-base font-bold">
-      +{tapPower + Math.floor(tapPower * (tapSpeedBonus / 100))}
-    </div>
-    {critChance > 0 && (
-      <div className="text-xs text-yellow-200 font-bold">
-        {critChance}% crit
-      </div>
-    )}
-  </div>
-</button>
-
-
-            {/* Floating numbers */}
-            {floatingNumbers.map((num) => (
-              <div
-                key={num.id}
-                className={`absolute pointer-events-none font-bold text-xl sm:text-2xl drop-shadow-lg ${
-                  num.isCrit ? "text-yellow-300" : "text-green-300"
-                }`}
-                style={{
-                  left: `calc(50% + ${num.x}px)`,
-                  top: `calc(50% + ${num.y}px)`,
-                  transform: "translate(-50%, -50%)",
-                  animation: "floatUp 1s ease-out forwards",
-                }}
-              >
-                +{num.value}
-                {num.isCrit && " ⚡"}
-              </div>
-            ))}
+      onTouchStart={(e) => {
+        e.preventDefault();
+        handleTap();
+      }}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        handleTap();
+      }}
+      className={`
+        w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 rounded-full 
+        bg-gradient-to-br from-orange-400 via-red-500 to-red-600
+        shadow-2xl hover:shadow-red-500/50 transition-all duration-200
+        text-white font-bold text-xl
+        ${
+          isAnimating
+            ? "scale-90"
+            : "scale-100 hover:scale-105 active:scale-95"
+        }
+        cursor-pointer border-4 border-white/30 backdrop-blur-xl
+        flex items-center justify-center
+      `}
+      style={{
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        boxShadow:
+          "0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
+      }}
+    >
+      <div className="text-center">
+        <i className="fas fa-hand-pointer text-4xl sm:text-5xl md:text-6xl mb-2 drop-shadow-lg"></i>
+        <div className="text-sm sm:text-base font-bold">
+          +{tapPower + Math.floor(tapPower * (tapSpeedBonus / 100))}
         </div>
-
-        <style jsx global>{`
-          @keyframes floatUp {
-            0% {
-              opacity: 1;
-              transform: translate(-50%, -50%) translateY(0px) scale(1);
-            }
-            50% {
-              transform: translate(-50%, -50%) translateY(-50px) scale(1.1);
-            }
-            100% {
-              opacity: 0;
-              transform: translate(-50%, -50%) translateY(-100px) scale(0.8);
-            }
-          }
-        `}</style>
+        {critChance > 0 && (
+          <div className="text-xs text-yellow-200 font-bold">
+            {critChance}% crit
+          </div>
+        )}
       </div>
-    </>
-  );
-}
+    </button>
+
+    {/* Floating numbers */}
+    {floatingNumbers.map((num) => (
+      <div
+        key={num.id}
+        className={`absolute pointer-events-none font-bold text-xl sm:text-2xl drop-shadow-lg ${
+          num.isCrit ? "text-yellow-300" : "text-green-300"
+        }`}
+        style={{
+          left: `calc(50% + ${num.x}px)`,
+          top: `calc(50% + ${num.y}px)`,
+          transform: "translate(-50%, -50%)",
+          animation: "floatUp 1s ease-out forwards",
+        }}
+      >
+        +{num.value}
+        {num.isCrit && " ⚡"}
+      </div>
+    ))}
+
+    <style jsx global>{`
+      @keyframes floatUp {
+        0% {
+          opacity: 1;
+          transform: translate(-50%, -50%) translateY(0px) scale(1);
+        }
+        50% {
+          transform: translate(-50%, -50%) translateY(-50px) scale(1.1);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(-50%, -50%) translateY(-100px) scale(0.8);
+        }
+      }
+    `}</style>
+  </>
+);
 
 // Finished phase
 if (gamePhase === "finished") {
