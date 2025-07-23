@@ -1,50 +1,43 @@
-import { NextResponse } from 'next/server';
-import { sql } from '../auth-handler/db';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
 export async function POST(req) {
-  try {
-    const body = await req.json();
-    console.log('API /api/battle POST body:', body);
+  const body = await req.json();
+  const { action, code, userId, taps } = body;
 
-    const { action, code, userId, profileName, winnerId, loserId, taps } = body;
-
-    if (!action) {
-      console.error('Missing action in request body');
-      return NextResponse.json({ error: 'Missing action' }, { status: 400 });
-    }
-    
-if (action === 'updateTaps') {
-  if (!code || !userId || typeof taps !== 'number') {
-    return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
-  }
-
-  try {
-    // Get the battle room data
-    const roomRows = await sql`
-      SELECT * FROM battle_games WHERE room_code = ${code};
-    `;
-
-    if (!roomRows || roomRows.length === 0) {
-      return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+  if (action === 'updateTaps') {
+    if (!code || !userId || typeof taps !== 'number') {
+      return new Response(JSON.stringify({ error: 'Missing parameters' }), { status: 400 });
     }
 
-    const room = roomRows[0];
+    // Fetch room info
+    const { data: rooms, error: selectError } = await supabase
+      .from('battle_games')
+      .select('*')
+      .eq('room_code', code);
+
+    if (selectError || !rooms || rooms.length === 0) {
+      return new Response(JSON.stringify({ error: 'Room not found' }), { status: 404 });
+    }
+
+    const room = rooms[0];
     const isPlayer1 = room.player1_id === userId;
-    const scoreColumn = isPlayer1 ? 'player1_score' : 'player2_score';
+    const updates = isPlayer1
+      ? { player1_score: room.player1_score + taps }
+      : { player2_score: room.player2_score + taps };
 
-   const query = `
-  UPDATE battle_games
-  SET ${scoreColumn} = ${scoreColumn} + $1
-  WHERE room_code = $2
-`;
+    const { error: updateError } = await supabase
+      .from('battle_games')
+      .update(updates)
+      .eq('room_code', code);
 
-await sql.query(query, [taps, code]);
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Error updating taps:', error);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    if (updateError) {
+      return new Response(JSON.stringify({ error: updateError.message }), { status: 500 });
+    }
+
+    return new Response(JSON.stringify({ success: true }), { status: 200 });
   }
-}
 
     // userId might be required for many actions but not all, so check where needed
 if (action === "getRoomStatus") {
