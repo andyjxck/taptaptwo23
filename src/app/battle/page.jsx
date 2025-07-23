@@ -529,7 +529,7 @@ const resetToStart = () => {
  
   
 
-// Auto tapper effect
+// Auto tapper effect without tapBatchRef
 React.useEffect(() => {
   let interval;
   if (gamePhase === "playing" && autoTapper > 0) {
@@ -537,8 +537,8 @@ React.useEffect(() => {
       setPlayerScore(prev => prev + autoTapper);
       setTotalTapsInGame(prev => prev + 1);
 
-      // Add to batch for sync
-      tapBatchRef.current += autoTapper;
+      // No tapBatchRef batching, so no backend sync here.
+      // If you want backend sync, add separate logic.
     }, 1000);
   }
   return () => clearInterval(interval);
