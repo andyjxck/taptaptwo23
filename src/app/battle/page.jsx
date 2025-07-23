@@ -35,7 +35,7 @@ useEffect(() => {
     .on(
       'postgres_changes',
       {
-        event: '*',
+        event: '*',  // listen to INSERT, UPDATE, DELETE (or use 'UPDATE' only)
         schema: 'public',
         table: 'battle_games',
         filter: `room_code=eq.${currentRoom}`,
@@ -43,32 +43,30 @@ useEffect(() => {
       async (payload) => {
         console.log('Realtime update:', payload);
 
-        const { data } = await supabase
+        // Fetch latest room data
+        const { data, error } = await supabase
           .from('battle_games')
           .select('*')
           .eq('room_code', currentRoom)
           .single();
 
-        if (!data) return;
+        if (error || !data) {
+          console.error('Failed to fetch room data:', error);
+          return;
+        }
 
-        const opponentId =
-          data.player1_id === userId ? data.player2_id : data.player1_id;
+        const amPlayer1 = data.player1_id === userId;
 
-        setOpponentName(
-          data.player1_id === userId ? data.player2_name : data.player1_name
-        );
+        // Set playerScore and opponentScore based on who you are
+        setPlayerScore(amPlayer1 ? data.player1_score : data.player2_score);
+        setOpponentScore(amPlayer1 ? data.player2_score : data.player1_score);
 
-        setIsOpponentReady(
-          data.player1_id === opponentId
-            ? data.player1_ready
-            : data.player2_ready
-        );
+        // Update opponent name (optional)
+        setOpponentName(amPlayer1 ? data.player2_name || 'Opponent' : data.player1_name || 'Opponent');
 
-        setIsPlayerReady(
-          data.player1_id === userId
-            ? data.player1_ready
-            : data.player2_ready
-        );
+        // Update ready states if needed
+        setIsPlayerReady(amPlayer1 ? data.player1_ready : data.player2_ready);
+        setIsOpponentReady(amPlayer1 ? data.player2_ready : data.player1_ready);
       }
     )
     .subscribe();
@@ -77,6 +75,7 @@ useEffect(() => {
     supabase.removeChannel(channel);
   };
 }, [currentRoom, userId]);
+
 
   const [isPlayerReady, setIsPlayerReady] = React.useState(false);
   const [isOpponentReady, setIsOpponentReady] = React.useState(false);
