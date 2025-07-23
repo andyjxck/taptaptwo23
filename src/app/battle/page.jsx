@@ -1581,6 +1581,7 @@ if (gamePhase === "playing") {
     `}
     </style>
        </div>
+        </div>
   </>
 );
 
