@@ -178,62 +178,72 @@ useEffect(() => {
     return result;
   };
 
- const handleTap = async () => {
-  if (gamePhase !== "playing") return;
+  // This ref accumulates taps between backend calls
+  const tapBatchRef = useRef(0);
 
-  setIsAnimating(true);
-  setTimeout(() => setIsAnimating(false), 150);
+  const handleTap = () => {
+    if (gamePhase !== "playing") return;
 
-  let coinsEarned = tapPower;
+    setIsAnimating(true);
+    setTimeout(() => setIsAnimating(false), 150);
 
-  // Apply tap speed bonus
-  coinsEarned += Math.floor(coinsEarned * (tapSpeedBonus / 100));
+    let coinsEarned = tapPower;
 
-  // Check for critical hit
-  const isCrit = Math.random() * 100 < critChance;
-  if (isCrit) {
-    coinsEarned *= 2;
-  }
+    // Apply tap speed bonus
+    coinsEarned += Math.floor(coinsEarned * (tapSpeedBonus / 100));
 
-  // Update local state
-  setPlayerScore((prev) => prev + coinsEarned);
-  setTotalTapsInGame((prev) => prev + 1);
+    // Check for critical hit
+    const isCrit = Math.random() * 100 < critChance;
+    if (isCrit) {
+      coinsEarned *= 2;
+    }
 
-  // Add floating number animation
-  const floatingId = Date.now() + Math.random();
-  setFloatingNumbers((prev) => [
-    ...prev,
-    {
-      id: floatingId,
-      value: coinsEarned,
-      isCrit: isCrit,
-      x: Math.random() * 100 - 50,
-      y: Math.random() * 100 - 50,
-    },
-  ]);
+    // Update local state immediately
+    setPlayerScore(prev => prev + coinsEarned);
+    setTotalTapsInGame(prev => prev + 1);
 
-  // Remove floating number after animation
-  setTimeout(() => {
-    setFloatingNumbers((prev) => prev.filter((num) => num.id !== floatingId));
-  }, 1000);
+    // Add floating number animation
+    const floatingId = Date.now() + Math.random();
+    setFloatingNumbers(prev => [
+      ...prev,
+      {
+        id: floatingId,
+        value: coinsEarned,
+        isCrit,
+        x: Math.random() * 100 - 50,
+        y: Math.random() * 100 - 50,
+      },
+    ]);
 
-  // --- NEW: Send tap update to backend ---
-  try {
-    await fetch('/api/battle', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'updateTaps',
-        code: currentRoom,
-        userId: userId,
-        taps: coinsEarned,
-      }),
-    });
-  } catch (err) {
-    console.error('Error sending tap update:', err);
-  }
-};
+    setTimeout(() => {
+      setFloatingNumbers(prev => prev.filter(num => num.id !== floatingId));
+    }, 1000);
 
+    // Add coinsEarned to batch ref instead of sending immediately
+    tapBatchRef.current += coinsEarned;
+  };
+
+  // useEffect to send batched taps every 500ms
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (tapBatchRef.current > 0 && currentRoom && userId) {
+        fetch('/api/battle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'updateTaps',
+            code: currentRoom,
+            userId: userId,
+            taps: tapBatchRef.current,
+          }),
+        }).catch(err => console.error('Error sending tap batch:', err));
+
+        tapBatchRef.current = 0; // reset batch after sending
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [currentRoom, userId]);
 
   // Upgrade functions
   const upgradeTapPower = () => {
