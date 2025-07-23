@@ -745,56 +745,57 @@ if (gamePhase === "start") {
               <i className="fas fa-sign-in-alt mr-2"></i>
               Join Room
             </button>
-<div className="space-y-3">
-  <select
-    value={aiDifficulty}
-    onChange={(e) => setAiDifficulty(e.target.value)}
-    className="w-full px-4 py-3 rounded-2xl bg-white/10 text-white border border-white/20 backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-white/30"
-    style={{
-      backdropFilter: "blur(20px)",
-      WebkitBackdropFilter: "blur(20px)",
-    }}
-  >
-    <option value="easy" className="bg-purple-900 text-white">
-      🟢 Easy AI
-    </option>
-    <option value="medium" className="bg-purple-900 text-white">
-      🟡 Medium AI
-    </option>
-    <option value="hard" className="bg-purple-900 text-white">
-      🔴 Hard AI
-    </option>
-  </select>
+            <div className="space-y-3">
+              <select
+                value={aiDifficulty}
+                onChange={(e) => setAiDifficulty(e.target.value)}
+                className="w-full px-4 py-3 rounded-2xl bg-white/10 text-white border border-white/20 backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-white/30"
+                style={{
+                  backdropFilter: "blur(20px)",
+                  WebkitBackdropFilter: "blur(20px)",
+                }}
+              >
+                <option value="easy" className="bg-purple-900 text-white">
+                  🟢 Easy AI
+                </option>
+                <option value="medium" className="bg-purple-900 text-white">
+                  🟡 Medium AI
+                </option>
+                <option value="hard" className="bg-purple-900 text-white">
+                  🔴 Hard AI
+                </option>
+              </select>
 
-  <button
-    onClick={playAI}
-    className="w-full px-6 py-4 bg-gradient-to-r from-orange-500/80 to-red-600/80 text-white rounded-2xl font-bold hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl hover:shadow-orange-500/25 backdrop-blur-xl border border-white/20"
-    style={{
-      backdropFilter: "blur(20px)",
-      WebkitBackdropFilter: "blur(20px)",
-    }}
-  >
-    <i className="fas fa-robot mr-2"></i>
-    Battle AI
-  </button>
-</div>
-</div>
-</div>
-</div>
-</>
-);
+              <button
+                onClick={playAI}
+                className="w-full px-6 py-4 bg-gradient-to-r from-orange-500/80 to-red-600/80 text-white rounded-2xl font-bold hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl hover:shadow-orange-500/25 backdrop-blur-xl border border-white/20"
+                style={{
+                  backdropFilter: "blur(20px)",
+                  WebkitBackdropFilter: "blur(20px)",
+                }}
+              >
+                <i className="fas fa-robot mr-2"></i>
+                Battle AI
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
 
 // Lobby phase
 if (gamePhase === "lobby") {
   return (
     <>
-      <TopProfileBar
-        profileName={profileName}
-        userId={userId}
-        profileIcon={profileIcon}
-        allTimeTotalTaps={allTimeTotalTaps}
-        renownTokens={renownTokens}
-      />
+    <TopProfileBar
+  profileName={profileName}
+  userId={userId}
+  profileIcon={profileIcon}
+  allTimeTotalTaps={allTimeTotalTaps}
+  renownTokens={renownTokens}
+/>
 
       <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4 pt-20 relative overflow-hidden">
         {/* Animated background */}
@@ -817,14 +818,16 @@ if (gamePhase === "lobby") {
             <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
               Room: {currentRoom}
             </h2>
-            <p className="text-white/70 text-sm">Waiting for players to ready up</p>
+            <p className="text-white/70 text-sm">
+              Waiting for players to ready up
+            </p>
           </div>
 
           <div className="space-y-3 mb-6">
             <div
-              className={`p-4 rounded-2xl backdrop-blur-xl border border-white/20 transition-all duration-300 ${
+              className={p-4 rounded-2xl backdrop-blur-xl border border-white/20 transition-all duration-300 ${
                 isPlayerReady ? "bg-green-500/20 border-green-400/30" : "bg-white/5"
-              }`}
+              }}
               style={{
                 backdropFilter: "blur(20px)",
                 WebkitBackdropFilter: "blur(20px)",
@@ -833,9 +836,9 @@ if (gamePhase === "lobby") {
               <div className="flex justify-between items-center">
                 <span className="text-white font-bold">{playerName}</span>
                 <span
-                  className={`text-sm font-bold ${
+                  className={text-sm font-bold ${
                     isPlayerReady ? "text-green-300" : "text-white/50"
-                  }`}
+                  }}
                 >
                   {isPlayerReady ? "✓ Ready" : "Not Ready"}
                 </span>
@@ -843,9 +846,9 @@ if (gamePhase === "lobby") {
             </div>
 
             <div
-              className={`p-4 rounded-2xl backdrop-blur-xl border border-white/20 transition-all duration-300 ${
+              className={p-4 rounded-2xl backdrop-blur-xl border border-white/20 transition-all duration-300 ${
                 isOpponentReady ? "bg-green-500/20 border-green-400/30" : "bg-white/5"
-              }`}
+              }}
               style={{
                 backdropFilter: "blur(20px)",
                 WebkitBackdropFilter: "blur(20px)",
@@ -854,9 +857,9 @@ if (gamePhase === "lobby") {
               <div className="flex justify-between items-center">
                 <span className="text-white font-bold">{opponentName}</span>
                 <span
-                  className={`text-sm font-bold ${
+                  className={text-sm font-bold ${
                     isOpponentReady ? "text-green-300" : "text-white/50"
-                  }`}
+                  }}
                 >
                   {isOpponentReady ? "✓ Ready" : "Not Ready"}
                 </span>
@@ -866,22 +869,19 @@ if (gamePhase === "lobby") {
 
           <div className="space-y-3">
             <button
-              onClick={() => {
-                setIsPlayerReady((prev) => !prev);
-                toggleReady();
-              }}
-              className={`w-full px-6 py-4 rounded-2xl font-bold transition-all duration-300 shadow-xl backdrop-blur-xl border border-white/20 ${
+              onClick={toggleReady}
+              className={w-full px-6 py-4 rounded-2xl font-bold transition-all duration-300 shadow-xl backdrop-blur-xl border border-white/20 ${
                 isPlayerReady
                   ? "bg-gradient-to-r from-red-500/80 to-red-600/80 text-white hover:scale-105 active:scale-95"
                   : "bg-gradient-to-r from-green-500/80 to-green-600/80 text-white hover:scale-105 active:scale-95"
-              }`}
+              }}
               style={{
                 backdropFilter: "blur(20px)",
                 WebkitBackdropFilter: "blur(20px)",
               }}
             >
               <i
-                className={`fas ${isPlayerReady ? "fa-times" : "fa-check"} mr-2`}
+                className={fas ${isPlayerReady ? "fa-times" : "fa-check"} mr-2}
               ></i>
               {isPlayerReady ? "Cancel Ready" : "Ready Up!"}
             </button>
