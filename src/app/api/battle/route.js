@@ -295,47 +295,63 @@ export async function POST(req) {
     }
 
     if (action === 'end') {
-      if (typeof taps !== 'number' || !winnerId || !loserId) {
-        return new Response(
-          JSON.stringify({ error: 'Missing or invalid taps, winnerId, or loserId' }),
-          { status: 400 }
-        );
-      }
+  const { total_taps_ingame, winnerId, loserId } = body;
 
-      // Update total taps for winner
-      const { error: updateWinnerError } = await supabase
-        .from('game_saves')
-        .update({
-          total_taps: supabase.raw('total_taps + ?', [taps]),
-          renown_tokens: supabase.raw('renown_tokens + 5'),
-        })
-        .eq('user_id', winnerId);
+  if (typeof total_taps_ingame !== 'number' || !winnerId || !loserId) {
+    return new Response(
+      JSON.stringify({ error: 'Missing or invalid total_taps_ingame, winnerId, or loserId' }),
+      { status: 400 }
+    );
+  }
 
-      if (updateWinnerError) {
-        return new Response(
-          JSON.stringify({ error: updateWinnerError.message }),
-          { status: 500 }
-        );
-      }
+  // 1. Update battle_games.total_taps_ingame for this room
+  const { error: updateBattleGamesError } = await supabase
+    .from('battle_games')
+    .update({ total_taps_ingame })
+    .eq('room_code', code);
 
-      // Update total taps for loser
-      const { error: updateLoserError } = await supabase
-        .from('game_saves')
-        .update({
-          total_taps: supabase.raw('total_taps + ?', [taps]),
-          renown_tokens: supabase.raw('renown_tokens + 1'),
-        })
-        .eq('user_id', loserId);
+  if (updateBattleGamesError) {
+    return new Response(
+      JSON.stringify({ error: updateBattleGamesError.message }),
+      { status: 500 }
+    );
+  }
 
-      if (updateLoserError) {
-        return new Response(
-          JSON.stringify({ error: updateLoserError.message }),
-          { status: 500 }
-        );
-      }
+  // 2. Add total_taps_ingame to winner's total_taps and add renown_tokens
+  const { error: updateWinnerError } = await supabase
+    .from('game_saves')
+    .update({
+      total_taps: supabase.raw('total_taps + ?', [total_taps_ingame]),
+      renown_tokens: supabase.raw('renown_tokens + 5'),
+    })
+    .eq('user_id', winnerId);
 
-      return new Response(JSON.stringify({ success: true }), { status: 200 });
-    }
+  if (updateWinnerError) {
+    return new Response(
+      JSON.stringify({ error: updateWinnerError.message }),
+      { status: 500 }
+    );
+  }
+
+  // 3. Add total_taps_ingame to loser's total_taps and add renown_tokens
+  const { error: updateLoserError } = await supabase
+    .from('game_saves')
+    .update({
+      total_taps: supabase.raw('total_taps + ?', [total_taps_ingame]),
+      renown_tokens: supabase.raw('renown_tokens + 1'),
+    })
+    .eq('user_id', loserId);
+
+  if (updateLoserError) {
+    return new Response(
+      JSON.stringify({ error: updateLoserError.message }),
+      { status: 500 }
+    );
+  }
+
+  return new Response(JSON.stringify({ success: true }), { status: 200 });
+}
+
 
     return new Response(
       JSON.stringify({ error: 'Invalid action' }),
