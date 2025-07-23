@@ -428,7 +428,7 @@ const playAI = async () => {
     .insert([{
       room_code: newRoomCode,
       player1_id: userId,
-      player2_id: 'AI_PLAYER',
+      player2_id: 0,
       player1_name: profileName || "You",
       player2_name: `AI (${aiDifficulty})`,
       player1_ready: true,
