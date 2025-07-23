@@ -12,6 +12,7 @@ export async function POST(req) {
       console.error('Missing action in request body');
       return NextResponse.json({ error: 'Missing action' }, { status: 400 });
     }
+    
 if (action === 'updateTaps') {
   if (!code || !userId || typeof taps !== 'number') {
     return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
@@ -31,13 +32,13 @@ if (action === 'updateTaps') {
     const isPlayer1 = room.player1_id === userId;
     const scoreColumn = isPlayer1 ? 'player1_score' : 'player2_score';
 
-    // Update the player's score by adding taps
-    await sql`
-      UPDATE battle_games
-      SET ${sql([scoreColumn])} = ${sql([scoreColumn])} + ${taps}
-      WHERE room_code = ${code};
-    `;
+   const query = `
+  UPDATE battle_games
+  SET ${scoreColumn} = ${scoreColumn} + $1
+  WHERE room_code = $2
+`;
 
+await sql.query(query, [taps, code]);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error updating taps:', error);
