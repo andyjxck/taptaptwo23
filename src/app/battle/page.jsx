@@ -1578,7 +1578,6 @@ if (gamePhase === "playing") {
         }
       }
     `}</style>
-        </div>
   </>
 );
 
@@ -1692,9 +1691,5 @@ if (gamePhase === "finished") {
     </>
   );
 }
-
-return null;
-
-  }
 
 export default MainComponent;
