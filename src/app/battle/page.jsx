@@ -146,13 +146,13 @@ const opponentPercent = 100 - playerPercent;
   
  // AI Upgrade Cost Functions (use refs inside the effect)
 const getAiTapPowerCost = () =>
-  Math.floor(10 * Math.pow(aiTapPowerLevelRef.current - 1, 1.4) || 10 * Math.pow(1.4, aiTapPowerLevelRef.current - 1));
+  Math.floor(10 * Math.pow(aiTapPowerLevelRef.current - 1, 1.2) || 10 * Math.pow(1.3, aiTapPowerLevelRef.current - 1));
 const getAiCritCost = () =>
-  Math.floor(25 * Math.pow(1.5, aiCritLevelRef.current));
+  Math.floor(25 * Math.pow(1.3, aiCritLevelRef.current));
 const getAiTapSpeedCost = () =>
-  Math.floor(50 * Math.pow(1.7, aiTapSpeedLevelRef.current));
+  Math.floor(50 * Math.pow(1.4, aiTapSpeedLevelRef.current));
 const getAiAutoTapperCost = () =>
-  Math.floor(100 * Math.pow(1.55, aiAutoTapperLevelRef.current));
+  Math.floor(100 * Math.pow(1.45, aiAutoTapperLevelRef.current));
 React.useEffect(() => {
   if (gamePhase !== "playing" || gameMode !== "ai" || !currentRoom) return;
 
@@ -189,7 +189,7 @@ React.useEffect(() => {
     // Try to buy upgrades if enough coins
     if (newAiCoins >= tapPowerCost) {
       newAiCoins -= tapPowerCost;
-      newTapPower = newTapPower + Math.floor(newTapPower * 0.12) + 1;
+      newTapPower = newTapPower + Math.floor(newTapPower * 0.28) + 2;
       newTapPowerLvl += 1;
       didUpgrade = true;
       setOpponentScore(prev => prev - tapPowerCost); // Deduct from score
@@ -207,7 +207,7 @@ React.useEffect(() => {
 
     if (newAiCoins >= tapSpeedCost) {
       newAiCoins -= tapSpeedCost;
-      newTapSpeedBonus = newTapSpeedBonus + 30 + Math.floor(newTapSpeedLvl * 1.3);
+      newTapSpeedBonus = newTapSpeedBonus + 25 + Math.floor(newTapSpeedLvl * 1.3);
       newTapSpeedLvl += 1;
       didUpgrade = true;
       setOpponentScore(prev => prev - tapSpeedCost); // Deduct from score
@@ -216,7 +216,7 @@ React.useEffect(() => {
 
     if (newAiCoins >= autoTapperCost && newAutoTapper < 50000) {
       newAiCoins -= autoTapperCost;
-      newAutoTapper = Math.min(newAutoTapper + 30 + Math.floor(newAutoTapperLvl * 1.4), 1000000);
+      newAutoTapper = Math.min(newAutoTapper + 10 + Math.floor(newAutoTapperLvl * 1.3), 100000);
       newAutoTapperLvl += 1;
       didUpgrade = true;
       setOpponentScore(prev => prev - autoTapperCost); // Deduct from score
@@ -462,13 +462,11 @@ useEffect(() => {
 
   // Calculate upgrade costs (1.3x multiplier)
   const getTapPowerCost = () =>
-    Math.floor(10 * Math.pow(1.4, tapPowerLevel - 1));
-  const getCritCost = () => Math.floor(25 * Math.pow(1.5, critLevel));
-  const getTapSpeedCost = () => Math.floor(50 * Math.pow(1.7, tapSpeedLevel));
+    Math.floor(10 * Math.pow(1.2, tapPowerLevel - 1));
+  const getCritCost = () => Math.floor(25 * Math.pow(1.3, critLevel));
+  const getTapSpeedCost = () => Math.floor(50 * Math.pow(1.5, tapSpeedLevel));
   const getAutoTapperCost = () =>
-    Math.floor(100 * Math.pow(1.55, autoTapperLevel));
-
-  
+    Math.floor(100 * Math.pow(1.35, autoTapperLevel));
 
   // Generate random room code
   const generateRoomCode = () => {
@@ -572,7 +570,7 @@ React.useEffect(() => {
   if (playerScore >= cost) {
     playUpgrade()
     setPlayerScore(prev => prev - cost);
-    setTapPower(prev => prev + Math.floor(prev * 0.12) + 1); // +35% +2
+    setTapPower(prev => prev + Math.floor(prev * 0.28) + 2); // +35% +2
     setTapPowerLevel(prev => prev + 1);
     setUpgradesPurchased(prev => prev + 1);
   }
@@ -594,7 +592,7 @@ const upgradeTapSpeed = () => {
   if (playerScore >= cost) {
     playUpgrade()
     setPlayerScore(prev => prev - cost);
-    setTapSpeedBonus(prev => prev + 30 + Math.floor(tapSpeedLevel * 1.3)); // scales faster
+    setTapSpeedBonus(prev => prev + 25 + Math.floor(tapSpeedLevel * 1.3)); // scales faster
     setTapSpeedLevel(prev => prev + 1);
     setUpgradesPurchased(prev => prev + 1);
   }
@@ -605,7 +603,7 @@ const upgradeAutoTapper = () => {
   if (playerScore >= cost && autoTapper < 50000) {
     playUpgrade()
     setPlayerScore(prev => prev - cost);
-    setAutoTapper(prev => Math.min(prev + 30 + Math.floor(autoTapperLevel * 1.4), 1000000)); // growth scaling
+    setAutoTapper(prev => Math.min(prev + 10 + Math.floor(autoTapperLevel * 1.3), 100000)); // growth scaling
     setAutoTapperLevel(prev => prev + 1);
     setUpgradesPurchased(prev => prev + 1);
   }
@@ -858,9 +856,9 @@ React.useEffect(() => {
   console.log("⏱️ AI interval running");
 
   let aiMultiplier = 1;
-  if (aiDifficulty === "easy") aiMultiplier = 1;
-  else if (aiDifficulty === "medium") aiMultiplier = 1.5;
-  else if (aiDifficulty === "hard") aiMultiplier = 2.2;
+  if (aiDifficulty === "easy") aiMultiplier = 0.9;
+  else if (aiDifficulty === "medium") aiMultiplier = 1.3;
+  else if (aiDifficulty === "hard") aiMultiplier = 1.8;
 
   const baseTapPower = aiTapPower || 1.5;
   const tapSpeedBonus = aiTapSpeedBonus || 0.8;
@@ -1368,22 +1366,25 @@ if (gamePhase === "playing") {
           </div>
         </div>
 
-        {/* Centered Tap Button */}
-        <div className="flex flex-1 justify-center items-center z-10 mt-6 relative max-w-md mx-auto w-full">
-          <button
-            onClick={() => {
-              if (navigator.vibrate) navigator.vibrate(50);
-              handleTap();
-            }}
-            className="w-[180px] h-[180px] rounded-full bg-white/30 backdrop-blur-xl border border-white/20 relative overflow-hidden transition-all duration-200 active:scale-95 shadow-2xl group"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-28 h-28 bg-gradient-to-r from-red-400 to-yellow-400 rounded-full animate-pulse opacity-50"></div>
-            </div>
-            <i className="fas fa-crosshairs text-6xl text-white relative z-10 drop-shadow"></i>
-          </button>
-        </div>
+     {/* Centered Tap Button */}
+<div className="flex flex-1 justify-center items-center z-10 mt-6 relative max-w-md mx-auto w-full">
+  <button
+    onClick={() => {
+      if (navigator.vibrate) navigator.vibrate(250);
+      handleTap();
+    }}
+    onMouseDown={(e) => {
+      e.preventDefault();
+    }}
+    className="w-[180px] h-[180px] rounded-full bg-white/30 backdrop-blur-xl border border-white/20 relative overflow-hidden transition-all duration-200 active:scale-95 shadow-2xl group"
+  >
+    <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
+    <div className="absolute inset-0 flex items-center justify-center">
+      <div className="w-28 h-28 bg-gradient-to-r from-red-400 to-yellow-400 rounded-full animate-pulse opacity-50"></div>
+    </div>
+    <i className="fas fa-swords text-6xl text-white relative z-10 drop-shadow"></i>
+  </button>
+</div>
 
         {/* Bottom-left upgrade button */}
         <UpgradeButton
