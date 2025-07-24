@@ -1153,31 +1153,23 @@ if (gamePhase === "start") {
     </>
   );
 }
-
-// Lobby phase
 if (gamePhase === "lobby") {
+  const bothReady = isPlayerReady && isOpponentReady;
+
   return (
     <>
-      <TopProfileBar
-        profileName={profileName}
-        userId={userId}
-        profileIcon={profileIcon}
-        allTimeTotalTaps={allTimeTotalTaps}
-        renownTokens={renownTokens}
-      />
-
-      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4 pt-20 relative overflow-hidden">
-        {/* Animated background */}
-        <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
-          <div
-            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse"
-            style={{ animationDelay: "1s" }}
-          ></div>
-        </div>
-
+      <div className="flex flex-col items-center pt-10 px-4 relative min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
+        {/* Top Bar */}
+        <TopProfileBar
+          profileName={profileName}
+          userId={userId}
+          profileIcon={profileIcon}
+          allTimeTotalTaps={allTimeTotalTaps}
+          renownTokens={renownTokens}
+        />
+        {/* Modal */}
         <div
-          className="relative backdrop-blur-xl bg-white/10 rounded-3xl p-6 sm:p-8 border border-white/20 w-full max-w-sm shadow-2xl"
+          className="relative backdrop-blur-xl bg-white/10 rounded-3xl p-6 sm:p-8 border border-white/20 w-full max-w-md shadow-2xl z-10"
           style={{
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
@@ -1185,98 +1177,62 @@ if (gamePhase === "lobby") {
         >
           {/* Room Info */}
           <div className="text-center mb-6">
-            {countdown !== null ? (
-              <h2 className="text-3xl text-white">Starting in {countdown}...</h2>
-            ) : (
-              <>
-                <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
-                  Room: {currentRoom}
-                </h2>
-                <p className="text-white/70 text-sm">
-                  Waiting for players to ready up
-                </p>
-              </>
-            )}
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">
+              Room: {currentRoom}
+            </h2>
+            <p className="text-white/70 text-sm">Waiting for players to ready up...</p>
           </div>
 
-          {/* Players Ready Status */}
-          <div className="space-y-3 mb-6">
-            <div
-              className={`p-4 rounded-2xl backdrop-blur-xl border border-white/20 transition-all duration-300 ${
-                isPlayerReady ? "bg-green-500/20 border-green-400/30" : "bg-white/5"
-              }`}
-              style={{
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-              }}
-            >
-              <div className="flex justify-between items-center">
-                <span className="text-white font-bold">{playerName}</span>
+          {/* Player Ready States */}
+          <div className="space-y-4 mb-6">
+            {[{ name: playerName, ready: isPlayerReady }, { name: opponentName, ready: isOpponentReady }].map((p, idx) => (
+              <div
+                key={idx}
+                className={`flex justify-between items-center p-4 rounded-xl border transition-all duration-300 ${
+                  p.ready
+                    ? "bg-green-500/20 border-green-400/30"
+                    : "bg-white/5 border-white/20"
+                }`}
+              >
+                <span className="text-white font-bold">{p.name}</span>
                 <span
                   className={`text-sm font-bold ${
-                    isPlayerReady ? "text-green-300" : "text-white/50"
+                    p.ready ? "text-green-300" : "text-white/50"
                   }`}
                 >
-                  {isPlayerReady ? "✓ Ready" : "Not Ready"}
+                  {p.ready ? "✓ Ready" : "Not Ready"}
                 </span>
               </div>
-            </div>
-
-            <div
-              className={`p-4 rounded-2xl backdrop-blur-xl border border-white/20 transition-all duration-300 ${
-                isOpponentReady ? "bg-green-500/20 border-green-400/30" : "bg-white/5"
-              }`}
-              style={{
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-              }}
-            >
-              <div className="flex justify-between items-center">
-                <span className="text-white font-bold">{opponentName}</span>
-                <span
-                  className={`text-sm font-bold ${
-                    isOpponentReady ? "text-green-300" : "text-white/50"
-                  }`}
-                >
-                  {isOpponentReady ? "✓ Ready" : "Not Ready"}
-                </span>
-              </div>
-            </div>
+            ))}
           </div>
 
-          {/* --- RULES SECTION --- */}
-          <div
-            className="bg-white/10 backdrop-blur-xl rounded-3xl p-4 mb-6 border border-white/20 text-white/80 space-y-2 text-sm leading-relaxed"
-            style={{
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-            }}
-          >
-            <h2 className="text-lg font-bold text-white mb-2 text-center">Game Rules</h2>
-            <p>• Tap the main button to earn coins</p>
-            <p>• Use coins to buy upgrades during the game</p>
-            <p>• 💪 Tap Power: Your coins per tap</p>
-            <p>• ⚡ Crit Chance: 5% chance to double coins</p>
-            <p>• 🚀 Tap Speed: Bonus coins per tap</p>
-            <p>• 🤖 Auto Tapper: Coins per second</p>
-            <p>• Player with most coins when time runs out wins!</p>
-            <p>• Winner earns 10 tokens, loser earns 3</p>
-          </div>
+          {/* Rules Collapsible */}
+          <details className="mb-6">
+            <summary className="cursor-pointer text-center text-white font-bold py-2 hover:underline">
+              Game Rules
+            </summary>
+            <div className="mt-4 text-white/80 text-sm leading-relaxed space-y-1">
+              <p>• Tap the main button to earn coins</p>
+              <p>• Use coins to buy upgrades during the game</p>
+              <p>• 💪 Tap Power: Your coins per tap</p>
+              <p>• ⚡ Crit Chance: 5% chance to double coins</p>
+              <p>• 🚀 Tap Speed: Bonus coins per tap</p>
+              <p>• 🤖 Auto Tapper: Coins per second</p>
+              <p>• Player with most coins when time runs out wins!</p>
+              <p>• Winner earns 10 tokens, loser earns 3</p>
+            </div>
+          </details>
 
           {/* Buttons */}
           <div className="space-y-3">
             <button
               onClick={toggleReady}
-              disabled={countdown !== null}  // Disable button during countdown
-              className={`w-full px-6 py-4 rounded-2xl font-bold transition-all duration-300 shadow-xl backdrop-blur-xl border border-white/20 ${
+              disabled={bothReady || countdown !== null}
+              className={`w-full px-6 py-4 rounded-xl font-bold transition-all duration-300 border shadow-xl ${
                 isPlayerReady
-                  ? "bg-gradient-to-r from-red-500/80 to-red-600/80 text-white hover:scale-105 active:scale-95"
-                  : "bg-gradient-to-r from-green-500/80 to-green-600/80 text-white hover:scale-105 active:scale-95"
-              } ${countdown !== null ? "opacity-50 cursor-not-allowed" : ""}`}
-              style={{
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-              }}
+                  ? "bg-red-600/80 text-white hover:scale-105 active:scale-95"
+                  : "bg-green-600/80 text-white hover:scale-105 active:scale-95"
+              } ${bothReady || countdown !== null ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               <i className={`fas ${isPlayerReady ? "fa-times" : "fa-check"} mr-2`}></i>
               {isPlayerReady ? "Cancel Ready" : "Ready Up!"}
@@ -1284,11 +1240,10 @@ if (gamePhase === "lobby") {
 
             <button
               onClick={resetToStart}
-              className="w-full px-6 py-4 bg-white/10 text-white rounded-2xl font-bold hover:bg-white/20 active:scale-95 transition-all duration-300 backdrop-blur-xl border border-white/20"
-              style={{
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-              }}
+              disabled={bothReady}
+              className={`w-full px-6 py-4 bg-white/10 text-white rounded-xl font-bold border hover:bg-white/20 active:scale-95 transition-all duration-300 ${
+                bothReady ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               <i className="fas fa-arrow-left mr-2"></i>
               Leave Room
@@ -1299,6 +1254,7 @@ if (gamePhase === "lobby") {
     </>
   );
 }
+
 
 if (gamePhase === "playing") {
   // Calculate score percentages for progress bar
