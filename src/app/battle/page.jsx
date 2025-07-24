@@ -1261,21 +1261,24 @@ if (gamePhase === "playing") {
   const playerPercent = ((playerScore || 0) / totalScore) * 100;
   const opponentPercent = ((opponentScore || 0) / totalScore) * 100;
 
-  // Glassy background gradient — smooth linear gradient with subtle opacity for iOS style
-  const backgroundGradient = `linear-gradient(
-    to bottom right,
-    rgba(252, 211, 77, 0.15) 0%,
-    rgba(252, 211, 77, 0.10) ${playerPercent}%, 
-    rgba(236, 72, 153, 0.10) ${playerPercent}%, 
-    rgba(236, 72, 153, 0.15) 100%
-  )`;
+ // Glassy background gradient — smooth linear gradient with subtle opacity for iOS style
+const backgroundGradient = `linear-gradient(
+  to bottom right,
+  rgba(252, 211, 77, 0.15) 0%,
+  rgba(252, 211, 77, 0.10) ${playerPercent}%,
+  rgba(236, 72, 153, 0.10) ${playerPercent}%,
+  rgba(236, 72, 153, 0.15) 100%
+)`;
 
-  return (
-    <>
-      <div
-        className="min-h-screen flex flex-col relative overflow-hidden pt-16 bg-gradient-to-br from-yellow-200/20 via-pink-300/10 to-pink-400/20"
-        style={{ background: backgroundGradient }}
-      >
+// In your JSX:
+return (
+  <>
+    <div
+      className="min-h-screen flex flex-col relative overflow-hidden pt-16"
+      style={{
+        background: backgroundGradient,
+        backgroundColor: "rgb(30 30 30)", // add a dark base color behind the gradient
+      }}
         {/* Animated background subtle pulse circles */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full blur-3xl animate-pulse bg-yellow-300/10"></div>
@@ -1289,43 +1292,43 @@ if (gamePhase === "playing") {
           ></div>
         </div>
 
-      {/* Scoreboard container */}
+     {/* Scoreboard container */}
 <div
-  className="relative z-20 backdrop-blur-xl bg-white/20 border border-white/25 max-w-md mx-auto rounded-xl flex flex-col items-center px-6 py-3 shadow-lg"
+  className="relative z-20 backdrop-blur-xl bg-white/20 border border-white/25 max-w-sm w-[90vw] mx-auto rounded-xl flex flex-col items-center px-4 py-2 shadow-lg"
   style={{
-    backdropFilter: "blur(30px)",
-    WebkitBackdropFilter: "blur(30px)",
-    gap: "0.5rem",
-    minWidth: "320px",
+    backdropFilter: "blur(28px)",
+    WebkitBackdropFilter: "blur(28px)",
+    gap: "0.4rem",
+    minWidth: "280px",
   }}
 >
   {/* Top row: Player name left, Opponent name right */}
-  <div className="w-full flex justify-between items-center text-white font-semibold select-none text-base md:text-lg">
-    <div className="truncate max-w-[45%] flex items-center space-x-2">
-      <i className="fas fa-user text-yellow-400 text-xl flex-shrink-0"></i>
-      <span className="truncate">{playerName}</span>
+  <div className="w-full flex justify-between items-center text-white font-semibold select-none text-sm sm:text-base md:text-lg">
+    <div className="truncate max-w-[45%] flex items-center space-x-1.5 sm:space-x-2">
+      <i className="fas fa-user text-yellow-400 text-lg sm:text-xl flex-shrink-0"></i>
+      <span className="truncate text-sm sm:text-base">{playerName}</span>
     </div>
-    <div className="truncate max-w-[45%] flex items-center space-x-2 justify-end">
-      <span className="truncate">{opponentName}</span>
+    <div className="truncate max-w-[45%] flex items-center space-x-1.5 sm:space-x-2 justify-end">
+      <span className="truncate text-sm sm:text-base">{opponentName}</span>
       <i
         className={
           gameMode === "ai"
-            ? "fas fa-robot text-pink-400 text-xl flex-shrink-0"
-            : "fas fa-user-friends text-pink-400 text-xl flex-shrink-0"
+            ? "fas fa-robot text-pink-400 text-lg sm:text-xl flex-shrink-0"
+            : "fas fa-user-friends text-pink-400 text-lg sm:text-xl flex-shrink-0"
         }
       ></i>
     </div>
   </div>
 
   {/* Middle row: Scores and progress bar */}
-  <div className="w-full flex items-center gap-3">
+  <div className="w-full flex items-center gap-2 sm:gap-3 mt-1">
     {/* Player Score left */}
-    <div className="text-yellow-300 font-bold text-lg tabular-nums min-w-[55px] text-left select-none">
+    <div className="text-yellow-300 font-bold text-base sm:text-lg tabular-nums min-w-[48px] sm:min-w-[55px] text-left select-none">
       {(playerScore || 0).toLocaleString()}
     </div>
 
     {/* Progress bar */}
-    <div className="flex-1 h-4 rounded-full bg-gray-900 overflow-hidden relative border border-white/25">
+    <div className="flex-1 h-3 sm:h-4 rounded-full bg-gray-900 overflow-hidden relative border border-white/25">
       <div
         className="absolute top-0 bottom-0 left-0 bg-yellow-400 transition-all duration-700"
         style={{ width: `${playerPercent}%` }}
@@ -1337,7 +1340,7 @@ if (gamePhase === "playing") {
     </div>
 
     {/* Opponent Score right */}
-    <div className="text-pink-300 font-bold text-lg tabular-nums min-w-[55px] text-right select-none">
+    <div className="text-pink-300 font-bold text-base sm:text-lg tabular-nums min-w-[48px] sm:min-w-[55px] text-right select-none">
       {gameMode === "ai"
         ? (aiCoins || 0).toLocaleString()
         : (opponentScore || 0).toLocaleString()}
@@ -1345,14 +1348,14 @@ if (gamePhase === "playing") {
   </div>
 
   {/* Timer below progress bar, smaller and centered */}
-  <div className="text-white font-mono text-xl md:text-2xl tracking-widest select-none drop-shadow-md bg-black/30 rounded-lg px-4 py-1 mt-2 w-full text-center">
+  <div className="text-white font-mono text-lg sm:text-xl tracking-widest select-none drop-shadow-md bg-black/30 rounded-lg px-3 py-1 mt-1 w-full text-center">
     {formatTime(timeLeft)}
   </div>
 
   {/* Leave button below timer */}
   <button
     onClick={resetToStart}
-    className="mt-3 w-[140px] py-2 bg-red-600/90 text-white font-semibold rounded-lg hover:bg-red-700 active:scale-95 transition-transform duration-150 shadow-lg backdrop-blur-md border border-white/30 flex items-center justify-center gap-2 mx-auto"
+    className="mt-2 w-[120px] sm:w-[140px] py-1.5 bg-red-600/90 text-white font-semibold rounded-lg hover:bg-red-700 active:scale-95 transition-transform duration-150 shadow-lg backdrop-blur-md border border-white/30 flex items-center justify-center gap-2 mx-auto text-sm sm:text-base"
     style={{
       backdropFilter: "blur(18px)",
       WebkitBackdropFilter: "blur(18px)",
@@ -1361,6 +1364,7 @@ if (gamePhase === "playing") {
     <i className="fas fa-times"></i> Leave
   </button>
 </div>
+
 
         {/* Game area */}
         <div className="flex flex-1 items-center justify-center relative z-10 px-4 mt-10">
