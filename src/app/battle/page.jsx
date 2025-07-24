@@ -7,11 +7,7 @@ export const dynamic = "force-client";
 
 
 function MainComponent() {
-  const totalScore =
-  playerScore + (gameMode === "ai" ? (aiCoins || 0) : (opponentScore || 0)) || 1;
 
-const playerPercent = Math.round((playerScore / totalScore) * 100);
-const opponentPercent = 100 - playerPercent;
 
   // Game phases: 'start', 'lobby', 'ready', 'playing', 'finished'
   const [countdown, setCountdown] = React.useState(null); // null means no countdown active
@@ -139,6 +135,11 @@ React.useEffect(() => { aiTapPowerRef.current = aiTapPower; }, [aiTapPower]);
   }
 };
 
+    const totalScore =
+  playerScore + (gameMode === "ai" ? (aiCoins || 0) : (opponentScore || 0)) || 1;
+
+const playerPercent = Math.round((playerScore / totalScore) * 100);
+const opponentPercent = 100 - playerPercent;
   
  // AI Upgrade Cost Functions (use refs inside the effect)
 const getAiTapPowerCost = () =>
@@ -1552,9 +1553,9 @@ if (gamePhase === "finished") {
           </a>
         </div>
       </div>
+    </div>
     </>
   );
-}
 }
 
 return null;
