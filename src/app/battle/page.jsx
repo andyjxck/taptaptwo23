@@ -1473,6 +1473,7 @@ if (gamePhase === "playing") {
             transition: "all 0.3s ease",
           }}
         />
+        </div>
 
        {floatingNumbers.map((num) => {
   // Random spread offsets within viewport, +- 150px from center horizontally and vertically
