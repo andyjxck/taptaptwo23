@@ -1371,103 +1371,103 @@ if (gamePhase === "playing") {
           </button>
         </div>
 
-        {/* UPGRADE BUTTONS fixed absolute, spaced below leave button */}
-        <div
-          className="fixed left-4 right-4 z-50"
-          style={{ top: upgradesTop }}
-        >
-          {/* Top-left button */}
-          <div className="absolute top-0 left-0">
-            <UpgradeButton
-              title="Tap Power"
-              level={tapPowerLevel}
-              cost={getTapPowerCost()}
-              description={`+${tapPower} per tap`}
-              onClick={(e) => {
-                e.preventDefault();
-                upgradeTapPower();
-              }}
-              disabled={playerScore < getTapPowerCost()}
-              icon="💪"
-              glassy
-              styleOverride={{
-                minWidth: "110px",
-                padding: "0.5rem 1rem",
-                borderRadius: "0.75rem",
-                fontSize: "1rem",
-              }}
-            />
-          </div>
+      {/* UPGRADE BUTTONS fixed absolute, spaced below leave button */}
+<div
+  className="fixed z-50 w-full max-w-md left-1/2 transform -translate-x-1/2"
+  style={{ top: upgradesTop }}
+>
+  {/* Top-left button */}
+  <div className="absolute top-0 left-0 translate-x-0 translate-y-0">
+    <UpgradeButton
+      title="Tap Power"
+      level={tapPowerLevel}
+      cost={getTapPowerCost()}
+      description={`+${tapPower} per tap`}
+      onClick={(e) => {
+        e.preventDefault();
+        upgradeTapPower();
+      }}
+      disabled={playerScore < getTapPowerCost()}
+      icon="💪"
+      glassy
+      styleOverride={{
+        minWidth: "110px",
+        padding: "0.5rem 1rem",
+        borderRadius: "0.75rem",
+        fontSize: "1rem",
+      }}
+    />
+  </div>
 
-          {/* Top-right button */}
-          <div className="absolute top-0 right-0">
-            <UpgradeButton
-              title="Critical Hit"
-              level={critLevel}
-              cost={getCritCost()}
-              description={`${critChance}% crit chance`}
-              onClick={(e) => {
-                e.preventDefault();
-                upgradeCritChance();
-              }}
-              disabled={playerScore < getCritCost() || critChance >= 100}
-              icon="⚡"
-              glassy
-              styleOverride={{
-                minWidth: "110px",
-                padding: "0.5rem 1rem",
-                borderRadius: "0.75rem",
-                fontSize: "1rem",
-              }}
-            />
-          </div>
+  {/* Top-right button */}
+  <div className="absolute top-0 right-0 translate-x-0 translate-y-0">
+    <UpgradeButton
+      title="Critical Hit"
+      level={critLevel}
+      cost={getCritCost()}
+      description={`${critChance}% crit chance`}
+      onClick={(e) => {
+        e.preventDefault();
+        upgradeCritChance();
+      }}
+      disabled={playerScore < getCritCost() || critChance >= 100}
+      icon="⚡"
+      glassy
+      styleOverride={{
+        minWidth: "110px",
+        padding: "0.5rem 1rem",
+        borderRadius: "0.75rem",
+        fontSize: "1rem",
+      }}
+    />
+  </div>
 
-          {/* Bottom-left button */}
-          <div className="absolute bottom-0 left-0" style={{ marginTop: "72px" }}>
-            <UpgradeButton
-              title="Tap Speed"
-              level={tapSpeedLevel}
-              cost={getTapSpeedCost()}
-              description={`+${tapSpeedBonus}% bonus`}
-              onClick={(e) => {
-                e.preventDefault();
-                upgradeTapSpeed();
-              }}
-              disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
-              icon="🚀"
-              glassy
-              styleOverride={{
-                minWidth: "110px",
-                padding: "0.5rem 1rem",
-                borderRadius: "0.75rem",
-                fontSize: "1rem",
-              }}
-            />
-          </div>
+  {/* Bottom-left button */}
+  <div className="absolute bottom-0 left-0 translate-x-0 translate-y-0">
+    <UpgradeButton
+      title="Tap Speed"
+      level={tapSpeedLevel}
+      cost={getTapSpeedCost()}
+      description={`+${tapSpeedBonus}% bonus`}
+      onClick={(e) => {
+        e.preventDefault();
+        upgradeTapSpeed();
+      }}
+      disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
+      icon="🚀"
+      glassy
+      styleOverride={{
+        minWidth: "110px",
+        padding: "0.5rem 1rem",
+        borderRadius: "0.75rem",
+        fontSize: "1rem",
+      }}
+    />
+  </div>
 
-          {/* Bottom-right button */}
-          <div className="absolute bottom-0 right-0" style={{ marginTop: "72px" }}>
-            <UpgradeButton
-              title="Auto Tapper"
-              level={autoTapperLevel}
-              cost={getAutoTapperCost()}
-              description={`${autoTapper}/sec`}
-              onClick={(e) => {
-                e.preventDefault();
-                upgradeAutoTapper();
-              }}
-              disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
-              icon="🤖"
-              glassy
-              styleOverride={{
-                minWidth: "110px",
-                padding: "0.5rem 1rem",
-                borderRadius: "0.75rem",
-                fontSize: "1rem",
-              }}
-            />
-          </div>
-        </div>
+  {/* Bottom-right button */}
+  <div className="absolute bottom-0 right-0 translate-x-0 translate-y-0">
+    <UpgradeButton
+      title="Auto Tapper"
+      level={autoTapperLevel}
+      cost={getAutoTapperCost()}
+      description={`${autoTapper}/sec`}
+      onClick={(e) => {
+        e.preventDefault();
+        upgradeAutoTapper();
+      }}
+      disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
+      icon="🤖"
+      glassy
+      styleOverride={{
+        minWidth: "110px",
+        padding: "0.5rem 1rem",
+        borderRadius: "0.75rem",
+        fontSize: "1rem",
+      }}
+    />
+  </div>
+</div>
 
         {/* MAIN BATTLE BUTTON fixed absolutely centered vertically between leave button bottom and viewport bottom */}
         <div
