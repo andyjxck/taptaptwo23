@@ -1302,20 +1302,17 @@ if (gamePhase === "playing") {
           />
         </div>
 
-{/* Top-right upgrade button — fully fixed and visible */}
-<div className="fixed top-[72px] right-4 sm:right-6 z-50">
-  <UpgradeButton
-    title="Critical Hit"
-    level={critLevel}
-    cost={getCritCost()}
-    description={`${critChance}% crit chance`}
-    onClick={() => upgradeCritChance()}
-    disabled={playerScore < getCritCost() || critChance >= 100}
-    position=""
-    icon="⚡"
-    glassy
-  />
-</div>
+<UpgradeButton
+  title="Critical Hit"
+  level={critLevel}
+  cost={getCritCost()}
+  description={`${critChance}% crit chance`}
+  onClick={() => upgradeCritChance()}
+  disabled={playerScore < getCritCost() || critChance >= 100}
+  position="absolute top-2 right-2"
+  icon="⚡"
+  glassy
+/>
 
         {/* Scoreboard below top buttons */}
 <div className="z-10 mt-[110px] max-w-md mx-auto text-white select-none space-y-3 w-full">
