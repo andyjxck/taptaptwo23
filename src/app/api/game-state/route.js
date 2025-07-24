@@ -451,6 +451,92 @@ async function handler({
     return { success: true, message: "Andysocial promo code applied!" };
   }
 
+   // === BATTLE CODE ===
+if (codeName === "battle") {
+  let houseLevel = (Number(save.house_level) || 1) + 10;
+  let tap_power_upgrades = Number(save.tap_power_upgrades) || 0;
+  let auto_tapper_upgrades = Number(save.auto_tapper_upgrades) || 0;
+  let crit_chance_upgrades = Number(save.crit_chance_upgrades) || 0;
+  let tap_speed_bonus_upgrades = Number(save.tap_speed_bonus_upgrades) || 0;
+
+  // Distribute 100 upgrade points randomly across 4 categories
+  let upgrades = [0, 0, 0, 0];
+  let remaining = 100;
+  for (let i = 0; i < 4; i++) {
+    if (i === 3) {
+      upgrades[i] = remaining;
+    } else {
+      const rand = Math.floor(Math.random() * (remaining + 1));
+      upgrades[i] = rand;
+      remaining -= rand;
+    }
+  }
+
+  tap_power_upgrades += upgrades[0];
+  auto_tapper_upgrades += upgrades[1];
+  crit_chance_upgrades += upgrades[2];
+  tap_speed_bonus_upgrades += upgrades[3];
+
+  // Profile icons
+  let ownedProfileIcons = [];
+  try {
+    ownedProfileIcons = save.owned_profile_icons ? JSON.parse(save.owned_profile_icons) : [];
+  } catch {}
+  if (!Array.isArray(ownedProfileIcons)) ownedProfileIcons = [];
+
+  const availableIcons = allIcons.filter((x) => !ownedProfileIcons.includes(x));
+  for (let i = 0; i < 2 && availableIcons.length > 0; i++) {
+    const idx = Math.floor(Math.random() * availableIcons.length);
+    ownedProfileIcons.push(availableIcons[idx]);
+    availableIcons.splice(idx, 1);
+  }
+
+  // Themes
+  let ownedThemes = [];
+  try {
+    ownedThemes = save.owned_themes
+      ? typeof save.owned_themes === "string"
+        ? JSON.parse(save.owned_themes)
+        : save.owned_themes
+      : [];
+  } catch {}
+  if (!Array.isArray(ownedThemes)) ownedThemes = [];
+
+  const themeOptions = allThemes.filter((t) => !ownedThemes.includes(t));
+  if (themeOptions.length > 0) {
+    const rand = Math.floor(Math.random() * themeOptions.length);
+    ownedThemes.push(themeOptions[rand]);
+  }
+
+  const renownTokens = (Number(save.renown_tokens) || 0) + 30;
+
+  usedCodes.push(codeName);
+
+  try {
+    await sql`
+      UPDATE game_saves
+      SET
+        house_level = ${houseLevel},
+        tap_power_upgrades = ${tap_power_upgrades},
+        auto_tapper_upgrades = ${auto_tapper_upgrades},
+        crit_chance_upgrades = ${crit_chance_upgrades},
+        tap_speed_bonus_upgrades = ${tap_speed_bonus_upgrades},
+        renown_tokens = ${renownTokens},
+        owned_profile_icons = ${JSON.stringify(ownedProfileIcons)},
+        owned_themes = ${JSON.stringify(ownedThemes)}
+      WHERE user_id = ${userIdInt}
+    `;
+    await sql`
+      UPDATE users SET used_codes = ${JSON.stringify(usedCodes)}
+      WHERE user_id = ${userIdInt}
+    `;
+  } catch {
+    return { error: "Database error applying code" };
+  }
+
+  return { success: true, message: "Battle promo code applied!" };
+}
+
   // Unknown code
   return { error: "Invalid or unsupported code" };
 }
