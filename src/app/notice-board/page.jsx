@@ -134,9 +134,20 @@ function MainComponent() {
         Feel free to join and hang out using the link below:
       </p>
 
-      <p style={{ fontWeight: "bold", color: "#7c3aed", marginBottom: "1.25rem" }}>
-        https://discord.gg/5uQzMpNX
-      </p>
+      <a
+  href="https://discord.gg/5uQzMpNX"
+  target="_blank"
+  rel="noopener noreferrer"
+  style={{
+    fontWeight: "bold",
+    color: "#7c3aed",
+    marginBottom: "1.25rem",
+    display: "inline-block",
+  }}
+>
+  https://discord.gg/5uQzMpNX
+</a>
+
 
       <p
         style={{
