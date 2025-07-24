@@ -1484,8 +1484,6 @@ if (gamePhase === "playing") {
   let colorClass = "text-green-400"; // default player color
   if (num.isCrit) {
     colorClass = "text-red-500 font-extrabold";
-  } else if (num.player === "opponent") {
-    colorClass = "text-pink-400";
   }
 
   return (
