@@ -1365,7 +1365,6 @@ if (gamePhase === "playing") {
       <i className="fas fa-times mr-1" /> Leave
     </button>
   </div>
-</div>
 
 
           {/* Bottom Upgrade Buttons */}
