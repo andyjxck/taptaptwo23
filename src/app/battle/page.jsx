@@ -892,17 +892,6 @@ React.useEffect(() => {
 
 
   
-  // Update all-time total taps when game finishes
-React.useEffect(() => {
-  if (gamePhase === "finished" && !renownAwarded) {
-    setAllTimeTotalTaps((prev) => prev + totalTapsInGame);
-    const playerWon = playerScore > opponentScore;
-    const tie = playerScore === opponentScore;
-    const renownEarned = playerWon ? 10 : tie ? 5 : 3;
-    setRenownTokens((prev) => prev + renownEarned);
-    setRenownAwarded(true);
-  }
-}, [gamePhase, playerScore, opponentScore, totalTapsInGame, renownAwarded]);
 const fetchTotalTapsInGame = async (roomCode) => {
   const res = await fetch('/api/battle', {
     method: 'POST',
