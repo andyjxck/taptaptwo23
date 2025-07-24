@@ -12,8 +12,8 @@ function MainComponent() {
   // Game phases: 'start', 'lobby', 'ready', 'playing', 'finished'
   const [countdown, setCountdown] = React.useState(null); // null means no countdown active
   const [gamePhase, setGamePhase] = React.useState("start");
-  const [timeLeft, setTimeLeft] = React.useState(30);
-  const [gameDuration, setGameDuration] = React.useState(30);
+  const [timeLeft, setTimeLeft] = React.useState(180);
+  const [gameDuration, setGameDuration] = React.useState(180);
 
   const [playerScore, setPlayerScore] = React.useState(0);
   const [opponentScore, setOpponentScore] = React.useState(0);
@@ -396,7 +396,7 @@ useEffect(() => {
 
     const startGameTimer = () => {
   setGamePhase("playing"); // Change game phase to playing
-  setTimeLeft(30); // Set game time to 3 minutes (in seconds)
+  setTimeLeft(180); // Set game time to 3 minutes (in seconds)
 };
 
   
@@ -1408,19 +1408,29 @@ if (gamePhase === "playing") {
           glassy
         />
 
-        {/* Timer + Leave stacked below scoreboard */}
-        <div className="z-10 max-w-md mx-auto flex flex-col items-center text-white gap-2 mt-6 mb-6">
-          <div className="font-mono text-2xl sm:text-3xl tracking-widest bg-black/30 px-4 py-1 rounded-md border border-white/20 select-none">
-            {formatTime(timeLeft)} {/* format like 00:25 */}
-          </div>
+       {/* Timer + Leave + Mute side-by-side, centered */}
+<div className="z-10 max-w-md mx-auto flex flex-col items-center text-white gap-2 mt-6 mb-6">
+  <div className="font-mono text-2xl sm:text-3xl tracking-widest bg-black/30 px-4 py-1 rounded-md border border-white/20 select-none">
+    {formatTime(timeLeft)} {/* format like 00:25 */}
+  </div>
 
-          <button
-            onClick={resetToStart}
-            className="px-4 py-1 bg-red-500/80 text-white text-sm rounded-full hover:bg-red-500 active:scale-95 transition-all duration-200 backdrop-blur-xl border border-white/20"
-          >
-            <i className="fas fa-times mr-1" /> Leave
-          </button>
-        </div>
+  {/* Buttons container - flex row, centered, gap between */}
+  <div className="flex space-x-4">
+    <button
+      onClick={resetToStart}
+      className="flex items-center px-4 py-1 bg-red-500/80 text-white text-sm rounded-full hover:bg-red-500 active:scale-95 transition-all duration-200 backdrop-blur-xl border border-white/20"
+    >
+      <i className="fas fa-times mr-1" /> Leave
+    </button>
+
+    <button
+      onClick={() => setMuted((m) => !m)}
+      className="flex items-center justify-center px-4 py-1 text-[#4a5568] hover:bg-gray-100 rounded-full border border-white/20"
+      aria-label={muted ? "Unmute sounds" : "Mute sounds"}
+    >
+      <i className={`fas ${muted ? "fa-volume-mute" : "fa-volume-up"}`}></i>
+    </button>
+  </div>
 
         {/* Floating Numbers */}
         {floatingNumbers.map((num) => (
