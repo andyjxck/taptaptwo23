@@ -135,7 +135,7 @@ function MainComponent() {
       </p>
 
       <a
-  href="https://discord.gg/5uQzMpNX"
+  href="https://discord.gg/PmWMEH8RWJ"
   target="_blank"
   rel="noopener noreferrer"
   style={{
@@ -145,7 +145,7 @@ function MainComponent() {
     display: "inline-block",
   }}
 >
-  https://discord.gg/5uQzMpNX
+  https://discord.gg/PmWMEH8RWJ
 </a>
 
 
