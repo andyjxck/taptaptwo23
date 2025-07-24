@@ -1017,7 +1017,7 @@ const UpgradeButton = ({
   position,
   icon,
 }) => (
-  <div className={`absolute ${position} z-10`}>
+  <div className={`absolute ${position} z-15`}>
     <button
       onClick={onClick}
       disabled={disabled || (maxLevel && level >= maxLevel)}
@@ -1315,7 +1315,7 @@ if (gamePhase === "playing") {
   />
 </div>
 {/* Scoreboard + Timer below top buttons */}
-<div className="z-10 mt-40 max-w-md mx-auto text-white select-none space-y-2">
+<div className="z-10 mt-38 max-w-md mx-auto text-white select-none space-y-2">
   {/* Scoreboard - horizontal layout */}
   <div className="backdrop-blur-xl bg-white/10 border border-white/20 p-2 shadow-xl rounded-xl flex justify-between items-center text-xs sm:text-sm font-bold">
     {/* Player 1 */}
