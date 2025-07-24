@@ -16,8 +16,8 @@ const opponentPercent = 100 - playerPercent;
   // Game phases: 'start', 'lobby', 'ready', 'playing', 'finished'
   const [countdown, setCountdown] = React.useState(null); // null means no countdown active
   const [gamePhase, setGamePhase] = React.useState("start");
-  const [timeLeft, setTimeLeft] = React.useState(30);
-  const [gameDuration, setGameDuration] = React.useState(30);
+  const [timeLeft, setTimeLeft] = React.useState(180);
+  const [gameDuration, setGameDuration] = React.useState(180);
 
   const [playerScore, setPlayerScore] = React.useState(0);
   const [opponentScore, setOpponentScore] = React.useState(0);
@@ -391,7 +391,7 @@ useEffect(() => {
 
     const startGameTimer = () => {
   setGamePhase("playing"); // Change game phase to playing
-  setTimeLeft(30); // Set game time to 3 minutes (in seconds)
+  setTimeLeft(180); // Set game time to 3 minutes (in seconds)
 };
 
   
@@ -956,73 +956,42 @@ const fetchRoomStatus = async () => {
 };
 
 
-const TopProfileBar = ({
-  profileName,
-  userId,
-  profileIcon,
-  allTimeTotalTaps,
-  renownTokens,
-}) => (
-  <div
-    className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white/10 border-b border-white/20 p-3 shadow-xl"
-    style={{
-      backdropFilter: "blur(20px)",
-      WebkitBackdropFilter: "blur(20px)",
-    }}
-  >
-    <div className="flex items-center justify-between max-w-6xl mx-auto">
-      {/* Left side - Profile icon and info */}
-      <div className="flex items-center space-x-3 min-w-0">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center shadow-lg overflow-hidden flex-shrink-0">
+const TopProfileBar = ({ profileName, userId, profileIcon, renownTokens, allTimeTotalTaps }) => {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  return (
+    <div className="z-50 flex flex-col items-center space-y-2 mb-4">
+      <div className="text-center">
+        <h1 className="text-white text-3xl font-bold tracking-tight">Tap Tap Two</h1>
+        <p className="text-white/60 text-sm">an andysocial game</p>
+      </div>
+
+      <div
+        className="flex items-center space-x-3 px-4 py-2 bg-white/10 rounded-full backdrop-blur-xl border border-white/20 shadow-lg cursor-pointer hover:scale-105 transition-all duration-200"
+        onClick={() => setDropdownOpen(!dropdownOpen)}
+      >
+        <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
           {profileIcon ? (
-            <img
-              src={profileIcon}
-              alt={`${profileName} icon`}
-              className="w-full h-full object-cover rounded-full"
-            />
+            <img src={profileIcon} alt="Profile" className="w-full h-full object-cover rounded-full" />
           ) : (
             <i className="fas fa-user text-white text-sm"></i>
           )}
         </div>
-        {/* Info stacked vertically */}
-        <div className="flex flex-col min-w-0">
-          <div
-            className="text-white font-bold text-sm truncate"
-            title={`${profileName} ${userId ? `(${userId})` : ""}`}
-          >
-            {profileName} {userId ? `(${userId})` : ""}
-          </div>
-          <div className="flex items-center space-x-4 text-xs text-white/70 mt-1 flex-wrap">
-            <div className="flex items-center whitespace-nowrap">
-              <i className="fas fa-coins text-yellow-400 mr-1"></i>
-              <span>{renownTokens} tokens</span>
-            </div>
-            <div className="flex items-center whitespace-nowrap">
-              <i className="fas fa-hand-pointer text-blue-400 mr-1"></i>
-              <span>{(allTimeTotalTaps || 0).toLocaleString()} taps</span>
-            </div>
-          </div>
+        <div className="text-white text-sm font-semibold">
+          {profileName} {userId && `(${userId})`}
         </div>
+        <i className={`fas fa-chevron-${dropdownOpen ? "up" : "down"} text-white/70`} />
       </div>
 
-      {/* Right side - Return button */}
-      <a
-        href="https://taptaptwo.co.uk"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-purple-500/80 to-pink-500/80 text-white rounded-xl font-bold hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg backdrop-blur-xl border border-white/20 text-xs sm:text-sm whitespace-nowrap"
-        style={{
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-        }}
-      >
-        <i className="fas fa-arrow-left"></i>
-        <span className="hidden sm:inline">Return to</span>
-        <span>Tap Tap: Two</span>
-      </a>
+      {dropdownOpen && (
+        <div className="mt-2 px-4 py-2 bg-white/10 text-white rounded-xl text-sm space-y-1 border border-white/20 backdrop-blur-xl shadow-xl">
+          <div><i className="fas fa-coins text-yellow-400 mr-2"></i>{renownTokens} tokens</div>
+          <div><i className="fas fa-hand-pointer text-blue-400 mr-2"></i>{allTimeTotalTaps?.toLocaleString() || 0} taps</div>
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 const UpgradeButton = ({
   title,
@@ -1067,126 +1036,117 @@ const UpgradeButton = ({
   </div>
 );
 
-// Starting page
 if (gamePhase === "start") {
   return (
     <>
-    <TopProfileBar
-  profileName={profileName}
-  userId={userId}
-  profileIcon={profileIcon}
-  allTimeTotalTaps={allTimeTotalTaps}
-  renownTokens={renownTokens}
-/>
+      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4 pt-6 relative flex flex-col items-center justify-between overflow-hidden">
 
-<div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4 pt-20 relative overflow-hidden">
-  {/* Animated background elements */}
-  <div className="absolute inset-0">
-    <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
-    <div
-      className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse"
-      style={{ animationDelay: "1s" }}
-    ></div>
-    <div
-      className="absolute top-1/2 left-1/2 w-64 h-64 bg-pink-500/20 rounded-full blur-3xl animate-pulse"
-      style={{ animationDelay: "2s" }}
-    ></div>
-  </div>
+        {/* Background Blurs */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+          <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-pink-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
+        </div>
 
-  <div
-    className="relative backdrop-blur-xl bg-white/10 rounded-3xl p-6 sm:p-8 border border-white/20 w-full max-w-sm shadow-2xl"
-    style={{
-      backdropFilter: "blur(20px)",
-      WebkitBackdropFilter: "blur(20px)",
-    }}
-  >
-          {/* Logo and Title */}
-          <div className="text-center mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 tracking-tight">
-              Tap Tap: Battle
-            </h1>
-            <p className="text-white/70 text-sm">Competitive Tapping Arena</p>
+        {/* Top Bar and Title */}
+        <div className="z-10 mt-4">
+          <TopProfileBar
+            profileName={profileName}
+            userId={userId}
+            profileIcon={profileIcon}
+            renownTokens={renownTokens}
+            allTimeTotalTaps={allTimeTotalTaps}
+          />
+        </div>
+
+        {/* Center Modal with Tabs */}
+        <div className="relative z-10 w-full max-w-sm bg-white/10 border border-white/20 backdrop-blur-xl p-6 sm:p-8 rounded-3xl shadow-2xl">
+          <div className="flex justify-around mb-6">
+            <button
+              className={`px-4 py-2 rounded-xl font-bold text-white ${activeTab === "join" ? "bg-white/20 border border-white/30" : "hover:bg-white/10"}`}
+              onClick={() => setActiveTab("join")}
+            >
+              Create / Join
+            </button>
+            <button
+              className={`px-4 py-2 rounded-xl font-bold text-white ${activeTab === "ai" ? "bg-white/20 border border-white/30" : "hover:bg-white/10"}`}
+              onClick={() => setActiveTab("ai")}
+            >
+              AI
+            </button>
           </div>
 
-          <div className="space-y-4">
-            <input
-              type="text"
-              placeholder="Room Code (6 chars)"
-              value={roomCode}
-              onChange={(e) =>
-                setRoomCode(e.target.value.toUpperCase().slice(0, 6))
-              }
-              className="w-full px-4 py-4 rounded-2xl bg-white/10 text-white placeholder-white/50 border border-white/20 backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all duration-300 text-center font-mono text-lg tracking-widest"
-              maxLength={6}
-              style={{
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-              }}
-            />
+          {activeTab === "join" && (
+            <>
+              <input
+                type="text"
+                placeholder="Room Code (6 chars)"
+                value={roomCode}
+                onChange={(e) => setRoomCode(e.target.value.toUpperCase().slice(0, 6))}
+                className="w-full px-4 py-4 rounded-2xl bg-white/10 text-white placeholder-white/50 border border-white/20 backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-white/30 text-center font-mono text-lg tracking-widest mb-4"
+              />
+              <button
+                onClick={createRoom}
+                disabled={roomCode.length > 0}
+                className={`w-full mb-4 px-6 py-4 rounded-2xl font-bold transition-all duration-300 shadow-xl backdrop-blur-xl border border-white/20 ${
+                  roomCode.length === 0
+                    ? "bg-gradient-to-r from-green-500/80 to-emerald-600/80 text-white hover:scale-105"
+                    : "bg-white/5 text-white/40 cursor-not-allowed"
+                }`}
+              >
+                <i className="fas fa-plus mr-2" />
+                Create Room
+              </button>
 
-            <button
-              onClick={createRoom}
-              className="w-full px-6 py-4 bg-gradient-to-r from-green-500/80 to-emerald-600/80 text-white rounded-2xl font-bold hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl hover:shadow-green-500/25 backdrop-blur-xl border border-white/20"
-              style={{
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-              }}
-            >
-              <i className="fas fa-plus mr-2"></i>
-              Create Room
-            </button>
+              <button
+                onClick={joinRoom}
+                disabled={roomCode.length !== 6}
+                className={`w-full px-6 py-4 rounded-2xl font-bold transition-all duration-300 shadow-xl backdrop-blur-xl border border-white/20 ${
+                  roomCode.length === 6
+                    ? "bg-gradient-to-r from-blue-500/80 to-cyan-600/80 text-white hover:scale-105"
+                    : "bg-white/5 text-white/40 cursor-not-allowed"
+                }`}
+              >
+                <i className="fas fa-sign-in-alt mr-2" />
+                Join Room
+              </button>
+            </>
+          )}
 
-            <button
-              onClick={joinRoom}
-              disabled={roomCode.length !== 6}
-              className={`w-full px-6 py-4 rounded-2xl font-bold transition-all duration-300 shadow-xl backdrop-blur-xl border border-white/20 ${
-                roomCode.length === 6
-                  ? "bg-gradient-to-r from-blue-500/80 to-cyan-600/80 text-white hover:scale-105 active:scale-95 hover:shadow-blue-500/25"
-                  : "bg-white/5 text-white/40 cursor-not-allowed"
-              }`}
-              style={{
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-              }}
-            >
-              <i className="fas fa-sign-in-alt mr-2"></i>
-              Join Room
-            </button>
-
-            <div className="space-y-3">
+          {activeTab === "ai" && (
+            <>
               <select
                 value={aiDifficulty}
                 onChange={(e) => setAiDifficulty(e.target.value)}
-                className="w-full px-4 py-3 rounded-2xl bg-white/10 text-white border border-white/20 backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-white/30"
-                style={{
-                  backdropFilter: "blur(20px)",
-                  WebkitBackdropFilter: "blur(20px)",
-                }}
+                className="w-full px-4 py-3 rounded-2xl bg-white/10 text-white border border-white/20 backdrop-blur-xl mb-4"
               >
-                <option value="easy" className="bg-purple-900 text-white">
-                  🟢 Easy AI
-                </option>
-                <option value="medium" className="bg-purple-900 text-white">
-                  🟡 Medium AI
-                </option>
-                <option value="hard" className="bg-purple-900 text-white">
-                  🔴 Hard AI
-                </option>
+                <option value="easy" className="bg-purple-900 text-white">🟢 Easy AI</option>
+                <option value="medium" className="bg-purple-900 text-white">🟡 Medium AI</option>
+                <option value="hard" className="bg-purple-900 text-white">🔴 Hard AI</option>
               </select>
 
               <button
                 onClick={playAI}
-                className="w-full px-6 py-4 bg-gradient-to-r from-orange-500/80 to-red-600/80 text-white rounded-2xl font-bold hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl hover:shadow-orange-500/25 backdrop-blur-xl border border-white/20"
-                style={{
-                  backdropFilter: "blur(20px)",
-                  WebkitBackdropFilter: "blur(20px)",
-                }}
+                className="w-full px-6 py-4 bg-gradient-to-r from-orange-500/80 to-red-600/80 text-white rounded-2xl font-bold hover:scale-105 active:scale-95 shadow-xl border border-white/20 backdrop-blur-xl"
               >
-                <i className="fas fa-robot mr-2"></i>
+                <i className="fas fa-robot mr-2" />
                 Battle AI
               </button>
-            </div>
-          </div>
+            </>
+          )}
+        </div>
+
+        {/* Footer Return Button */}
+        <div className="z-10 mt-6">
+          <a
+            href="https://taptaptwo.co.uk"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center space-x-2 px-4 py-3 bg-white/10 text-white rounded-xl font-bold text-sm hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg border border-white/20 backdrop-blur-xl"
+          >
+            <i className="fas fa-arrow-left" />
+            <span>Return to Tap Tap Two</span>
+          </a>
         </div>
       </div>
     </>
