@@ -1302,10 +1302,8 @@ if (gamePhase === "playing") {
         </div>
 
       {/* Top-right button */}
-<div
-  className="absolute top-2 right-2 z-20"
-  style={{ transform: "translateX(-145px)" }}
->
+{/* Top-right button */}
+<div className="absolute top-2 right-2 z-20">
   <UpgradeButton
     title="Critical Hit"
     level={critLevel}
@@ -1318,6 +1316,7 @@ if (gamePhase === "playing") {
     glassy
   />
 </div>
+
 
 
         {/* Scoreboard below top buttons */}
