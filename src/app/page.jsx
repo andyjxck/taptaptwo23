@@ -2495,7 +2495,7 @@ async function removeFriend(friendId) {
             <button
               onClick={() => {
                 if (navigator.vibrate) {
-  navigator.vibrate(250); // vibrate for 50 milliseconds
+  navigator.vibrate(50); // vibrate for 50 milliseconds
 }
 
                 setShowDoubleEarningsModal(false);
@@ -3357,7 +3357,7 @@ if (lastActive && !isNaN(lastActive)) {
               onClick={() => {
                 if (canReset) {
                   if (navigator.vibrate) {
-  navigator.vibrate(250); // vibrate for 50 milliseconds
+  navigator.vibrate(50); // vibrate for 50 milliseconds
 }
                   handleReset();
                 }
@@ -3438,7 +3438,7 @@ const handleReset = useCallback(() => {
 }, [gameState, saveGame, activeShopBoosts]);
 
 const handleTap = useCallback(() => {
- if (navigator.vibrate) navigator.vibrate(250);
+ if (navigator.vibrate) navigator.vibrate(50);
   playClick(); // 🔊 Play sound immediately when tapped
 
   const now = Date.now();
@@ -3563,7 +3563,7 @@ const handleUpgrade = useCallback(
 
       if (state.coins < cost) break;
 
-      if (navigator.vibrate) navigator.vibrate(250);
+      if (navigator.vibrate) navigator.vibrate(50);
 
       // ✅ Play sound before upgrade is applied
       playUpgrade();
@@ -4070,7 +4070,7 @@ const renderLeaderboard = () => (
                         return;
                       }
                        if (navigator.vibrate) {
-  navigator.vibrate(250); // vibrate for 50 milliseconds
+  navigator.vibrate(50); // vibrate for 50 milliseconds
 }
                       setGameState((prev) => ({
                         ...prev,
@@ -4898,7 +4898,7 @@ const renderLeaderboard = () => (
             onClick={() => {
               if (!canAfford) return;
   playUpgrade(); 
-  if (navigator.vibrate) navigator.vibrate(250);
+  if (navigator.vibrate) navigator.vibrate(50);
               setGameState((prev) => {
                 const newHouseLevel = prev.houseLevel + 1;
                 const updatedState = {
@@ -5475,7 +5475,7 @@ const renderLeaderboard = () => (
         <div className="relative">
           <button
             onClick={() => {
-  if (navigator.vibrate) navigator.vibrate(250);
+  if (navigator.vibrate) navigator.vibrate(50);
   handleTap();
 }}
             className={`w-[200px] h-[200px] rounded-full ${glassStyle} bg-white/30 ${buttonGlow} transform active:scale-95 transition-all duration-200 relative overflow-hidden hover:shadow-2xl border border-white/30 group`}
