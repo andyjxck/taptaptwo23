@@ -957,42 +957,128 @@ const fetchRoomStatus = async () => {
 };
 
 
-const TopProfileBar = ({ profileName, userId, profileIcon, renownTokens, allTimeTotalTaps }) => {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+if (gamePhase === "finished") {
+  const playerWon = playerScore > opponentScore;
+  const tie = playerScore === opponentScore;
+  const renownEarned = playerWon ? 10 : tie ? 5 : 3;
 
   return (
-    <div className="z-50 flex flex-col items-center space-y-2 mb-4">
-      <div className="text-center">
-        <h1 className="text-white text-3xl font-bold tracking-tight">Tap Tap Two</h1>
-        <p className="text-white/60 text-sm">an andysocial game</p>
-      </div>
+    <>
+      <TopProfileBar
+        profileName={profileName}
+        userId={userId}
+        profileIcon={profileIcon}
+        allTimeTotalTaps={allTimeTotalTaps}
+        renownTokens={renownTokens}
+      />
 
-      <div
-        className="flex items-center space-x-3 px-4 py-2 bg-white/10 rounded-full backdrop-blur-xl border border-white/20 shadow-lg cursor-pointer hover:scale-105 transition-all duration-200"
-        onClick={() => setDropdownOpen(!dropdownOpen)}
-      >
-        <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-          {profileIcon ? (
-            <img src={profileIcon} alt="Profile" className="w-full h-full object-cover rounded-full" />
-          ) : (
-            <i className="fas fa-user text-white text-sm"></i>
-          )}
+      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4 pt-20 relative overflow-hidden">
+        {/* Animated background */}
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
+          <div
+            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse"
+            style={{ animationDelay: "1s" }}
+          ></div>
         </div>
-        <div className="text-white text-sm font-semibold">
-          {profileName} {userId && `(${userId})`}
-        </div>
-        <i className={`fas fa-chevron-${dropdownOpen ? "up" : "down"} text-white/70`} />
-      </div>
 
-      {dropdownOpen && (
-        <div className="mt-2 px-4 py-2 bg-white/10 text-white rounded-xl text-sm space-y-1 border border-white/20 backdrop-blur-xl shadow-xl">
-          <div><i className="fas fa-coins text-yellow-400 mr-2"></i>{renownTokens} tokens</div>
-          <div><i className="fas fa-hand-pointer text-blue-400 mr-2"></i>{allTimeTotalTaps?.toLocaleString() || 0} taps</div>
+        <div
+          className="relative backdrop-blur-xl bg-white/10 rounded-3xl p-6 sm:p-8 border border-white/20 w-full max-w-sm text-center shadow-2xl flex flex-col"
+          style={{
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+          }}
+        >
+          <div className="text-4xl sm:text-5xl mb-4">
+            {playerWon ? "🎉" : tie ? "🤝" : "😢"}
+          </div>
+
+          <div className="text-xl sm:text-2xl font-bold mb-6 text-white">
+            {playerWon ? "Victory!" : tie ? "Tie Game!" : "Defeat!"}
+          </div>
+
+          <div className="space-y-3 mb-6 text-white">
+            <div className="text-lg font-bold">Final Score</div>
+            <div
+              className="backdrop-blur-xl bg-white/10 rounded-2xl p-4 border border-white/20"
+              style={{
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+              }}
+            >
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-bold">{playerName}</span>
+                <span className="text-yellow-300 font-bold">
+                  {(playerScore || 0).toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-bold">{opponentName}</span>
+                <span className="text-red-300 font-bold">
+                  {(opponentScore || 0).toLocaleString()}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div
+            className="backdrop-blur-xl bg-white/10 rounded-2xl p-4 mb-6 border border-white/20"
+            style={{
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+            }}
+          >
+            <div className="text-white font-bold mb-3">Battle Stats</div>
+            <div className="text-white/80 text-sm space-y-1">
+              <div className="flex justify-between">
+                <span>Total Taps:</span>
+                <span className="font-bold">{totalTapsInGame}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Upgrades:</span>
+                <span className="font-bold">{upgradesPurchased}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Coins Earned:</span>
+                <span className="font-bold">{(playerScore || 0).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between border-t border-white/20 pt-2 mt-2">
+                <span className="text-yellow-300">Tokens Earned:</span>
+                <span className="text-yellow-300 font-bold">+{renownEarned}</span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={resetToStart}
+            className="w-full px-6 py-4 bg-gradient-to-r from-blue-500/80 to-cyan-600/80 text-white rounded-2xl font-bold hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl backdrop-blur-xl border border-white/20 mb-4"
+            style={{
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+            }}
+          >
+            <i className="fas fa-redo mr-2"></i>
+            Battle Again
+          </button>
+
+          <a
+            href="https://taptaptwo.co.uk"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full inline-block px-6 py-4 bg-white/10 text-white rounded-2xl font-bold hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl backdrop-blur-xl border border-white/20"
+            style={{
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              textAlign: "center",
+            }}
+          >
+            Return to Tap Tap Two
+          </a>
         </div>
-      )}
-    </div>
+      </div>
+    </>
   );
-};
+}
 
 const UpgradeButton = ({
   title,
@@ -1292,7 +1378,7 @@ if (gamePhase === "playing") {
       {/* Top-right button */}
 <div
   className="absolute top-2 right-2 z-20"
-  style={{ transform: "translateX(-140px)" }}
+  style={{ transform: "translateX(-145px)" }}
 >
   <UpgradeButton
     title="Critical Hit"
