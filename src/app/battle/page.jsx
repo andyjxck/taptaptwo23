@@ -1324,7 +1324,7 @@ if (gamePhase === "playing") {
         </div>
 
         {/* Scoreboard below top buttons */}
-        <div className="z-10 mt-20 max-w-md mx-auto text-white select-none space-y-2.5 w-full">
+        <div className="z-10 mt-20 max-w-md mx-auto text-white select-none space-y-3.5 w-full">
           {/* Scoreboard - horizontal layout */}
           <div className="backdrop-blur-xl bg-white/10 border border-white/20 p-2 shadow-xl rounded-xl flex justify-between items-center text-xs sm:text-sm font-bold">
             {/* Player 1 */}
@@ -1482,7 +1482,7 @@ if (gamePhase === "finished") {
         </div>
 
         {/* Floating TopProfileBar inside main container */}
-        <div className="absolute top-4 right-4 z-30">
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30">
           <TopProfileBar
             profileName={profileName}
             userId={userId}
