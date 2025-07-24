@@ -1270,34 +1270,35 @@ if (gamePhase === "playing") {
   return (
     <>
       <div
-        className={`min-h-screen flex flex-col relative overflow-hidden pt-16 bg-gradient-to-br ${backgroundClass}`}
+        className={`min-h-screen relative overflow-hidden bg-gradient-to-br ${backgroundClass}`}
       >
+        {/* Background decorative circles */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full blur-3xl animate-pulse bg-yellow-300/10"></div>
           <div
             className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl animate-pulse bg-pink-400/10"
             style={{ animationDelay: "1s" }}
-          ></div>
+          />
           <div
             className="absolute top-1/2 left-1/2 w-64 h-64 rounded-full blur-3xl animate-pulse bg-yellow-300/10"
             style={{ animationDelay: "2s" }}
-          ></div>
+          />
         </div>
 
-        {/* --- DESKTOP SCOREBOARD: Fixed top center --- */}
-        <div className="hidden lg:flex fixed top-4 left-1/2 transform -translate-x-1/2 z-30 w-full max-w-md px-4">
+        {/* --- SCOREBOARD (fixed top center) --- */}
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40 w-full max-w-md px-4">
           <div
-            className="w-full backdrop-blur-xl bg-white/20 border border-white/25 rounded-xl flex flex-col items-center px-6 py-4 shadow-lg"
+            className="backdrop-blur-xl bg-white/20 border border-white/25 rounded-xl flex flex-col items-center px-6 py-4 shadow-lg select-none text-white"
             style={{
               backdropFilter: "blur(28px)",
               WebkitBackdropFilter: "blur(28px)",
-              gap: "0.4rem",
+              gap: "0.3rem",
               minWidth: "260px",
               maxWidth: "100%",
             }}
           >
-            {/* Top row: Player name left, Opponent name right */}
-            <div className="w-full flex justify-between items-center text-white font-semibold select-none text-lg">
+            {/* Player names row */}
+            <div className="w-full flex justify-between font-semibold text-lg">
               <div className="truncate max-w-[45%] flex items-center space-x-2">
                 <i className="fas fa-user text-yellow-400 text-xl flex-shrink-0"></i>
                 <span className="truncate">{playerName}</span>
@@ -1314,12 +1315,11 @@ if (gamePhase === "playing") {
               </div>
             </div>
 
-            {/* Middle row: Scores and progress bar */}
+            {/* Progress bar */}
             <div className="w-full flex items-center gap-3 mt-2">
-              <div className="text-yellow-300 font-bold text-lg tabular-nums min-w-[55px] text-left select-none">
+              <div className="text-yellow-300 font-bold text-lg tabular-nums min-w-[55px] text-left">
                 {(playerScore || 0).toLocaleString()}
               </div>
-
               <div className="flex-1 h-4 rounded-full bg-gray-900 overflow-hidden relative border border-white/25">
                 <div
                   className="absolute top-0 bottom-0 left-0 bg-yellow-400 transition-all duration-700"
@@ -1330,234 +1330,131 @@ if (gamePhase === "playing") {
                   style={{ width: `${opponentPercent}%` }}
                 />
               </div>
-
-              <div className="text-pink-300 font-bold text-lg tabular-nums min-w-[55px] text-right select-none">
+              <div className="text-pink-300 font-bold text-lg tabular-nums min-w-[55px] text-right">
                 {gameMode === "ai"
                   ? (aiCoins || 0).toLocaleString()
                   : (opponentScore || 0).toLocaleString()}
               </div>
             </div>
 
-            {/* Timer below progress bar */}
-            <div className="text-white font-mono text-xl tracking-widest select-none drop-shadow-md bg-black/30 rounded-lg px-3 py-1 mt-2 w-full text-center">
+            {/* Timer */}
+            <div className="text-white font-mono text-xl tracking-widest drop-shadow-md bg-black/30 rounded-lg px-3 py-1 mt-2 w-full text-center">
               {formatTime(timeLeft)}
             </div>
           </div>
         </div>
 
-        {/* --- MOBILE SCOREBOARD + LEAVE BUTTON + UPGRADES --- */}
-        <div className="lg:hidden flex flex-col items-center w-full max-w-md mx-auto px-4 pt-2 z-20">
-          {/* Scoreboard container */}
-          <div
-            className="w-full backdrop-blur-xl bg-white/20 border border-white/25 rounded-xl flex flex-col items-center px-6 py-4 shadow-lg"
-            style={{
-              backdropFilter: "blur(28px)",
-              WebkitBackdropFilter: "blur(28px)",
-              gap: "0.4rem",
-              minWidth: "260px",
-              maxWidth: "100%",
+        {/* --- LEAVE BUTTON (fixed below scoreboard) --- */}
+        <button
+          onClick={resetToStart}
+          className="fixed top-[96px] left-1/2 transform -translate-x-1/2 z-40 bg-red-600/90 text-white font-semibold rounded-lg py-2 px-8 shadow-lg hover:bg-red-700 active:scale-95 transition-transform duration-150 select-none"
+          style={{
+            backdropFilter: "blur(18px)",
+            WebkitBackdropFilter: "blur(18px)",
+          }}
+        >
+          <i className="fas fa-times mr-2"></i> Leave
+        </button>
+
+        {/* --- UPGRADE BUTTONS (fixed corners) --- */}
+
+        {/* Top-left */}
+        <div className="fixed top-4 left-4 z-50">
+          <UpgradeButton
+            title="Tap Power"
+            level={tapPowerLevel}
+            cost={getTapPowerCost()}
+            description={`+${tapPower} per tap`}
+            onClick={(e) => {
+              e.preventDefault();
+              upgradeTapPower();
             }}
-          >
-            {/* Top row: Player name left, Opponent name right */}
-            <div className="w-full flex justify-between items-center text-white font-semibold select-none text-base">
-              <div className="truncate max-w-[45%] flex items-center space-x-1.5">
-                <i className="fas fa-user text-yellow-400 text-lg flex-shrink-0"></i>
-                <span className="truncate">{playerName}</span>
-              </div>
-              <div className="truncate max-w-[45%] flex items-center space-x-1.5 justify-end">
-                <span className="truncate">{opponentName}</span>
-                <i
-                  className={
-                    gameMode === "ai"
-                      ? "fas fa-robot text-pink-400 text-lg flex-shrink-0"
-                      : "fas fa-user-friends text-pink-400 text-lg flex-shrink-0"
-                  }
-                ></i>
-              </div>
-            </div>
-
-            {/* Middle row: Scores and progress bar */}
-            <div className="w-full flex items-center gap-2 mt-1">
-              <div className="text-yellow-300 font-bold text-base tabular-nums min-w-[48px] text-left select-none">
-                {(playerScore || 0).toLocaleString()}
-              </div>
-
-              <div className="flex-1 h-3 rounded-full bg-gray-900 overflow-hidden relative border border-white/25">
-                <div
-                  className="absolute top-0 bottom-0 left-0 bg-yellow-400 transition-all duration-700"
-                  style={{ width: `${playerPercent}%` }}
-                />
-                <div
-                  className="absolute top-0 bottom-0 right-0 bg-pink-400 transition-all duration-700"
-                  style={{ width: `${opponentPercent}%` }}
-                />
-              </div>
-
-              <div className="text-pink-300 font-bold text-base tabular-nums min-w-[48px] text-right select-none">
-                {gameMode === "ai"
-                  ? (aiCoins || 0).toLocaleString()
-                  : (opponentScore || 0).toLocaleString()}
-              </div>
-            </div>
-
-            {/* Timer below progress bar */}
-            <div className="text-white font-mono text-lg tracking-widest select-none drop-shadow-md bg-black/30 rounded-lg px-3 py-1 mt-1 w-full text-center">
-              {formatTime(timeLeft)}
-            </div>
-          </div>
-
-          {/* Leave button below scoreboard */}
-          <button
-            onClick={resetToStart}
-            className="w-full max-w-xs py-2 mt-4 bg-red-600/90 text-white font-semibold rounded-lg hover:bg-red-700 active:scale-95 transition-transform duration-150 shadow-lg backdrop-blur-md border border-white/30 flex items-center justify-center gap-2 text-base mx-auto"
-            style={{
-              backdropFilter: "blur(18px)",
-              WebkitBackdropFilter: "blur(18px)",
+            disabled={playerScore < getTapPowerCost()}
+            icon="💪"
+            glassy
+            styleOverride={{
+              minWidth: "110px",
+              padding: "0.5rem 1rem",
+              borderRadius: "0.75rem",
             }}
-          >
-            <i className="fas fa-times"></i> Leave
-          </button>
-
-          {/* Upgrade buttons container - relative for absolute children */}
-          <div className="relative w-full h-[180px] mt-8">
-            {/* Top left */}
-            <div className="absolute top-0 left-0">
-              <UpgradeButton
-                title="Tap Power"
-                level={tapPowerLevel}
-                cost={getTapPowerCost()}
-                description={`+${tapPower} per tap`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  upgradeTapPower();
-                }}
-                disabled={playerScore < getTapPowerCost()}
-                position={undefined}
-                icon="💪"
-                glassy
-                styleOverride={{
-                  background:
-                    "linear-gradient(135deg, rgba(255 255 255 / 0.15), rgba(255 255 255 / 0.05))",
-                  boxShadow: "0 8px 20px rgba(255, 255, 255, 0.2)",
-                  border: "1px solid rgba(255, 255, 255, 0.3)",
-                  color: "white",
-                  fontWeight: "600",
-                  backdropFilter: "blur(12px)",
-                  transition: "all 0.3s ease",
-                  minWidth: "120px",
-                  textAlign: "center",
-                  padding: "0.5rem 1rem",
-                  borderRadius: "0.75rem",
-                }}
-              />
-            </div>
-
-            {/* Top right */}
-            <div className="absolute top-0 right-0">
-              <UpgradeButton
-                title="Critical Hit"
-                level={critLevel}
-                cost={getCritCost()}
-                description={`${critChance}% crit chance`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  upgradeCritChance();
-                }}
-                disabled={playerScore < getCritCost() || critChance >= 100}
-                position={undefined}
-                icon="⚡"
-                glassy
-                styleOverride={{
-                  background:
-                    "linear-gradient(135deg, rgba(255 255 255 / 0.15), rgba(255 255 255 / 0.05))",
-                  boxShadow: "0 8px 20px rgba(255, 255, 255, 0.2)",
-                  border: "1px solid rgba(255, 255, 255, 0.3)",
-                  color: "white",
-                  fontWeight: "600",
-                  backdropFilter: "blur(12px)",
-                  transition: "all 0.3s ease",
-                  minWidth: "120px",
-                  textAlign: "center",
-                  padding: "0.5rem 1rem",
-                  borderRadius: "0.75rem",
-                }}
-              />
-            </div>
-
-            {/* Bottom left */}
-            <div className="absolute bottom-0 left-0">
-              <UpgradeButton
-                title="Tap Speed"
-                level={tapSpeedLevel}
-                cost={getTapSpeedCost()}
-                description={`+${tapSpeedBonus}% bonus`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  upgradeTapSpeed();
-                }}
-                disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
-                position={undefined}
-                icon="🚀"
-                glassy
-                styleOverride={{
-                  background:
-                    "linear-gradient(135deg, rgba(255 255 255 / 0.15), rgba(255 255 255 / 0.05))",
-                  boxShadow: "0 8px 20px rgba(255, 255, 255, 0.2)",
-                  border: "1px solid rgba(255, 255, 255, 0.3)",
-                  color: "white",
-                  fontWeight: "600",
-                  backdropFilter: "blur(12px)",
-                  transition: "all 0.3s ease",
-                  minWidth: "120px",
-                  textAlign: "center",
-                  padding: "0.5rem 1rem",
-                  borderRadius: "0.75rem",
-                }}
-              />
-            </div>
-
-            {/* Bottom right */}
-            <div className="absolute bottom-0 right-0">
-              <UpgradeButton
-                title="Auto Tapper"
-                level={autoTapperLevel}
-                cost={getAutoTapperCost()}
-                description={`${autoTapper}/sec`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  upgradeAutoTapper();
-                }}
-                disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
-                position={undefined}
-                icon="🤖"
-                glassy
-                styleOverride={{
-                  background:
-                    "linear-gradient(135deg, rgba(255 255 255 / 0.15), rgba(255 255 255 / 0.05))",
-                  boxShadow: "0 8px 20px rgba(255, 255, 255, 0.2)",
-                  border: "1px solid rgba(255, 255, 255, 0.3)",
-                  color: "white",
-                  fontWeight: "600",
-                  backdropFilter: "blur(12px)",
-                  transition: "all 0.3s ease",
-                  minWidth: "120px",
-                  textAlign: "center",
-                  padding: "0.5rem 1rem",
-                  borderRadius: "0.75rem",
-                }}
-              />
-            </div>
-          </div>
+          />
         </div>
 
-        {/* --- MAIN BATTLE BUTTON --- */}
-        <div className="flex flex-1 items-center justify-center relative z-10 px-4 mt-6">
+        {/* Top-right */}
+        <div className="fixed top-4 right-4 z-50">
+          <UpgradeButton
+            title="Critical Hit"
+            level={critLevel}
+            cost={getCritCost()}
+            description={`${critChance}% crit chance`}
+            onClick={(e) => {
+              e.preventDefault();
+              upgradeCritChance();
+            }}
+            disabled={playerScore < getCritCost() || critChance >= 100}
+            icon="⚡"
+            glassy
+            styleOverride={{
+              minWidth: "110px",
+              padding: "0.5rem 1rem",
+              borderRadius: "0.75rem",
+            }}
+          />
+        </div>
+
+        {/* Bottom-left */}
+        <div className="fixed bottom-4 left-4 z-50">
+          <UpgradeButton
+            title="Tap Speed"
+            level={tapSpeedLevel}
+            cost={getTapSpeedCost()}
+            description={`+${tapSpeedBonus}% bonus`}
+            onClick={(e) => {
+              e.preventDefault();
+              upgradeTapSpeed();
+            }}
+            disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
+            icon="🚀"
+            glassy
+            styleOverride={{
+              minWidth: "110px",
+              padding: "0.5rem 1rem",
+              borderRadius: "0.75rem",
+            }}
+          />
+        </div>
+
+        {/* Bottom-right */}
+        <div className="fixed bottom-4 right-4 z-50">
+          <UpgradeButton
+            title="Auto Tapper"
+            level={autoTapperLevel}
+            cost={getAutoTapCost()}
+            description={`${autoTapper}/sec`}
+            onClick={(e) => {
+              e.preventDefault();
+              upgradeAutoTapper();
+            }}
+            disabled={playerScore < getAutoTapCost() || autoTapper >= 100000}
+            icon="🤖"
+            glassy
+            styleOverride={{
+              minWidth: "110px",
+              padding: "0.5rem 1rem",
+              borderRadius: "0.75rem",
+            }}
+          />
+        </div>
+
+        {/* --- MAIN BATTLE BUTTON (centered) --- */}
+        <div className="flex items-center justify-center min-h-screen pointer-events-none">
           <button
             onClick={() => {
               if (navigator.vibrate) navigator.vibrate(250);
               handleTap();
             }}
             className={`
+              pointer-events-auto
               w-[200px] h-[200px] rounded-full bg-white/30 border border-white/30 relative overflow-hidden cursor-pointer
               shadow-lg hover:shadow-2xl active:scale-95 transition-transform duration-200
               flex items-center justify-center
