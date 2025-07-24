@@ -281,6 +281,29 @@ React.useEffect(() => {
   console.log("Current gameMode:", gameMode);
 }, [gameMode]);
 
+const [renownAwarded, setRenownAwarded] = React.useState(false);
+
+// Step 1: When game finishes and renown not awarded, update renownTokens and mark awarded
+React.useEffect(() => {
+  if (gamePhase === "finished" && !renownAwarded) {
+    setAllTimeTotalTaps(prev => prev + totalTapsInGame);
+
+    const playerWon = playerScore > opponentScore;
+    const tie = playerScore === opponentScore;
+    const renownEarned = playerWon ? 10 : tie ? 5 : 3;
+
+    setRenownTokens(prev => prev + renownEarned);
+    setRenownAwarded(true);
+  }
+}, [gamePhase, playerScore, opponentScore, totalTapsInGame, renownAwarded]);
+
+// Step 2: When renownTokens state changes AND renown was awarded, save progress
+React.useEffect(() => {
+  if (renownAwarded && userId) {
+    saveGameProgress(userId);
+  }
+}, [renownTokens, renownAwarded, userId]);
+
 async function saveGameProgress(currentUserId) {
   try {
     const response = await fetch('/api/battle', {
@@ -288,9 +311,9 @@ async function saveGameProgress(currentUserId) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'saveProgress',
-        userId: currentUserId,   // Pass userId explicitly here
+        userId: currentUserId,
         total_taps: totalTapsInGame,
-        renown_tokens: renownTokens,
+        renown_tokens: renownTokens, // now updated value
       }),
     });
 
@@ -302,13 +325,6 @@ async function saveGameProgress(currentUserId) {
     console.error('Save error:', error);
   }
 }
-
-  React.useEffect(() => {
-  if (gamePhase === 'finished' && userId) {
-    saveGameProgress(userId);
-  }
-}, [gamePhase, userId]);
-
 
 const formatTime = (totalSeconds) => {
   const minutes = Math.floor(totalSeconds / 60);
