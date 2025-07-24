@@ -5407,6 +5407,7 @@ const renderLeaderboard = () => (
     )}
   </div>
 </div>
+    </div>
 
   {["game", "house", "leaderboard"].includes(activeTab) && (
     <div className="text-center">
