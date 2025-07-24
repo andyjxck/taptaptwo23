@@ -1265,7 +1265,7 @@ if (gamePhase === "playing") {
 
   return (
     <>
-      <div className={`min-h-screen bg-gradient-to-br ${backgroundFrom} via-purple-800 ${backgroundTo} flex flex-col relative overflow-hidden`}>
+      <div className={`min-h-screen bg-gradient-to-br ${backgroundFrom} via-red-600 ${backgroundTo} flex flex-col relative overflow-hidden`}>
 
         {/* Background blobs */}
         <div className="absolute inset-0 z-0">
@@ -1292,7 +1292,7 @@ if (gamePhase === "playing") {
       {/* Top-right button */}
 <div
   className="absolute top-2 right-2 z-20"
-  style={{ transform: "translateX(-120px)" }}
+  style={{ transform: "translateX(-140px)" }}
 >
   <UpgradeButton
     title="Critical Hit"
