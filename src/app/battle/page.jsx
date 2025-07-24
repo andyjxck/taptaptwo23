@@ -16,8 +16,8 @@ const opponentPercent = 100 - playerPercent;
   // Game phases: 'start', 'lobby', 'ready', 'playing', 'finished'
   const [countdown, setCountdown] = React.useState(null); // null means no countdown active
   const [gamePhase, setGamePhase] = React.useState("start");
-  const [timeLeft, setTimeLeft] = React.useState(180);
-  const [gameDuration, setGameDuration] = React.useState(180);
+  const [timeLeft, setTimeLeft] = React.useState(30);
+  const [gameDuration, setGameDuration] = React.useState(30);
 
   const [playerScore, setPlayerScore] = React.useState(0);
   const [opponentScore, setOpponentScore] = React.useState(0);
@@ -32,6 +32,7 @@ const opponentPercent = 100 - playerPercent;
   const [profileIcon, setProfileIcon] = React.useState("");
   const [allTimeTotalTaps, setAllTimeTotalTaps] = React.useState(0);
   const [renownTokens, setRenownTokens] = React.useState(0);
+  const [renownAwarded, setRenownAwarded] = React.useState(false);
   const [totalTapsInGame, setTotalTapsInGame] = React.useState(0);
 // AI coins state (start low)
 const [aiCoins, setAiCoins] = React.useState(0);
@@ -376,7 +377,7 @@ useEffect(() => {
 
     const startGameTimer = () => {
   setGamePhase("playing"); // Change game phase to playing
-  setTimeLeft(180); // Set game time to 3 minutes (in seconds)
+  setTimeLeft(30); // Set game time to 3 minutes (in seconds)
 };
 
   
@@ -879,14 +880,15 @@ React.useEffect(() => {
   
   // Update all-time total taps when game finishes
 React.useEffect(() => {
-  if (gamePhase === "finished") {
-    setAllTimeTotalTaps((prev) => prev + totalTapsInGame);  // Use totalTapsInGame here
+  if (gamePhase === "finished" && !renownAwarded) {
+    setAllTimeTotalTaps((prev) => prev + totalTapsInGame);
     const playerWon = playerScore > opponentScore;
     const tie = playerScore === opponentScore;
     const renownEarned = playerWon ? 10 : tie ? 5 : 3;
     setRenownTokens((prev) => prev + renownEarned);
+    setRenownAwarded(true);
   }
-}, [gamePhase, playerScore, opponentScore, totalTapsInGame]);
+}, [gamePhase, playerScore, opponentScore, totalTapsInGame, renownAwarded]);
 const fetchTotalTapsInGame = async (roomCode) => {
   const res = await fetch('/api/battle', {
     method: 'POST',
