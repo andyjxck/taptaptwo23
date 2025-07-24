@@ -1261,24 +1261,23 @@ if (gamePhase === "playing") {
   const playerPercent = ((playerScore || 0) / totalScore) * 100;
   const opponentPercent = ((opponentScore || 0) / totalScore) * 100;
 
-  // Glassy background gradient with ~0.6 opacity for iOS style
-  const backgroundGradient = `linear-gradient(
-    to bottom right,
-    rgba(252, 211, 77, 0.6) 0%,
-    rgba(252, 211, 77, 0.55) ${playerPercent}%,
-    rgba(236, 72, 153, 0.55) ${playerPercent + 0.1}%,
-    rgba(236, 72, 153, 0.6) 100%
-  )`;
+const backgroundGradient = `linear-gradient(
+  to bottom right,
+  rgba(202, 138, 4, 0.2) 0%,                                 /* soft dark yellow */
+  rgba(202, 138, 4, 0.25) ${playerPercent}%,                 /* deepens based on player */
+  rgba(190, 24, 93, 0.25) ${playerPercent + 0.1}%,           /* transition into pink */
+  rgba(190, 24, 93, 0.2) 100%                                /* soft dark pink */
+)`;
 
-  return (
-    <>
-      <div
-        className="min-h-screen flex flex-col relative overflow-hidden pt-16"
-        style={{
-          background: backgroundGradient,
-          backgroundColor: "rgb(30 30 30)", // dark base behind gradient
-        }}
-      >
+return (
+  <>
+    <div
+      className="min-h-screen flex flex-col relative overflow-hidden pt-16"
+      style={{
+        background: backgroundGradient,
+        backgroundColor: "rgb(17 24 39)", // tailwind's gray-900 for dark fallback
+      }}
+    >
         {/* Animated background subtle pulse circles */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full blur-3xl animate-pulse bg-yellow-300/10"></div>
