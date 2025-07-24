@@ -1254,7 +1254,6 @@ if (gamePhase === "lobby") {
     </>
   );
 }
-
 if (gamePhase === "playing") {
   const totalScore = (playerScore || 0) + (opponentScore || 0) || 1;
   const playerPercent = ((playerScore || 0) / totalScore) * 100;
@@ -1267,17 +1266,17 @@ if (gamePhase === "playing") {
   return (
     <>
       <div className={`min-h-screen bg-gradient-to-br ${backgroundFrom} via-purple-800 ${backgroundTo} flex flex-col relative overflow-hidden`}>
-        
-        {/* Background blobs */}
-        <div className="absolute inset-0 z-0">
+
+        {/* Blurred Animated Blobs */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
           <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse" />
           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
           <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
         </div>
 
         {/* Scoreboard */}
-        <div className="z-10 mt-8 mb-2 backdrop-blur-xl bg-white/10 border border-white/20 p-4 shadow-xl max-w-md mx-auto rounded-xl flex flex-col">
-          <div className="flex justify-between items-center text-white font-bold text-sm select-none mb-2">
+        <div className="z-10 mt-8 backdrop-blur-xl bg-white/10 border border-white/20 p-4 shadow-xl max-w-md mx-auto rounded-xl w-full flex flex-col">
+          <div className="flex justify-between items-center text-white font-bold text-sm mb-2">
             <div className="flex items-center space-x-2">
               <i className="fas fa-user text-yellow-400"></i>
               <span>{playerName}</span>
@@ -1285,7 +1284,7 @@ if (gamePhase === "playing") {
             <div className="text-yellow-300 text-xl sm:text-2xl">{(playerScore || 0).toLocaleString()}</div>
           </div>
 
-          <div className="flex justify-between items-center text-white font-bold text-sm select-none mb-2">
+          <div className="flex justify-between items-center text-white font-bold text-sm mb-2">
             <div className="flex items-center space-x-2">
               <i className={gameMode === "ai" ? "fas fa-robot text-pink-400" : "fas fa-user-friends text-pink-400"}></i>
               <span>{opponentName}</span>
@@ -1295,14 +1294,14 @@ if (gamePhase === "playing") {
             </div>
           </div>
 
-          <div className="relative w-full h-5 rounded-full bg-gray-800 overflow-hidden mt-3 select-none">
+          <div className="relative w-full h-5 rounded-full bg-gray-800 overflow-hidden mt-3">
             <div className="absolute left-0 top-0 bottom-0 bg-yellow-400 transition-all duration-500" style={{ width: `${playerPercent}%` }} />
             <div className="absolute right-0 top-0 bottom-0 bg-pink-400 transition-all duration-500" style={{ width: `${opponentPercent}%` }} />
           </div>
         </div>
 
-        {/* Timer + Leave stacked */}
-        <div className="z-10 max-w-md mx-auto flex flex-col items-center text-white gap-2">
+        {/* Timer and Leave button */}
+        <div className="z-10 max-w-md mx-auto mt-2 flex flex-col items-center text-white gap-2">
           <div className="text-xl sm:text-2xl font-bold select-none">{formatTime(timeLeft)}</div>
           <button
             onClick={resetToStart}
@@ -1312,23 +1311,27 @@ if (gamePhase === "playing") {
           </button>
         </div>
 
-        {/* Tap Button - Centered */}
-        <div className="flex-1 flex items-center justify-center z-10 mt-4 relative">
-          <button
-            onClick={() => {
-              if (navigator.vibrate) navigator.vibrate(250);
-              handleTap();
-            }}
-            className="w-[200px] h-[200px] rounded-full bg-white/30 backdrop-blur-xl border border-white/20 relative overflow-hidden transition-all duration-200 active:scale-95 shadow-2xl group"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-32 h-32 bg-gradient-to-r from-red-400 to-yellow-400 rounded-full animate-pulse opacity-50"></div>
-            </div>
-            <i className="fas fa-crosshairs text-6xl text-white relative z-10 drop-shadow"></i>
-          </button>
+        {/* Main game area below scoreboard */}
+        <div className="relative flex-1 max-w-md w-full mx-auto mt-4 z-10">
 
-          {/* Upgrade buttons in corners of bottom space */}
+          {/* Center Tap Button */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <button
+              onClick={() => {
+                if (navigator.vibrate) navigator.vibrate(250);
+                handleTap();
+              }}
+              className="w-[200px] h-[200px] rounded-full bg-white/30 backdrop-blur-xl border border-white/20 relative overflow-hidden transition-all duration-200 active:scale-95 shadow-2xl group pointer-events-auto"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-32 h-32 bg-gradient-to-r from-red-400 to-yellow-400 rounded-full animate-pulse opacity-50"></div>
+              </div>
+              <i className="fas fa-crosshairs text-6xl text-white relative z-10 drop-shadow"></i>
+            </button>
+          </div>
+
+          {/* Corner Upgrade Buttons */}
           <UpgradeButton
             title="Tap Power"
             level={tapPowerLevel}
@@ -1336,7 +1339,7 @@ if (gamePhase === "playing") {
             description={`+${tapPower} per tap`}
             onClick={() => upgradeTapPower()}
             disabled={playerScore < getTapPowerCost()}
-            position="absolute top-2 left-2"
+            position="top-2 left-2"
             icon="💪"
             glassy
           />
@@ -1347,7 +1350,7 @@ if (gamePhase === "playing") {
             description={`${critChance}% crit chance`}
             onClick={() => upgradeCritChance()}
             disabled={playerScore < getCritCost() || critChance >= 100}
-            position="absolute top-2 right-2"
+            position="top-2 right-2"
             icon="⚡"
             glassy
           />
@@ -1358,7 +1361,7 @@ if (gamePhase === "playing") {
             description={`+${tapSpeedBonus}% bonus`}
             onClick={() => upgradeTapSpeed()}
             disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
-            position="absolute bottom-2 left-2"
+            position="bottom-2 left-2"
             icon="🚀"
             glassy
           />
@@ -1369,7 +1372,7 @@ if (gamePhase === "playing") {
             description={`${autoTapper}/sec`}
             onClick={() => upgradeAutoTapper()}
             disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
-            position="absolute bottom-2 right-2"
+            position="bottom-2 right-2"
             icon="🤖"
             glassy
           />
@@ -1393,6 +1396,7 @@ if (gamePhase === "playing") {
         ))}
       </div>
 
+      {/* Floating Number Animation */}
       <style jsx global>{`
         @keyframes floatUp {
           0% {
@@ -1411,7 +1415,6 @@ if (gamePhase === "playing") {
     </>
   );
 }
-
 
 
 // Finished phase
