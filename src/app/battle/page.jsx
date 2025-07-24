@@ -1315,7 +1315,7 @@ if (gamePhase === "playing") {
   />
 </div>
 {/* Scoreboard + Timer below top buttons */}
-<div className="z-10 mt-38 max-w-md mx-auto text-white select-none space-y-2">
+<div className="z-10 mt-30 max-w-md mx-auto text-white select-none space-y-2.5">
   {/* Scoreboard - horizontal layout */}
   <div className="backdrop-blur-xl bg-white/10 border border-white/20 p-2 shadow-xl rounded-xl flex justify-between items-center text-xs sm:text-sm font-bold">
     {/* Player 1 */}
@@ -1434,15 +1434,7 @@ if (gamePhase === "finished") {
 
   return (
     <>
-      <TopProfileBar
-        profileName={profileName}
-        userId={userId}
-        profileIcon={profileIcon}
-        allTimeTotalTaps={allTimeTotalTaps}
-        renownTokens={renownTokens}
-      />
-
-      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4 pt-20 relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex flex-col items-center p-4 pt-4 relative overflow-hidden">
         {/* Animated background */}
         <div className="absolute inset-0">
           <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
@@ -1452,11 +1444,24 @@ if (gamePhase === "finished") {
           ></div>
         </div>
 
+        {/* Floating TopProfileBar inside main container */}
+        <div className="absolute top-4 right-4 z-30">
+          <TopProfileBar
+            profileName={profileName}
+            userId={userId}
+            profileIcon={profileIcon}
+            allTimeTotalTaps={allTimeTotalTaps}
+            renownTokens={renownTokens}
+            floating // add a prop if your component supports different styles for floating
+          />
+        </div>
+
         <div
-          className="relative backdrop-blur-xl bg-white/10 rounded-3xl p-6 sm:p-8 border border-white/20 w-full max-w-sm text-center shadow-2xl flex flex-col"
+          className="relative backdrop-blur-xl bg-white/10 rounded-3xl p-6 sm:p-8 border border-white/20 w-full max-w-sm text-center shadow-2xl flex flex-col mt-24"
           style={{
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
+            zIndex: 10,
           }}
         >
           <div className="text-4xl sm:text-5xl mb-4">
@@ -1549,6 +1554,7 @@ if (gamePhase === "finished") {
     </>
   );
 }
+
 
 return null;
 
