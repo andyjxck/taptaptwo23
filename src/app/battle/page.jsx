@@ -16,8 +16,8 @@ const opponentPercent = 100 - playerPercent;
   // Game phases: 'start', 'lobby', 'ready', 'playing', 'finished'
   const [countdown, setCountdown] = React.useState(null); // null means no countdown active
   const [gamePhase, setGamePhase] = React.useState("start");
-  const [timeLeft, setTimeLeft] = React.useState(180);
-  const [gameDuration, setGameDuration] = React.useState(180);
+  const [timeLeft, setTimeLeft] = React.useState(30);
+  const [gameDuration, setGameDuration] = React.useState(30);
 
   const [playerScore, setPlayerScore] = React.useState(0);
   const [opponentScore, setOpponentScore] = React.useState(0);
@@ -152,10 +152,17 @@ const getAiAutoTapperCost = () =>
 React.useEffect(() => {
   if (gamePhase !== "playing" || gameMode !== "ai" || !currentRoom) return;
 
-  const upgradeInterval = 5000; // every 5 seconds
+  const upgradeInterval = 3000; // every 3 seconds
   let isCancelled = false;
 
   const upgradeTimer = setInterval(async () => {
+    if (isCancelled) return;
+
+    // Don't upgrade in last 10 seconds
+    if (typeof timeLeft === "number" && timeLeft <= 10) {
+      return;
+    }
+
     // Read current state from refs
     let coins = aiCoinsRef.current;
     let tapPowerLevel = aiTapPowerLevelRef.current;
@@ -188,7 +195,7 @@ React.useEffect(() => {
       newTapPower = newTapPower + Math.floor(newTapPower * 0.2) + 2;
       newTapPowerLvl += 1;
       didUpgrade = true;
-      setOpponentScore(prev => prev - tapPowerCost); // Deduct from score
+      setOpponentScore(prev => prev - tapPowerCost);
       console.log("✅ AI bought Tap Power. New Coins:", newAiCoins);
     }
 
@@ -197,7 +204,7 @@ React.useEffect(() => {
       newCritChance = Math.min(newCritChance + 2 + Math.floor(newCritLvl / 3), 100);
       newCritLvl += 1;
       didUpgrade = true;
-      setOpponentScore(prev => prev - critCost); // Deduct from score
+      setOpponentScore(prev => prev - critCost);
       console.log("✅ AI bought Crit Chance. New Coins:", newAiCoins);
     }
 
@@ -206,7 +213,7 @@ React.useEffect(() => {
       newTapSpeedBonus = newTapSpeedBonus + 25 + Math.floor(newTapSpeedLvl * 1.3);
       newTapSpeedLvl += 1;
       didUpgrade = true;
-      setOpponentScore(prev => prev - tapSpeedCost); // Deduct from score
+      setOpponentScore(prev => prev - tapSpeedCost);
       console.log("✅ AI bought Tap Speed. New Coins:", newAiCoins);
     }
 
@@ -215,12 +222,11 @@ React.useEffect(() => {
       newAutoTapper = Math.min(newAutoTapper + 10 + Math.floor(newAutoTapperLvl * 1.2), 100000);
       newAutoTapperLvl += 1;
       didUpgrade = true;
-      setOpponentScore(prev => prev - autoTapperCost); // Deduct from score
+      setOpponentScore(prev => prev - autoTapperCost);
       console.log("✅ AI bought Auto Tapper. New Coins:", newAiCoins);
     }
 
     if (!didUpgrade) return;
-    if (isCancelled) return;
 
     // Update React state locally
     setAiCoins(newAiCoins);
@@ -253,7 +259,7 @@ React.useEffect(() => {
     isCancelled = true;
     clearInterval(upgradeTimer);
   };
-}, [gamePhase, gameMode, currentRoom]);
+}, [gamePhase, gameMode, currentRoom, timeLeft]);
 
 
 // Game timer effect
@@ -392,7 +398,7 @@ useEffect(() => {
 
     const startGameTimer = () => {
   setGamePhase("playing"); // Change game phase to playing
-  setTimeLeft(180); // Set game time to 3 minutes (in seconds)
+  setTimeLeft(30); // Set game time to 3 minutes (in seconds)
 };
 
   
@@ -528,21 +534,25 @@ const handleTap = async () => {
   // Update total taps count
   setTotalTapsInGame(prev => prev + 1);
 
-  // Spawn floating number (unbatched, immediate feedback)
-  const id = now + Math.random();
-  const x = Math.random() * 100 - 50;
-  const y = Math.random() * 100 - 50;
+// Spawn floating number (more widely spread)
+const id = now + Math.random();
 
-  setFloatingNumbers(prev => [
-    ...prev,
-    { id, value: coinsEarned, isCrit, x, y }
-  ]);
+// Pick a random angle and distance from center to spread in a circular area
+const angle = Math.random() * 2 * Math.PI;
+const distance = Math.random() * 150 + 50; // 50 to 200px from center
 
-  // Remove floating number after 1 second
-  setTimeout(() => {
-    setFloatingNumbers(prev => prev.filter(num => num.id !== id));
-  }, 1000);
-};
+const x = Math.cos(angle) * distance;
+const y = Math.sin(angle) * distance;
+
+setFloatingNumbers(prev => [
+  ...prev,
+  { id, value: coinsEarned, isCrit, x, y }
+]);
+
+// Remove floating number after 1 second
+setTimeout(() => {
+  setFloatingNumbers(prev => prev.filter(num => num.id !== id));
+}, 1000);
 
 // Flush batched player score updates every 100ms (only multiplayer mode)
 React.useEffect(() => {
@@ -843,12 +853,12 @@ React.useEffect(() => {
   console.log("⏱️ AI interval running");
 
   let aiMultiplier = 1;
-  if (aiDifficulty === "easy") aiMultiplier = 0.7;
-  else if (aiDifficulty === "medium") aiMultiplier = 1;
-  else if (aiDifficulty === "hard") aiMultiplier = 1.2;
+  if (aiDifficulty === "easy") aiMultiplier = 0.9;
+  else if (aiDifficulty === "medium") aiMultiplier = 1.3;
+  else if (aiDifficulty === "hard") aiMultiplier = 1.8;
 
-  const baseTapPower = aiTapPower || 1;
-  const tapSpeedBonus = aiTapSpeedBonus || 0;
+  const baseTapPower = aiTapPower || 1.5;
+  const tapSpeedBonus = aiTapSpeedBonus || 0.8;
   const critChance = aiCritChance || 0;
 
   const effectiveTapPower = baseTapPower + Math.floor(baseTapPower * (tapSpeedBonus / 100));
