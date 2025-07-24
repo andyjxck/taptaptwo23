@@ -1276,12 +1276,12 @@ if (gamePhase === "lobby") {
             <h2 className="text-lg font-bold text-white mb-2 text-center">Game Rules</h2>
             <p>• Tap the main button to earn coins</p>
             <p>• Use coins to buy upgrades during the game</p>
-            <p>• 💪 Tap Power: +1 coin per tap per level</p>
+            <p>• 💪 Tap Power: Your coins per tap</p>
             <p>• ⚡ Crit Chance: 5% chance to double coins</p>
-            <p>• 🚀 Tap Speed: +25% bonus coins per tap</p>
-            <p>• 🤖 Auto Tapper: +10 coins per second</p>
+            <p>• 🚀 Tap Speed: Bonus coins per tap</p>
+            <p>• 🤖 Auto Tapper: Coins per second</p>
             <p>• Player with most coins when time runs out wins!</p>
-            <p>• Winner earns 5 tokens, loser earns 1</p>
+            <p>• Winner earns 10 tokens, loser earns 3</p>
           </div>
 
           {/* Buttons */}
@@ -1416,81 +1416,66 @@ if (gamePhase === "playing") {
         </div>
 
         {/* Game area */}
-        <UpgradeButton
-          title="Tap Power"
-          level={tapPowerLevel}
-          cost={getTapPowerCost()}
-          description={`+${tapPower} per tap`}
-          onTouchStart={(e) => {
-            e.preventDefault();
-            upgradeTapPower();
-          }}
-          onMouseDown={(e) => {
-            e.preventDefault();
-            upgradeTapPower();
-          }}
-          disabled={playerScore < getTapPowerCost()}
-          position="top-2 left-2 sm:top-4 sm:left-4"
-          icon="💪"
-          glassy
-        />
+<UpgradeButton
+  title="Tap Power"
+  level={tapPowerLevel}
+  cost={getTapPowerCost()}
+  description={`+${tapPower} per tap`}
+  onClick={(e) => {
+    e.preventDefault();
+    upgradeTapPower();
+  }}
+  disabled={playerScore < getTapPowerCost()}
+  position="top-2 left-2 sm:top-4 sm:left-4"
+  icon="💪"
+  glassy
+/>
 
-        <UpgradeButton
-          title="Critical Hit"
-          level={critLevel}
-          cost={getCritCost()}
-          description={`${critChance}% crit chance`}
-          onTouchStart={(e) => {
-            e.preventDefault();
-            upgradeCritChance();
-          }}
-          onMouseDown={(e) => {
-            e.preventDefault();
-            upgradeCritChance();
-          }}
-          disabled={playerScore < getCritCost() || critChance >= 100}
-          position="top-2 right-2 sm:top-4 sm:right-4"
-          icon="⚡"
-          glassy
-        />
+<UpgradeButton
+  title="Critical Hit"
+  level={critLevel}
+  cost={getCritCost()}
+  description={`${critChance}% crit chance`}
+  onClick={(e) => {
+    e.preventDefault();
+    upgradeCritChance();
+  }}
+  disabled={playerScore < getCritCost() || critChance >= 100}
+  position="top-2 right-2 sm:top-4 sm:right-4"
+  icon="⚡"
+  glassy
+/>
 
-        <UpgradeButton
-          title="Tap Speed"
-          level={tapSpeedLevel}
-          cost={getTapSpeedCost()}
-          description={`+${tapSpeedBonus}% bonus`}
-          onTouchStart={(e) => {
-            e.preventDefault();
-            upgradeTapSpeed();
-          }}
-          onMouseDown={(e) => {
-            e.preventDefault();
-            upgradeTapSpeed();
-          }}
-          disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
-          position="bottom-2 left-2 sm:bottom-4 sm:left-4"
-          icon="🚀"
-          glassy
-        />
+<UpgradeButton
+  title="Tap Speed"
+  level={tapSpeedLevel}
+  cost={getTapSpeedCost()}
+  description={`+${tapSpeedBonus}% bonus`}
+  onClick={(e) => {
+    e.preventDefault();
+    upgradeTapSpeed();
+  }}
+  disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
+  position="bottom-2 left-2 sm:bottom-4 sm:left-4"
+  icon="🚀"
+  glassy
+/>
 
-        <UpgradeButton
-          title="Auto Tapper"
-          level={autoTapperLevel}
-          cost={getAutoTapperCost()}
-          description={`${autoTapper}/sec`}
-          onTouchStart={(e) => {
-            e.preventDefault();
-            upgradeAutoTapper();
-          }}
-          onMouseDown={(e) => {
-            e.preventDefault();
-            upgradeAutoTapper();
-          }}
-          disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
-          position="bottom-2 right-2 sm:bottom-4 sm:right-4"
-          icon="🤖"
-          glassy
-        />
+<UpgradeButton
+  title="Auto Tapper"
+  level={autoTapperLevel}
+  cost={getAutoTapperCost()}
+  description={`${autoTapper}/sec`}
+  onClick={(e) => {
+    e.preventDefault();
+    upgradeAutoTapper();
+  }}
+  disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
+  position="bottom-2 right-2 sm:bottom-4 sm:right-4"
+  icon="🤖"
+  glassy
+/>
+
 <div className="flex flex-1 items-center justify-center">
   <button
     onTouchStart={(e) => {
