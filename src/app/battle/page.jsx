@@ -1566,13 +1566,16 @@ if (gamePhase === "finished") {
 
   return (
     <>
-     <TopProfileBar
-  profileName={profileName}
-  userId={userId}
-  profileIcon={profileIcon}
-  allTimeTotalTaps={allTimeTotalTaps}
-  renownTokens={renownTokens}
-/>
+  {/* Top Bar and Title */}
+        <div className="z-10 mt-4">
+          <TopProfileBar
+            profileName={profileName}
+            userId={userId}
+            profileIcon={profileIcon}
+            renownTokens={renownTokens}
+            allTimeTotalTaps={allTimeTotalTaps}
+          />
+        </div>
 
       <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4 pt-20 relative overflow-hidden">
         {/* Animated background */}
