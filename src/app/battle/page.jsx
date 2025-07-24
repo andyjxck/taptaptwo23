@@ -1254,6 +1254,7 @@ if (gamePhase === "lobby") {
     </>
   );
 }
+
 if (gamePhase === "playing") {
   const totalScore = (playerScore || 0) + (opponentScore || 0) || 1;
   const playerPercent = ((playerScore || 0) / totalScore) * 100;
@@ -1263,140 +1264,141 @@ if (gamePhase === "playing") {
   const backgroundFrom = isPlayerWinning ? "from-yellow-400" : "from-pink-500";
   const backgroundTo = isPlayerWinning ? "to-orange-500" : "to-purple-900";
 
-  return (
-    <>
-      <div className={`min-h-screen bg-gradient-to-br ${backgroundFrom} via-purple-800 ${backgroundTo} flex flex-col relative overflow-hidden`}>
+return (
+  <>
+    <div className={`min-h-screen bg-gradient-to-br ${backgroundFrom} via-purple-800 ${backgroundTo} flex flex-col relative overflow-hidden`}>
 
-        {/* Blurred Animated Blobs */}
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-          <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
-        </div>
-
-        {/* Scoreboard */}
-        <div className="z-10 mt-8 backdrop-blur-xl bg-white/10 border border-white/20 p-4 shadow-xl max-w-md mx-auto rounded-xl w-full flex flex-col">
-          <div className="flex justify-between items-center text-white font-bold text-sm mb-2">
-            <div className="flex items-center space-x-2">
-              <i className="fas fa-user text-yellow-400"></i>
-              <span>{playerName}</span>
-            </div>
-            <div className="text-yellow-300 text-xl sm:text-2xl">{(playerScore || 0).toLocaleString()}</div>
-          </div>
-
-          <div className="flex justify-between items-center text-white font-bold text-sm mb-2">
-            <div className="flex items-center space-x-2">
-              <i className={gameMode === "ai" ? "fas fa-robot text-pink-400" : "fas fa-user-friends text-pink-400"}></i>
-              <span>{opponentName}</span>
-            </div>
-            <div className="text-pink-300 text-xl sm:text-2xl">
-              {gameMode === "ai" ? (aiCoins || 0).toLocaleString() : (opponentScore || 0).toLocaleString()}
-            </div>
-          </div>
-
-          <div className="relative w-full h-5 rounded-full bg-gray-800 overflow-hidden mt-3">
-            <div className="absolute left-0 top-0 bottom-0 bg-yellow-400 transition-all duration-500" style={{ width: `${playerPercent}%` }} />
-            <div className="absolute right-0 top-0 bottom-0 bg-pink-400 transition-all duration-500" style={{ width: `${opponentPercent}%` }} />
-          </div>
-        </div>
-
-        {/* Timer and Leave button */}
-        <div className="z-10 max-w-md mx-auto mt-2 flex flex-col items-center text-white gap-2">
-          <div className="text-xl sm:text-2xl font-bold select-none">{formatTime(timeLeft)}</div>
-          <button
-            onClick={resetToStart}
-            className="px-4 py-1 bg-red-500/80 text-white text-sm rounded-full hover:bg-red-500 active:scale-95 transition-all duration-200 backdrop-blur-xl border border-white/20"
-          >
-            <i className="fas fa-times mr-1" /> Leave
-          </button>
-        </div>
-
-        {/* Main game area below scoreboard */}
-        <div className="relative flex-1 max-w-md w-full mx-auto mt-4 z-10">
-
-          {/* Center Tap Button */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <button
-              onClick={() => {
-                if (navigator.vibrate) navigator.vibrate(250);
-                handleTap();
-              }}
-              className="w-[200px] h-[200px] rounded-full bg-white/30 backdrop-blur-xl border border-white/20 relative overflow-hidden transition-all duration-200 active:scale-95 shadow-2xl group pointer-events-auto"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-32 h-32 bg-gradient-to-r from-red-400 to-yellow-400 rounded-full animate-pulse opacity-50"></div>
-              </div>
-              <i className="fas fa-crosshairs text-6xl text-white relative z-10 drop-shadow"></i>
-            </button>
-          </div>
-
-          {/* Corner Upgrade Buttons */}
-          <UpgradeButton
-            title="Tap Power"
-            level={tapPowerLevel}
-            cost={getTapPowerCost()}
-            description={`+${tapPower} per tap`}
-            onClick={() => upgradeTapPower()}
-            disabled={playerScore < getTapPowerCost()}
-            position="top-2 left-2"
-            icon="💪"
-            glassy
-          />
-          <UpgradeButton
-            title="Critical Hit"
-            level={critLevel}
-            cost={getCritCost()}
-            description={`${critChance}% crit chance`}
-            onClick={() => upgradeCritChance()}
-            disabled={playerScore < getCritCost() || critChance >= 100}
-            position="top-2 right-2"
-            icon="⚡"
-            glassy
-          />
-          <UpgradeButton
-            title="Tap Speed"
-            level={tapSpeedLevel}
-            cost={getTapSpeedCost()}
-            description={`+${tapSpeedBonus}% bonus`}
-            onClick={() => upgradeTapSpeed()}
-            disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
-            position="bottom-2 left-2"
-            icon="🚀"
-            glassy
-          />
-          <UpgradeButton
-            title="Auto Tapper"
-            level={autoTapperLevel}
-            cost={getAutoTapperCost()}
-            description={`${autoTapper}/sec`}
-            onClick={() => upgradeAutoTapper()}
-            disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
-            position="bottom-2 right-2"
-            icon="🤖"
-            glassy
-          />
-        </div>
-
-        {/* Floating Numbers */}
-        {floatingNumbers.map((num) => (
-          <div
-            key={num.id}
-            className={`absolute pointer-events-none font-bold text-xl sm:text-2xl drop-shadow-lg ${num.isCrit ? "text-yellow-300" : "text-green-300"}`}
-            style={{
-              left: `calc(50% + ${num.x}px)`,
-              top: `calc(50% + ${num.y}px)`,
-              transform: "translate(-50%, -50%)",
-              animation: "floatUp 1s ease-out forwards",
-            }}
-          >
-            +{num.value}
-            {num.isCrit && " ⚡"}
-          </div>
-        ))}
+      {/* Background blobs */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
       </div>
 
-      {/* Floating Number Animation */}
+      {/* Top corner buttons - outside scoreboard */}
+      <div className="absolute top-2 left-2 z-20">
+        <UpgradeButton
+          title="Tap Power"
+          level={tapPowerLevel}
+          cost={getTapPowerCost()}
+          description={`+${tapPower} per tap`}
+          onClick={() => upgradeTapPower()}
+          disabled={playerScore < getTapPowerCost()}
+          position=""
+          icon="💪"
+          glassy
+        />
+      </div>
+      <div className="absolute top-2 right-2 z-20">
+        <UpgradeButton
+          title="Critical Hit"
+          level={critLevel}
+          cost={getCritCost()}
+          description={`${critChance}% crit chance`}
+          onClick={() => upgradeCritChance()}
+          disabled={playerScore < getCritCost() || critChance >= 100}
+          position=""
+          icon="⚡"
+          glassy
+        />
+      </div>
+
+      {/* Scoreboard - moved down */}
+      <div className="z-10 mt-24 mb-2 backdrop-blur-xl bg-white/10 border border-white/20 p-4 shadow-xl max-w-md mx-auto rounded-xl flex flex-col">
+        <div className="flex justify-between items-center text-white font-bold text-sm select-none mb-2">
+          <div className="flex items-center space-x-2">
+            <i className="fas fa-user text-yellow-400"></i>
+            <span>{playerName}</span>
+          </div>
+          <div className="text-yellow-300 text-xl sm:text-2xl">{(playerScore || 0).toLocaleString()}</div>
+        </div>
+
+        <div className="flex justify-between items-center text-white font-bold text-sm select-none mb-2">
+          <div className="flex items-center space-x-2">
+            <i className={gameMode === "ai" ? "fas fa-robot text-pink-400" : "fas fa-user-friends text-pink-400"}></i>
+            <span>{opponentName}</span>
+          </div>
+          <div className="text-pink-300 text-xl sm:text-2xl">
+            {gameMode === "ai" ? (aiCoins || 0).toLocaleString() : (opponentScore || 0).toLocaleString()}
+          </div>
+        </div>
+
+        <div className="relative w-full h-5 rounded-full bg-gray-800 overflow-hidden mt-3 select-none">
+          <div className="absolute left-0 top-0 bottom-0 bg-yellow-400 transition-all duration-500" style={{ width: `${playerPercent}%` }} />
+          <div className="absolute right-0 top-0 bottom-0 bg-pink-400 transition-all duration-500" style={{ width: `${opponentPercent}%` }} />
+        </div>
+      </div>
+
+      {/* Timer + Leave stacked */}
+      <div className="z-10 max-w-md mx-auto flex flex-col items-center text-white gap-2">
+        <div className="text-xl sm:text-2xl font-bold select-none">{formatTime(timeLeft)}</div>
+        <button
+          onClick={resetToStart}
+          className="px-4 py-1 bg-red-500/80 text-white text-sm rounded-full hover:bg-red-500 active:scale-95 transition-all duration-200 backdrop-blur-xl border border-white/20"
+        >
+          <i className="fas fa-times mr-1" /> Leave
+        </button>
+      </div>
+
+      {/* Tap Button - Centered */}
+      <div className="flex-1 flex items-center justify-center z-10 mt-4 relative">
+        <button
+          onClick={() => {
+            if (navigator.vibrate) navigator.vibrate(250);
+            handleTap();
+          }}
+          className="w-[200px] h-[200px] rounded-full bg-white/30 backdrop-blur-xl border border-white/20 relative overflow-hidden transition-all duration-200 active:scale-95 shadow-2xl group"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-32 h-32 bg-gradient-to-r from-red-400 to-yellow-400 rounded-full animate-pulse opacity-50"></div>
+          </div>
+          <i className="fas fa-crosshairs text-6xl text-white relative z-10 drop-shadow"></i>
+        </button>
+
+        {/* Bottom Upgrade Buttons */}
+        <UpgradeButton
+          title="Tap Speed"
+          level={tapSpeedLevel}
+          cost={getTapSpeedCost()}
+          description={`+${tapSpeedBonus}% bonus`}
+          onClick={() => upgradeTapSpeed()}
+          disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
+          position="absolute bottom-2 left-2"
+          icon="🚀"
+          glassy
+        />
+        <UpgradeButton
+          title="Auto Tapper"
+          level={autoTapperLevel}
+          cost={getAutoTapperCost()}
+          description={`${autoTapper}/sec`}
+          onClick={() => upgradeAutoTapper()}
+          disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
+          position="absolute bottom-2 right-2"
+          icon="🤖"
+          glassy
+        />
+      </div>
+
+      {/* Floating Numbers */}
+      {floatingNumbers.map((num) => (
+        <div
+          key={num.id}
+          className={`absolute pointer-events-none font-bold text-xl sm:text-2xl drop-shadow-lg ${num.isCrit ? "text-yellow-300" : "text-green-300"}`}
+          style={{
+            left: `calc(50% + ${num.x}px)`,
+            top: `calc(50% + ${num.y}px)`,
+            transform: "translate(-50%, -50%)",
+            animation: "floatUp 1s ease-out forwards",
+          }}
+        >
+          +{num.value}
+          {num.isCrit && " ⚡"}
+        </div>
+      ))}
+    </div>
+
       <style jsx global>{`
         @keyframes floatUp {
           0% {
@@ -1415,6 +1417,7 @@ if (gamePhase === "playing") {
     </>
   );
 }
+
 
 
 // Finished phase
