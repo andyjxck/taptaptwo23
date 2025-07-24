@@ -1266,8 +1266,8 @@ if (gamePhase === "playing") {
 
   return (
     <>
-      <div className={`min-h-screen bg-gradient-to-br ${backgroundFrom} via-purple-800 ${backgroundTo} flex flex-col relative overflow-hidden`}>
-        
+      <div className={`min-h-screen bg-gradient-to-br ${backgroundFrom} via-purple-800 ${backgroundTo} flex flex-col items-center relative overflow-hidden`}>
+
         {/* Background blobs */}
         <div className="absolute inset-0 z-0">
           <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse" />
@@ -1275,8 +1275,34 @@ if (gamePhase === "playing") {
           <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
         </div>
 
-        {/* Scoreboard */}
-        <div className="z-10 mt-8 mb-2 backdrop-blur-xl bg-white/10 border border-white/20 p-4 shadow-xl max-w-md mx-auto rounded-xl flex flex-col">
+        {/* UPGRADE BUTTONS - Top Left & Right */}
+        <div className="absolute z-20 w-full max-w-md px-4 top-2 flex justify-between sm:justify-around">
+          <UpgradeButton
+            title="Tap Power"
+            level={tapPowerLevel}
+            cost={getTapPowerCost()}
+            description={`+${tapPower} per tap`}
+            onClick={() => upgradeTapPower()}
+            disabled={playerScore < getTapPowerCost()}
+            position=""
+            icon="💪"
+            glassy
+          />
+          <UpgradeButton
+            title="Critical Hit"
+            level={critLevel}
+            cost={getCritCost()}
+            description={`${critChance}% crit chance`}
+            onClick={() => upgradeCritChance()}
+            disabled={playerScore < getCritCost() || critChance >= 100}
+            position=""
+            icon="⚡"
+            glassy
+          />
+        </div>
+
+        {/* SCOREBOARD */}
+        <div className="z-10 mt-24 sm:mt-16 backdrop-blur-xl bg-white/10 border border-white/20 p-4 shadow-xl w-full max-w-md mx-auto rounded-xl flex flex-col">
           <div className="flex justify-between items-center text-white font-bold text-sm select-none mb-2">
             <div className="flex items-center space-x-2">
               <i className="fas fa-user text-yellow-400"></i>
@@ -1301,19 +1327,20 @@ if (gamePhase === "playing") {
           </div>
         </div>
 
-        {/* Timer + Leave stacked */}
-        <div className="z-10 max-w-md mx-auto flex flex-col items-center text-white gap-2">
+        {/* TIMER + LEAVE BUTTON */}
+        <div className="z-10 mt-2 mb-2 text-white flex flex-col items-center">
           <div className="text-xl sm:text-2xl font-bold select-none">{formatTime(timeLeft)}</div>
           <button
             onClick={resetToStart}
-            className="px-4 py-1 bg-red-500/80 text-white text-sm rounded-full hover:bg-red-500 active:scale-95 transition-all duration-200 backdrop-blur-xl border border-white/20"
+            className="mt-1 px-4 py-1 bg-red-500/80 text-white text-sm rounded-full hover:bg-red-500 active:scale-95 transition-all duration-200 backdrop-blur-xl border border-white/20"
           >
             <i className="fas fa-times mr-1" /> Leave
           </button>
         </div>
 
-        {/* Tap Button - Centered */}
-        <div className="flex-1 flex items-center justify-center z-10 mt-4 relative">
+        {/* MAIN INTERACTION AREA */}
+        <div className="relative z-10 flex-1 flex items-center justify-center w-full max-w-md px-4 mt-2 mb-8">
+          {/* Tap Button */}
           <button
             onClick={() => {
               if (navigator.vibrate) navigator.vibrate(250);
@@ -1328,51 +1355,33 @@ if (gamePhase === "playing") {
             <i className="fas fa-crosshairs text-6xl text-white relative z-10 drop-shadow"></i>
           </button>
 
-          {/* Upgrade buttons in corners of bottom space */}
-          <UpgradeButton
-            title="Tap Power"
-            level={tapPowerLevel}
-            cost={getTapPowerCost()}
-            description={`+${tapPower} per tap`}
-            onClick={() => upgradeTapPower()}
-            disabled={playerScore < getTapPowerCost()}
-            position="absolute top-2 left-2"
-            icon="💪"
-            glassy
-          />
-          <UpgradeButton
-            title="Critical Hit"
-            level={critLevel}
-            cost={getCritCost()}
-            description={`${critChance}% crit chance`}
-            onClick={() => upgradeCritChance()}
-            disabled={playerScore < getCritCost() || critChance >= 100}
-            position="absolute top-2 right-2"
-            icon="⚡"
-            glassy
-          />
-          <UpgradeButton
-            title="Tap Speed"
-            level={tapSpeedLevel}
-            cost={getTapSpeedCost()}
-            description={`+${tapSpeedBonus}% bonus`}
-            onClick={() => upgradeTapSpeed()}
-            disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
-            position="absolute bottom-2 left-2"
-            icon="🚀"
-            glassy
-          />
-          <UpgradeButton
-            title="Auto Tapper"
-            level={autoTapperLevel}
-            cost={getAutoTapperCost()}
-            description={`${autoTapper}/sec`}
-            onClick={() => upgradeAutoTapper()}
-            disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
-            position="absolute bottom-2 right-2"
-            icon="🤖"
-            glassy
-          />
+          {/* Bottom Corner Upgrades */}
+          <div className="absolute bottom-0 left-0 mb-2 ml-2">
+            <UpgradeButton
+              title="Tap Speed"
+              level={tapSpeedLevel}
+              cost={getTapSpeedCost()}
+              description={`+${tapSpeedBonus}% bonus`}
+              onClick={() => upgradeTapSpeed()}
+              disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
+              position=""
+              icon="🚀"
+              glassy
+            />
+          </div>
+          <div className="absolute bottom-0 right-0 mb-2 mr-2">
+            <UpgradeButton
+              title="Auto Tapper"
+              level={autoTapperLevel}
+              cost={getAutoTapperCost()}
+              description={`${autoTapper}/sec`}
+              onClick={() => upgradeAutoTapper()}
+              disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
+              position=""
+              icon="🤖"
+              glassy
+            />
+          </div>
         </div>
 
         {/* Floating Numbers */}
@@ -1411,7 +1420,6 @@ if (gamePhase === "playing") {
     </>
   );
 }
-
 
 
 // Finished phase
