@@ -554,6 +554,7 @@ setFloatingNumbers(prev => [
 setTimeout(() => {
   setFloatingNumbers(prev => prev.filter(num => num.id !== id));
 }, 1000);
+}
 
 // Flush batched player score updates every 100ms (only multiplayer mode)
 React.useEffect(() => {
@@ -1553,13 +1554,12 @@ if (gamePhase === "finished") {
           </a>
         </div>
       </div>
-    </div>
     </>
   );
 }
 
 return null;
 
-  }
+}
 
 export default MainComponent;
