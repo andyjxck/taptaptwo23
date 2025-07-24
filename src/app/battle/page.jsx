@@ -1284,8 +1284,8 @@ if (gamePhase === "playing") {
           ></div>
         </div>
 
-        {/* Wrapper for scoreboard + buttons */}
-        <div className="relative z-20 flex flex-col items-center gap-4 w-full max-w-md mx-auto px-4">
+        {/* Wrapper for scoreboard + leave button + upgrades */}
+        <div className="relative z-20 flex flex-col items-center gap-6 w-full max-w-md mx-auto px-4">
           {/* Scoreboard container */}
           <div
             className="w-full backdrop-blur-xl bg-white/20 border border-white/25 rounded-xl flex flex-col items-center px-6 py-4 shadow-lg"
@@ -1359,6 +1359,126 @@ if (gamePhase === "playing") {
           >
             <i className="fas fa-times"></i> Leave
           </button>
+
+          {/* Upgrade buttons container */}
+          <div className="w-full max-w-md flex flex-wrap justify-center gap-4 px-2">
+            {/* Each UpgradeButton now WITHOUT absolute positioning */}
+            <UpgradeButton
+              title="Tap Power"
+              level={tapPowerLevel}
+              cost={getTapPowerCost()}
+              description={`+${tapPower} per tap`}
+              onClick={(e) => {
+                e.preventDefault();
+                upgradeTapPower();
+              }}
+              disabled={playerScore < getTapPowerCost()}
+              position={undefined} // REMOVE absolute positioning
+              icon="💪"
+              glassy
+              styleOverride={{
+                background:
+                  "linear-gradient(135deg, rgba(255 255 255 / 0.15), rgba(255 255 255 / 0.05))",
+                boxShadow: "0 8px 20px rgba(255, 255, 255, 0.2)",
+                border: "1px solid rgba(255, 255, 255, 0.3)",
+                color: "white",
+                fontWeight: "600",
+                backdropFilter: "blur(12px)",
+                transition: "all 0.3s ease",
+                minWidth: "120px",
+                textAlign: "center",
+                padding: "0.5rem 1rem",
+                borderRadius: "0.75rem",
+              }}
+            />
+
+            <UpgradeButton
+              title="Critical Hit"
+              level={critLevel}
+              cost={getCritCost()}
+              description={`${critChance}% crit chance`}
+              onClick={(e) => {
+                e.preventDefault();
+                upgradeCritChance();
+              }}
+              disabled={playerScore < getCritCost() || critChance >= 100}
+              position={undefined}
+              icon="⚡"
+              glassy
+              styleOverride={{
+                background:
+                  "linear-gradient(135deg, rgba(255 255 255 / 0.15), rgba(255 255 255 / 0.05))",
+                boxShadow: "0 8px 20px rgba(255, 255, 255, 0.2)",
+                border: "1px solid rgba(255, 255, 255, 0.3)",
+                color: "white",
+                fontWeight: "600",
+                backdropFilter: "blur(12px)",
+                transition: "all 0.3s ease",
+                minWidth: "120px",
+                textAlign: "center",
+                padding: "0.5rem 1rem",
+                borderRadius: "0.75rem",
+              }}
+            />
+
+            <UpgradeButton
+              title="Tap Speed"
+              level={tapSpeedLevel}
+              cost={getTapSpeedCost()}
+              description={`+${tapSpeedBonus}% bonus`}
+              onClick={(e) => {
+                e.preventDefault();
+                upgradeTapSpeed();
+              }}
+              disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
+              position={undefined}
+              icon="🚀"
+              glassy
+              styleOverride={{
+                background:
+                  "linear-gradient(135deg, rgba(255 255 255 / 0.15), rgba(255 255 255 / 0.05))",
+                boxShadow: "0 8px 20px rgba(255, 255, 255, 0.2)",
+                border: "1px solid rgba(255, 255, 255, 0.3)",
+                color: "white",
+                fontWeight: "600",
+                backdropFilter: "blur(12px)",
+                transition: "all 0.3s ease",
+                minWidth: "120px",
+                textAlign: "center",
+                padding: "0.5rem 1rem",
+                borderRadius: "0.75rem",
+              }}
+            />
+
+            <UpgradeButton
+              title="Auto Tapper"
+              level={autoTapperLevel}
+              cost={getAutoTapperCost()}
+              description={`${autoTapper}/sec`}
+              onClick={(e) => {
+                e.preventDefault();
+                upgradeAutoTapper();
+              }}
+              disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
+              position={undefined}
+              icon="🤖"
+              glassy
+              styleOverride={{
+                background:
+                  "linear-gradient(135deg, rgba(255 255 255 / 0.15), rgba(255 255 255 / 0.05))",
+                boxShadow: "0 8px 20px rgba(255, 255, 255, 0.2)",
+                border: "1px solid rgba(255, 255, 255, 0.3)",
+                color: "white",
+                fontWeight: "600",
+                backdropFilter: "blur(12px)",
+                transition: "all 0.3s ease",
+                minWidth: "120px",
+                textAlign: "center",
+                padding: "0.5rem 1rem",
+                borderRadius: "0.75rem",
+              }}
+            />
+          </div>
         </div>
 
         {/* Game area */}
@@ -1392,157 +1512,56 @@ if (gamePhase === "playing") {
           </button>
         </div>
 
-        {/* Upgrades (4 corners) */}
-        <UpgradeButton
-          title="Tap Power"
-          level={tapPowerLevel}
-          cost={getTapPowerCost()}
-          description={`+${tapPower} per tap`}
-          onClick={(e) => {
-            e.preventDefault();
-            upgradeTapPower();
-          }}
-          disabled={playerScore < getTapPowerCost()}
-          position="top-4 left-4"
-          icon="💪"
-          glassy
-          styleOverride={{
-            background:
-              "linear-gradient(135deg, rgba(255 255 255 / 0.15), rgba(255 255 255 / 0.05))",
-            boxShadow: "0 8px 20px rgba(255, 255, 255, 0.2)",
-            border: "1px solid rgba(255, 255, 255, 0.3)",
-            color: "white",
-            fontWeight: "600",
-            backdropFilter: "blur(12px)",
-            transition: "all 0.3s ease",
-          }}
-        />
+        {/* Floating damage/healing numbers */}
+        {floatingNumbers.map((num) => {
+          // Random spread offsets within viewport, +- 150px from center horizontally and vertically
+          const spreadX = num.x + (Math.random() * 300 - 150);
+          const spreadY = num.y + (Math.random() * 300 - 150);
 
-        <UpgradeButton
-          title="Critical Hit"
-          level={critLevel}
-          cost={getCritCost()}
-          description={`${critChance}% crit chance`}
-          onClick={(e) => {
-            e.preventDefault();
-            upgradeCritChance();
-          }}
-          disabled={playerScore < getCritCost() || critChance >= 100}
-          position="top-4 right-4"
-          icon="⚡"
-          glassy
-          styleOverride={{
-            background:
-              "linear-gradient(135deg, rgba(255 255 255 / 0.15), rgba(255 255 255 / 0.05))",
-            boxShadow: "0 8px 20px rgba(255, 255, 255, 0.2)",
-            border: "1px solid rgba(255, 255, 255, 0.3)",
-            color: "white",
-            fontWeight: "600",
-            backdropFilter: "blur(12px)",
-            transition: "all 0.3s ease",
-          }}
-        />
-
-        <UpgradeButton
-          title="Tap Speed"
-          level={tapSpeedLevel}
-          cost={getTapSpeedCost()}
-          description={`+${tapSpeedBonus}% bonus`}
-          onClick={(e) => {
-            e.preventDefault();
-            upgradeTapSpeed();
-          }}
-          disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
-          position="bottom-4 left-4"
-          icon="🚀"
-          glassy
-          styleOverride={{
-            background:
-              "linear-gradient(135deg, rgba(255 255 255 / 0.15), rgba(255 255 255 / 0.05))",
-            boxShadow: "0 8px 20px rgba(255, 255, 255, 0.2)",
-            border: "1px solid rgba(255, 255, 255, 0.3)",
-            color: "white",
-            fontWeight: "600",
-            backdropFilter: "blur(12px)",
-            transition: "all 0.3s ease",
-          }}
-        />
-
-        <UpgradeButton
-          title="Auto Tapper"
-          level={autoTapperLevel}
-          cost={getAutoTapperCost()}
-          description={`${autoTapper}/sec`}
-          onClick={(e) => {
-            e.preventDefault();
-            upgradeAutoTapper();
-          }}
-          disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
-          position="bottom-4 right-4"
-          icon="🤖"
-          glassy
-          styleOverride={{
-            background:
-              "linear-gradient(135deg, rgba(255 255 255 / 0.15), rgba(255 255 255 / 0.05))",
-            boxShadow: "0 8px 20px rgba(255, 255, 255, 0.2)",
-            border: "1px solid rgba(255, 255, 255, 0.3)",
-            color: "white",
-            fontWeight: "600",
-            backdropFilter: "blur(12px)",
-            transition: "all 0.3s ease",
-          }}
-        />
-      </div>
-
-      {/* Floating damage/healing numbers */}
-      {floatingNumbers.map((num) => {
-        // Random spread offsets within viewport, +- 150px from center horizontally and vertically
-        const spreadX = num.x + (Math.random() * 300 - 150);
-        const spreadY = num.y + (Math.random() * 300 - 150);
-
-        // Determine color classes based on crit and owner
-        let colorClass = "text-green-400"; // default player color
-        if (num.isCrit) {
-          colorClass = "text-red-500 font-extrabold";
-        }
-
-        return (
-          <div
-            key={num.id}
-            className={`absolute pointer-events-none font-bold text-xl sm:text-2xl drop-shadow-lg ${colorClass}`}
-            style={{
-              left: `calc(50% + ${spreadX}px)`,
-              top: `calc(50% + ${spreadY}px)`,
-              transform: "translate(-50%, -50%)",
-              animation: "floatUp 1s ease-out forwards",
-              whiteSpace: "nowrap",
-              userSelect: "none",
-            }}
-          >
-            +{num.value}
-            {num.isCrit && " ⚡"}
-          </div>
-        );
-      })}
-
-      <style jsx global>{`
-        @keyframes floatUp {
-          0% {
-            opacity: 1;
-            transform: translate(-50%, -50%) translateY(0px) scale(1);
+          // Determine color classes based on crit and owner
+          let colorClass = "text-green-400"; // default player color
+          if (num.isCrit) {
+            colorClass = "text-red-500 font-extrabold";
           }
-          50% {
-            transform: translate(-50%, -50%) translateY(-50px) scale(1.1);
+
+          return (
+            <div
+              key={num.id}
+              className={`absolute pointer-events-none font-bold text-xl sm:text-2xl drop-shadow-lg ${colorClass}`}
+              style={{
+                left: `calc(50% + ${spreadX}px)`,
+                top: `calc(50% + ${spreadY}px)`,
+                transform: "translate(-50%, -50%)",
+                animation: "floatUp 1s ease-out forwards",
+                whiteSpace: "nowrap",
+                userSelect: "none",
+              }}
+            >
+              +{num.value}
+              {num.isCrit && " ⚡"}
+            </div>
+          );
+        })}
+
+        <style jsx global>{`
+          @keyframes floatUp {
+            0% {
+              opacity: 1;
+              transform: translate(-50%, -50%) translateY(0px) scale(1);
+            }
+            50% {
+              transform: translate(-50%, -50%) translateY(-50px) scale(1.1);
+            }
+            100% {
+              opacity: 0;
+              transform: translate(-50%, -50%) translateY(-100px) scale(0.8);
+            }
           }
-          100% {
-            opacity: 0;
-            transform: translate(-50%, -50%) translateY(-100px) scale(0.8);
-          }
-        }
-      `}</style>
-    </>
-  );
+        `}</style>
+      </>
+    );
 }
+
 
 
 // Finished phase
