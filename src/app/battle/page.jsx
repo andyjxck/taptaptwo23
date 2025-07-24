@@ -1254,7 +1254,6 @@ if (gamePhase === "lobby") {
     </>
   );
 }
-
 if (gamePhase === "playing") {
   // Calculate score percentages for progress bar
   const totalScore = (playerScore || 0) + (opponentScore || 0) || 1; // avoid div by zero
@@ -1285,70 +1284,74 @@ if (gamePhase === "playing") {
           ></div>
         </div>
 
-        {/* Scoreboard container */}
-        <div
-          className="relative z-20 backdrop-blur-xl bg-white/20 border border-white/25 max-w-sm w-[90vw] mx-auto rounded-xl flex flex-col items-center px-4 py-2 shadow-lg"
-          style={{
-            backdropFilter: "blur(28px)",
-            WebkitBackdropFilter: "blur(28px)",
-            gap: "0.4rem",
-            minWidth: "280px",
-          }}
-        >
-          {/* Top row: Player name left, Opponent name right */}
-          <div className="w-full flex justify-between items-center text-white font-semibold select-none text-sm sm:text-base md:text-lg">
-            <div className="truncate max-w-[45%] flex items-center space-x-1.5 sm:space-x-2">
-              <i className="fas fa-user text-yellow-400 text-lg sm:text-xl flex-shrink-0"></i>
-              <span className="truncate text-sm sm:text-base">{playerName}</span>
+        {/* Wrapper for scoreboard + buttons */}
+        <div className="relative z-20 flex flex-col items-center gap-4 w-full max-w-md mx-auto px-4">
+          {/* Scoreboard container */}
+          <div
+            className="w-full backdrop-blur-xl bg-white/20 border border-white/25 rounded-xl flex flex-col items-center px-6 py-4 shadow-lg"
+            style={{
+              backdropFilter: "blur(28px)",
+              WebkitBackdropFilter: "blur(28px)",
+              gap: "0.4rem",
+              minWidth: "260px",
+              maxWidth: "100%",
+            }}
+          >
+            {/* Top row: Player name left, Opponent name right */}
+            <div className="w-full flex justify-between items-center text-white font-semibold select-none text-sm sm:text-base md:text-lg">
+              <div className="truncate max-w-[45%] flex items-center space-x-1.5 sm:space-x-2">
+                <i className="fas fa-user text-yellow-400 text-lg sm:text-xl flex-shrink-0"></i>
+                <span className="truncate text-sm sm:text-base">{playerName}</span>
+              </div>
+              <div className="truncate max-w-[45%] flex items-center space-x-1.5 sm:space-x-2 justify-end">
+                <span className="truncate text-sm sm:text-base">{opponentName}</span>
+                <i
+                  className={
+                    gameMode === "ai"
+                      ? "fas fa-robot text-pink-400 text-lg sm:text-xl flex-shrink-0"
+                      : "fas fa-user-friends text-pink-400 text-lg sm:text-xl flex-shrink-0"
+                  }
+                ></i>
+              </div>
             </div>
-            <div className="truncate max-w-[45%] flex items-center space-x-1.5 sm:space-x-2 justify-end">
-              <span className="truncate text-sm sm:text-base">{opponentName}</span>
-              <i
-                className={
-                  gameMode === "ai"
-                    ? "fas fa-robot text-pink-400 text-lg sm:text-xl flex-shrink-0"
-                    : "fas fa-user-friends text-pink-400 text-lg sm:text-xl flex-shrink-0"
-                }
-              ></i>
+
+            {/* Middle row: Scores and progress bar */}
+            <div className="w-full flex items-center gap-2 sm:gap-3 mt-1">
+              {/* Player Score left */}
+              <div className="text-yellow-300 font-bold text-base sm:text-lg tabular-nums min-w-[48px] sm:min-w-[55px] text-left select-none">
+                {(playerScore || 0).toLocaleString()}
+              </div>
+
+              {/* Progress bar */}
+              <div className="flex-1 h-3 sm:h-4 rounded-full bg-gray-900 overflow-hidden relative border border-white/25">
+                <div
+                  className="absolute top-0 bottom-0 left-0 bg-yellow-400 transition-all duration-700"
+                  style={{ width: `${playerPercent}%` }}
+                />
+                <div
+                  className="absolute top-0 bottom-0 right-0 bg-pink-400 transition-all duration-700"
+                  style={{ width: `${opponentPercent}%` }}
+                />
+              </div>
+
+              {/* Opponent Score right */}
+              <div className="text-pink-300 font-bold text-base sm:text-lg tabular-nums min-w-[48px] sm:min-w-[55px] text-right select-none">
+                {gameMode === "ai"
+                  ? (aiCoins || 0).toLocaleString()
+                  : (opponentScore || 0).toLocaleString()}
+              </div>
+            </div>
+
+            {/* Timer below progress bar, smaller and centered */}
+            <div className="text-white font-mono text-lg sm:text-xl tracking-widest select-none drop-shadow-md bg-black/30 rounded-lg px-3 py-1 mt-1 w-full text-center">
+              {formatTime(timeLeft)}
             </div>
           </div>
 
-          {/* Middle row: Scores and progress bar */}
-          <div className="w-full flex items-center gap-2 sm:gap-3 mt-1">
-            {/* Player Score left */}
-            <div className="text-yellow-300 font-bold text-base sm:text-lg tabular-nums min-w-[48px] sm:min-w-[55px] text-left select-none">
-              {(playerScore || 0).toLocaleString()}
-            </div>
-
-            {/* Progress bar */}
-            <div className="flex-1 h-3 sm:h-4 rounded-full bg-gray-900 overflow-hidden relative border border-white/25">
-              <div
-                className="absolute top-0 bottom-0 left-0 bg-yellow-400 transition-all duration-700"
-                style={{ width: `${playerPercent}%` }}
-              />
-              <div
-                className="absolute top-0 bottom-0 right-0 bg-pink-400 transition-all duration-700"
-                style={{ width: `${opponentPercent}%` }}
-              />
-            </div>
-
-            {/* Opponent Score right */}
-            <div className="text-pink-300 font-bold text-base sm:text-lg tabular-nums min-w-[48px] sm:min-w-[55px] text-right select-none">
-              {gameMode === "ai"
-                ? (aiCoins || 0).toLocaleString()
-                : (opponentScore || 0).toLocaleString()}
-            </div>
-          </div>
-
-          {/* Timer below progress bar, smaller and centered */}
-          <div className="text-white font-mono text-lg sm:text-xl tracking-widest select-none drop-shadow-md bg-black/30 rounded-lg px-3 py-1 mt-1 w-full text-center">
-            {formatTime(timeLeft)}
-          </div>
-
-          {/* Leave button below timer */}
+          {/* Leave button below scoreboard */}
           <button
             onClick={resetToStart}
-            className="mt-2 w-[120px] sm:w-[140px] py-1.5 bg-red-600/90 text-white font-semibold rounded-lg hover:bg-red-700 active:scale-95 transition-transform duration-150 shadow-lg backdrop-blur-md border border-white/30 flex items-center justify-center gap-2 mx-auto text-sm sm:text-base"
+            className="w-full max-w-xs py-2 bg-red-600/90 text-white font-semibold rounded-lg hover:bg-red-700 active:scale-95 transition-transform duration-150 shadow-lg backdrop-blur-md border border-white/30 flex items-center justify-center gap-2 text-base"
             style={{
               backdropFilter: "blur(18px)",
               WebkitBackdropFilter: "blur(18px)",
@@ -1359,7 +1362,7 @@ if (gamePhase === "playing") {
         </div>
 
         {/* Game area */}
-        <div className="flex flex-1 items-center justify-center relative z-10 px-4">
+        <div className="flex flex-1 items-center justify-center relative z-10 px-4 mt-6">
           {/* Main Battle Button */}
           <button
             onClick={() => {
@@ -1540,7 +1543,6 @@ if (gamePhase === "playing") {
     </>
   );
 }
-
 
 
 // Finished phase
