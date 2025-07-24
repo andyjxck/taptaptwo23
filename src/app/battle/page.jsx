@@ -1273,13 +1273,14 @@ if (gamePhase === "playing") {
   const opponentPercent = ((opponentScore || 0) / totalScore) * 100;
   const isPlayerWinning = (playerScore || 0) >= (opponentScore || 0);
 
-  const backgroundFrom = isPlayerWinning ? "from-yellow-400" : "from-pink-500";
-  const backgroundTo = isPlayerWinning ? "to-orange-500" : "to-purple-900";
+  const backgroundFrom = isPlayerWinning ? "from-yellow-300" : "from-pink-500";
+  const backgroundTo = isPlayerWinning ? "to-orange-400" : "to-purple-800";
+  const backgroundVia = isPlayerWinning ? "via-red-400" : "via-fuchsia-600";
 
   return (
     <>
       <div
-        className={`min-h-screen bg-gradient-to-br ${backgroundFrom} via-red-600 ${backgroundTo} flex flex-col relative overflow-hidden px-2 pt-14 pb-8`}
+        className={`min-h-screen bg-gradient-to-br ${backgroundFrom} ${backgroundVia} ${backgroundTo} flex flex-col relative overflow-hidden px-2 pt-14 pb-8`}
       >
         {/* Background blobs */}
         <div className="absolute inset-0 z-0">
