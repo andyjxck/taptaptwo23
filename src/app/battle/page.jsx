@@ -1555,6 +1555,7 @@ if (gamePhase === "finished") {
     </>
   );
 }
+}
 
 return null;
 
