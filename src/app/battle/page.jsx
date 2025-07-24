@@ -1343,8 +1343,8 @@ if (gamePhase === "playing") {
           </div>
         </div>
 
-        {/* --- Leave button BELOW scoreboard --- */}
-        <div className="fixed top-[104px] left-1/2 transform -translate-x-1/2 z-40 w-full max-w-md px-4">
+        {/* --- Leave button BELOW scoreboard with enough margin --- */}
+        <div className="fixed top-[92px] left-1/2 transform -translate-x-1/2 z-40 w-full max-w-md px-4">
           <button
             onClick={resetToStart}
             className="w-full bg-red-600/90 text-white font-semibold rounded-lg py-2 shadow-lg hover:bg-red-700 active:scale-95 transition-transform duration-150 select-none"
@@ -1357,14 +1357,12 @@ if (gamePhase === "playing") {
           </button>
         </div>
 
-        {/* --- BUTTONS CONTAINER BELOW SCOREBOARD AND LEAVE BUTTON --- */}
-        <div className="flex-grow flex relative mt-[148px] px-4"> 
-          {/* 
-            flex-grow to fill remaining vertical space
-            mt to push down below scoreboard + leave button (104 + 44 ~ 148px)
-          */}
-
-          {/* Upgrade buttons in corners */}
+        {/* --- Buttons container BELOW scoreboard + leave button --- */}
+        <div
+          className="relative flex-grow mt-[144px] px-4" 
+          style={{ minHeight: "calc(100vh - 144px)" }} // fill space below scoreboard + leave
+        >
+          {/* Upgrade buttons fixed inside this area */}
           <div className="absolute top-0 left-0 z-50">
             <UpgradeButton
               title="Tap Power"
@@ -1450,7 +1448,7 @@ if (gamePhase === "playing") {
           </div>
 
           {/* Main battle button centered */}
-          <div className="m-auto flex items-center justify-center pointer-events-auto z-40">
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40 pointer-events-auto">
             <button
               onClick={() => {
                 if (navigator.vibrate) navigator.vibrate(250);
@@ -1528,7 +1526,6 @@ if (gamePhase === "playing") {
     </>
   );
 }
-
 
 
 
