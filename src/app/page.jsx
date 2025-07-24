@@ -5282,123 +5282,131 @@ const renderLeaderboard = () => (
       </span>
     </div>
 
-    <div className="flex items-center space-x-2 h-full">
-      <button
-        onClick={() => setShowMaddoxModal(true)}
-        className="relative flex items-center justify-center w-11 h-11 rounded-full bg-gradient-to-br from-[#1e293b] to-[#dc2626] shadow-xl hover:scale-110 transition-all border-2 border-[#dc2626]"
-        aria-label="Maddox Promo"
-        style={{ marginRight: "8px" }}
-      >
-        <img
-          src="https://ucarecdn.com/7eaeaf25-2192-4082-a415-dd52f360d379/-/format/auto/"
-          alt="Maddox Logo"
-          className="w-7 h-7 rounded-full object-contain"
-        />
-        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center border-2 border-white shadow">
-          <span className="text-xs font-bold text-white" style={{ lineHeight: "1" }}>
-            !
-          </span>
-        </span>
-      </button>
+ <div className="flex items-center space-x-2 h-full">
+  <button
+    onClick={() => setShowMaddoxModal(true)}
+    className="relative flex items-center justify-center w-11 h-11 rounded-full bg-gradient-to-br from-[#1e293b] to-[#dc2626] shadow-xl hover:scale-110 transition-all border-2 border-[#dc2626]"
+    aria-label="Maddox Promo"
+    style={{ marginRight: "8px" }}
+  >
+    <img
+      src="https://ucarecdn.com/7eaeaf25-2192-4082-a415-dd52f360d379/-/format/auto/"
+      alt="Maddox Logo"
+      className="w-7 h-7 rounded-full object-contain"
+    />
+    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center border-2 border-white shadow">
+      <span className="text-xs font-bold text-white" style={{ lineHeight: "1" }}>
+        !
+      </span>
+    </span>
+  </button>
 
-      <button
-        onClick={() => setShowResetModal(true)}
-        className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200 relative`}
-        aria-label="Reset progress"
+  <button
+    onClick={() => setShowResetModal(true)}
+    className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200 relative`}
+    aria-label="Reset progress"
+  >
+    <i className="fas fa-sync-alt"></i>
+    <span
+      className="absolute top-0 right-0 flex items-center justify-center rounded-full text-white font-bold"
+      style={{
+        fontSize: "0.75rem",
+        padding: "0 6px",
+        minWidth: "24px",
+        height: "20px",
+        lineHeight: "20px",
+        textAlign: "center",
+        userSelect: "none",
+        backgroundColor: "#4f46e5",
+        transform: "translate(50%, -50%)",
+        zIndex: 20,
+      }}
+    >
+      {getTokensFromCoins(gameState.coinsEarnedThisRun || 0)}
+    </span>
+  </button>
+
+  {/* NEW Battle Button */}
+  <a
+    href="/battle"
+    className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200`}
+    aria-label="Battle Mode"
+  >
+    <i className="fas fa-crosshairs"></i>
+  </a>
+
+  <button
+    onClick={() => setActiveTab("leaderboard")}
+    className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200`}
+  >
+    <i className="fas fa-trophy"></i>
+  </button>
+
+  <div className="relative">
+    <button
+      onClick={() => setShowDropdown((prev) => !prev)}
+      className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200`}
+      aria-label="Open menu"
+    >
+      <i className="fas fa-bars"></i>
+    </button>
+
+    {showDropdown && (
+      <div
+        className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 box-border"
+        onClick={() => setShowDropdown(false)}
       >
-        <i className="fas fa-sync-alt"></i>
-        <span
-          className="absolute top-0 right-0 flex items-center justify-center rounded-full text-white font-bold"
-          style={{
-            fontSize: "0.75rem",
-            padding: "0 6px",
-            minWidth: "24px",
-            height: "20px",
-            lineHeight: "20px",
-            textAlign: "center",
-            userSelect: "none",
-            backgroundColor: "#4f46e5",
-            transform: "translate(50%, -50%)",
-            zIndex: 20,
-          }}
+        <a
+          href="/help"
+          className="block px-4 py-2 text-[#4a5568] hover:bg-gray-100"
         >
-          {getTokensFromCoins(gameState.coinsEarnedThisRun || 0)}
-        </span>
-      </button>
+          <i className="fas fa-question mr-2"></i> Help
+        </a>
 
-      <a
-        href="/notice-board"
-        className="relative block px-4 py-2 text-[#4a5568] hover:bg-gray-100"
-      >
-        <i className="fas fa-bullhorn"></i>
-        <span
-          className="absolute top-2 right-2 block w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"
-          style={{ pointerEvents: "none", boxShadow: "0 0 0 1px #fff" }}
-        />
-      </a>
-      <button
-        onClick={() => setActiveTab("leaderboard")}
-        className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200`}
-      >
-        <i className="fas fa-trophy"></i>
-      </button>
+        <a
+          href="/notice-board"
+          className="block px-4 py-2 text-[#4a5568] hover:bg-gray-100"
+        >
+          <i className="fas fa-bullhorn mr-2"></i> Notice Board
+        </a>
 
-      <div className="relative">
         <button
-          onClick={() => setShowDropdown((prev) => !prev)}
-          className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200`}
-          aria-label="Open menu"
+          onClick={() => setShowFeedback(true)}
+          className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
         >
-          <i className="fas fa-bars"></i>
+          <i className="fas fa-comment-alt mr-2"></i> Feedback
         </button>
 
-        {showDropdown && (
-          <div
-            className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 box-border"
-            onClick={() => setShowDropdown(false)}
-          >
-            <a
-              href="/help"
-              className="block px-4 py-2 text-[#4a5568] hover:bg-gray-100"
-            >
-              <i className="fas fa-question mr-2"></i> Help
-            </a>
-            <button
-              onClick={() => setShowFeedback(true)}
-              className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
-            >
-              <i className="fas fa-comment-alt mr-2"></i> Feedback
-            </button>
-            <button
-              onClick={() => setActiveTab("profile")}
-              className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
-            >
-              <i className="fas fa-user mr-2"></i> Profile
-            </button>
-           <button
-  onClick={() => setMuted((m) => !m)}
-  className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
-  aria-label={muted ? "Unmute sounds" : "Mute sounds"}
->
-  <i className={`fas mr-2 ${muted ? "fa-volume-mute" : "fa-volume-up"}`}></i>
-  {muted ? "Unmute" : "Mute"}
-</button>
+        <button
+          onClick={() => setActiveTab("profile")}
+          className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
+        >
+          <i className="fas fa-user mr-2"></i> Profile
+        </button>
 
-            <button
-              onClick={() => {
-                localStorage.removeItem("userId");
-                localStorage.removeItem("pin");
-                window.location.href = "/login";
-              }}
-              className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
-            >
-              <i className="fas fa-sign-out-alt mr-2"></i> Logout
-            </button>
-          </div>
-        )}
+        <button
+          onClick={() => setMuted((m) => !m)}
+          className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
+          aria-label={muted ? "Unmute sounds" : "Mute sounds"}
+        >
+          <i className={`fas mr-2 ${muted ? "fa-volume-mute" : "fa-volume-up"}`}></i>
+          {muted ? "Unmute" : "Mute"}
+        </button>
+
+        <button
+          onClick={() => {
+            localStorage.removeItem("userId");
+            localStorage.removeItem("pin");
+            window.location.href = "/login";
+          }}
+          className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
+        >
+          <i className="fas fa-sign-out-alt mr-2"></i> Logout
+        </button>
       </div>
-    </div>
+    )}
   </div>
+</div>
 
   {["game", "house", "leaderboard"].includes(activeTab) && (
     <div className="text-center">
