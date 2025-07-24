@@ -1469,13 +1469,13 @@ if (gamePhase === "playing") {
         <UpgradeButton
           title="Auto Tapper"
           level={autoTapperLevel}
-          cost={getAutoTapCost()}
+          cost={getAutoTapperCost()}
           description={`${autoTapper}/sec`}
           onClick={(e) => {
             e.preventDefault();
             upgradeAutoTapper();
           }}
-          disabled={playerScore < getAutoTapCost() || autoTapper >= 100000}
+          disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
           position="bottom-4 right-4"
           icon="🤖"
           glassy
