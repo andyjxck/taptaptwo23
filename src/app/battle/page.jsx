@@ -153,17 +153,10 @@ const getAiAutoTapperCost = () =>
 React.useEffect(() => {
   if (gamePhase !== "playing" || gameMode !== "ai" || !currentRoom) return;
 
-  const upgradeInterval = 3000; // every 3 seconds
+  const upgradeInterval = 5000; // every 5 seconds
   let isCancelled = false;
 
   const upgradeTimer = setInterval(async () => {
-    if (isCancelled) return;
-
-    // Don't upgrade in last 10 seconds
-    if (typeof timeLeft === "number" && timeLeft <= 10) {
-      return;
-    }
-
     // Read current state from refs
     let coins = aiCoinsRef.current;
     let tapPowerLevel = aiTapPowerLevelRef.current;
@@ -196,7 +189,7 @@ React.useEffect(() => {
       newTapPower = newTapPower + Math.floor(newTapPower * 0.2) + 2;
       newTapPowerLvl += 1;
       didUpgrade = true;
-      setOpponentScore(prev => prev - tapPowerCost);
+      setOpponentScore(prev => prev - tapPowerCost); // Deduct from score
       console.log("✅ AI bought Tap Power. New Coins:", newAiCoins);
     }
 
@@ -205,7 +198,7 @@ React.useEffect(() => {
       newCritChance = Math.min(newCritChance + 2 + Math.floor(newCritLvl / 3), 100);
       newCritLvl += 1;
       didUpgrade = true;
-      setOpponentScore(prev => prev - critCost);
+      setOpponentScore(prev => prev - critCost); // Deduct from score
       console.log("✅ AI bought Crit Chance. New Coins:", newAiCoins);
     }
 
@@ -214,7 +207,7 @@ React.useEffect(() => {
       newTapSpeedBonus = newTapSpeedBonus + 25 + Math.floor(newTapSpeedLvl * 1.3);
       newTapSpeedLvl += 1;
       didUpgrade = true;
-      setOpponentScore(prev => prev - tapSpeedCost);
+      setOpponentScore(prev => prev - tapSpeedCost); // Deduct from score
       console.log("✅ AI bought Tap Speed. New Coins:", newAiCoins);
     }
 
@@ -223,11 +216,12 @@ React.useEffect(() => {
       newAutoTapper = Math.min(newAutoTapper + 10 + Math.floor(newAutoTapperLvl * 1.2), 100000);
       newAutoTapperLvl += 1;
       didUpgrade = true;
-      setOpponentScore(prev => prev - autoTapperCost);
+      setOpponentScore(prev => prev - autoTapperCost); // Deduct from score
       console.log("✅ AI bought Auto Tapper. New Coins:", newAiCoins);
     }
 
     if (!didUpgrade) return;
+    if (isCancelled) return;
 
     // Update React state locally
     setAiCoins(newAiCoins);
@@ -260,7 +254,7 @@ React.useEffect(() => {
     isCancelled = true;
     clearInterval(upgradeTimer);
   };
-}, [gamePhase, gameMode, currentRoom, timeLeft]);
+}, [gamePhase, gameMode, currentRoom]);
 
 
 // Game timer effect
