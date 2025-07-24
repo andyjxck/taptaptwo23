@@ -30,6 +30,9 @@ function MainComponent() {
   const [renownTokens, setRenownTokens] = React.useState(0);
   const [renownAwarded, setRenownAwarded] = React.useState(false);
   const [totalTapsInGame, setTotalTapsInGame] = React.useState(0);
+   const [muted, setMuted] = useState(false);
+  const [playClick] = useSound("/sounds/click.wav", { volume: muted ? 0 : 0.4 });
+const [playUpgrade] = useSound("/sounds/upgrade.wav", { volume: muted ? 0 : 0.4 });
 // AI coins state (start low)
   const [activeTab, setActiveTab] = useState("join");
 const [aiCoins, setAiCoins] = React.useState(0);
@@ -482,7 +485,7 @@ const handleTap = async () => {
   if (gamePhase !== "playing") return;
 
   const now = Date.now();
-
+playClick();
   // Animation throttle
   if (now - lastAnimationTimeRef.current > 150) {
     setIsAnimating(true);
@@ -565,6 +568,7 @@ React.useEffect(() => {
  const upgradeTapPower = () => {
   const cost = getTapPowerCost();
   if (playerScore >= cost) {
+    playUpgrade()
     setPlayerScore(prev => prev - cost);
     setTapPower(prev => prev + Math.floor(prev * 0.2) + 2); // +35% +2
     setTapPowerLevel(prev => prev + 1);
@@ -575,6 +579,7 @@ React.useEffect(() => {
 const upgradeCritChance = () => {
   const cost = getCritCost();
   if (playerScore >= cost && critChance < 100) {
+    playUpgrade()
     setPlayerScore(prev => prev - cost);
     setCritChance(prev => Math.min(prev + 2 + Math.floor(critLevel / 3), 100)); // +5%, scaling slightly
     setCritLevel(prev => prev + 1);
@@ -585,6 +590,7 @@ const upgradeCritChance = () => {
 const upgradeTapSpeed = () => {
   const cost = getTapSpeedCost();
   if (playerScore >= cost) {
+    playUpgrade()
     setPlayerScore(prev => prev - cost);
     setTapSpeedBonus(prev => prev + 25 + Math.floor(tapSpeedLevel * 1.3)); // scales faster
     setTapSpeedLevel(prev => prev + 1);
@@ -595,6 +601,7 @@ const upgradeTapSpeed = () => {
 const upgradeAutoTapper = () => {
   const cost = getAutoTapperCost();
   if (playerScore >= cost && autoTapper < 50000) {
+    playUpgrade()
     setPlayerScore(prev => prev - cost);
     setAutoTapper(prev => Math.min(prev + 10 + Math.floor(autoTapperLevel * 1.2), 100000)); // growth scaling
     setAutoTapperLevel(prev => prev + 1);
