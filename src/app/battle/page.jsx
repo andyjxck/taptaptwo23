@@ -1266,7 +1266,7 @@ if (gamePhase === "playing") {
     : "from-pink-800 via-pink-900 to-pink-800";
 
   // Constants for spacing (px)
-  const scoreboardHeight = 120; // approximate scoreboard container height in px
+  const scoreboardHeight = 200; // approximate scoreboard container height in px
   const leaveButtonHeight = 48; // approx height of leave button (py-2 + font size)
   const spacing = 16; // spacing in px between elements
 
