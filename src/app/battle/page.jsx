@@ -189,7 +189,7 @@ React.useEffect(() => {
     // Try to buy upgrades if enough coins
     if (newAiCoins >= tapPowerCost) {
       newAiCoins -= tapPowerCost;
-      newTapPower = newTapPower + Math.floor(newTapPower * 0.28) + 2;
+      newTapPower = newTapPower + Math.floor(newTapPower * 0.16) + 2;
       newTapPowerLvl += 1;
       didUpgrade = true;
       setOpponentScore(prev => prev - tapPowerCost); // Deduct from score
@@ -207,7 +207,7 @@ React.useEffect(() => {
 
     if (newAiCoins >= tapSpeedCost) {
       newAiCoins -= tapSpeedCost;
-      newTapSpeedBonus = newTapSpeedBonus + 25 + Math.floor(newTapSpeedLvl * 1.3);
+      newTapSpeedBonus = newTapSpeedBonus + 25 + Math.floor(newTapSpeedLvl * 1.35);
       newTapSpeedLvl += 1;
       didUpgrade = true;
       setOpponentScore(prev => prev - tapSpeedCost); // Deduct from score
@@ -216,7 +216,7 @@ React.useEffect(() => {
 
     if (newAiCoins >= autoTapperCost && newAutoTapper < 50000) {
       newAiCoins -= autoTapperCost;
-      newAutoTapper = Math.min(newAutoTapper + 10 + Math.floor(newAutoTapperLvl * 1.3), 100000);
+      newAutoTapper = Math.min(newAutoTapper + 30 + Math.floor(newAutoTapperLvl * 1.38), 100000);
       newAutoTapperLvl += 1;
       didUpgrade = true;
       setOpponentScore(prev => prev - autoTapperCost); // Deduct from score
@@ -570,7 +570,7 @@ React.useEffect(() => {
   if (playerScore >= cost) {
     playUpgrade()
     setPlayerScore(prev => prev - cost);
-    setTapPower(prev => prev + Math.floor(prev * 0.28) + 2); // +35% +2
+    setTapPower(prev => prev + Math.floor(prev * 0.16) + 2); // +35% +2
     setTapPowerLevel(prev => prev + 1);
     setUpgradesPurchased(prev => prev + 1);
   }
@@ -603,7 +603,7 @@ const upgradeAutoTapper = () => {
   if (playerScore >= cost && autoTapper < 50000) {
     playUpgrade()
     setPlayerScore(prev => prev - cost);
-    setAutoTapper(prev => Math.min(prev + 10 + Math.floor(autoTapperLevel * 1.3), 100000)); // growth scaling
+    setAutoTapper(prev => Math.min(prev + 30 + Math.floor(autoTapperLevel * 1.34), 100000)); // growth scaling
     setAutoTapperLevel(prev => prev + 1);
     setUpgradesPurchased(prev => prev + 1);
   }
