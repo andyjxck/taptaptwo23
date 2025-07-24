@@ -281,8 +281,6 @@ React.useEffect(() => {
   console.log("Current gameMode:", gameMode);
 }, [gameMode]);
 
-const [renownAwarded, setRenownAwarded] = React.useState(false);
-
 // Step 1: When game finishes and renown not awarded, update renownTokens and mark awarded
 React.useEffect(() => {
   if (gamePhase === "finished" && !renownAwarded) {
