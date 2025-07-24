@@ -1370,7 +1370,7 @@ if (gamePhase === "playing") {
         <div className="flex flex-1 justify-center items-center z-10 mt-6 relative max-w-md mx-auto w-full">
           <button
             onClick={() => {
-              if (navigator.vibrate) navigator.vibrate(250);
+              if (navigator.vibrate) navigator.vibrate(50);
               handleTap();
             }}
             className="w-[180px] h-[180px] rounded-full bg-white/30 backdrop-blur-xl border border-white/20 relative overflow-hidden transition-all duration-200 active:scale-95 shadow-2xl group"
