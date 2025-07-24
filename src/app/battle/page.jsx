@@ -1431,6 +1431,7 @@ if (gamePhase === "playing") {
       <i className={`fas ${muted ? "fa-volume-mute" : "fa-volume-up"}`}></i>
     </button>
   </div>
+  </div>
 
         {/* Floating Numbers */}
         {floatingNumbers.map((num) => (
