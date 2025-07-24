@@ -1490,7 +1490,7 @@ if (gamePhase === "playing") {
       />
     </div>
   </div>
-
+</div>
         {/* Game area */}
         <div className="flex flex-1 items-center justify-center relative z-10 px-4 mt-6">
           {/* Main Battle Button */}
