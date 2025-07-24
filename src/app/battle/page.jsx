@@ -461,7 +461,7 @@ useEffect(() => {
 const scoreBatchRef = React.useRef(0);
 const lastAnimationTimeRef = React.useRef(0);
 
-const handleTap = () => {
+const handleTap = async () => {
   if (gamePhase !== "playing") return;
 
   const now = Date.now();
@@ -483,20 +483,30 @@ const handleTap = () => {
     scoreBatchRef.current += coinsEarned;
 
     if (currentRoom && userId) {
-      fetch('/api/battle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'updateTaps',
-          code: currentRoom,
-          userId: userId,
-          taps: coinsEarned,
-        }),
-      }).catch(err => console.error('Error sending tap:', err));
+      try {
+        const res = await fetch('/api/battle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'updateTaps',
+            code: currentRoom,
+            userId: userId,
+            taps: coinsEarned,
+          }),
+        });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error("Tap update failed:", errorText);
+        }
+      } catch (err) {
+        console.error('Error sending tap:', err);
+      }
     }
   }
 
   setTotalTapsInGame(prev => prev + 1);
+};
 
   // Spawn floating number immediately (unbatched)
   const id = now + Math.random();
