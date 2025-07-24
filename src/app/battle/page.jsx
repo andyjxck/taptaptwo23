@@ -1558,6 +1558,7 @@ if (gamePhase === "playing") {
             }
           }
         `}</style>
+         </div> 
       </>
     );
 }
