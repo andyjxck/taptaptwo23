@@ -5913,7 +5913,6 @@ const renderLeaderboard = () => (
     </div>
   </div>
 )}
-
 {showWelcomeModal && (
   <div className="fixed inset-x-0 top-0 z-50 flex justify-center p-4 pointer-events-none">
     <div
@@ -5929,17 +5928,32 @@ const renderLeaderboard = () => (
         boxShadow: "0 8px 32px 0 rgba(124,58,237,0.18)",
       }}
     >
-      <h2 className="text-xl font-semibold text-white mb-4 text-center">Announcement</h2>
+      <h2 className="text-xl font-semibold text-white mb-4 text-center">🚨 Battle Mode is Live!</h2>
+
       <p className="text-white mb-4 text-center font-semibold">
-        Welcome to the new site! <br />
-        I'm really sorry if some of your stats have been reset, are outdated or missing.
-        <br />
-        It's been a nightmare moving sites, but I'm pretty sure we're there now.
+        Our brand new <span className="text-purple-200 font-bold">Battle Mode</span> is now available to play!
+        <br /><br />
+        Tap it out in real-time against your friends or face off against AI opponents.
+        <br /><br />
+        Earn <span className="text-yellow-300 font-bold">Renown Tokens</span> by winning matches — these carry back to the main game.
       </p>
+
+      <p className="text-white mb-4 text-center font-semibold">
+        💬 Use code <span className="bg-purple-700 px-2 rounded font-mono">battle</span> in the shop for extra rewards with this update!
+      </p>
+
       <p className="text-white mb-6 text-center font-semibold">
-        Use code{" "}
-        <span className="font-mono bg-purple-700 px-2 rounded">taptaptwo</span> in the "house" tab for an extra small boost on top of the extra 100 renown everyone has been gifted.
+        Early test version. Expect bugs. Please report any issues you find!
       </p>
+
+      <div className="flex justify-center mb-4">
+        <a
+          href="/battle"
+          className="px-4 py-2 rounded-lg bg-yellow-400 hover:bg-yellow-500 text-black font-bold transition"
+        >
+          Play Battle Mode
+        </a>
+      </div>
 
       <div className="flex justify-center">
         <button
@@ -5952,6 +5966,7 @@ const renderLeaderboard = () => (
     </div>
   </div>
 )}
+
 
 {showChangePinModal && (
   <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
