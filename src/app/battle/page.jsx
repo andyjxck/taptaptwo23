@@ -1279,6 +1279,7 @@ return (
         background: backgroundGradient,
         backgroundColor: "rgb(30 30 30)", // add a dark base color behind the gradient
       }}
+      >
         {/* Animated background subtle pulse circles */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full blur-3xl animate-pulse bg-yellow-300/10"></div>
