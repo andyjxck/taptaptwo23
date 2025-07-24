@@ -1261,22 +1261,19 @@ if (gamePhase === "playing") {
   const playerPercent = ((playerScore || 0) / totalScore) * 100;
   const opponentPercent = ((opponentScore || 0) / totalScore) * 100;
 
-  // Glassy background gradient: softened, translucent layers for iOS style
-  // Using multiple rgba stops with low opacity and blur
-  const backgroundGradient = `
-    linear-gradient(
-      135deg,
-      rgba(252, 211, 77, 0.15) 0%,
-      rgba(252, 211, 77, 0.07) ${playerPercent * 0.8}%,
-      rgba(236, 72, 153, 0.07) ${playerPercent * 1.2}%,
-      rgba(236, 72, 153, 0.15) 100%
-    )
-  `;
+  // Glassy background gradient — smooth linear gradient with subtle opacity for iOS style
+  const backgroundGradient = `linear-gradient(
+    to bottom right,
+    rgba(252, 211, 77, 0.15) 0%,
+    rgba(252, 211, 77, 0.10) ${playerPercent}%, 
+    rgba(236, 72, 153, 0.10) ${playerPercent}%, 
+    rgba(236, 72, 153, 0.15) 100%
+  )`;
 
   return (
     <>
       <div
-        className="min-h-screen flex flex-col relative overflow-hidden pt-16"
+        className="min-h-screen flex flex-col relative overflow-hidden pt-16 bg-gradient-to-br from-yellow-200/20 via-pink-300/10 to-pink-400/20"
         style={{ background: backgroundGradient }}
       >
         {/* Animated background subtle pulse circles */}
@@ -1292,39 +1289,40 @@ if (gamePhase === "playing") {
           ></div>
         </div>
 
-        {/* Scoreboard container: smaller height, centered content */}
+        {/* Scoreboard container: compact height, centered content */}
         <div
-          className="relative z-20 backdrop-blur-xl bg-white/15 border-b border-white/20 max-w-md mx-auto rounded-xl flex flex-col items-center px-5 py-3 shadow-lg"
+          className="relative z-20 backdrop-blur-xl bg-white/20 border border-white/25 max-w-md mx-auto rounded-xl flex flex-col items-center px-6 py-2 shadow-lg"
           style={{
-            backdropFilter: "blur(28px)",
-            WebkitBackdropFilter: "blur(28px)",
-            minHeight: "80px",
-            gap: "0.4rem",
+            backdropFilter: "blur(30px)",
+            WebkitBackdropFilter: "blur(30px)",
+            minHeight: "65px",
+            gap: "0.25rem",
           }}
         >
-          {/* Player and Opponent Names with scores */}
-          <div className="w-full flex justify-between text-white font-semibold select-none text-sm md:text-base">
-            <div className="flex items-center space-x-2 md:space-x-3">
-              <i className="fas fa-user text-yellow-400 text-lg md:text-xl"></i>
+          {/* Player row */}
+          <div className="w-full flex justify-between items-center text-white font-semibold select-none text-sm md:text-base">
+            <div className="flex items-center space-x-2 md:space-x-3 truncate">
+              <i className="fas fa-user text-yellow-400 text-lg md:text-xl flex-shrink-0"></i>
               <span className="truncate">{playerName}</span>
             </div>
-            <div className="text-yellow-300 text-lg md:text-xl">
+            <div className="text-yellow-300 text-lg md:text-xl tabular-nums">
               {(playerScore || 0).toLocaleString()}
             </div>
           </div>
 
-          <div className="w-full flex justify-between text-white font-semibold select-none text-sm md:text-base">
-            <div className="flex items-center space-x-2 md:space-x-3">
+          {/* Opponent row */}
+          <div className="w-full flex justify-between items-center text-white font-semibold select-none text-sm md:text-base">
+            <div className="flex items-center space-x-2 md:space-x-3 truncate">
               <i
                 className={
                   gameMode === "ai"
-                    ? "fas fa-robot text-pink-400 text-lg md:text-xl"
-                    : "fas fa-user-friends text-pink-400 text-lg md:text-xl"
+                    ? "fas fa-robot text-pink-400 text-lg md:text-xl flex-shrink-0"
+                    : "fas fa-user-friends text-pink-400 text-lg md:text-xl flex-shrink-0"
                 }
               ></i>
               <span className="truncate">{opponentName}</span>
             </div>
-            <div className="text-pink-300 text-lg md:text-xl">
+            <div className="text-pink-300 text-lg md:text-xl tabular-nums">
               {gameMode === "ai"
                 ? (aiCoins || 0).toLocaleString()
                 : (opponentScore || 0).toLocaleString()}
@@ -1332,7 +1330,7 @@ if (gamePhase === "playing") {
           </div>
 
           {/* Dynamic Battle progress bar */}
-          <div className="w-full h-4 rounded-full bg-gray-900 overflow-hidden relative my-3 border border-white/25">
+          <div className="w-full h-4 rounded-full bg-gray-900 overflow-hidden relative my-2 border border-white/25">
             <div
               className="absolute top-0 bottom-0 left-0 bg-yellow-400 transition-all duration-700"
               style={{ width: `${playerPercent}%` }}
@@ -1344,14 +1342,14 @@ if (gamePhase === "playing") {
           </div>
 
           {/* Timer styled as digital clock */}
-          <div className="text-white font-mono text-3xl md:text-4xl tracking-widest select-none drop-shadow-md bg-black/25 rounded-lg px-5 py-1 w-full text-center">
+          <div className="text-white font-mono text-3xl md:text-4xl tracking-widest select-none drop-shadow-md bg-black/30 rounded-lg px-6 py-1 w-full text-center">
             {formatTime(timeLeft)}
           </div>
 
-          {/* Leave Button below timer, centered */}
+          {/* Leave button centered below timer with fixed width, not full width */}
           <button
             onClick={resetToStart}
-            className="mt-3 w-full max-w-xs mx-auto py-2 bg-red-600/90 text-white font-semibold rounded-lg hover:bg-red-700 active:scale-95 transition-transform duration-150 shadow-lg backdrop-blur-md border border-white/30 flex items-center justify-center gap-2"
+            className="mt-3 w-[140px] py-2 bg-red-600/90 text-white font-semibold rounded-lg hover:bg-red-700 active:scale-95 transition-transform duration-150 shadow-lg backdrop-blur-md border border-white/30 flex items-center justify-center gap-2 mx-auto"
             style={{
               backdropFilter: "blur(18px)",
               WebkitBackdropFilter: "blur(18px)",
@@ -1471,13 +1469,13 @@ if (gamePhase === "playing") {
         <UpgradeButton
           title="Auto Tapper"
           level={autoTapperLevel}
-          cost={getAutoTapperCost()}
+          cost={getAutoTapCost()}
           description={`${autoTapper}/sec`}
           onClick={(e) => {
             e.preventDefault();
             upgradeAutoTapper();
           }}
-          disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
+          disabled={playerScore < getAutoTapCost() || autoTapper >= 100000}
           position="bottom-4 right-4"
           icon="🤖"
           glassy
