@@ -1316,61 +1316,57 @@ if (gamePhase === "playing") {
     glassy
   />
 </div>
+{/* Scoreboard + Timer below top buttons */}
+<div className="z-10 mt-32 max-w-md mx-auto text-white select-none space-y-2">
+  {/* Scoreboard - horizontal layout */}
+  <div className="backdrop-blur-xl bg-white/10 border border-white/20 p-2 shadow-xl rounded-xl flex justify-between items-center text-xs sm:text-sm font-bold">
+    {/* Player 1 */}
+    <div className="flex items-center space-x-1">
+      <i className="fas fa-user text-yellow-400"></i>
+      <span>{playerName}</span>
+      <span className="text-yellow-300 text-sm sm:text-base">
+        {(playerScore || 0).toLocaleString()}
+      </span>
+    </div>
 
+    {/* Progress Bar (thin and centered) */}
+    <div className="relative flex-1 mx-2 h-3 rounded-full bg-gray-800 overflow-hidden">
+      <div
+        className="absolute left-0 top-0 bottom-0 bg-yellow-400 transition-all duration-500"
+        style={{ width: `${playerPercent}%` }}
+      />
+      <div
+        className="absolute right-0 top-0 bottom-0 bg-pink-400 transition-all duration-500"
+        style={{ width: `${opponentPercent}%` }}
+      />
+    </div>
 
+    {/* Player 2 */}
+    <div className="flex items-center space-x-1 justify-end">
+      <i className={gameMode === "ai" ? "fas fa-robot text-pink-400" : "fas fa-user-friends text-pink-400"}></i>
+      <span>{opponentName}</span>
+      <span className="text-pink-300 text-sm sm:text-base">
+        {gameMode === "ai" ? (aiCoins || 0).toLocaleString() : (opponentScore || 0).toLocaleString()}
+      </span>
+    </div>
+  </div>
 
-        {/* Scoreboard below top buttons */}
-        <div className="z-10 mt-24 mb-2 backdrop-blur-xl bg-white/10 border border-white/20 p-4 shadow-xl max-w-md mx-auto rounded-xl flex flex-col">
-          <div className="flex justify-between items-center text-white font-bold text-sm select-none mb-2">
-            <div className="flex items-center space-x-2">
-              <i className="fas fa-user text-yellow-400"></i>
-              <span>{playerName}</span>
-            </div>
-            <div className="text-yellow-300 text-xl sm:text-2xl">{(playerScore || 0).toLocaleString()}</div>
-          </div>
+  {/* Timer */}
+  <div className="flex flex-col items-center gap-2">
+    <div className="font-mono text-2xl sm:text-3xl tracking-widest bg-black/30 px-4 py-1 rounded-md border border-white/20">
+      {formatTime(timeLeft)} {/* should return format like 00:25 */}
+    </div>
 
-          <div className="flex justify-between items-center text-white font-bold text-sm select-none mb-2">
-            <div className="flex items-center space-x-2">
-              <i className={gameMode === "ai" ? "fas fa-robot text-pink-400" : "fas fa-user-friends text-pink-400"}></i>
-              <span>{opponentName}</span>
-            </div>
-            <div className="text-pink-300 text-xl sm:text-2xl">
-              {gameMode === "ai" ? (aiCoins || 0).toLocaleString() : (opponentScore || 0).toLocaleString()}
-            </div>
-          </div>
+    {/* Leave Button below */}
+    <button
+      onClick={resetToStart}
+      className="px-4 py-1 bg-red-500/80 text-white text-sm rounded-full hover:bg-red-500 active:scale-95 transition-all duration-200 backdrop-blur-xl border border-white/20"
+    >
+      <i className="fas fa-times mr-1" /> Leave
+    </button>
+  </div>
+</div>
 
-          <div className="relative w-full h-5 rounded-full bg-gray-800 overflow-hidden mt-3 select-none">
-            <div className="absolute left-0 top-0 bottom-0 bg-yellow-400 transition-all duration-500" style={{ width: `${playerPercent}%` }} />
-            <div className="absolute right-0 top-0 bottom-0 bg-pink-400 transition-all duration-500" style={{ width: `${opponentPercent}%` }} />
-          </div>
-        </div>
-
-        {/* Timer + Leave stacked */}
-        <div className="z-10 max-w-md mx-auto flex flex-col items-center text-white gap-2">
-          <div className="text-xl sm:text-2xl font-bold select-none">{formatTime(timeLeft)}</div>
-          <button
-            onClick={resetToStart}
-            className="px-4 py-1 bg-red-500/80 text-white text-sm rounded-full hover:bg-red-500 active:scale-95 transition-all duration-200 backdrop-blur-xl border border-white/20"
-          >
-            <i className="fas fa-times mr-1" /> Leave
-          </button>
-        </div>
-
-        {/* Tap Button - Centered */}
-        <div className="flex-1 flex items-center justify-center z-10 mt-4 relative">
-          <button
-            onClick={() => {
-              if (navigator.vibrate) navigator.vibrate(250);
-              handleTap();
-            }}
-            className="w-[200px] h-[200px] rounded-full bg-white/30 backdrop-blur-xl border border-white/20 relative overflow-hidden transition-all duration-200 active:scale-95 shadow-2xl group"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-32 h-32 bg-gradient-to-r from-red-400 to-yellow-400 rounded-full animate-pulse opacity-50"></div>
-            </div>
-            <i className="fas fa-crosshairs text-6xl text-white relative z-10 drop-shadow"></i>
-          </button>
 
           {/* Bottom Upgrade Buttons */}
           <UpgradeButton
