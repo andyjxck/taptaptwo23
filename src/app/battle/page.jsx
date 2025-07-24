@@ -1260,24 +1260,20 @@ if (gamePhase === "playing") {
   const totalScore = (playerScore || 0) + (opponentScore || 0) || 1; // avoid div by zero
   const playerPercent = ((playerScore || 0) / totalScore) * 100;
   const opponentPercent = ((opponentScore || 0) / totalScore) * 100;
+// Decide background color theme based on who's winning
+const isPlayerWinning = (playerScore || 0) > (gameMode === "ai" ? (aiCoins || 0) : (opponentScore || 0));
 
-const backgroundGradient = `linear-gradient(
-  to bottom right,
-  rgba(202, 138, 4, 0.2) 0%,                                 /* soft dark yellow */
-  rgba(202, 138, 4, 0.25) ${playerPercent}%,                 /* deepens based on player */
-  rgba(190, 24, 93, 0.25) ${playerPercent + 0.1}%,           /* transition into pink */
-  rgba(190, 24, 93, 0.2) 100%                                /* soft dark pink */
-)`;
+// Pick static gradient class
+const backgroundClass = isPlayerWinning
+  ? "from-yellow-700 via-yellow-900 to-yellow-800
+  : "from-pink-800 via-pink-900 to-pink-800";
 
 return (
   <>
     <div
-      className="min-h-screen flex flex-col relative overflow-hidden pt-16"
-      style={{
-        background: backgroundGradient,
-        backgroundColor: "rgb(17 24 39)", // tailwind's gray-900 for dark fallback
-      }}
+      className={`min-h-screen flex flex-col relative overflow-hidden pt-16 bg-gradient-to-br ${backgroundClass}`}
     >
+
         {/* Animated background subtle pulse circles */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full blur-3xl animate-pulse bg-yellow-300/10"></div>
