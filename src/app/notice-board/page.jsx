@@ -28,7 +28,134 @@ function MainComponent() {
   const currentSeason = "Spring";
 
   const notes = [
-  {
+ {
+  id: 10,
+  title: "Dev Log #10 - 24/07/25",
+  content: (
+    <div
+      style={{
+        fontFamily:
+          "'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        lineHeight: 1.7,
+        color: "#2d3748",
+        fontSize: "1.05rem",
+        letterSpacing: "0.02em",
+      }}
+    >
+      <p
+        style={{
+          fontStyle: "italic",
+          color: "#666666",
+          fontSize: "0.97rem",
+          marginBottom: "1.5rem",
+          maxWidth: "90%",
+          lineHeight: 1.6,
+        }}
+      >
+        Hey guys! This week's a big one, hence why there's been fewer updates throughout the week.
+        I've been pouring my heart and soul into creating the next addition to the game — and would like to welcome you all to:
+      </p>
+
+      <h2
+        style={{
+          fontFamily: "'Crimson Text', serif",
+          fontWeight: 700,
+          fontSize: "2.2rem",
+          color: "#ef4444",
+          letterSpacing: "0.05em",
+          margin: 0,
+          marginBottom: "2rem",
+          textAlign: "left",
+        }}
+      >
+        The Battle Update
+      </h2>
+
+      <p style={{ marginBottom: "1.25rem" }}>
+        - <b>Battle Mode</b> is now open to the public! Though it’s still early days, expect bugs and don’t hesitate to report them via the in-game feedback button.
+      </p>
+
+      <p style={{ marginBottom: "1.25rem" }}>
+        - Win a match? You’ll earn <b>10 renown</b>. Tie? <b>5 renown</b>. Even a loss earns <b>3 renown</b>.
+      </p>
+
+      <p style={{ marginBottom: "1.25rem" }}>
+        - <b>Renown now carries across</b> between battle mode and the normal game.
+      </p>
+
+      <p style={{ marginBottom: "1.25rem" }}>
+        - You can now play with a friend using a code — one player creates, one joins — or take on the AI, which is being rebalanced daily.
+      </p>
+
+      <p style={{ marginBottom: "1.25rem" }}>
+        - <b>Games are 3 minutes long</b>. The winner is whoever has the most coins left at the end — <b>spent coins don’t count</b>!
+      </p>
+
+      <p style={{ marginBottom: "1.25rem" }}>
+        → Try it out here:{" "}
+        <a
+          href="https://taptaptwo.co.uk/battle"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: "#7c3aed", fontWeight: "600", textDecoration: "underline" }}
+        >
+          https://taptaptwo.co.uk/battle
+        </a>
+      </p>
+
+      <h3
+        style={{
+          fontSize: "1.4rem",
+          fontWeight: "600",
+          marginTop: "2rem",
+          marginBottom: "1rem",
+          color: "#7c3aed",
+        }}
+      >
+        What’s coming next:
+      </h3>
+
+      <ul style={{ paddingLeft: "1.2rem", marginBottom: "1.5rem" }}>
+        <li>✅ Play with friends in Battle</li>
+        <li>🧪 2v2 Battle</li>
+        <li>🎮 Other tap minigames</li>
+        <li>💰 More ways to earn renown</li>
+        <li>🛍️ New shop items</li>
+        <li>🎨 New themes</li>
+        <li>🔓 New ways to unlock potential</li>
+      </ul>
+
+      <p style={{ marginBottom: "1.25rem" }}>
+        As always, thank you all so much for supporting the game. I hope you enjoy this update — it’s a huge one!
+      </p>
+
+      <p style={{ marginBottom: "1.25rem" }}>
+        With this update (and before I start rolling out posts on social media), I’ve also launched an <b>Andysocial Discord</b>! 🎉
+        Feel free to join and hang out using the link below:
+      </p>
+
+      <p style={{ fontWeight: "bold", color: "#7c3aed", marginBottom: "1.25rem" }}>
+        https://discord.gg/5uQzMpNX
+      </p>
+
+      <p
+        style={{
+          fontStyle: "italic",
+          color: "#666666",
+          fontSize: "0.97rem",
+          marginTop: "2rem",
+        }}
+      >
+        Thanks guys! I love you all.
+        <br />
+        Andy
+      </p>
+    </div>
+  ),
+  created_at: "22:21",
+},
+
+    {
   id: 10,
   title: "Dev Log #10 - 22/07/25",
   content: (
