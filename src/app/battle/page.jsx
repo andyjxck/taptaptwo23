@@ -1255,22 +1255,23 @@ if (gamePhase === "lobby") {
   );
 }
 
-
 if (gamePhase === "playing") {
   // Calculate score percentages for progress bar
   const totalScore = (playerScore || 0) + (opponentScore || 0) || 1; // avoid div by zero
   const playerPercent = ((playerScore || 0) / totalScore) * 100;
   const opponentPercent = ((opponentScore || 0) / totalScore) * 100;
 
-  // Background color interpolation between yellow and pink based on leading player
-  // Player leading -> more yellow, opponent leading -> more pink
-  // Calculate mix ratio: playerPercent from 0-100 means 0 = pink, 100 = yellow
-  // Use tailwind classes with inline style gradient stops for flexibility
-  const backgroundGradient = `linear-gradient(
-    to bottom right,
-    rgba(252, 211, 77, 0.7) ${playerPercent}%,
-    rgba(236, 72, 153, 0.7) ${playerPercent}%
-  )`;
+  // Glassy background gradient: softened, translucent layers for iOS style
+  // Using multiple rgba stops with low opacity and blur
+  const backgroundGradient = `
+    linear-gradient(
+      135deg,
+      rgba(252, 211, 77, 0.15) 0%,
+      rgba(252, 211, 77, 0.07) ${playerPercent * 0.8}%,
+      rgba(236, 72, 153, 0.07) ${playerPercent * 1.2}%,
+      rgba(236, 72, 153, 0.15) 100%
+    )
+  `;
 
   return (
     <>
@@ -1280,40 +1281,58 @@ if (gamePhase === "playing") {
       >
         {/* Animated background subtle pulse circles */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full blur-3xl animate-pulse bg-yellow-300/20"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl animate-pulse bg-pink-400/20" style={{ animationDelay: "1s" }}></div>
-          <div className="absolute top-1/2 left-1/2 w-64 h-64 rounded-full blur-3xl animate-pulse bg-yellow-300/20" style={{ animationDelay: "2s" }}></div>
+          <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full blur-3xl animate-pulse bg-yellow-300/10"></div>
+          <div
+            className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl animate-pulse bg-pink-400/10"
+            style={{ animationDelay: "1s" }}
+          ></div>
+          <div
+            className="absolute top-1/2 left-1/2 w-64 h-64 rounded-full blur-3xl animate-pulse bg-yellow-300/10"
+            style={{ animationDelay: "2s" }}
+          ></div>
         </div>
 
-        {/* Scoreboard container */}
+        {/* Scoreboard container: smaller height, centered content */}
         <div
-          className="relative z-20 backdrop-blur-xl bg-white/20 border-b border-white/30 p-6 max-w-md mx-auto rounded-xl flex flex-col items-center shadow-lg"
+          className="relative z-20 backdrop-blur-xl bg-white/15 border-b border-white/20 max-w-md mx-auto rounded-xl flex flex-col items-center px-5 py-3 shadow-lg"
           style={{
-            backdropFilter: "blur(24px)",
-            WebkitBackdropFilter: "blur(24px)",
+            backdropFilter: "blur(28px)",
+            WebkitBackdropFilter: "blur(28px)",
+            minHeight: "80px",
+            gap: "0.4rem",
           }}
         >
           {/* Player and Opponent Names with scores */}
-          <div className="w-full flex justify-between text-white font-semibold select-none mb-4">
-            <div className="flex items-center space-x-3">
-              <i className="fas fa-user text-yellow-400 text-xl"></i>
-              <span className="text-lg">{playerName}</span>
+          <div className="w-full flex justify-between text-white font-semibold select-none text-sm md:text-base">
+            <div className="flex items-center space-x-2 md:space-x-3">
+              <i className="fas fa-user text-yellow-400 text-lg md:text-xl"></i>
+              <span className="truncate">{playerName}</span>
             </div>
-            <div className="text-yellow-300 text-2xl">{(playerScore || 0).toLocaleString()}</div>
+            <div className="text-yellow-300 text-lg md:text-xl">
+              {(playerScore || 0).toLocaleString()}
+            </div>
           </div>
 
-          <div className="w-full flex justify-between text-white font-semibold select-none mb-6">
-            <div className="flex items-center space-x-3">
-              <i className={gameMode === "ai" ? "fas fa-robot text-pink-400 text-xl" : "fas fa-user-friends text-pink-400 text-xl"}></i>
-              <span className="text-lg">{opponentName}</span>
+          <div className="w-full flex justify-between text-white font-semibold select-none text-sm md:text-base">
+            <div className="flex items-center space-x-2 md:space-x-3">
+              <i
+                className={
+                  gameMode === "ai"
+                    ? "fas fa-robot text-pink-400 text-lg md:text-xl"
+                    : "fas fa-user-friends text-pink-400 text-lg md:text-xl"
+                }
+              ></i>
+              <span className="truncate">{opponentName}</span>
             </div>
-            <div className="text-pink-300 text-2xl">
-              {gameMode === "ai" ? (aiCoins || 0).toLocaleString() : (opponentScore || 0).toLocaleString()}
+            <div className="text-pink-300 text-lg md:text-xl">
+              {gameMode === "ai"
+                ? (aiCoins || 0).toLocaleString()
+                : (opponentScore || 0).toLocaleString()}
             </div>
           </div>
 
           {/* Dynamic Battle progress bar */}
-          <div className="w-full h-6 rounded-full bg-gray-900 overflow-hidden relative mb-6 border border-white/30">
+          <div className="w-full h-4 rounded-full bg-gray-900 overflow-hidden relative my-3 border border-white/25">
             <div
               className="absolute top-0 bottom-0 left-0 bg-yellow-400 transition-all duration-700"
               style={{ width: `${playerPercent}%` }}
@@ -1325,20 +1344,20 @@ if (gamePhase === "playing") {
           </div>
 
           {/* Timer styled as digital clock */}
-          <div className="text-white font-mono text-4xl tracking-widest mb-3 select-none drop-shadow-md bg-black/30 rounded-lg px-6 py-2 w-full text-center">
+          <div className="text-white font-mono text-3xl md:text-4xl tracking-widest select-none drop-shadow-md bg-black/25 rounded-lg px-5 py-1 w-full text-center">
             {formatTime(timeLeft)}
           </div>
 
-          {/* Leave Button below timer */}
+          {/* Leave Button below timer, centered */}
           <button
             onClick={resetToStart}
-            className="w-full py-3 bg-red-600/90 text-white font-semibold rounded-lg hover:bg-red-700 active:scale-95 transition-transform duration-150 shadow-lg backdrop-blur-md border border-white/25"
+            className="mt-3 w-full max-w-xs mx-auto py-2 bg-red-600/90 text-white font-semibold rounded-lg hover:bg-red-700 active:scale-95 transition-transform duration-150 shadow-lg backdrop-blur-md border border-white/30 flex items-center justify-center gap-2"
             style={{
               backdropFilter: "blur(18px)",
               WebkitBackdropFilter: "blur(18px)",
             }}
           >
-            <i className="fas fa-times mr-2"></i> Leave
+            <i className="fas fa-times"></i> Leave
           </button>
         </div>
 
@@ -1473,39 +1492,37 @@ if (gamePhase === "playing") {
             transition: "all 0.3s ease",
           }}
         />
-        </div>
+      </div>
 
-       {floatingNumbers.map((num) => {
-  // Random spread offsets within viewport, +- 150px from center horizontally and vertically
-  const spreadX = num.x + (Math.random() * 300 - 150);
-  const spreadY = num.y + (Math.random() * 300 - 150);
+      {floatingNumbers.map((num) => {
+        // Random spread offsets within viewport, +- 150px from center horizontally and vertically
+        const spreadX = num.x + (Math.random() * 300 - 150);
+        const spreadY = num.y + (Math.random() * 300 - 150);
 
-  // Determine color classes based on crit and owner
-  // Assuming num.player is 'player' or 'opponent' or undefined (you may need to add this property when creating floating numbers)
-  let colorClass = "text-green-400"; // default player color
-  if (num.isCrit) {
-    colorClass = "text-red-500 font-extrabold";
-  }
+        // Determine color classes based on crit and owner
+        let colorClass = "text-green-400"; // default player color
+        if (num.isCrit) {
+          colorClass = "text-red-500 font-extrabold";
+        }
 
-  return (
-    <div
-      key={num.id}
-      className={`absolute pointer-events-none font-bold text-xl sm:text-2xl drop-shadow-lg ${colorClass}`}
-      style={{
-        left: `calc(50% + ${spreadX}px)`,
-        top: `calc(50% + ${spreadY}px)`,
-        transform: "translate(-50%, -50%)",
-        animation: "floatUp 1s ease-out forwards",
-        whiteSpace: "nowrap",
-        userSelect: "none",
-      }}
-    >
-      +{num.value}
-      {num.isCrit && " ⚡"}
-    </div>
-  );
-})}
-
+        return (
+          <div
+            key={num.id}
+            className={`absolute pointer-events-none font-bold text-xl sm:text-2xl drop-shadow-lg ${colorClass}`}
+            style={{
+              left: `calc(50% + ${spreadX}px)`,
+              top: `calc(50% + ${spreadY}px)`,
+              transform: "translate(-50%, -50%)",
+              animation: "floatUp 1s ease-out forwards",
+              whiteSpace: "nowrap",
+              userSelect: "none",
+            }}
+          >
+            +{num.value}
+            {num.isCrit && " ⚡"}
+          </div>
+        );
+      })}
 
       <style jsx global>{`
         @keyframes floatUp {
