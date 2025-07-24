@@ -1255,28 +1255,28 @@ if (gamePhase === "lobby") {
   );
 }
 
-
 if (gamePhase === "playing") {
   const totalScore = (playerScore || 0) + (opponentScore || 0) || 1;
   const playerPercent = ((playerScore || 0) / totalScore) * 100;
   const opponentPercent = ((opponentScore || 0) / totalScore) * 100;
-
   const isPlayerWinning = (playerScore || 0) >= (opponentScore || 0);
-  const backgroundFrom = isPlayerWinning ? "from-yellow-500" : "from-pink-500";
-  const backgroundTo = isPlayerWinning ? "to-yellow-800" : "to-pink-800";
+
+  const backgroundFrom = isPlayerWinning ? "from-yellow-400" : "from-pink-500";
+  const backgroundTo = isPlayerWinning ? "to-orange-500" : "to-purple-900";
 
   return (
     <>
-      <div className={`min-h-screen bg-gradient-to-br ${backgroundFrom} via-purple-900 ${backgroundTo} flex flex-col relative overflow-hidden pt-16`}>
-        {/* Background glow blobs */}
+      <div className={`min-h-screen bg-gradient-to-br ${backgroundFrom} via-purple-800 ${backgroundTo} flex flex-col relative overflow-hidden`}>
+        
+        {/* Background blobs */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }}></div>
-          <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }}></div>
+          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+          <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }} />
         </div>
 
         {/* Scoreboard */}
-        <div className="relative z-10 backdrop-blur-xl bg-white/10 border-b border-white/20 p-4 shadow-xl max-w-md mx-auto rounded-xl flex flex-col">
+        <div className="z-10 mt-8 mb-2 backdrop-blur-xl bg-white/10 border border-white/20 p-4 shadow-xl max-w-md mx-auto rounded-xl flex flex-col">
           <div className="flex justify-between items-center text-white font-bold text-sm select-none mb-2">
             <div className="flex items-center space-x-2">
               <i className="fas fa-user text-yellow-400"></i>
@@ -1296,91 +1296,30 @@ if (gamePhase === "playing") {
           </div>
 
           <div className="relative w-full h-5 rounded-full bg-gray-800 overflow-hidden mt-3 select-none">
-            <div className="absolute left-0 top-0 bottom-0 bg-yellow-400 transition-all duration-500" style={{ width: `${playerPercent}%` }}></div>
-            <div className="absolute right-0 top-0 bottom-0 bg-pink-400 transition-all duration-500" style={{ width: `${opponentPercent}%` }}></div>
+            <div className="absolute left-0 top-0 bottom-0 bg-yellow-400 transition-all duration-500" style={{ width: `${playerPercent}%` }} />
+            <div className="absolute right-0 top-0 bottom-0 bg-pink-400 transition-all duration-500" style={{ width: `${opponentPercent}%` }} />
           </div>
         </div>
 
-        {/* Timer + Leave Button (moved below scoreboard) */}
-        <div className="relative z-10 max-w-md mx-auto flex justify-between items-center text-white mt-4 px-4">
+        {/* Timer + Leave stacked */}
+        <div className="z-10 max-w-md mx-auto flex flex-col items-center text-white gap-2">
           <div className="text-xl sm:text-2xl font-bold select-none">{formatTime(timeLeft)}</div>
           <button
             onClick={resetToStart}
             className="px-4 py-1 bg-red-500/80 text-white text-sm rounded-full hover:bg-red-500 active:scale-95 transition-all duration-200 backdrop-blur-xl border border-white/20"
           >
-            <i className="fas fa-times mr-1"></i> Leave
+            <i className="fas fa-times mr-1" /> Leave
           </button>
         </div>
 
-        {/* Upgrade buttons (same as before) */}
-        <UpgradeButton
-          title="Tap Power"
-          level={tapPowerLevel}
-          cost={getTapPowerCost()}
-          description={`+${tapPower} per tap`}
-          onClick={(e) => {
-            e.preventDefault();
-            upgradeTapPower();
-          }}
-          disabled={playerScore < getTapPowerCost()}
-          position="top-2 left-2 sm:top-4 sm:left-4"
-          icon="💪"
-          glassy
-        />
-
-        <UpgradeButton
-          title="Critical Hit"
-          level={critLevel}
-          cost={getCritCost()}
-          description={`${critChance}% crit chance`}
-          onClick={(e) => {
-            e.preventDefault();
-            upgradeCritChance();
-          }}
-          disabled={playerScore < getCritCost() || critChance >= 100}
-          position="top-2 right-2 sm:top-4 sm:right-4"
-          icon="⚡"
-          glassy
-        />
-
-        <UpgradeButton
-          title="Tap Speed"
-          level={tapSpeedLevel}
-          cost={getTapSpeedCost()}
-          description={`+${tapSpeedBonus}% bonus`}
-          onClick={(e) => {
-            e.preventDefault();
-            upgradeTapSpeed();
-          }}
-          disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
-          position="bottom-2 left-2 sm:bottom-4 sm:left-4"
-          icon="🚀"
-          glassy
-        />
-
-        <UpgradeButton
-          title="Auto Tapper"
-          level={autoTapperLevel}
-          cost={getAutoTapperCost()}
-          description={`${autoTapper}/sec`}
-          onClick={(e) => {
-            e.preventDefault();
-            upgradeAutoTapper();
-          }}
-          disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
-          position="bottom-2 right-2 sm:bottom-4 sm:right-4"
-          icon="🤖"
-          glassy
-        />
-
-        {/* Tap Button (redesigned) */}
-        <div className="flex flex-1 items-center justify-center z-10">
+        {/* Tap Button - Centered */}
+        <div className="flex-1 flex items-center justify-center z-10 mt-4 relative">
           <button
             onClick={() => {
               if (navigator.vibrate) navigator.vibrate(250);
               handleTap();
             }}
-            className={`w-[200px] h-[200px] rounded-full bg-white/30 backdrop-blur-xl border border-white/20 relative overflow-hidden transition-all duration-200 active:scale-95 shadow-2xl group`}
+            className="w-[200px] h-[200px] rounded-full bg-white/30 backdrop-blur-xl border border-white/20 relative overflow-hidden transition-all duration-200 active:scale-95 shadow-2xl group"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
             <div className="absolute inset-0 flex items-center justify-center">
@@ -1388,15 +1327,59 @@ if (gamePhase === "playing") {
             </div>
             <i className="fas fa-crosshairs text-6xl text-white relative z-10 drop-shadow"></i>
           </button>
+
+          {/* Upgrade buttons in corners of bottom space */}
+          <UpgradeButton
+            title="Tap Power"
+            level={tapPowerLevel}
+            cost={getTapPowerCost()}
+            description={`+${tapPower} per tap`}
+            onClick={() => upgradeTapPower()}
+            disabled={playerScore < getTapPowerCost()}
+            position="absolute top-2 left-2"
+            icon="💪"
+            glassy
+          />
+          <UpgradeButton
+            title="Critical Hit"
+            level={critLevel}
+            cost={getCritCost()}
+            description={`${critChance}% crit chance`}
+            onClick={() => upgradeCritChance()}
+            disabled={playerScore < getCritCost() || critChance >= 100}
+            position="absolute top-2 right-2"
+            icon="⚡"
+            glassy
+          />
+          <UpgradeButton
+            title="Tap Speed"
+            level={tapSpeedLevel}
+            cost={getTapSpeedCost()}
+            description={`+${tapSpeedBonus}% bonus`}
+            onClick={() => upgradeTapSpeed()}
+            disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
+            position="absolute bottom-2 left-2"
+            icon="🚀"
+            glassy
+          />
+          <UpgradeButton
+            title="Auto Tapper"
+            level={autoTapperLevel}
+            cost={getAutoTapperCost()}
+            description={`${autoTapper}/sec`}
+            onClick={() => upgradeAutoTapper()}
+            disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
+            position="absolute bottom-2 right-2"
+            icon="🤖"
+            glassy
+          />
         </div>
 
-        {/* Floating numbers */}
+        {/* Floating Numbers */}
         {floatingNumbers.map((num) => (
           <div
             key={num.id}
-            className={`absolute pointer-events-none font-bold text-xl sm:text-2xl drop-shadow-lg ${
-              num.isCrit ? "text-yellow-300" : "text-green-300"
-            }`}
+            className={`absolute pointer-events-none font-bold text-xl sm:text-2xl drop-shadow-lg ${num.isCrit ? "text-yellow-300" : "text-green-300"}`}
             style={{
               left: `calc(50% + ${num.x}px)`,
               top: `calc(50% + ${num.y}px)`,
