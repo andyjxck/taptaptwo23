@@ -465,23 +465,28 @@ const handleTap = async () => {
   if (gamePhase !== "playing") return;
 
   const now = Date.now();
+
+  // Animation throttle
   if (now - lastAnimationTimeRef.current > 150) {
     setIsAnimating(true);
     lastAnimationTimeRef.current = now;
     setTimeout(() => setIsAnimating(false), 150);
   }
 
+  // Calculate coins earned
   let coinsEarned = tapPower;
   coinsEarned += Math.floor(coinsEarned * (tapSpeedBonus / 100));
-
   const isCrit = Math.random() * 100 < critChance;
   if (isCrit) coinsEarned *= 2;
 
+  // Update local or AI score
   if (gameMode === "ai") {
     setPlayerScore(prev => prev + coinsEarned);
   } else {
+    // Batch the score locally
     scoreBatchRef.current += coinsEarned;
 
+    // Send each tap update to server (fire and forget, but with error catch)
     if (currentRoom && userId) {
       try {
         const res = await fetch('/api/battle', {
@@ -494,7 +499,6 @@ const handleTap = async () => {
             taps: coinsEarned,
           }),
         });
-
         if (!res.ok) {
           const errorText = await res.text();
           console.error("Tap update failed:", errorText);
@@ -505,26 +509,26 @@ const handleTap = async () => {
     }
   }
 
+  // Update total taps count
   setTotalTapsInGame(prev => prev + 1);
-};
 
-  // Spawn floating number immediately (unbatched)
+  // Spawn floating number (unbatched, immediate feedback)
   const id = now + Math.random();
-  const value = coinsEarned;
   const x = Math.random() * 100 - 50;
   const y = Math.random() * 100 - 50;
 
   setFloatingNumbers(prev => [
     ...prev,
-    { id, value, isCrit, x, y }
+    { id, value: coinsEarned, isCrit, x, y }
   ]);
 
+  // Remove floating number after 1 second
   setTimeout(() => {
     setFloatingNumbers(prev => prev.filter(num => num.id !== id));
   }, 1000);
 };
 
-// Flush batched player score updates every 100ms (only multiplayer)
+// Flush batched player score updates every 100ms (only multiplayer mode)
 React.useEffect(() => {
   const interval = setInterval(() => {
     if (scoreBatchRef.current > 0) {
@@ -534,7 +538,6 @@ React.useEffect(() => {
   }, 100);
   return () => clearInterval(interval);
 }, []);
-
 
   // Upgrade functions
  const upgradeTapPower = () => {
