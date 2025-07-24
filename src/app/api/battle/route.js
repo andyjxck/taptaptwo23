@@ -31,10 +31,10 @@ if (action === 'saveProgress') {
     return new Response(JSON.stringify({ error: 'Missing parameters' }), { status: 400 });
   }
 
-  // 1. Fetch existing stats
+  // 1. Fetch existing stats (to preserve total_taps adding behavior)
   const { data: existing, error: fetchError } = await supabase
     .from('game_saves')
-    .select('total_taps, renown_tokens')
+    .select('total_taps')
     .eq('user_id', userId)
     .single();
 
@@ -42,11 +42,13 @@ if (action === 'saveProgress') {
     return new Response(JSON.stringify({ error: fetchError?.message || 'User not found' }), { status: 500 });
   }
 
-  // 2. Add new values to old ones
+  // 2. Calculate updated total taps (additive)
   const updatedTotalTaps = (existing.total_taps || 0) + total_taps;
-  const updatedRenownTokens = (existing.renown_tokens || 0) + renown_tokens;
 
-  // 3. Save updated totals
+  // 3. Replace renown tokens with the new value (no addition)
+  const updatedRenownTokens = renown_tokens;
+
+  // 4. Save updated totals
   const { error: updateError } = await supabase
     .from('game_saves')
     .update({
