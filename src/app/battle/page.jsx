@@ -1302,7 +1302,8 @@ if (gamePhase === "playing") {
           />
         </div>
 
-        <div className="absolute top-2 right-4 sm:right-6 z-20">
+{/* Top-right upgrade button — fully fixed and visible */}
+<div className="fixed top-[72px] right-4 sm:right-6 z-50">
   <UpgradeButton
     title="Critical Hit"
     level={critLevel}
