@@ -1255,17 +1255,25 @@ if (gamePhase === "lobby") {
   );
 }
 if (gamePhase === "playing") {
-  // Calculate score percentages for progress bar
-  const totalScore = (playerScore || 0) + (opponentScore || 0) || 1; // avoid div by zero
+  const totalScore = (playerScore || 0) + (opponentScore || 0) || 1;
   const playerPercent = ((playerScore || 0) / totalScore) * 100;
   const opponentPercent = ((opponentScore || 0) / totalScore) * 100;
   const isPlayerWinning =
     (playerScore || 0) > (gameMode === "ai" ? (aiCoins || 0) : (opponentScore || 0));
 
-  // Pick static gradient class
   const backgroundClass = isPlayerWinning
     ? "from-yellow-700 via-yellow-900 to-yellow-800"
     : "from-pink-800 via-pink-900 to-pink-800";
+
+  // Constants for spacing (px)
+  const scoreboardHeight = 120; // approximate scoreboard container height in px
+  const leaveButtonHeight = 48; // approx height of leave button (py-2 + font size)
+  const spacing = 16; // spacing in px between elements
+
+  // Positions for leave button and upgrade buttons calculated explicitly:
+  const leaveButtonTop = scoreboardHeight + spacing; // Leave button below scoreboard
+  const upgradesTop = leaveButtonTop + leaveButtonHeight + spacing; // Upgrades start below leave button
+  // Main battle button vertically centered between upgradesTop and bottom of viewport
 
   return (
     <>
@@ -1284,10 +1292,13 @@ if (gamePhase === "playing") {
           />
         </div>
 
-        {/* --- SCOREBOARD (fixed top center) --- */}
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40 w-full max-w-md px-4">
+        {/* SCOREBOARD (fixed top center) */}
+        <div
+          className="fixed left-1/2 transform -translate-x-1/2 z-40 w-full max-w-md px-4"
+          style={{ top: 4, height: scoreboardHeight }}
+        >
           <div
-            className="backdrop-blur-xl bg-white/20 border border-white/25 rounded-xl flex flex-col items-center px-6 py-4 shadow-lg select-none text-white"
+            className="backdrop-blur-xl bg-white/20 border border-white/25 rounded-xl flex flex-col items-center px-6 py-4 shadow-lg select-none text-white h-full"
             style={{
               backdropFilter: "blur(28px)",
               WebkitBackdropFilter: "blur(28px)",
@@ -1296,7 +1307,7 @@ if (gamePhase === "playing") {
               maxWidth: "100%",
             }}
           >
-            {/* Player names row */}
+            {/* Player names */}
             <div className="w-full flex justify-between font-semibold text-lg">
               <div className="truncate max-w-[45%] flex items-center space-x-2">
                 <i className="fas fa-user text-yellow-400 text-xl flex-shrink-0"></i>
@@ -1343,8 +1354,11 @@ if (gamePhase === "playing") {
           </div>
         </div>
 
-        {/* --- Leave button BELOW scoreboard with enough margin --- */}
-        <div className="fixed top-[92px] left-1/2 transform -translate-x-1/2 z-40 w-full max-w-md px-4">
+        {/* LEAVE BUTTON fixed BELOW scoreboard with explicit spacing */}
+        <div
+          className="fixed left-1/2 transform -translate-x-1/2 z-40 w-full max-w-md px-4"
+          style={{ top: leaveButtonTop, height: leaveButtonHeight }}
+        >
           <button
             onClick={resetToStart}
             className="w-full bg-red-600/90 text-white font-semibold rounded-lg py-2 shadow-lg hover:bg-red-700 active:scale-95 transition-transform duration-150 select-none"
@@ -1357,13 +1371,13 @@ if (gamePhase === "playing") {
           </button>
         </div>
 
-        {/* --- Buttons container BELOW scoreboard + leave button --- */}
+        {/* UPGRADE BUTTONS fixed absolute, spaced below leave button */}
         <div
-          className="relative flex-grow mt-[144px] px-4" 
-          style={{ minHeight: "calc(100vh - 144px)" }} // fill space below scoreboard + leave
+          className="fixed left-4 right-4 z-50"
+          style={{ top: upgradesTop }}
         >
-          {/* Upgrade buttons fixed inside this area */}
-          <div className="absolute top-0 left-0 z-50">
+          {/* Top-left button */}
+          <div className="absolute top-0 left-0">
             <UpgradeButton
               title="Tap Power"
               level={tapPowerLevel}
@@ -1380,11 +1394,13 @@ if (gamePhase === "playing") {
                 minWidth: "110px",
                 padding: "0.5rem 1rem",
                 borderRadius: "0.75rem",
+                fontSize: "1rem",
               }}
             />
           </div>
 
-          <div className="absolute top-0 right-0 z-50">
+          {/* Top-right button */}
+          <div className="absolute top-0 right-0">
             <UpgradeButton
               title="Critical Hit"
               level={critLevel}
@@ -1401,11 +1417,13 @@ if (gamePhase === "playing") {
                 minWidth: "110px",
                 padding: "0.5rem 1rem",
                 borderRadius: "0.75rem",
+                fontSize: "1rem",
               }}
             />
           </div>
 
-          <div className="absolute bottom-0 left-0 z-50">
+          {/* Bottom-left button */}
+          <div className="absolute bottom-0 left-0" style={{ marginTop: "72px" }}>
             <UpgradeButton
               title="Tap Speed"
               level={tapSpeedLevel}
@@ -1422,11 +1440,13 @@ if (gamePhase === "playing") {
                 minWidth: "110px",
                 padding: "0.5rem 1rem",
                 borderRadius: "0.75rem",
+                fontSize: "1rem",
               }}
             />
           </div>
 
-          <div className="absolute bottom-0 right-0 z-50">
+          {/* Bottom-right button */}
+          <div className="absolute bottom-0 right-0" style={{ marginTop: "72px" }}>
             <UpgradeButton
               title="Auto Tapper"
               level={autoTapperLevel}
@@ -1443,39 +1463,46 @@ if (gamePhase === "playing") {
                 minWidth: "110px",
                 padding: "0.5rem 1rem",
                 borderRadius: "0.75rem",
+                fontSize: "1rem",
               }}
             />
           </div>
+        </div>
 
-          {/* Main battle button centered */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40 pointer-events-auto">
-            <button
-              onClick={() => {
-                if (navigator.vibrate) navigator.vibrate(250);
-                handleTap();
-              }}
-              className={`
-                w-[200px] h-[200px] rounded-full bg-white/30 border border-white/30 relative overflow-hidden cursor-pointer
-                shadow-lg hover:shadow-2xl active:scale-95 transition-transform duration-200
-                flex items-center justify-center
-                backdrop-blur-md
-                group
-              `}
-            >
-              {/* Overlay shine */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-60 group-hover:opacity-75 transition-opacity duration-200 rounded-full"></div>
+        {/* MAIN BATTLE BUTTON fixed absolutely centered vertically between leave button bottom and viewport bottom */}
+        <div
+          className="fixed left-1/2 z-40 pointer-events-auto"
+          style={{
+            top: `calc(${upgradesTop}px + 140px)`, // 140px below upgrades container top
+            transform: "translateX(-50%)",
+          }}
+        >
+          <button
+            onClick={() => {
+              if (navigator.vibrate) navigator.vibrate(250);
+              handleTap();
+            }}
+            className={`
+              w-[200px] h-[200px] rounded-full bg-white/30 border border-white/30 relative overflow-hidden cursor-pointer
+              shadow-lg hover:shadow-2xl active:scale-95 transition-transform duration-200
+              flex items-center justify-center
+              backdrop-blur-md
+              group
+            `}
+          >
+            {/* Overlay shine */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-60 group-hover:opacity-75 transition-opacity duration-200 rounded-full"></div>
 
-              {/* Pulsing battle circle */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-40 h-40 bg-gradient-to-r from-yellow-400 to-pink-400 rounded-full animate-pulse opacity-60"></div>
-              </div>
+            {/* Pulsing battle circle */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-40 h-40 bg-gradient-to-r from-yellow-400 to-pink-400 rounded-full animate-pulse opacity-60"></div>
+            </div>
 
-              {/* Battle icon */}
-              <span className="text-6xl relative z-10 select-none text-pink-600 drop-shadow-lg">
-                ⚔️
-              </span>
-            </button>
-          </div>
+            {/* Battle icon */}
+            <span className="text-6xl relative z-10 select-none text-pink-600 drop-shadow-lg">
+              ⚔️
+            </span>
+          </button>
         </div>
 
         {/* Floating damage/healing numbers */}
@@ -1526,6 +1553,7 @@ if (gamePhase === "playing") {
     </>
   );
 }
+
 
 
 
