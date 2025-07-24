@@ -1269,9 +1269,8 @@ if (gamePhase === "playing") {
 
   return (
     <>
-      <div
-        className={`min-h-screen relative overflow-hidden bg-gradient-to-br ${backgroundClass}`}
-      >
+      <div className={`min-h-screen flex flex-col bg-gradient-to-br ${backgroundClass} relative overflow-hidden`}>
+
         {/* Background decorative circles */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full blur-3xl animate-pulse bg-yellow-300/10"></div>
@@ -1344,137 +1343,141 @@ if (gamePhase === "playing") {
           </div>
         </div>
 
-        {/* --- LEAVE BUTTON (fixed below scoreboard) --- */}
-        <button
-          onClick={resetToStart}
-          className="fixed top-[96px] left-1/2 transform -translate-x-1/2 z-40 bg-red-600/90 text-white font-semibold rounded-lg py-2 px-8 shadow-lg hover:bg-red-700 active:scale-95 transition-transform duration-150 select-none"
-          style={{
-            backdropFilter: "blur(18px)",
-            WebkitBackdropFilter: "blur(18px)",
-          }}
-        >
-          <i className="fas fa-times mr-2"></i> Leave
-        </button>
-
-        {/* --- UPGRADE BUTTONS (fixed corners) --- */}
-
-        {/* Top-left */}
-        <div className="fixed top-4 left-4 z-50">
-          <UpgradeButton
-            title="Tap Power"
-            level={tapPowerLevel}
-            cost={getTapPowerCost()}
-            description={`+${tapPower} per tap`}
-            onClick={(e) => {
-              e.preventDefault();
-              upgradeTapPower();
-            }}
-            disabled={playerScore < getTapPowerCost()}
-            icon="💪"
-            glassy
-            styleOverride={{
-              minWidth: "110px",
-              padding: "0.5rem 1rem",
-              borderRadius: "0.75rem",
-            }}
-          />
-        </div>
-
-        {/* Top-right */}
-        <div className="fixed top-4 right-4 z-50">
-          <UpgradeButton
-            title="Critical Hit"
-            level={critLevel}
-            cost={getCritCost()}
-            description={`${critChance}% crit chance`}
-            onClick={(e) => {
-              e.preventDefault();
-              upgradeCritChance();
-            }}
-            disabled={playerScore < getCritCost() || critChance >= 100}
-            icon="⚡"
-            glassy
-            styleOverride={{
-              minWidth: "110px",
-              padding: "0.5rem 1rem",
-              borderRadius: "0.75rem",
-            }}
-          />
-        </div>
-
-        {/* Bottom-left */}
-        <div className="fixed bottom-4 left-4 z-50">
-          <UpgradeButton
-            title="Tap Speed"
-            level={tapSpeedLevel}
-            cost={getTapSpeedCost()}
-            description={`+${tapSpeedBonus}% bonus`}
-            onClick={(e) => {
-              e.preventDefault();
-              upgradeTapSpeed();
-            }}
-            disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
-            icon="🚀"
-            glassy
-            styleOverride={{
-              minWidth: "110px",
-              padding: "0.5rem 1rem",
-              borderRadius: "0.75rem",
-            }}
-          />
-        </div>
-
-        {/* Bottom-right */}
-        <div className="fixed bottom-4 right-4 z-50">
-          <UpgradeButton
-            title="Auto Tapper"
-            level={autoTapperLevel}
-            cost={getAutoTapperCost()}
-            description={`${autoTapper}/sec`}
-            onClick={(e) => {
-              e.preventDefault();
-              upgradeAutoTapper();
-            }}
-            disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
-            icon="🤖"
-            glassy
-            styleOverride={{
-              minWidth: "110px",
-              padding: "0.5rem 1rem",
-              borderRadius: "0.75rem",
-            }}
-          />
-        </div>
-
-        {/* --- MAIN BATTLE BUTTON (centered) --- */}
-        <div className="flex items-center justify-center min-h-screen pointer-events-none">
+        {/* --- Leave button BELOW scoreboard --- */}
+        <div className="fixed top-[104px] left-1/2 transform -translate-x-1/2 z-40 w-full max-w-md px-4">
           <button
-            onClick={() => {
-              if (navigator.vibrate) navigator.vibrate(250);
-              handleTap();
+            onClick={resetToStart}
+            className="w-full bg-red-600/90 text-white font-semibold rounded-lg py-2 shadow-lg hover:bg-red-700 active:scale-95 transition-transform duration-150 select-none"
+            style={{
+              backdropFilter: "blur(18px)",
+              WebkitBackdropFilter: "blur(18px)",
             }}
-            className={`
-              pointer-events-auto
-              w-[200px] h-[200px] rounded-full bg-white/30 border border-white/30 relative overflow-hidden cursor-pointer
-              shadow-lg hover:shadow-2xl active:scale-95 transition-transform duration-200
-              flex items-center justify-center
-              backdrop-blur-md
-              group
-            `}
           >
-            {/* Overlay shine */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-60 group-hover:opacity-75 transition-opacity duration-200 rounded-full"></div>
-
-            {/* Pulsing battle circle */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-40 h-40 bg-gradient-to-r from-yellow-400 to-pink-400 rounded-full animate-pulse opacity-60"></div>
-            </div>
-
-            {/* Battle icon */}
-            <span className="text-6xl relative z-10 select-none text-pink-600 drop-shadow-lg">
-              ⚔️
-            </span>
+            <i className="fas fa-times mr-2"></i> Leave
           </button>
+        </div>
+
+        {/* --- BUTTONS CONTAINER BELOW SCOREBOARD AND LEAVE BUTTON --- */}
+        <div className="flex-grow flex relative mt-[148px] px-4"> 
+          {/* 
+            flex-grow to fill remaining vertical space
+            mt to push down below scoreboard + leave button (104 + 44 ~ 148px)
+          */}
+
+          {/* Upgrade buttons in corners */}
+          <div className="absolute top-0 left-0 z-50">
+            <UpgradeButton
+              title="Tap Power"
+              level={tapPowerLevel}
+              cost={getTapPowerCost()}
+              description={`+${tapPower} per tap`}
+              onClick={(e) => {
+                e.preventDefault();
+                upgradeTapPower();
+              }}
+              disabled={playerScore < getTapPowerCost()}
+              icon="💪"
+              glassy
+              styleOverride={{
+                minWidth: "110px",
+                padding: "0.5rem 1rem",
+                borderRadius: "0.75rem",
+              }}
+            />
+          </div>
+
+          <div className="absolute top-0 right-0 z-50">
+            <UpgradeButton
+              title="Critical Hit"
+              level={critLevel}
+              cost={getCritCost()}
+              description={`${critChance}% crit chance`}
+              onClick={(e) => {
+                e.preventDefault();
+                upgradeCritChance();
+              }}
+              disabled={playerScore < getCritCost() || critChance >= 100}
+              icon="⚡"
+              glassy
+              styleOverride={{
+                minWidth: "110px",
+                padding: "0.5rem 1rem",
+                borderRadius: "0.75rem",
+              }}
+            />
+          </div>
+
+          <div className="absolute bottom-0 left-0 z-50">
+            <UpgradeButton
+              title="Tap Speed"
+              level={tapSpeedLevel}
+              cost={getTapSpeedCost()}
+              description={`+${tapSpeedBonus}% bonus`}
+              onClick={(e) => {
+                e.preventDefault();
+                upgradeTapSpeed();
+              }}
+              disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
+              icon="🚀"
+              glassy
+              styleOverride={{
+                minWidth: "110px",
+                padding: "0.5rem 1rem",
+                borderRadius: "0.75rem",
+              }}
+            />
+          </div>
+
+          <div className="absolute bottom-0 right-0 z-50">
+            <UpgradeButton
+              title="Auto Tapper"
+              level={autoTapperLevel}
+              cost={getAutoTapperCost()}
+              description={`${autoTapper}/sec`}
+              onClick={(e) => {
+                e.preventDefault();
+                upgradeAutoTapper();
+              }}
+              disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
+              icon="🤖"
+              glassy
+              styleOverride={{
+                minWidth: "110px",
+                padding: "0.5rem 1rem",
+                borderRadius: "0.75rem",
+              }}
+            />
+          </div>
+
+          {/* Main battle button centered */}
+          <div className="m-auto flex items-center justify-center pointer-events-auto z-40">
+            <button
+              onClick={() => {
+                if (navigator.vibrate) navigator.vibrate(250);
+                handleTap();
+              }}
+              className={`
+                w-[200px] h-[200px] rounded-full bg-white/30 border border-white/30 relative overflow-hidden cursor-pointer
+                shadow-lg hover:shadow-2xl active:scale-95 transition-transform duration-200
+                flex items-center justify-center
+                backdrop-blur-md
+                group
+              `}
+            >
+              {/* Overlay shine */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-60 group-hover:opacity-75 transition-opacity duration-200 rounded-full"></div>
+
+              {/* Pulsing battle circle */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-40 h-40 bg-gradient-to-r from-yellow-400 to-pink-400 rounded-full animate-pulse opacity-60"></div>
+              </div>
+
+              {/* Battle icon */}
+              <span className="text-6xl relative z-10 select-none text-pink-600 drop-shadow-lg">
+                ⚔️
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* Floating damage/healing numbers */}
@@ -1525,6 +1528,7 @@ if (gamePhase === "playing") {
     </>
   );
 }
+
 
 
 
