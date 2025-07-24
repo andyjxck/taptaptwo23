@@ -35,6 +35,7 @@ const opponentPercent = 100 - playerPercent;
   const [renownAwarded, setRenownAwarded] = React.useState(false);
   const [totalTapsInGame, setTotalTapsInGame] = React.useState(0);
 // AI coins state (start low)
+  const [activeTab, setActiveTab] = useState("join");
 const [aiCoins, setAiCoins] = React.useState(0);
  const [isPlayerReady, setIsPlayerReady] = React.useState(false);
   const [isOpponentReady, setIsOpponentReady] = React.useState(false);
