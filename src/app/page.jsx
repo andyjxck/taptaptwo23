@@ -823,6 +823,8 @@ const [activeShopBoosts, setActiveShopBoosts] = useState([]);
 const [lastDailyClaim, setLastDailyClaim] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
     const [showRequests, setShowRequests] = useState(false);
+const [guild, setGuild] = useState(null);
+const [inviteToGuild, setInviteToGuild] = useState({});
 
 
 
@@ -1025,15 +1027,26 @@ const [playBg] = useSound("/sounds/taptaptwobg.mp3", {
     tapSpeedBonus: "Increases tap speed, allowing more taps in less time.",
   };
 
-    useEffect(() => {
-    const storedUserId = localStorage.getItem("userId");
-    const storedPin = localStorage.getItem("pin");
+   useEffect(() => {
+  const storedUserId = localStorage.getItem("userId");
+  const storedPin = localStorage.getItem("pin");
 
-    if (storedUserId && storedPin) {
-      setUserId(storedUserId);
-      setPin(storedPin);
-    }
-  }, []);
+  if (!storedUserId || !storedPin) {
+    window.location.href = "/login";
+    return;
+  }
+
+  // Example static values for testing
+  setGuild({ id: 1, name: "TapMasters", leader_id: Number(storedUserId) });
+
+  // If this user is a guild leader, allow inviting these fake friend IDs
+  setInviteToGuild({
+    101: true,
+    102: true,
+  });
+
+}, []);
+
 
  useEffect(() => {
   if (!userId || !pin) return;
@@ -5829,7 +5842,7 @@ const renderLeaderboard = () => (
     ) : activeTab === "profile" ? (
       renderProfileTab()
     ) : activeTab === "friends" ? (
-      renderFriendsTab()
+      renderFriendsTab({ friends, guild, inviteToGuild })
     ) : null}
   </div>
 </div>
