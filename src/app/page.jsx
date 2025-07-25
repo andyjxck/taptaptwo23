@@ -1037,7 +1037,25 @@ const [playBg] = useSound("/sounds/taptaptwobg.mp3", {
   }
 
   // Example static values for testing
-  setGuild({ id: 1, name: "TapMasters", leader_id: Number(storedUserId) });
+setGuild({
+  id: 1,
+  name: "TapMasters",
+  leader_id: Number(storedUserId),
+  is_leader: true,
+  members: [
+    {
+      user_id: Number(storedUserId),
+      profile_name: "You",
+      profile_icon: "robot",
+    },
+    {
+      user_id: 102,
+      profile_name: "Player2",
+      profile_icon: "fire",
+    },
+  ],
+});
+
 
   // If this user is a guild leader, allow inviting these fake friend IDs
   setInviteToGuild({
