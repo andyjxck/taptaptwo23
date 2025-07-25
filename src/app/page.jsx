@@ -829,23 +829,7 @@ const [lastDailyClaim, setLastDailyClaim] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
     const [showRequests, setShowRequests] = useState(false);
 const [guild, setGuild] = useState(null);
-const inviteToGuild = async (friendId) => {
-  if (!guild || !guild.id) return;
 
-  const { error } = await supabase
-    .from("users")
-    .update({ guild_id: guild.id })
-    .eq("user_id", friendId);
-
-  if (error) {
-    console.error("Error inviting friend:", error);
-    alert("Failed to invite friend to guild.");
-  } else {
-    alert("Friend invited!");
-    // Re-fetch guild data to update member list
-    await fetchGuildData() // or you could re-call fetchGuildData()
-  }
-};
 
 
 
@@ -1001,7 +985,29 @@ const fetchGuildData = async () => {
   }
 };
 
-  
+  useEffect(() => {
+  if (!userId) return;
+  fetchGuildData();
+}, [userId]);
+
+
+  const inviteToGuild = async (friendId) => {
+  if (!guild || !guild.id) return;
+
+  const { error } = await supabase
+    .from("users")
+    .update({ guild_id: guild.id })
+    .eq("user_id", friendId);
+
+  if (error) {
+    console.error("Error inviting friend:", error);
+    alert("Failed to invite friend to guild.");
+  } else {
+    alert("Friend invited!");
+    // Re-fetch guild data to update member list
+    await fetchGuildData() // or you could re-call fetchGuildData()
+  }
+};
   const UPGRADE_DISPLAY_NAMES = {
     tapPowerUpgrades: "Tap Power Upgrades",
     autoTapperUpgrades: "Auto Tapper Upgrades",
