@@ -1025,57 +1025,20 @@ const [playBg] = useSound("/sounds/taptaptwobg.mp3", {
     tapSpeedBonus: "Increases tap speed, allowing more taps in less time.",
   };
 
-  <button
-  onClick={() => {
-    if (navigator.vibrate) navigator.vibrate(50);
+ useEffect(() => {
+  if (!userId || !pin) return;
 
-    const storedUserId = localStorage.getItem("userId");
-    const storedPin = localStorage.getItem("pin");
-
-    if (!storedUserId || !storedPin) {
-      window.location.href = "/login";
-      return;
-    }
-
-    // Set state with stored values before tapping
-    setUserId(storedUserId);
-    setPin(storedPin);
-
-    handleTap();
-  }}
-  className={`w-[200px] h-[200px] rounded-full ${glassStyle} bg-white/30 ${buttonGlow} transform active:scale-95 transition-all duration-200 relative overflow-hidden hover:shadow-2xl border border-white/30 group`}
->
-  <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
-  <div className="absolute inset-0 flex items-center justify-center">
-    <div
-      className={`w-32 h-32 bg-gradient-to-r ${
-        gameState.equippedTheme && gameState.equippedTheme !== "seasons"
-          ? CUSTOM_THEMES[gameState.equippedTheme]?.buttonGlow
-          : SEASONAL_THEMES[gameState.currentSeason].buttonGlow
-      } rounded-full animate-pulse opacity-50`}
-    ></div>
-  </div>
-  {gameState.equippedTheme && gameState.equippedTheme !== "seasons" ? (
-    <span className="text-6xl relative z-10 select-none">
-      {CUSTOM_THEMES[gameState.equippedTheme]?.icon || "❓"}
-    </span>
-  ) : (
-    <i
-      className={`fas ${
-        SEASONAL_THEMES[gameState.currentSeason].icon
-      } text-6xl relative z-10 ${
-        gameState.currentSeason === 0
-          ? "text-green-400"
-          : gameState.currentSeason === 1
-          ? "text-yellow-400"
-          : gameState.currentSeason === 2
-          ? "text-orange-400"
-          : "text-blue-400"
-      } transition-colors duration-500 group-hover:scale-110 transform`}
-    />
-  )}
-</button>
-
+  fetch("/api/record-pageview", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      page_path: "/",
+      user_id: userId,
+      user_agent: navigator.userAgent,
+      referrer: document.referrer || null,
+    }),
+  }).catch(console.error);
+}, [userId, pin]);
 
   const Tooltip = ({ text }) => (
     <div
