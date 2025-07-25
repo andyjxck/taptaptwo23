@@ -5855,11 +5855,11 @@ const renderLeaderboard = () => (
       renderHouseTab()
     ) : activeTab === "shop" ? (
       renderShopTab()
-    ) : activeTab === "profile" ? (
-      renderProfileTab()
-    activeTab === "friends" || activeTab === "guilds" ? (
+   ) : activeTab === "profile" ? (
+  renderProfileTab()
+) : (activeTab === "friends" || activeTab === "guilds") ? (
   renderFriendsTab({ friends, guild, inviteToGuild })
-    ) : null}
+) : null}
   </div>
 </div>
 
