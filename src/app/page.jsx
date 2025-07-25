@@ -1025,23 +1025,80 @@ useEffect(() => {
 }, [userId]);
 
 
-  const inviteToGuild = async (friendId) => {
+const inviteToGuild = async (friendId) => {
   if (!guild || !guild.id) return;
 
   const { error } = await supabase
-    .from("users")
-    .update({ guild_id: guild.id })
-    .eq("user_id", friendId);
+    .from("guild_invites")
+    .insert([
+      {
+        guild_id: guild.id,
+        invited_user_id: friendId,
+        inviter_user_id: userId, // or guild.leader_id
+        status: "pending",
+      },
+    ]);
 
   if (error) {
-    console.error("Error inviting friend:", error);
-    alert("Failed to invite friend to guild.");
+    alert("Failed to send invite.");
   } else {
-    alert("Friend invited!");
-    // Re-fetch guild data to update member list
-    await fetchGuildData() // or you could re-call fetchGuildData()
+    alert("Guild invite sent!");
   }
 };
+
+  const [guildInvites, setGuildInvites] = useState([]);
+
+const fetchGuildInvites = async () => {
+  const { data, error } = await supabase
+    .from("guild_invites")
+    .select(`
+      id,
+      guild_id,
+      inviter_user_id,
+      created_at,
+      guilds (
+        name,
+        icon
+      )
+    `)
+    .eq("invited_user_id", userId)
+    .eq("status", "pending");
+
+  if (error) {
+    setGuildInvites([]);
+  } else {
+    setGuildInvites(data);
+  }
+};
+
+  const acceptGuildInvite = async (inviteId, guildId) => {
+  // 1. Update user's guild_id
+  const { error: userErr } = await supabase
+    .from("users")
+    .update({ guild_id: guildId })
+    .eq("user_id", userId);
+
+  // 2. Mark invite as accepted
+  const { error: inviteErr } = await supabase
+    .from("guild_invites")
+    .update({ status: "accepted" })
+    .eq("id", inviteId);
+
+  if (!userErr && !inviteErr) {
+    alert("You joined the guild!");
+    fetchGuildInvites(); // Refresh invites
+    fetchGuildData();    // Refresh current guild
+  } else {
+    alert("Failed to join the guild.");
+  }
+};
+
+  useEffect(() => {
+  if (!guild && activeTab === "guilds" && userId) {
+    fetchGuildInvites();
+  }
+}, [guild, activeTab, userId]);
+
   const UPGRADE_DISPLAY_NAMES = {
     tapPowerUpgrades: "Tap Power Upgrades",
     autoTapperUpgrades: "Auto Tapper Upgrades",
@@ -1622,6 +1679,32 @@ const renderFriendsTab = () => {
       </span>
       {guild ? guild.name : "Your Guild"}
     </h2>
+    
+    {!guild && guildInvites.length > 0 && (
+  <div className="space-y-4 mb-6">
+    <h3 className="text-lg font-bold text-indigo-700">Guild Invites</h3>
+    {guildInvites.map((invite) => (
+      <div key={invite.id} className="bg-indigo-50 rounded-xl px-4 py-3 flex items-center justify-between">
+        <span>
+          <span className="text-2xl mr-2">
+            {invite.guilds?.icon === "fire" ? "🔥" :
+              invite.guilds?.icon === "skull" ? "💀" :
+              invite.guilds?.icon === "dragon" ? "🐉" :
+              invite.guilds?.icon === "robot" ? "🤖" : "👥"}
+          </span>
+          <span className="font-semibold">{invite.guilds?.name || "Unnamed Guild"}</span>
+        </span>
+        <button
+          className="ml-4 px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-full"
+          onClick={() => acceptGuildInvite(invite.id, invite.guild_id)}
+        >
+          Accept
+        </button>
+      </div>
+    ))}
+  </div>
+)}
+
 
     {!guild && (
       <div className="space-y-6 py-8">
