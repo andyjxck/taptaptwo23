@@ -1025,6 +1025,16 @@ const [playBg] = useSound("/sounds/taptaptwobg.mp3", {
     tapSpeedBonus: "Increases tap speed, allowing more taps in less time.",
   };
 
+    useEffect(() => {
+    const storedUserId = localStorage.getItem("userId");
+    const storedPin = localStorage.getItem("pin");
+
+    if (storedUserId && storedPin) {
+      setUserId(storedUserId);
+      setPin(storedPin);
+    }
+  }, []);
+
  useEffect(() => {
   if (!userId || !pin) return;
 
@@ -5461,7 +5471,7 @@ const renderLeaderboard = () => (
     {activeTab === "game" ? (
       <div className="flex flex-col items-center justify-center space-y-6">
         <div className="relative">
-        <button
+      <button
   onClick={() => {
     if (navigator.vibrate) navigator.vibrate(50);
 
@@ -5473,9 +5483,7 @@ const renderLeaderboard = () => (
       return;
     }
 
-    // Set state with stored values before tapping
-    setUserId(storedUserId);
-    setPin(storedPin);
+    // No longer setting userId or pin here
 
     handleTap();
   }}
@@ -5511,6 +5519,7 @@ const renderLeaderboard = () => (
     />
   )}
 </button>
+
 
 
           {hasBoost && (
