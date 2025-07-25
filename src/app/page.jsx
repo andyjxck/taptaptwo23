@@ -966,6 +966,35 @@ useEffect(() => {
     }));
   }, [gameState.currentSeason, gameState.equippedTheme]);
 
+
+  const fetchGuildData = async () => {
+  if (!userId) return;
+
+  const { data, error } = await supabase
+    .from("guilds")
+    .select(`
+      id,
+      name,
+      icon,
+      leader_id,
+      users:user_id (
+        user_id,
+        profile_name,
+        profile_icon
+      )
+    `)
+    .eq("id", guildIdFromUser) // You may need to use a JOIN or separate query depending on your schema
+    .single();
+
+  if (error) {
+    console.error("Error fetching guild data:", error);
+    return;
+  }
+
+  setGuild(data);
+};
+
+  
   const UPGRADE_DISPLAY_NAMES = {
     tapPowerUpgrades: "Tap Power Upgrades",
     autoTapperUpgrades: "Auto Tapper Upgrades",
