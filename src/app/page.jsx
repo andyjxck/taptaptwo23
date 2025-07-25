@@ -995,12 +995,12 @@ const fetchGuildData = async (id = userId) => {
 
   const userIds = guildUsers?.map(u => u.user_id) || [];
 
-  // 4. Fetch their profile info from game_saves
+  // 4. Fetch their profile info and house_level from game_saves
   let members = [];
   if (userIds.length > 0) {
     const { data: memberProfiles, error: memberProfilesError } = await supabase
       .from("game_saves")
-      .select("user_id, profile_name, profile_icon")
+      .select("user_id, profile_name, profile_icon, house_level")
       .in("user_id", userIds);
 
     members = memberProfiles || [];
@@ -1011,6 +1011,7 @@ const fetchGuildData = async (id = userId) => {
     setGuild({
       id: guildData.id,
       name: guildData.name,
+      icon: guildData.icon,
       leader_id: guildData.leader_id,
       is_leader: userData.is_guild_leader,
       members,
@@ -1019,10 +1020,21 @@ const fetchGuildData = async (id = userId) => {
 };
 
 
+
 useEffect(() => {
-  if (!userId) return;
+  if (activeTab !== "guilds" || !userId) return;
+
+  // Fetch immediately
   fetchGuildData(userId);
-}, [userId]);
+
+  // Set interval to refetch every 5 seconds
+  const interval = setInterval(() => {
+    fetchGuildData(userId);
+  }, 5000);
+
+  // Clear interval when tab or userId changes or component unmounts
+  return () => clearInterval(interval);
+}, [activeTab, userId]);
 
 
 const inviteToGuild = async (friendId) => {
@@ -1387,6 +1399,24 @@ const handleCreateGuild = async (e) => {
       saveGame();
     }, 0);
   };
+
+  const leaveGuild = async () => {
+  if (!guild || !userId) return;
+  // Remove user from guild (set their guild_id to null)
+  const { error } = await supabase
+    .from("users")
+    .update({ guild_id: null })
+    .eq("user_id", userId);
+  if (error) {
+    alert("Failed to leave guild.");
+  } else {
+    setGuild(null);
+    alert("You left the guild.");
+    fetchGuildData(userId); // Refresh guild data
+  }
+};
+
+  
 const renderFriendsTab = () => {
   return (
     <div className={`${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow} max-w-xl mx-auto`}>
@@ -1679,6 +1709,24 @@ const renderFriendsTab = () => {
       </span>
       {guild ? guild.name : "Your Guild"}
     </h2>
+    {/* Guild Score and Leave Button */}
+    {guild && (
+      <div className="flex justify-between items-center mt-2 mb-2">
+        <span className="text-indigo-900 font-bold text-lg">
+          Guild Score: {guild.members
+            ? guild.members.reduce((total, member) => total + (member.house_level || 0), 0)
+            : 0}
+        </span>
+        <button
+          className="bg-red-500 hover:bg-red-700 text-white px-4 py-1 rounded-full text-sm shadow"
+          onClick={leaveGuild}
+          disabled={guild.is_leader} // Optional
+          title={guild.is_leader ? "Leaders cannot leave (must transfer or disband)" : "Leave Guild"}
+        >
+          Leave Guild
+        </button>
+      </div>
+    )}
     
     {!guild && guildInvites.length > 0 && (
   <div className="space-y-4 mb-6">
