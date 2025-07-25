@@ -1003,12 +1003,11 @@ const fetchGuildData = async (id = userId) => {
     });
   }
 };
+
 useEffect(() => {
   if (!userId) return;
-  if (activeTab === "guilds") {
-    fetchGuildData(userId);
-  }
-}, [userId, activeTab]);
+  fetchGuildData(userId);
+}, [userId]);
 
 
   const inviteToGuild = async (friendId) => {
