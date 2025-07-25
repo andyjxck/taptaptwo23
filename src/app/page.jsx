@@ -1320,7 +1320,6 @@ const renderFriendsTab = () => {
         >
           Friends
         </button>
-
         <button
           onClick={() => setActiveTab("guilds")}
           className={`pb-2 font-semibold text-lg ${
@@ -1332,12 +1331,10 @@ const renderFriendsTab = () => {
         </button>
       </div>
 
-      {/* Content */}
+      {/* FRIENDS TAB */}
       {activeTab === "friends" && (
         <>
-          {/* Friends Tab Content */}
-
-          {/* Add Friend + Requests Header */}
+          {/* Add/Search UI */}
           <div className="flex justify-between items-center mb-4">
             <button
               onClick={() => setShowSearch((prev) => !prev)}
@@ -1346,11 +1343,7 @@ const renderFriendsTab = () => {
             >
               <i className="fas fa-user-plus"></i>
             </button>
-
-            <h2 className="text-2xl font-crimson-text text-center text-[#2d3748]">
-              Friends
-            </h2>
-
+            <h2 className="text-2xl font-crimson-text text-center text-[#2d3748]">Friends</h2>
             <button
               onClick={() => setShowRequests((prev) => !prev)}
               className="text-yellow-600 hover:text-yellow-800 text-xl"
@@ -1360,7 +1353,6 @@ const renderFriendsTab = () => {
             </button>
           </div>
 
-          {/* Disabled Chat Button */}
           <div className="text-center mb-4">
             <button
               disabled
@@ -1371,7 +1363,7 @@ const renderFriendsTab = () => {
             </button>
           </div>
 
-          {/* Search Section */}
+          {/* Search */}
           {showSearch && (
             <div className="space-y-2 mb-6">
               <input
@@ -1394,50 +1386,31 @@ const renderFriendsTab = () => {
                     <h4 className="font-semibold text-[#2d3748]">Search Results:</h4>
                     {searchResults.map((user) => {
                       const iconObj = PROFILE_ICONS.find(ic => ic.id === user.profile_icon);
-
                       return (
                         <div
                           key={user.user_id}
                           className="flex items-center justify-between bg-white/20 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow duration-200"
                         >
                           <div className="flex items-center space-x-4">
-                            {iconObj ? (
-                              iconObj.image ? (
-                                <img
-                                  src={iconObj.image}
-                                  alt={iconObj.name}
-                                  className="w-12 h-12 rounded-full border-2 border-purple-600 object-cover"
-                                  title={iconObj.name}
-                                />
-                              ) : (
-                                <span className="text-2xl" title={iconObj.name}>{iconObj.emoji}</span>
-                              )
+                            {iconObj?.image ? (
+                              <img src={iconObj.image} alt={iconObj.name} className="w-12 h-12 rounded-full border-2 border-purple-600 object-cover" />
                             ) : (
-                              <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center border-2 border-purple-600">
-                                <i className="fas fa-user text-purple-600"></i>
-                              </div>
+                              <span className="text-2xl" title={iconObj?.name}>{iconObj?.emoji || <i className="fas fa-user text-purple-600"></i>}</span>
                             )}
-
                             <div>
-                              <p className="font-semibold text-[#2d3748]">
-                                {user.profile_name || 'Unknown'}{' '}
-                                <span className="text-sm text-gray-500">({user.user_id})</span>
-                              </p>
+                              <p className="font-semibold text-[#2d3748]">{user.profile_name || 'Unknown'} <span className="text-sm text-gray-500">({user.user_id})</span></p>
                               <p className="text-sm text-purple-700 font-medium">{user.house_name || 'No House'}</p>
                             </div>
                           </div>
-
                           <div className="text-right text-[#2d3748] text-xs space-y-1 mr-4">
                             <p><span className="font-semibold">Taps:</span> {user.total_taps ?? 0}</p>
                             <p><span className="font-semibold">Upgrades:</span> {user.combined_upgrade_level ?? 0}</p>
                             <p><span className="font-semibold">Coins:</span> {formatNumberShort(user.total_coins_earned ?? 0)}</p>
                           </div>
-
                           <button
                             onClick={() => sendFriendRequest(user.user_id)}
                             className="ml-2 px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
                             disabled={user.user_id === userId}
-                            title={user.user_id === userId ? "You can't add yourself" : "Add Friend"}
                           >
                             Add
                           </button>
@@ -1446,60 +1419,40 @@ const renderFriendsTab = () => {
                     })}
                   </div>
                 ) : (
-                  <p className="mt-4 text-center text-[#2d3748]">
-                    No user found with ID "{searchQuery}"
-                  </p>
+                  <p className="mt-4 text-center text-[#2d3748]">No user found with ID "{searchQuery}"</p>
                 )
               )}
             </div>
           )}
 
-          {/* Pending Requests */}
+          {/* Requests */}
           {showRequests && (
             <div className="space-y-2 mb-6">
               <h4 className="font-semibold text-[#2d3748]">Pending Requests:</h4>
               {pendingRequests.length > 0 ? (
                 pendingRequests.map((req) => {
                   const iconObj = PROFILE_ICONS.find(ic => ic.id === req.profile_icon);
-
                   return (
                     <div
                       key={req.user_id}
                       className="flex items-center justify-between bg-yellow-100/20 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow duration-200"
                     >
                       <div className="flex items-center space-x-4">
-                        {iconObj ? (
-                          iconObj.image ? (
-                            <img
-                              src={iconObj.image}
-                              alt={iconObj.name}
-                              className="w-10 h-10 rounded-full border-2 border-purple-600 object-cover"
-                              title={iconObj.name}
-                            />
-                          ) : (
-                            <span className="text-xl" title={iconObj.name}>{iconObj.emoji}</span>
-                          )
+                        {iconObj?.image ? (
+                          <img src={iconObj.image} alt={iconObj.name} className="w-10 h-10 rounded-full border-2 border-purple-600 object-cover" />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center border-2 border-purple-600">
-                            <i className="fas fa-user text-purple-600"></i>
-                          </div>
+                          <span className="text-xl">{iconObj?.emoji || <i className="fas fa-user text-purple-600"></i>}</span>
                         )}
-
                         <div>
-                          <p className="font-semibold text-[#2d3748]">
-                            {req.profile_name || 'Unknown'}{' '}
-                            <span className="text-sm text-gray-500">({req.user_id})</span>
-                          </p>
+                          <p className="font-semibold text-[#2d3748]">{req.profile_name || 'Unknown'} <span className="text-sm text-gray-500">({req.user_id})</span></p>
                           <p className="text-sm text-purple-700 font-medium">{req.house_name || 'No House'}</p>
                         </div>
                       </div>
-
                       <div className="text-right text-[#2d3748] text-xs space-y-1 mr-4">
                         <p><span className="font-semibold">Taps:</span> {req.total_taps ?? 0}</p>
                         <p><span className="font-semibold">Upgrades:</span> {req.combined_upgrade_level ?? 0}</p>
                         <p><span className="font-semibold">Coins:</span> {formatNumberShort(req.total_coins_earned ?? 0)}</p>
                       </div>
-
                       <button
                         onClick={() => acceptFriendRequest(req.user_id)}
                         className="ml-2 px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
@@ -1515,72 +1468,43 @@ const renderFriendsTab = () => {
             </div>
           )}
 
-          {/* Friends List */}
+          {/* Friends */}
           {friendsLoading && <p>Loading friends...</p>}
           {friendError && <p className="text-red-500">{friendError}</p>}
-          {!friendsLoading && !friendError && friends.length === 0 && (
-            <p className="text-center text-[#2d3748]">No friends found.</p>
-          )}
+          {!friendsLoading && !friendError && friends.length === 0 && <p className="text-center text-[#2d3748]">No friends found.</p>}
           {!friendsLoading && !friendError && friends.length > 0 && (
             <div className="space-y-2">
               <h4 className="font-semibold text-[#2d3748]">Your Friends:</h4>
               {friends.map((friend) => {
                 const iconObj = PROFILE_ICONS.find(ic => ic.id === friend.profile_icon);
-
                 return (
                   <div
                     key={friend.friend_id}
                     className="flex justify-between items-center bg-white/10 rounded-lg p-3"
                   >
                     <div className="flex items-center space-x-4 text-[#2d3748]">
-                      {iconObj ? (
-                        iconObj.image ? (
-                          <img
-                            src={iconObj.image}
-                            alt={iconObj.name}
-                            className="w-10 h-10 rounded-full border-2 border-purple-600 object-cover"
-                            title={iconObj.name}
-                          />
-                        ) : (
-                          <span className="text-2xl" title={iconObj.name}>{iconObj.emoji}</span>
-                        )
+                      {iconObj?.image ? (
+                        <img src={iconObj.image} alt={iconObj.name} className="w-10 h-10 rounded-full border-2 border-purple-600 object-cover" />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center border-2 border-purple-600">
-                          <i className="fas fa-user text-purple-600"></i>
-                        </div>
+                        <span className="text-2xl">{iconObj?.emoji || <i className="fas fa-user text-purple-600"></i>}</span>
                       )}
-
                       <div>
-                        <p className="font-medium">
-                          {friend.profile_name || 'Unknown'}{' '}
-                          <span className="text-xs text-gray-500">({friend.friend_id})</span>
-                        </p>
+                        <p className="font-medium">{friend.profile_name || 'Unknown'} <span className="text-xs text-gray-500">({friend.friend_id})</span></p>
                         <p className="text-xs">Taps: {formatNumberShort(friend.total_taps ?? 0)}</p>
                         <p className="text-xs">Upgrades: {friend.combined_upgrade_level ?? 0}</p>
                         <p className="text-xs">Coins: {formatNumberShort(friend.total_coins_earned ?? 0)}</p>
                       </div>
                     </div>
-
                     <div className="flex flex-col items-end gap-2">
-                      <button
-                        onClick={() => removeFriend(friend.friend_id)}
-                        className="text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                      >
-                        Remove
-                      </button>
-
-                      {guild?.is_leader &&
-  guild.members?.length < 5 &&
-  friend.guild_id == null && (
-    <button
-      onClick={() => inviteToGuild(friend.friend_id)}
-      className="text-sm bg-indigo-500 text-white px-3 py-1 rounded hover:bg-indigo-600"
-      title="Invite to your guild"
-    >
-      Invite to Guild
-    </button>
-)}
-
+                      <button onClick={() => removeFriend(friend.friend_id)} className="text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Remove</button>
+                      {guild?.is_leader && guild.members?.length < 5 && friend.guild_id == null && (
+                        <button
+                          onClick={() => inviteToGuild(friend.friend_id)}
+                          className="text-sm bg-indigo-500 text-white px-3 py-1 rounded hover:bg-indigo-600"
+                        >
+                          Invite to Guild
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -1590,114 +1514,77 @@ const renderFriendsTab = () => {
         </>
       )}
 
-{activeTab === "guilds" && (
-  <>
-    {/* Guilds Tab Content */}
-    <h2 className="text-2xl font-crimson-text text-center text-indigo-700 mb-4">
-      Your Guild
-    </h2>
-
-  {!guild && (
-  <div className="text-white bg-black/20 p-4 rounded-xl max-w-md mx-auto space-y-4">
-    <p className="text-center text-gray-400">You are not in a guild.</p>
-
-    {!creatingGuild ? (
-      <div className="text-center">
-        <button
-          onClick={() => setCreatingGuild(true)}
-          className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-full"
-        >
-          Create a Guild
-        </button>
-      </div>
-    ) : (
-      <form
-      onSubmit={handleCreateGuild}
-        className="space-y-3"
-      >
-        <input
-          type="text"
-          placeholder="Guild Name"
-          maxLength={20}
-          value={newGuildName}
-          onChange={(e) => setNewGuildName(e.target.value)}
-          className="w-full p-2 rounded bg-white/10 border border-white/20 text-white"
-        />
-
-        <select
-          value={newGuildIcon}
-          onChange={(e) => setNewGuildIcon(e.target.value)}
-          className="w-full p-2 rounded bg-white/10 border border-white/20 text-white"
-        >
-          <option value="robot">🤖 Robot</option>
-          <option value="fire">🔥 Fire</option>
-          <option value="skull">💀 Skull</option>
-          <option value="dragon">🐉 Dragon</option>
-        </select>
-
-        <button
-          type="submit"
-          className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-full"
-        >
-          Create Guild
-        </button>
-      </form>
-    )}
-  </div>
-)}
-
-
-    {guild && (
-      <div className="bg-white/20 rounded-lg p-5 shadow-md">
-        <p className="font-semibold text-indigo-700 text-lg mb-2">
-          Guild Name: {guild.name}
-        </p>
-
-        <p className="text-sm text-indigo-600 mb-4">
-          Members ({guild.members?.length ?? 0}/5):
-        </p>
-
-        <ul className="list-disc list-inside text-indigo-700 max-h-48 overflow-y-auto mb-4">
-          {guild.members?.map((member) => {
-            const iconObj = PROFILE_ICONS.find(ic => ic.id === member.profile_icon);
-            return (
-              <li key={member.user_id} className="flex items-center space-x-3 mb-1">
-                {iconObj ? (
-                  iconObj.image ? (
-                    <img
-                      src={iconObj.image}
-                      alt={iconObj.name}
-                      className="w-8 h-8 rounded-full border-2 border-indigo-600 object-cover"
-                      title={iconObj.name}
-                    />
-                  ) : (
-                    <span className="text-xl" title={iconObj.name}>{iconObj.emoji}</span>
-                  )
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center border-2 border-indigo-600">
-                    <i className="fas fa-user text-indigo-600"></i>
-                  </div>
-                )}
-                <span className="font-medium">{member.profile_name || "Unknown"}</span>
-                {member.user_id === guild.leader_id && (
-                  <span className="ml-auto text-xs text-indigo-600 font-semibold italic">
-                    Leader
-                  </span>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-
-        {guild.is_leader && guild.members?.length < 5 && (
-          <p className="text-sm text-indigo-600">
-            You can invite more friends to your guild from the Friends tab.
-          </p>
-        )}
-      </div>
-    )}
-  </>
-)}
+      {/* GUILDS TAB */}
+      {activeTab === "guilds" && (
+        <>
+          <h2 className="text-2xl font-crimson-text text-center text-indigo-700 mb-4">Your Guild</h2>
+          {!guild ? (
+            <div className="text-white bg-black/20 p-4 rounded-xl max-w-md mx-auto space-y-4">
+              <p className="text-center text-gray-400">You are not in a guild.</p>
+              {!creatingGuild ? (
+                <div className="text-center">
+                  <button
+                    onClick={() => setCreatingGuild(true)}
+                    className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-full"
+                  >
+                    Create a Guild
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleCreateGuild} className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Guild Name"
+                    maxLength={20}
+                    value={newGuildName}
+                    onChange={(e) => setNewGuildName(e.target.value)}
+                    className="w-full p-2 rounded bg-white/10 border border-white/20 text-white"
+                  />
+                  <select
+                    value={newGuildIcon}
+                    onChange={(e) => setNewGuildIcon(e.target.value)}
+                    className="w-full p-2 rounded bg-white/10 border border-white/20 text-white"
+                  >
+                    <option value="robot">🤖 Robot</option>
+                    <option value="fire">🔥 Fire</option>
+                    <option value="skull">💀 Skull</option>
+                    <option value="dragon">🐉 Dragon</option>
+                  </select>
+                  <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-full">
+                    Create Guild
+                  </button>
+                </form>
+              )}
+            </div>
+          ) : (
+            <div className="bg-white/20 rounded-lg p-5 shadow-md">
+              <p className="font-semibold text-indigo-700 text-lg mb-2">Guild Name: {guild.name}</p>
+              <p className="text-sm text-indigo-600 mb-4">Members ({guild.members?.length ?? 0}/5):</p>
+              <ul className="list-disc list-inside text-indigo-700 max-h-48 overflow-y-auto mb-4">
+                {guild.members?.map((member) => {
+                  const iconObj = PROFILE_ICONS.find(ic => ic.id === member.profile_icon);
+                  return (
+                    <li key={member.user_id} className="flex items-center space-x-3 mb-1">
+                      {iconObj?.image ? (
+                        <img src={iconObj.image} alt={iconObj.name} className="w-8 h-8 rounded-full border-2 border-indigo-600 object-cover" />
+                      ) : (
+                        <span className="text-xl">{iconObj?.emoji || <i className="fas fa-user text-indigo-600"></i>}</span>
+                      )}
+                      <span className="font-medium">{member.profile_name || "Unknown"}</span>
+                      {member.user_id === guild.leader_id && (
+                        <span className="ml-auto text-xs text-indigo-600 font-semibold italic">Leader</span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+              {guild.is_leader && guild.members?.length < 5 && (
+                <p className="text-sm text-indigo-600">You can invite more friends to your guild from the Friends tab.</p>
+              )}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };
