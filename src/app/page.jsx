@@ -866,8 +866,6 @@ const [guild, setGuild] = useState(null);
     });
   }
 };
-  fetchGuildData();
-},
 const inviteToGuild = async (friendId) => {
   if (!guild || !guild.id) return;
 
