@@ -967,32 +967,6 @@ useEffect(() => {
   }, [gameState.currentSeason, gameState.equippedTheme]);
 
 
-  const fetchGuildData = async () => {
-  if (!userId) return;
-
-  const { data, error } = await supabase
-    .from("guilds")
-    .select(`
-      id,
-      name,
-      icon,
-      leader_id,
-      users:user_id (
-        user_id,
-        profile_name,
-        profile_icon
-      )
-    `)
-    .eq("id", guildIdFromUser) // You may need to use a JOIN or separate query depending on your schema
-    .single();
-
-  if (error) {
-    console.error("Error fetching guild data:", error);
-    return;
-  }
-
-  setGuild(data);
-};
 
   
   const UPGRADE_DISPLAY_NAMES = {
@@ -1090,42 +1064,40 @@ useEffect(() => {
   setPin(storedPin);
 
   const fetchGuildData = async () => {
-    const { data: userData, error: userError } = await supabase
-      .from("users")
-      .select("guild_id, is_guild_leader")
-      .eq("user_id", storedUserId)
-      .single();
+  if (!userId) return;
 
-    if (userError || !userData.guild_id) {
-      setGuild(null);
-      return;
-    }
+  const { data: userData, error: userError } = await supabase
+    .from("users")
+    .select("guild_id, is_guild_leader")
+    .eq("user_id", parseInt(userId))
+    .single();
 
-    const { data: guildData, error: guildError } = await supabase
-      .from("guilds")
-      .select("*")
-      .eq("id", userData.guild_id)
-      .single();
+  if (userError || !userData.guild_id) {
+    setGuild(null);
+    return;
+  }
 
-    const { data: members, error: membersError } = await supabase
-      .from("users")
-      .select("user_id, profile_name, profile_icon")
-      .eq("guild_id", userData.guild_id);
+  const { data: guildData, error: guildError } = await supabase
+    .from("guilds")
+    .select("*")
+    .eq("id", userData.guild_id)
+    .single();
 
-    if (!guildError && !membersError) {
-      setGuild({
-        id: guildData.id,
-        name: guildData.name,
-        leader_id: guildData.leader_id,
-        is_leader: userData.is_guild_leader,
-        members,
-      });
-    }
-  };
+  const { data: members, error: membersError } = await supabase
+    .from("users")
+    .select("user_id, profile_name, profile_icon")
+    .eq("guild_id", userData.guild_id);
 
-  fetchGuildData();
-}, []);
-
+  if (!guildError && !membersError) {
+    setGuild({
+      id: guildData.id,
+      name: guildData.name,
+      leader_id: guildData.leader_id,
+      is_leader: userData.is_guild_leader,
+      members,
+    });
+  }
+};
 
 
  useEffect(() => {
@@ -1180,7 +1152,7 @@ const handleCreateGuild = async (e) => {
     return;
   }
 
-  alert("Guild created!");
+  setNotification("Guild created!");
 
   // Reset form state
   setCreatingGuild(false);
