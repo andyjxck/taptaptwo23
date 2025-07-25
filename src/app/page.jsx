@@ -1004,10 +1004,21 @@ const fetchGuildData = async (id = userId) => {
   }
 };
 
-  useEffect(() => {
-  if (!userId) return;
+useEffect(() => {
+  if (activeTab !== "guilds" || !userId) return;
+
+  // Fetch once immediately on tab switch
   fetchGuildData(userId);
-}, [userId]);
+
+  // Then set up an interval to fetch every second
+  const interval = setInterval(() => {
+    fetchGuildData(userId);
+  }, 1000);
+
+  // Clear interval when leaving the tab or on unmount
+  return () => clearInterval(interval);
+}, [activeTab, userId]);
+
 
 
   const inviteToGuild = async (friendId) => {
