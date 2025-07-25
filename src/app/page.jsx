@@ -1614,7 +1614,6 @@ const renderFriendsTab = () => {
         </>
       )}
       </div>
-  );
 
 {activeTab === "guilds" && (
   <div className="w-full max-w-lg mx-auto bg-gradient-to-br from-indigo-50/80 to-white/30 rounded-2xl p-6 shadow-lg">
@@ -1734,7 +1733,7 @@ const renderFriendsTab = () => {
   </div>
 )}
 };
-
+      };
 
 const buyRegularItem = async ({ itemId, itemType, price, userId, pin }) => {
   if (!userId || !pin) {
