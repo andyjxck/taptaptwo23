@@ -2608,21 +2608,6 @@ async function removeFriend(friendId) {
     return () => clearInterval(interval);
   }, [activeBoost]);
 
-useEffect(() => {
-fetch("/api/record-pageview", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        page_path: "/",
-        user_id: userId || null,
-        user_agent: navigator.userAgent,
-        referrer: document.referrer || null,
-      }),
-    }).catch(console.error);
-  }, []); // Runs once on mount
-
-
-
   useEffect(() => {
     // Only trigger in thunder or lightning
     if (
@@ -5473,43 +5458,56 @@ const renderLeaderboard = () => (
     {activeTab === "game" ? (
       <div className="flex flex-col items-center justify-center space-y-6">
         <div className="relative">
-          <button
-            onClick={() => {
-  if (navigator.vibrate) navigator.vibrate(50);
-  handleTap();
-}}
-            className={`w-[200px] h-[200px] rounded-full ${glassStyle} bg-white/30 ${buttonGlow} transform active:scale-95 transition-all duration-200 relative overflow-hidden hover:shadow-2xl border border-white/30 group`}
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div
-                className={`w-32 h-32 bg-gradient-to-r ${
-                  gameState.equippedTheme && gameState.equippedTheme !== "seasons"
-                    ? CUSTOM_THEMES[gameState.equippedTheme]?.buttonGlow
-                    : SEASONAL_THEMES[gameState.currentSeason].buttonGlow
-                } rounded-full animate-pulse opacity-50`}
-              ></div>
-            </div>
-            {gameState.equippedTheme && gameState.equippedTheme !== "seasons" ? (
-              <span className="text-6xl relative z-10 select-none">
-                {CUSTOM_THEMES[gameState.equippedTheme]?.icon || "❓"}
-              </span>
-            ) : (
-              <i
-                className={`fas ${
-                  SEASONAL_THEMES[gameState.currentSeason].icon
-                } text-6xl relative z-10 ${
-                  gameState.currentSeason === 0
-                    ? "text-green-400"
-                    : gameState.currentSeason === 1
-                    ? "text-yellow-400"
-                    : gameState.currentSeason === 2
-                    ? "text-orange-400"
-                    : "text-blue-400"
-                } transition-colors duration-500 group-hover:scale-110 transform`}
-              />
-            )}
-          </button>
+        <button
+  onClick={() => {
+    if (navigator.vibrate) navigator.vibrate(50);
+
+    // Record page view on tap
+    fetch("/api/record-pageview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        page_path: "/",
+        user_id: userId || null,
+        user_agent: navigator.userAgent,
+        referrer: document.referrer || null,
+      }),
+    }).catch(console.error);
+
+    handleTap();
+  }}
+  className={`w-[200px] h-[200px] rounded-full ${glassStyle} bg-white/30 ${buttonGlow} transform active:scale-95 transition-all duration-200 relative overflow-hidden hover:shadow-2xl border border-white/30 group`}
+>
+  <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
+  <div className="absolute inset-0 flex items-center justify-center">
+    <div
+      className={`w-32 h-32 bg-gradient-to-r ${
+        gameState.equippedTheme && gameState.equippedTheme !== "seasons"
+          ? CUSTOM_THEMES[gameState.equippedTheme]?.buttonGlow
+          : SEASONAL_THEMES[gameState.currentSeason].buttonGlow
+      } rounded-full animate-pulse opacity-50`}
+    ></div>
+  </div>
+  {gameState.equippedTheme && gameState.equippedTheme !== "seasons" ? (
+    <span className="text-6xl relative z-10 select-none">
+      {CUSTOM_THEMES[gameState.equippedTheme]?.icon || "❓"}
+    </span>
+  ) : (
+    <i
+      className={`fas ${
+        SEASONAL_THEMES[gameState.currentSeason].icon
+      } text-6xl relative z-10 ${
+        gameState.currentSeason === 0
+          ? "text-green-400"
+          : gameState.currentSeason === 1
+          ? "text-yellow-400"
+          : gameState.currentSeason === 2
+          ? "text-orange-400"
+          : "text-blue-400"
+      } transition-colors duration-500 group-hover:scale-110 transform`}
+    />
+  )}
+</button>
 
           {hasBoost && (
             <div className="absolute -top-2 -right-2 bg-pink-400 text-white rounded-full px-2 py-1 text-xs">
