@@ -1113,8 +1113,7 @@ useEffect(() => {
     }),
   }).catch(console.error);
 }, [userId, pin]);
-
-  const handleCreateGuild = async (e) => {
+const handleCreateGuild = async (e) => {
   e.preventDefault();
   if (!userId || !newGuildName) return;
 
@@ -1124,8 +1123,8 @@ useEffect(() => {
     .insert([
       {
         name: newGuildName,
-        leader_id: Number(userId),
-        icon: newGuildIcon, // assuming your guilds table has an 'icon' column
+        leader_id: parseInt(userId),
+        icon: newGuildIcon,
       },
     ])
     .select()
@@ -1137,14 +1136,14 @@ useEffect(() => {
     return;
   }
 
-  // Step 2: Update the current user to join that guild as leader
+  // Step 2: Update user to join that guild
   const { error: userError } = await supabase
     .from("users")
     .update({
       guild_id: newGuild.id,
       is_guild_leader: true,
     })
-    .eq("user_id", userId);
+    .eq("user_id", parseInt(userId)); // ✅ FIXED: parseInt here
 
   if (userError) {
     console.error("Error setting user to guild:", userError);
@@ -1153,11 +1152,16 @@ useEffect(() => {
   }
 
   alert("Guild created!");
+
+  // Reset form state
   setCreatingGuild(false);
   setNewGuildName("");
+  setNewGuildIcon("robot");
 
-  await fetchGuildData(); // update UI with new info
+  // Refresh guild data in UI
+  await fetchGuildData();
 };
+
 
   
   const Tooltip = ({ text }) => (
