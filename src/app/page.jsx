@@ -829,6 +829,45 @@ const [lastDailyClaim, setLastDailyClaim] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
     const [showRequests, setShowRequests] = useState(false);
 const [guild, setGuild] = useState(null);
+
+  
+  const fetchGuildData = async () => {
+  if (!userId) return;
+
+  const { data: userData, error: userError } = await supabase
+    .from("users")
+    .select("guild_id, is_guild_leader")
+    .eq("user_id", parseInt(userId))
+    .single();
+
+  if (userError || !userData.guild_id) {
+    setGuild(null);
+    return;
+  }
+
+  const { data: guildData, error: guildError } = await supabase
+    .from("guilds")
+    .select("*")
+    .eq("id", userData.guild_id)
+    .single();
+
+  const { data: members, error: membersError } = await supabase
+    .from("users")
+    .select("user_id, profile_name, profile_icon")
+    .eq("guild_id", userData.guild_id);
+
+  if (!guildError && !membersError) {
+    setGuild({
+      id: guildData.id,
+      name: guildData.name,
+      leader_id: guildData.leader_id,
+      is_leader: userData.is_guild_leader,
+      members,
+    });
+  }
+};
+  fetchGuildData();
+}, []);
 const inviteToGuild = async (friendId) => {
   if (!guild || !guild.id) return;
 
@@ -1062,42 +1101,6 @@ useEffect(() => {
 
   setUserId(storedUserId);
   setPin(storedPin);
-
-  const fetchGuildData = async () => {
-  if (!userId) return;
-
-  const { data: userData, error: userError } = await supabase
-    .from("users")
-    .select("guild_id, is_guild_leader")
-    .eq("user_id", parseInt(userId))
-    .single();
-
-  if (userError || !userData.guild_id) {
-    setGuild(null);
-    return;
-  }
-
-  const { data: guildData, error: guildError } = await supabase
-    .from("guilds")
-    .select("*")
-    .eq("id", userData.guild_id)
-    .single();
-
-  const { data: members, error: membersError } = await supabase
-    .from("users")
-    .select("user_id, profile_name, profile_icon")
-    .eq("guild_id", userData.guild_id);
-
-  if (!guildError && !membersError) {
-    setGuild({
-      id: guildData.id,
-      name: guildData.name,
-      leader_id: guildData.leader_id,
-      is_leader: userData.is_guild_leader,
-      members,
-    });
-  }
-};
 
 
  useEffect(() => {
