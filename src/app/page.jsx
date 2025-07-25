@@ -795,6 +795,9 @@ function MainComponent() {
   const [loading, setLoading] = useState(true);
   const [showChangePinModal, setShowChangePinModal] = useState(false);
   const [currentPinInput, setCurrentPinInput] = useState("");
+  const [creatingGuild, setCreatingGuild] = useState(false);
+const [newGuildName, setNewGuildName] = useState("");
+const [newGuildIcon, setNewGuildIcon] = useState("robot"); // default icon
   const [newPinInput, setNewPinInput] = useState("");
   const [confirmPinInput, setConfirmPinInput] = useState("");
   const [pinErrorMessage, setPinErrorMessage] = useState("");
@@ -1109,6 +1112,52 @@ useEffect(() => {
   }).catch(console.error);
 }, [userId, pin]);
 
+  const handleCreateGuild = async (e) => {
+  e.preventDefault();
+  if (!userId || !newGuildName) return;
+
+  // Step 1: Create the guild
+  const { data: newGuild, error: guildError } = await supabase
+    .from("guilds")
+    .insert([
+      {
+        name: newGuildName,
+        leader_id: Number(userId),
+        icon: newGuildIcon, // assuming your guilds table has an 'icon' column
+      },
+    ])
+    .select()
+    .single();
+
+  if (guildError) {
+    console.error("Error creating guild:", guildError);
+    alert("Failed to create guild.");
+    return;
+  }
+
+  // Step 2: Update the current user to join that guild as leader
+  const { error: userError } = await supabase
+    .from("users")
+    .update({
+      guild_id: newGuild.id,
+      is_guild_leader: true,
+    })
+    .eq("user_id", userId);
+
+  if (userError) {
+    console.error("Error setting user to guild:", userError);
+    alert("Guild created but failed to join.");
+    return;
+  }
+
+  alert("Guild created!");
+  setCreatingGuild(false);
+  setNewGuildName("");
+
+  await fetchGuildData(); // update UI with new info
+};
+
+  
   const Tooltip = ({ text }) => (
     <div
       className="absolute z-50 w-48 p-2 text-xs text-white bg-gray-800 rounded shadow-lg"
@@ -1533,69 +1582,114 @@ const renderFriendsTab = () => {
         </>
       )}
 
-      {activeTab === "guilds" && (
-        <>
-          {/* Guilds Tab Content */}
+{activeTab === "guilds" && (
+  <>
+    {/* Guilds Tab Content */}
+    <h2 className="text-2xl font-crimson-text text-center text-indigo-700 mb-4">
+      Your Guild
+    </h2>
 
-          <h2 className="text-2xl font-crimson-text text-center text-indigo-700 mb-4">
-            Your Guild
-          </h2>
+  {!guild && (
+  <div className="text-white bg-black/20 p-4 rounded-xl max-w-md mx-auto space-y-4">
+    <p className="text-center text-gray-400">You are not in a guild.</p>
 
-          {!guild && (
-            <p className="text-center text-gray-500">You are not in a guild.</p>
-          )}
+    {!creatingGuild ? (
+      <div className="text-center">
+        <button
+          onClick={() => setCreatingGuild(true)}
+          className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-full"
+        >
+          Create a Guild
+        </button>
+      </div>
+    ) : (
+      <form
+      onSubmit={handleCreateGuild}
+        className="space-y-3"
+      >
+        <input
+          type="text"
+          placeholder="Guild Name"
+          maxLength={20}
+          value={newGuildName}
+          onChange={(e) => setNewGuildName(e.target.value)}
+          className="w-full p-2 rounded bg-white/10 border border-white/20 text-white"
+        />
 
-          {guild && (
-            <div className="bg-white/20 rounded-lg p-5 shadow-md">
-              <p className="font-semibold text-indigo-700 text-lg mb-2">
-                Guild Name: {guild.name}
-              </p>
+        <select
+          value={newGuildIcon}
+          onChange={(e) => setNewGuildIcon(e.target.value)}
+          className="w-full p-2 rounded bg-white/10 border border-white/20 text-white"
+        >
+          <option value="robot">🤖 Robot</option>
+          <option value="fire">🔥 Fire</option>
+          <option value="skull">💀 Skull</option>
+          <option value="dragon">🐉 Dragon</option>
+        </select>
 
-              <p className="text-sm text-indigo-600 mb-4">
-                Members ({guild.members?.length ?? 0}/5):
-              </p>
+        <button
+          type="submit"
+          className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-full"
+        >
+          Create Guild
+        </button>
+      </form>
+    )}
+  </div>
+)}
 
-              <ul className="list-disc list-inside text-indigo-700 max-h-48 overflow-y-auto mb-4">
-                {guild.members?.map((member) => {
-                  const iconObj = PROFILE_ICONS.find(ic => ic.id === member.profile_icon);
-                  return (
-                    <li key={member.user_id} className="flex items-center space-x-3 mb-1">
-                      {iconObj ? (
-                        iconObj.image ? (
-                          <img
-                            src={iconObj.image}
-                            alt={iconObj.name}
-                            className="w-8 h-8 rounded-full border-2 border-indigo-600 object-cover"
-                            title={iconObj.name}
-                          />
-                        ) : (
-                          <span className="text-xl" title={iconObj.name}>{iconObj.emoji}</span>
-                        )
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center border-2 border-indigo-600">
-                          <i className="fas fa-user text-indigo-600"></i>
-                        </div>
-                      )}
-                      <span className="font-medium">{member.profile_name || "Unknown"}</span>
-                      {member.user_id === guild.leader_id && (
-                        <span className="ml-auto text-xs text-indigo-600 font-semibold italic">
-                          Leader
-                        </span>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
 
-              {guild.is_leader && guild.members?.length < 5 && (
-                <p className="text-sm text-indigo-600">
-                  You can invite more friends to your guild from the Friends tab.
-                </p>
-              )}
-            </div>
-          )}
-        </>
-      )}
+    {guild && (
+      <div className="bg-white/20 rounded-lg p-5 shadow-md">
+        <p className="font-semibold text-indigo-700 text-lg mb-2">
+          Guild Name: {guild.name}
+        </p>
+
+        <p className="text-sm text-indigo-600 mb-4">
+          Members ({guild.members?.length ?? 0}/5):
+        </p>
+
+        <ul className="list-disc list-inside text-indigo-700 max-h-48 overflow-y-auto mb-4">
+          {guild.members?.map((member) => {
+            const iconObj = PROFILE_ICONS.find(ic => ic.id === member.profile_icon);
+            return (
+              <li key={member.user_id} className="flex items-center space-x-3 mb-1">
+                {iconObj ? (
+                  iconObj.image ? (
+                    <img
+                      src={iconObj.image}
+                      alt={iconObj.name}
+                      className="w-8 h-8 rounded-full border-2 border-indigo-600 object-cover"
+                      title={iconObj.name}
+                    />
+                  ) : (
+                    <span className="text-xl" title={iconObj.name}>{iconObj.emoji}</span>
+                  )
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center border-2 border-indigo-600">
+                    <i className="fas fa-user text-indigo-600"></i>
+                  </div>
+                )}
+                <span className="font-medium">{member.profile_name || "Unknown"}</span>
+                {member.user_id === guild.leader_id && (
+                  <span className="ml-auto text-xs text-indigo-600 font-semibold italic">
+                    Leader
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+
+        {guild.is_leader && guild.members?.length < 5 && (
+          <p className="text-sm text-indigo-600">
+            You can invite more friends to your guild from the Friends tab.
+          </p>
+        )}
+      </div>
+    )}
+  </>
+)}
     </div>
   );
 };
