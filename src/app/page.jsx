@@ -5857,8 +5857,8 @@ const renderLeaderboard = () => (
       renderShopTab()
     ) : activeTab === "profile" ? (
       renderProfileTab()
-    ) : activeTab === "friends" ? (
-      renderFriendsTab({ friends, guild, inviteToGuild })
+    activeTab === "friends" || activeTab === "guilds" ? (
+  renderFriendsTab({ friends, guild, inviteToGuild })
     ) : null}
   </div>
 </div>
