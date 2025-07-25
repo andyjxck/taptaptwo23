@@ -830,7 +830,7 @@ const [lastDailyClaim, setLastDailyClaim] = useState(0);
     const [showRequests, setShowRequests] = useState(false);
 const [guild, setGuild] = useState(null);
 
-
+  const [activeTab, setActiveTab] = useState("game");
 
 
 // Fetch friends list and pending requests only when userId is set
@@ -1037,7 +1037,7 @@ useEffect(() => {
 
   const [rainDrops, setRainDrops] = React.useState([]);
   const [notification, setNotification] = useState(null);
-  const [activeTab, setActiveTab] = useState("game");
+
   const [showStats, setShowStats] = useState(false);
   const [activeTheme, setActiveTheme] = React.useState("heaven");
   const [showFeedback, setShowFeedback] = useState(false);
