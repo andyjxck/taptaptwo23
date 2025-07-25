@@ -968,7 +968,7 @@ useEffect(() => {
 const fetchGuildData = async (id = userId) => {
   if (!id) return;
 
-  // 1. Get this user
+  // 1. Get this user and their guild_id
   const { data: userData, error: userError } = await supabase
     .from("users")
     .select("guild_id, is_guild_leader")
@@ -980,20 +980,34 @@ const fetchGuildData = async (id = userId) => {
     return;
   }
 
-  // 2. Get the guild
+  // 2. Get the guild details
   const { data: guildData, error: guildError } = await supabase
     .from("guilds")
     .select("*")
     .eq("id", userData.guild_id)
     .single();
 
-  // 3. Get all members of this guild
-  const { data: members, error: membersError } = await supabase
+  // 3. Get all user_ids in this guild from users table
+  const { data: guildUsers, error: guildUsersError } = await supabase
     .from("users")
-    .select("user_id, profile_name, profile_icon")
+    .select("user_id")
     .eq("guild_id", userData.guild_id);
 
-  if (!guildError && !membersError) {
+  const userIds = guildUsers?.map(u => u.user_id) || [];
+
+  // 4. Fetch their profile info from game_saves
+  let members = [];
+  if (userIds.length > 0) {
+    const { data: memberProfiles, error: memberProfilesError } = await supabase
+      .from("game_saves")
+      .select("user_id, profile_name, profile_icon")
+      .in("user_id", userIds);
+
+    members = memberProfiles || [];
+  }
+
+  // 5. Set state
+  if (!guildError) {
     setGuild({
       id: guildData.id,
       name: guildData.name,
@@ -1003,6 +1017,7 @@ const fetchGuildData = async (id = userId) => {
     });
   }
 };
+
 
 useEffect(() => {
   if (!userId) return;
