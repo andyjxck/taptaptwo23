@@ -14,9 +14,73 @@ const STATIC_STARS = Array.from({ length: 25 }, (_, i) => {
     top: `${Math.random() * 95 + 2}%`,
     left: `${Math.random() * 95 + 2}%`,
     size,
-    opacity,
-  };
-});
+    export const GUILD_ICONS = [
+  { id: "tree", name: "Tree", emoji: "🌳" },
+  { id: "seedling", name: "Seedling", emoji: "🌱" },
+  { id: "cloudMoon", name: "Cloud Moon", emoji: "🌜" },
+  { id: "sun", name: "Sun", emoji: "🌞" },
+  { id: "star", name: "Star", emoji: "⭐" },
+  { id: "alien", name: "Alien", emoji: "👽" },
+  { id: "fire", name: "Fire", emoji: "🔥" },
+  { id: "ghost", name: "Ghost", emoji: "👻" },
+  { id: "cat", name: "Cat Face", emoji: "🐱" },
+  { id: "unicorn", name: "Unicorn", emoji: "🦄" },
+  { id: "robot", name: "Robot", emoji: "🤖" },
+  { id: "crown", name: "Crown", emoji: "👑" },
+  { id: "icecream", name: "Ice Cream", emoji: "🍦" },
+  { id: "rocket", name: "Rocket", emoji: "🚀" },
+  { id: "rainbow", name: "Rainbow", emoji: "🌈" },
+  { id: "mouse", name: "Mouse", emoji: "🐭" },
+  { id: "frog", name: "Frog", emoji: "🐸" },
+  { id: "fox", name: "Fox", emoji: "🦊" },
+  { id: "penguin", name: "Penguin", emoji: "🐧" },
+  { id: "bunny", name: "Bunny", emoji: "🐰" },
+  { id: "duck", name: "Duck", emoji: "🦆" },
+  { id: "hamster", name: "Hamster", emoji: "🐹" },
+  { id: "owl", name: "Owl", emoji: "🦉" },
+  { id: "hedgehog", name: "Hedgehog", emoji: "🦔" },
+  { id: "panda", name: "Panda", emoji: "🐼" },
+  { id: "monkey", name: "Monkey", emoji: "🐵" },
+  { id: "bee", name: "Bee", emoji: "🐝" },
+  { id: "butterfly", name: "Butterfly", emoji: "🦋" },
+  { id: "ladybug", name: "Ladybug", emoji: "🐞" },
+  { id: "chick", name: "Chick", emoji: "🐤" },
+  { id: "bear", name: "Bear", emoji: "🐻" },
+  { id: "dolphin", name: "Dolphin", emoji: "🐬" },
+  { id: "whale", name: "Whale", emoji: "🐳" },
+  { id: "snail", name: "Snail", emoji: "🐌" },
+  { id: "peach", name: "Peach", emoji: "🍑" },
+  { id: "avocado", name: "Avocado", emoji: "🥑" },
+  { id: "mushroom", name: "Mushroom", emoji: "🍄" },
+  { id: "cherry", name: "Cherry", emoji: "🍒" },
+  { id: "cookie", name: "Cookie", emoji: "🍪" },
+  { id: "dragon", name: "Dragon", emoji: "🐲" },
+  { id: "mermaid", name: "Mermaid", emoji: "🧜‍♀️" },
+  { id: "wizard", name: "Wizard", emoji: "🧙‍♂️" },
+  { id: "crystalball", name: "Crystal Ball", emoji: "🔮" },
+  { id: "cactus", name: "Cactus", emoji: "🌵" },
+  { id: "volcano", name: "Volcano", emoji: "🌋" },
+  { id: "jellyfish", name: "Jellyfish", emoji: "🎐" },
+  { id: "starstruck", name: "Starstruck", emoji: "🤩" },
+  { id: "medal", name: "Gold Medal", emoji: "🏅" },
+  { id: "lighthouse", name: "Lighthouse", emoji: "🗼" },
+  { id: "moon", name: "Moon", emoji: "🌕" },
+  { id: "comet", name: "Comet", emoji: "☄️" },
+  { id: "snowflake", name: "Snowflake", emoji: "❄️" },
+  { id: "maple", name: "Maple Leaf", emoji: "🍁" },
+  { id: "eclipse", name: "Eclipse", emoji: "🌑" },
+  { id: "mountain", name: "Mountain", emoji: "🏔️" },
+  { id: "ninja", name: "Ninja", emoji: "🥷" },
+  { id: "phoenix", name: "Phoenix", emoji: "🔥🕊️" },
+  { id: "clover", name: "Four Leaf Clover", emoji: "🍀" },
+  { id: "pirate", name: "Pirate", emoji: "🏴‍☠️" },
+  { id: "vampire", name: "Vampire", emoji: "🧛‍♂️" },
+  { id: "sakura", name: "Sakura", emoji: "🌸" },
+  { id: "balloon", name: "Balloon", emoji: "🎈" },
+  { id: "dragonfruit", name: "Dragon Fruit", emoji: "🐉🍈" },
+];
+
+
 
 const CUSTOM_THEME_WEATHER_RENAMES = {
   hell: {
@@ -1702,74 +1766,74 @@ const renderFriendsTab = () => {
       )}
 
 {activeTab === "guilds" && (
-  <div className="w-full max-w-lg mx-auto bg-gradient-to-br from-indigo-50/80 to-white/30 rounded-2xl p-6 shadow-lg">
-    <h2 className="text-3xl font-bold text-indigo-800 text-center mb-1 tracking-wide drop-shadow">
-      <span className="mr-2">
-        {guild?.icon === "fire" ? "🔥" : guild?.icon === "skull" ? "💀" : guild?.icon === "dragon" ? "🐉" : guild?.icon === "robot" ? "🤖" : "👥"}
+  <div className="w-full max-w-lg mx-auto bg-gradient-to-br from-indigo-200/60 to-white/70 rounded-3xl p-6 shadow-2xl border border-white/20 backdrop-blur-lg glass">
+    <h2 className="text-3xl font-bold text-indigo-900 text-center mb-1 tracking-wide drop-shadow-lg flex items-center justify-center gap-2">
+      <span>
+        {guild?.icon
+          ? (GUILD_ICONS.find(ic => ic.id === guild.icon)?.emoji || "👥")
+          : "👥"}
       </span>
       {guild ? guild.name : "Your Guild"}
     </h2>
-    {/* Guild Score and Leave Button */}
+    {/* Guild Score and Leave Option */}
     {guild && (
-      <div className="flex justify-between items-center mt-2 mb-2">
-        <span className="text-indigo-900 font-bold text-lg">
-          Guild Score: {guild.members
+      <div className="flex flex-col sm:flex-row sm:justify-between items-center mt-2 mb-4 gap-2">
+        <span className="bg-indigo-50/60 text-indigo-900 font-bold text-lg rounded-xl px-4 py-1 border border-indigo-200 shadow">
+          Guild Score: <span className="text-indigo-800">{guild.members
             ? guild.members.reduce((total, member) => total + (member.house_level || 0), 0)
-            : 0}
+            : 0}</span>
         </span>
         <button
-          className="bg-red-500 hover:bg-red-700 text-white px-4 py-1 rounded-full text-sm shadow"
+          className="bg-red-500/80 hover:bg-red-700 text-white px-4 py-1 rounded-full text-sm shadow active:scale-95 transition"
           onClick={leaveGuild}
-          disabled={guild.is_leader} // Optional
+          disabled={guild.is_leader}
           title={guild.is_leader ? "Leaders cannot leave (must transfer or disband)" : "Leave Guild"}
         >
           Leave Guild
         </button>
       </div>
     )}
-    
-    {!guild && guildInvites.length > 0 && (
-  <div className="space-y-4 mb-6">
-    <h3 className="text-lg font-bold text-indigo-700">Guild Invites</h3>
-    {guildInvites.map((invite) => (
-      <div key={invite.id} className="bg-indigo-50 rounded-xl px-4 py-3 flex items-center justify-between">
-        <span>
-          <span className="text-2xl mr-2">
-            {invite.guilds?.icon === "fire" ? "🔥" :
-              invite.guilds?.icon === "skull" ? "💀" :
-              invite.guilds?.icon === "dragon" ? "🐉" :
-              invite.guilds?.icon === "robot" ? "🤖" : "👥"}
-          </span>
-          <span className="font-semibold">{invite.guilds?.name || "Unnamed Guild"}</span>
-        </span>
-        <button
-          className="ml-4 px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-full"
-          onClick={() => acceptGuildInvite(invite.id, invite.guild_id)}
-        >
-          Accept
-        </button>
+
+    {/* Guild Invites */}
+    {!guild && guildInvites?.length > 0 && (
+      <div className="space-y-4 mb-6">
+        <h3 className="text-lg font-bold text-indigo-700 text-center">Guild Invites</h3>
+        {guildInvites.map((invite) => (
+          <div key={invite.id} className="bg-white/80 rounded-2xl px-4 py-3 flex items-center justify-between shadow border border-indigo-200">
+            <span>
+              <span className="text-2xl mr-2">
+                {GUILD_ICONS.find(ic => ic.id === invite.guilds?.icon)?.emoji || "👥"}
+              </span>
+              <span className="font-semibold text-indigo-900">{invite.guilds?.name || "Unnamed Guild"}</span>
+            </span>
+            <button
+              className="ml-4 px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-full shadow"
+              onClick={() => acceptGuildInvite(invite.id, invite.guild_id)}
+            >
+              Accept
+            </button>
+          </div>
+        ))}
       </div>
-    ))}
-  </div>
-)}
+    )}
 
-
+    {/* Create Guild Section */}
     {!guild && (
-      <div className="space-y-6 py-8">
-        <p className="text-center text-gray-600 dark:text-gray-200 text-lg mb-2">You are not in a guild yet.</p>
+      <div className="space-y-8 py-8">
+        <p className="text-center text-gray-700 text-lg mb-2">You are not in a guild yet.</p>
         {!creatingGuild ? (
           <div className="text-center">
             <button
               onClick={() => setCreatingGuild(true)}
-              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-full shadow transition"
+              className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-full shadow-lg transition active:scale-95"
             >
-              <i className="fas fa-users mr-2"></i> Create a Guild
+              <i className="fas fa-users mr-2" /> Create a Guild
             </button>
           </div>
         ) : (
           <form
             onSubmit={handleCreateGuild}
-            className="flex flex-col space-y-4 items-center"
+            className="flex flex-col space-y-6 items-center w-full"
           >
             <input
               type="text"
@@ -1777,22 +1841,35 @@ const renderFriendsTab = () => {
               maxLength={20}
               value={newGuildName}
               onChange={e => setNewGuildName(e.target.value)}
-              className="w-64 px-3 py-2 rounded-xl bg-white/70 border border-indigo-300 focus:ring-2 focus:ring-indigo-400 text-gray-900 font-medium"
+              className="w-64 px-3 py-2 rounded-xl bg-white/80 border border-indigo-300 focus:ring-2 focus:ring-indigo-400 text-gray-900 font-medium shadow"
               required
             />
-            <select
-              value={newGuildIcon}
-              onChange={e => setNewGuildIcon(e.target.value)}
-              className="w-64 px-3 py-2 rounded-xl bg-white/70 border border-indigo-300 text-gray-900 font-semibold"
-            >
-              <option value="robot">🤖 Robot</option>
-              <option value="fire">🔥 Fire</option>
-              <option value="skull">💀 Skull</option>
-              <option value="dragon">🐉 Dragon</option>
-            </select>
+            {/* Emoji keyboard style grid */}
+            <div className="w-full max-w-xs mx-auto">
+              <label className="block text-center font-semibold text-indigo-800 mb-2">Choose an Icon</label>
+              <div
+                className="grid grid-cols-6 gap-2 sm:grid-cols-10 p-2 bg-white/60 rounded-xl shadow-inner border border-indigo-100"
+                style={{ maxHeight: '180px', overflowY: 'auto', touchAction: 'pan-y' }}
+              >
+                {GUILD_ICONS.map((icon) => (
+                  <button
+                    key={icon.id}
+                    type="button"
+                    onClick={() => setNewGuildIcon(icon.id)}
+                    className={`rounded-lg p-2 text-2xl transition border-2
+                      ${newGuildIcon === icon.id
+                        ? 'border-indigo-700 bg-indigo-100 scale-110'
+                        : 'border-transparent hover:bg-indigo-50 active:scale-95'}`}
+                    aria-label={icon.name}
+                  >
+                    {icon.emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
             <button
               type="submit"
-              className="w-64 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full font-semibold shadow transition"
+              className="w-64 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full font-semibold shadow transition active:scale-95"
             >
               Create Guild
             </button>
@@ -1808,62 +1885,62 @@ const renderFriendsTab = () => {
       </div>
     )}
 
+    {/* Guild Members */}
     {guild && (
-      <div className="mt-2 space-y-4">
+      <div className="mt-4 space-y-4">
         <div className="flex items-center justify-between px-2">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">{guild.icon === "fire" ? "🔥" : guild.icon === "skull" ? "💀" : guild.icon === "dragon" ? "🐉" : guild.icon === "robot" ? "🤖" : "👥"}</span>
+            <span className="text-2xl">{GUILD_ICONS.find(ic => ic.id === guild.icon)?.emoji || "👥"}</span>
             <span className="font-bold text-xl text-indigo-800">{guild.name}</span>
           </div>
           <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
             Members {guild.members?.length ?? 0}/5
           </span>
         </div>
-
-        <ul className="divide-y divide-indigo-100 bg-white/60 rounded-xl overflow-hidden">
+        <ul className="divide-y divide-indigo-100 bg-white/70 rounded-2xl overflow-hidden shadow-inner border border-indigo-100">
           {guild.members && guild.members.length > 0 ? (
-            guild.members.map(member => {
-              const iconObj = PROFILE_ICONS.find(ic => ic.id === member.profile_icon);
-              return (
-                <li key={member.user_id} className="flex items-center px-4 py-2 gap-4">
-                  {iconObj ? (
-                    iconObj.image ? (
-                      <img
-                        src={iconObj.image}
-                        alt={iconObj.name}
-                        className="w-8 h-8 rounded-full border-2 border-indigo-400 object-cover"
-                      />
+            // Sort members highest to lowest house_level
+            guild.members
+              .slice() // clone array
+              .sort((a, b) => (b.house_level || 0) - (a.house_level || 0))
+              .map(member => {
+                const iconObj = PROFILE_ICONS.find(ic => ic.id === member.profile_icon);
+                return (
+                  <li key={member.user_id} className="flex items-center px-4 py-2 gap-4">
+                    {iconObj ? (
+                      iconObj.image ? (
+                        <img
+                          src={iconObj.image}
+                          alt={iconObj.name}
+                          className="w-9 h-9 rounded-full border-2 border-indigo-300 object-cover"
+                        />
+                      ) : (
+                        <span className="text-2xl">{iconObj.emoji}</span>
+                      )
                     ) : (
-                      <span className="text-2xl">{iconObj.emoji}</span>
-                    )
-                  ) : (
-                    <span className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-400 font-bold">?</span>
-                  )}
-                  <span className="font-medium text-indigo-800">{member.profile_name || "Unknown"}</span>
-                  {member.user_id === guild.leader_id && (
-                    <span className="ml-auto text-xs bg-indigo-200 text-indigo-800 px-2 py-1 rounded-full font-bold">
-                      Leader
-                    </span>
-                  )}
-                </li>
-              );
-            })
+                      <span className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-400 font-bold text-lg">?</span>
+                    )}
+                    <span className="font-semibold text-indigo-900">{member.profile_name || "Unknown"}</span>
+                    <span className="ml-auto text-indigo-700 font-bold text-lg">{member.house_level || 0}</span>
+                    {member.user_id === guild.leader_id && (
+                      <span className="ml-2 text-xs bg-indigo-200 text-indigo-800 px-2 py-1 rounded-full font-bold">Leader</span>
+                    )}
+                  </li>
+                );
+              })
           ) : (
             <li className="text-gray-600 px-4 py-2">No members found.</li>
           )}
         </ul>
-
         {guild.is_leader && guild.members?.length < 5 && (
           <div className="text-xs text-indigo-700 text-center mt-4">
             Invite more friends from the <span className="font-semibold">Friends</span> tab below.
           </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
+        )}
+      </div>
+    )}
+  </div>
+)}
 };
 
 const buyRegularItem = async ({ itemId, itemType, price, userId, pin }) => {
