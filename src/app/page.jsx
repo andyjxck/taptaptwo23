@@ -824,19 +824,7 @@ const [lastDailyClaim, setLastDailyClaim] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
     const [showRequests, setShowRequests] = useState(false);
 
-// Load userId and pin from localStorage once on mount
-useEffect(() => {
-  const storedUserId = localStorage.getItem("userId");
-  const storedPin = localStorage.getItem("pin");
 
-  if (!storedUserId || !storedPin) {
-    window.location.href = "/login";
-    return;
-  }
-
-  setUserId(storedUserId);
-  setPin(storedPin);
-}, []);
 
 // Fetch friends list and pending requests only when userId is set
 useEffect(() => {
@@ -1036,6 +1024,58 @@ const [playBg] = useSound("/sounds/taptaptwobg.mp3", {
     critChance: "Increases chance of critical taps that multiply coin gain.",
     tapSpeedBonus: "Increases tap speed, allowing more taps in less time.",
   };
+
+  <button
+  onClick={() => {
+    if (navigator.vibrate) navigator.vibrate(50);
+
+    const storedUserId = localStorage.getItem("userId");
+    const storedPin = localStorage.getItem("pin");
+
+    if (!storedUserId || !storedPin) {
+      window.location.href = "/login";
+      return;
+    }
+
+    // Set state with stored values before tapping
+    setUserId(storedUserId);
+    setPin(storedPin);
+
+    handleTap();
+  }}
+  className={`w-[200px] h-[200px] rounded-full ${glassStyle} bg-white/30 ${buttonGlow} transform active:scale-95 transition-all duration-200 relative overflow-hidden hover:shadow-2xl border border-white/30 group`}
+>
+  <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
+  <div className="absolute inset-0 flex items-center justify-center">
+    <div
+      className={`w-32 h-32 bg-gradient-to-r ${
+        gameState.equippedTheme && gameState.equippedTheme !== "seasons"
+          ? CUSTOM_THEMES[gameState.equippedTheme]?.buttonGlow
+          : SEASONAL_THEMES[gameState.currentSeason].buttonGlow
+      } rounded-full animate-pulse opacity-50`}
+    ></div>
+  </div>
+  {gameState.equippedTheme && gameState.equippedTheme !== "seasons" ? (
+    <span className="text-6xl relative z-10 select-none">
+      {CUSTOM_THEMES[gameState.equippedTheme]?.icon || "❓"}
+    </span>
+  ) : (
+    <i
+      className={`fas ${
+        SEASONAL_THEMES[gameState.currentSeason].icon
+      } text-6xl relative z-10 ${
+        gameState.currentSeason === 0
+          ? "text-green-400"
+          : gameState.currentSeason === 1
+          ? "text-yellow-400"
+          : gameState.currentSeason === 2
+          ? "text-orange-400"
+          : "text-blue-400"
+      } transition-colors duration-500 group-hover:scale-110 transform`}
+    />
+  )}
+</button>
+
 
   const Tooltip = ({ text }) => (
     <div
@@ -5462,17 +5502,17 @@ const renderLeaderboard = () => (
   onClick={() => {
     if (navigator.vibrate) navigator.vibrate(50);
 
-    // Record page view on tap
-    fetch("/api/record-pageview", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        page_path: "/",
-        user_id: userId || null,
-        user_agent: navigator.userAgent,
-        referrer: document.referrer || null,
-      }),
-    }).catch(console.error);
+    const storedUserId = localStorage.getItem("userId");
+    const storedPin = localStorage.getItem("pin");
+
+    if (!storedUserId || !storedPin) {
+      window.location.href = "/login";
+      return;
+    }
+
+    // Set state with stored values before tapping
+    setUserId(storedUserId);
+    setPin(storedPin);
 
     handleTap();
   }}
@@ -5508,6 +5548,7 @@ const renderLeaderboard = () => (
     />
   )}
 </button>
+
 
           {hasBoost && (
             <div className="absolute -top-2 -right-2 bg-pink-400 text-white rounded-full px-2 py-1 text-xs">
