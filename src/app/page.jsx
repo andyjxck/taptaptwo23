@@ -2,6 +2,8 @@
 import AdBanner from '../components/AdBanner';
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import useSound from "use-sound"; // 👈 add this line
+import { supabase } from "@/utilities/supabaseClient";
+
 
 // Generate 25 static stars (adjust count as you wish)
 const STATIC_STARS = Array.from({ length: 25 }, (_, i) => {
