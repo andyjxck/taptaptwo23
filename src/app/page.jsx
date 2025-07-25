@@ -951,11 +951,14 @@ useEffect(() => {
   }, [gameState.currentSeason, gameState.equippedTheme]);
 
 
-const fetchGuildData = async () => {
+const fetchGuildData = async (id = userId) => {
+  if (!id) return;
+
+  // 1. Get this user
   const { data: userData, error: userError } = await supabase
     .from("users")
     .select("guild_id, is_guild_leader")
-    .eq("user_id", storedUserId) // Or parseInt(storedUserId)
+    .eq("user_id", parseInt(id))
     .single();
 
   if (userError || !userData.guild_id) {
@@ -963,12 +966,14 @@ const fetchGuildData = async () => {
     return;
   }
 
+  // 2. Get the guild
   const { data: guildData, error: guildError } = await supabase
     .from("guilds")
     .select("*")
     .eq("id", userData.guild_id)
     .single();
 
+  // 3. Get all members of this guild
   const { data: members, error: membersError } = await supabase
     .from("users")
     .select("user_id, profile_name, profile_icon")
@@ -987,7 +992,7 @@ const fetchGuildData = async () => {
 
   useEffect(() => {
   if (!userId) return;
-  fetchGuildData();
+  fetchGuildData(userId);
 }, [userId]);
 
 
