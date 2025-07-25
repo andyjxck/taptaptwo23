@@ -3938,6 +3938,8 @@ const [leaderboardData, setLeaderboardData] = useState({
 });
 
 useEffect(() => {
+  if (activeTab !== "leaderboard") return;
+
   const fetchLeaderboard = async () => {
     if (!userId || !pin) return;
 
@@ -3961,7 +3963,7 @@ useEffect(() => {
         renown: data.renown || [],
         coins: data.coins || [],
         totalTaps: data.totalTaps || [],
-        highestHouseLevel: data.highestHouseLevel || [],  // <-- Add this line
+        highestHouseLevel: data.highestHouseLevel || [],
       });
     } catch (error) {
       console.error("Error fetching leaderboard:", error);
@@ -3971,7 +3973,8 @@ useEffect(() => {
   fetchLeaderboard();
   const interval = setInterval(fetchLeaderboard, 5000);
   return () => clearInterval(interval);
-}, [userId, pin]);
+}, [userId, pin, activeTab]);
+
 
 const renderLeaderboard = () => (
   <>
