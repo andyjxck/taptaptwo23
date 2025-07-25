@@ -1027,7 +1027,7 @@ const [playBg] = useSound("/sounds/taptaptwobg.mp3", {
     tapSpeedBonus: "Increases tap speed, allowing more taps in less time.",
   };
 
-   useEffect(() => {
+ useEffect(() => {
   const storedUserId = localStorage.getItem("userId");
   const storedPin = localStorage.getItem("pin");
 
@@ -1036,33 +1036,33 @@ const [playBg] = useSound("/sounds/taptaptwobg.mp3", {
     return;
   }
 
-  // Example static values for testing
-setGuild({
-  id: 1,
-  name: "TapMasters",
-  leader_id: Number(storedUserId),
-  is_leader: true,
-  members: [
-    {
-      user_id: Number(storedUserId),
-      profile_name: "You",
-      profile_icon: "robot",
-    },
-    {
-      user_id: 102,
-      profile_name: "Player2",
-      profile_icon: "fire",
-    },
-  ],
-});
+  setUserId(storedUserId);
+  setPin(storedPin);
 
-
-  // If this user is a guild leader, allow inviting these fake friend IDs
-  setInviteToGuild({
-    101: true,
-    102: true,
+  // Set up dummy guild for testing
+  setGuild({
+    id: 1,
+    name: "TapMasters",
+    leader_id: Number(storedUserId),
+    is_leader: true,
+    members: [
+      {
+        user_id: Number(storedUserId),
+        profile_name: "You",
+        profile_icon: 1,
+      },
+      {
+        user_id: 101,
+        profile_name: "Alice",
+        profile_icon: 2,
+      },
+    ],
   });
 
+  setInviteToGuild({
+    102: true,
+    103: true,
+  });
 }, []);
 
 
