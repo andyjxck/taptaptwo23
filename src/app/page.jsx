@@ -1613,7 +1613,6 @@ const renderFriendsTab = () => {
           )}
         </>
       )}
-      </div>
 
 {activeTab === "guilds" && (
   <div className="w-full max-w-lg mx-auto bg-gradient-to-br from-indigo-50/80 to-white/30 rounded-2xl p-6 shadow-lg">
@@ -1727,13 +1726,14 @@ const renderFriendsTab = () => {
           <div className="text-xs text-indigo-700 text-center mt-4">
             Invite more friends from the <span className="font-semibold">Friends</span> tab below.
           </div>
-        )}
-      </div>
-    )}
-  </div>
-)}
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 };
-      };
 
 const buyRegularItem = async ({ itemId, itemType, price, userId, pin }) => {
   if (!userId || !pin) {
