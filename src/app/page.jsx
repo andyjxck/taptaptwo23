@@ -880,6 +880,20 @@ useEffect(() => {
   setLastDailyClaim(Number(dailyClaim) || 0);
 }, []);
 
+useEffect(() => {
+  const storedUserId = localStorage.getItem("userId");
+  const storedPin = localStorage.getItem("pin");
+
+  if (!storedUserId || !storedPin) {
+    window.location.href = "/login";
+    return;
+  }
+
+  setUserId(storedUserId);
+  setPin(storedPin);
+}, []);
+
+
 
   const [
     doubleEarningsOfflineEarningsBackup,
@@ -1094,20 +1108,6 @@ const [playBg] = useSound("/sounds/taptaptwobg.mp3", {
     critChance: "Increases chance of critical taps that multiply coin gain.",
     tapSpeedBonus: "Increases tap speed, allowing more taps in less time.",
   };
-
-useEffect(() => {
-  const storedUserId = localStorage.getItem("userId");
-  const storedPin = localStorage.getItem("pin");
-
-  if (!storedUserId || !storedPin) {
-    window.location.href = "/login";
-    return;
-  }
-
-  setUserId(storedUserId);
-  setPin(storedPin);
-}, []);
-
 
 
  useEffect(() => {
