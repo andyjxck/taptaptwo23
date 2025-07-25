@@ -1615,116 +1615,122 @@ const renderFriendsTab = () => {
       )}
 
 {activeTab === "guilds" && (
-  <>
-    {/* Guilds Tab Content */}
-    <h2 className="text-2xl font-crimson-text text-center text-indigo-700 mb-4">
-      Your Guild
+  <div className="w-full max-w-lg mx-auto bg-gradient-to-br from-indigo-50/80 to-white/30 rounded-2xl p-6 shadow-lg">
+    <h2 className="text-3xl font-bold text-indigo-800 text-center mb-1 tracking-wide drop-shadow">
+      <span className="mr-2">
+        {guild?.icon === "fire" ? "🔥" : guild?.icon === "skull" ? "💀" : guild?.icon === "dragon" ? "🐉" : guild?.icon === "robot" ? "🤖" : "👥"}
+      </span>
+      {guild ? guild.name : "Your Guild"}
     </h2>
 
-  {!guild && (
-  <div className="text-white bg-black/20 p-4 rounded-xl max-w-md mx-auto space-y-4">
-    <p className="text-center text-gray-400">You are not in a guild.</p>
-
-    {!creatingGuild ? (
-      <div className="text-center">
-        <button
-          onClick={() => setCreatingGuild(true)}
-          className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-full"
-        >
-          Create a Guild
-        </button>
-      </div>
-    ) : (
-      <form
-      onSubmit={handleCreateGuild}
-        className="space-y-3"
-      >
-        <input
-          type="text"
-          placeholder="Guild Name"
-          maxLength={20}
-          value={newGuildName}
-          onChange={(e) => setNewGuildName(e.target.value)}
-          className="w-full p-2 rounded bg-white/10 border border-white/20 text-white"
-        />
-
-        <select
-          value={newGuildIcon}
-          onChange={(e) => setNewGuildIcon(e.target.value)}
-          className="w-full p-2 rounded bg-white/10 border border-white/20 text-white"
-        >
-          <option value="robot">🤖 Robot</option>
-          <option value="fire">🔥 Fire</option>
-          <option value="skull">💀 Skull</option>
-          <option value="dragon">🐉 Dragon</option>
-        </select>
-
-        <button
-          type="submit"
-          className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-full"
-        >
-          Create Guild
-        </button>
-      </form>
-    )}
-  </div>
-)}
-
-
-    {guild && (
-      <div className="bg-white/20 rounded-lg p-5 shadow-md">
-        <p className="font-semibold text-indigo-700 text-lg mb-2">
-          Guild Name: {guild.name}
-        </p>
-
-        <p className="text-sm text-indigo-600 mb-4">
-          Members ({guild.members?.length ?? 0}/5):
-        </p>
-
-        <ul className="list-disc list-inside text-indigo-700 max-h-48 overflow-y-auto mb-4">
-          {guild.members?.map((member) => {
-            const iconObj = PROFILE_ICONS.find(ic => ic.id === member.profile_icon);
-            return (
-              <li key={member.user_id} className="flex items-center space-x-3 mb-1">
-                {iconObj ? (
-                  iconObj.image ? (
-                    <img
-                      src={iconObj.image}
-                      alt={iconObj.name}
-                      className="w-8 h-8 rounded-full border-2 border-indigo-600 object-cover"
-                      title={iconObj.name}
-                    />
-                  ) : (
-                    <span className="text-xl" title={iconObj.name}>{iconObj.emoji}</span>
-                  )
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center border-2 border-indigo-600">
-                    <i className="fas fa-user text-indigo-600"></i>
-                  </div>
-                )}
-                <span className="font-medium">{member.profile_name || "Unknown"}</span>
-                {member.user_id === guild.leader_id && (
-                  <span className="ml-auto text-xs text-indigo-600 font-semibold italic">
-                    Leader
-                  </span>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-
-        {guild.is_leader && guild.members?.length < 5 && (
-          <p className="text-sm text-indigo-600">
-            You can invite more friends to your guild from the Friends tab.
-          </p>
+    {!guild && (
+      <div className="space-y-6 py-8">
+        <p className="text-center text-gray-600 dark:text-gray-200 text-lg mb-2">You are not in a guild yet.</p>
+        {!creatingGuild ? (
+          <div className="text-center">
+            <button
+              onClick={() => setCreatingGuild(true)}
+              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-full shadow transition"
+            >
+              <i className="fas fa-users mr-2"></i> Create a Guild
+            </button>
+          </div>
+        ) : (
+          <form
+            onSubmit={handleCreateGuild}
+            className="flex flex-col space-y-4 items-center"
+          >
+            <input
+              type="text"
+              placeholder="Guild Name (max 20 chars)"
+              maxLength={20}
+              value={newGuildName}
+              onChange={e => setNewGuildName(e.target.value)}
+              className="w-64 px-3 py-2 rounded-xl bg-white/70 border border-indigo-300 focus:ring-2 focus:ring-indigo-400 text-gray-900 font-medium"
+              required
+            />
+            <select
+              value={newGuildIcon}
+              onChange={e => setNewGuildIcon(e.target.value)}
+              className="w-64 px-3 py-2 rounded-xl bg-white/70 border border-indigo-300 text-gray-900 font-semibold"
+            >
+              <option value="robot">🤖 Robot</option>
+              <option value="fire">🔥 Fire</option>
+              <option value="skull">💀 Skull</option>
+              <option value="dragon">🐉 Dragon</option>
+            </select>
+            <button
+              type="submit"
+              className="w-64 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full font-semibold shadow transition"
+            >
+              Create Guild
+            </button>
+            <button
+              type="button"
+              onClick={() => setCreatingGuild(false)}
+              className="w-64 py-1 mt-1 bg-gray-200 text-gray-800 rounded-full font-medium hover:bg-gray-300"
+            >
+              Cancel
+            </button>
+          </form>
         )}
       </div>
     )}
-  </>
+
+    {guild && (
+      <div className="mt-2 space-y-4">
+        <div className="flex items-center justify-between px-2">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">{guild.icon === "fire" ? "🔥" : guild.icon === "skull" ? "💀" : guild.icon === "dragon" ? "🐉" : guild.icon === "robot" ? "🤖" : "👥"}</span>
+            <span className="font-bold text-xl text-indigo-800">{guild.name}</span>
+          </div>
+          <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
+            Members {guild.members?.length ?? 0}/5
+          </span>
+        </div>
+
+        <ul className="divide-y divide-indigo-100 bg-white/60 rounded-xl overflow-hidden">
+          {guild.members && guild.members.length > 0 ? (
+            guild.members.map(member => {
+              const iconObj = PROFILE_ICONS.find(ic => ic.id === member.profile_icon);
+              return (
+                <li key={member.user_id} className="flex items-center px-4 py-2 gap-4">
+                  {iconObj ? (
+                    iconObj.image ? (
+                      <img
+                        src={iconObj.image}
+                        alt={iconObj.name}
+                        className="w-8 h-8 rounded-full border-2 border-indigo-400 object-cover"
+                      />
+                    ) : (
+                      <span className="text-2xl">{iconObj.emoji}</span>
+                    )
+                  ) : (
+                    <span className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-400 font-bold">?</span>
+                  )}
+                  <span className="font-medium text-indigo-800">{member.profile_name || "Unknown"}</span>
+                  {member.user_id === guild.leader_id && (
+                    <span className="ml-auto text-xs bg-indigo-200 text-indigo-800 px-2 py-1 rounded-full font-bold">
+                      Leader
+                    </span>
+                  )}
+                </li>
+              );
+            })
+          ) : (
+            <li className="text-gray-600 px-4 py-2">No members found.</li>
+          )}
+        </ul>
+
+        {guild.is_leader && guild.members?.length < 5 && (
+          <div className="text-xs text-indigo-700 text-center mt-4">
+            Invite more friends from the <span className="font-semibold">Friends</span> tab below.
+          </div>
+        )}
+      </div>
+    )}
+  </div>
 )}
-    </div>
-  );
-};
 
 
 const buyRegularItem = async ({ itemId, itemType, price, userId, pin }) => {
