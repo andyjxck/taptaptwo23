@@ -824,7 +824,6 @@ const [lastDailyClaim, setLastDailyClaim] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
     const [showRequests, setShowRequests] = useState(false);
 const [guild, setGuild] = useState(null);
-const [inviteToGuild, setInviteToGuild] = useState({});
 const inviteToGuild = async (friendId) => {
   if (!guild || !guild.id) return;
 
@@ -839,7 +838,7 @@ const inviteToGuild = async (friendId) => {
   } else {
     alert("Friend invited!");
     // Re-fetch guild data to update member list
-    window.location.reload(); // or you could re-call fetchGuildData()
+    await fetchGuildData() // or you could re-call fetchGuildData()
   }
 };
 
