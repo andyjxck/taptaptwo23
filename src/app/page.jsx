@@ -1204,8 +1204,6 @@ const [playBg] = useSound("/sounds/taptaptwobg.mp3", {
     }, 0);
   };
 const renderFriendsTab = () => {
-  const [activeTab, setActiveTab] = React.useState("friends"); // 'friends' or 'guilds'
-
   return (
     <div className={`${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow} max-w-xl mx-auto`}>
       {/* Tabs Header */}
