@@ -1613,7 +1613,9 @@ const renderFriendsTab = () => {
           )}
         </>
       )}
-
+      </div>
+  );
+  
 {activeTab === "guilds" && (
   <div className="w-full max-w-lg mx-auto bg-gradient-to-br from-indigo-50/80 to-white/30 rounded-2xl p-6 shadow-lg">
     <h2 className="text-3xl font-bold text-indigo-800 text-center mb-1 tracking-wide drop-shadow">
