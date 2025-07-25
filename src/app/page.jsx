@@ -967,31 +967,38 @@ useEffect(() => {
   }, [gameState.currentSeason, gameState.equippedTheme]);
 
 
-  const fetchGuildData = async () => {
-  if (!userId) return;
-
-  const { data, error } = await supabase
-    .from("guilds")
-    .select(`
-      id,
-      name,
-      icon,
-      leader_id,
-      users:user_id (
-        user_id,
-        profile_name,
-        profile_icon
-      )
-    `)
-    .eq("id", guildIdFromUser) // You may need to use a JOIN or separate query depending on your schema
+const fetchGuildData = async () => {
+  const { data: userData, error: userError } = await supabase
+    .from("users")
+    .select("guild_id, is_guild_leader")
+    .eq("user_id", storedUserId) // Or parseInt(storedUserId)
     .single();
 
-  if (error) {
-    console.error("Error fetching guild data:", error);
+  if (userError || !userData.guild_id) {
+    setGuild(null);
     return;
   }
 
-  setGuild(data);
+  const { data: guildData, error: guildError } = await supabase
+    .from("guilds")
+    .select("*")
+    .eq("id", userData.guild_id)
+    .single();
+
+  const { data: members, error: membersError } = await supabase
+    .from("users")
+    .select("user_id, profile_name, profile_icon")
+    .eq("guild_id", userData.guild_id);
+
+  if (!guildError && !membersError) {
+    setGuild({
+      id: guildData.id,
+      name: guildData.name,
+      leader_id: guildData.leader_id,
+      is_leader: userData.is_guild_leader,
+      members,
+    });
+  }
 };
 
   
@@ -1088,42 +1095,6 @@ useEffect(() => {
 
   setUserId(storedUserId);
   setPin(storedPin);
-
-  const fetchGuildData = async () => {
-    const { data: userData, error: userError } = await supabase
-      .from("users")
-      .select("guild_id, is_guild_leader")
-      .eq("user_id", storedUserId)
-      .single();
-
-    if (userError || !userData.guild_id) {
-      setGuild(null);
-      return;
-    }
-
-    const { data: guildData, error: guildError } = await supabase
-      .from("guilds")
-      .select("*")
-      .eq("id", userData.guild_id)
-      .single();
-
-    const { data: members, error: membersError } = await supabase
-      .from("users")
-      .select("user_id, profile_name, profile_icon")
-      .eq("guild_id", userData.guild_id);
-
-    if (!guildError && !membersError) {
-      setGuild({
-        id: guildData.id,
-        name: guildData.name,
-        leader_id: guildData.leader_id,
-        is_leader: userData.is_guild_leader,
-        members,
-      });
-    }
-  };
-
-  fetchGuildData();
 }, []);
 
 
