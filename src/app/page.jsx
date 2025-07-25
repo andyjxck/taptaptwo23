@@ -825,6 +825,23 @@ const [lastDailyClaim, setLastDailyClaim] = useState(0);
     const [showRequests, setShowRequests] = useState(false);
 const [guild, setGuild] = useState(null);
 const [inviteToGuild, setInviteToGuild] = useState({});
+const inviteToGuild = async (friendId) => {
+  if (!guild || !guild.id) return;
+
+  const { error } = await supabase
+    .from("users")
+    .update({ guild_id: guild.id })
+    .eq("user_id", friendId);
+
+  if (error) {
+    console.error("Error inviting friend:", error);
+    alert("Failed to invite friend to guild.");
+  } else {
+    alert("Friend invited!");
+    // Re-fetch guild data to update member list
+    window.location.reload(); // or you could re-call fetchGuildData()
+  }
+};
 
 
 
@@ -1027,7 +1044,7 @@ const [playBg] = useSound("/sounds/taptaptwobg.mp3", {
     tapSpeedBonus: "Increases tap speed, allowing more taps in less time.",
   };
 
- useEffect(() => {
+useEffect(() => {
   const storedUserId = localStorage.getItem("userId");
   const storedPin = localStorage.getItem("pin");
 
@@ -1039,31 +1056,43 @@ const [playBg] = useSound("/sounds/taptaptwobg.mp3", {
   setUserId(storedUserId);
   setPin(storedPin);
 
-  // Set up dummy guild for testing
-  setGuild({
-    id: 1,
-    name: "TapMasters",
-    leader_id: Number(storedUserId),
-    is_leader: true,
-    members: [
-      {
-        user_id: Number(storedUserId),
-        profile_name: "You",
-        profile_icon: 1,
-      },
-      {
-        user_id: 101,
-        profile_name: "Alice",
-        profile_icon: 2,
-      },
-    ],
-  });
+  const fetchGuildData = async () => {
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("guild_id, is_guild_leader")
+      .eq("user_id", storedUserId)
+      .single();
 
-  setInviteToGuild({
-    102: true,
-    103: true,
-  });
+    if (userError || !userData.guild_id) {
+      setGuild(null);
+      return;
+    }
+
+    const { data: guildData, error: guildError } = await supabase
+      .from("guilds")
+      .select("*")
+      .eq("id", userData.guild_id)
+      .single();
+
+    const { data: members, error: membersError } = await supabase
+      .from("users")
+      .select("user_id, profile_name, profile_icon")
+      .eq("guild_id", userData.guild_id);
+
+    if (!guildError && !membersError) {
+      setGuild({
+        id: guildData.id,
+        name: guildData.name,
+        leader_id: guildData.leader_id,
+        is_leader: userData.is_guild_leader,
+        members,
+      });
+    }
+  };
+
+  fetchGuildData();
 }, []);
+
 
 
  useEffect(() => {
@@ -1484,15 +1513,18 @@ const renderFriendsTab = () => {
                         Remove
                       </button>
 
-                      {guild?.is_leader && guild.members?.length < 5 && (
-                        <button
-                          onClick={() => inviteToGuild(friend.friend_id)}
-                          className="text-sm bg-indigo-500 text-white px-3 py-1 rounded hover:bg-indigo-600"
-                          title="Invite to your guild"
-                        >
-                          Invite to Guild
-                        </button>
-                      )}
+                      {guild?.is_leader &&
+  guild.members?.length < 5 &&
+  friend.guild_id == null && (
+    <button
+      onClick={() => inviteToGuild(friend.friend_id)}
+      className="text-sm bg-indigo-500 text-white px-3 py-1 rounded hover:bg-indigo-600"
+      title="Invite to your guild"
+    >
+      Invite to Guild
+    </button>
+)}
+
                     </div>
                   </div>
                 );
