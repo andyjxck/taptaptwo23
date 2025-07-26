@@ -1930,35 +1930,48 @@ const renderFriendsTab = () => {
         <span className="bg-indigo-50/60 text-indigo-900 font-bold text-lg rounded-xl px-4 py-1 border border-indigo-200 shadow">
           Guild Score: <span className="text-indigo-800">{guild.score || 0}</span>
         </span>
-      <button
+<button
   type="button"
   onClick={async () => {
     if (!userId || !guild) return;
 
-    // Leader is trying to leave
-    if (userId === guild.leader_id) {
-      // 1. Delete the guild
-      const { error: deleteError } = await supabase
+    const isLeader = userId === guild.leader_id;
+
+    if (isLeader) {
+      // 1. Kick all users out of the guild
+      const { error: clearUsersError } = await supabase
+        .from("users")
+        .update({ guild_id: null })
+        .eq("guild_id", guild.id);
+
+      // 2. Delete all related guild_invites
+      await supabase
+        .from("guild_invites")
+        .delete()
+        .eq("guild_id", guild.id);
+
+      // 3. Delete all related guild_chat messages
+      await supabase
+        .from("guild_chat")
+        .delete()
+        .eq("guild_id", guild.id);
+
+      // 4. Delete the actual guild
+      const { error: deleteGuildError } = await supabase
         .from("guilds")
         .delete()
         .eq("id", guild.id);
 
-      // 2. Remove user's guild_id
-      const { error: userError } = await supabase
-        .from("users")
-        .update({ guild_id: null })
-        .eq("user_id", userId);
-
-      if (deleteError || userError) {
-        setNotification("Failed to disband guild.");
+      if (clearUsersError || deleteGuildError) {
+        setNotification("Failed to disband the guild.");
       } else {
         setGuild(null);
         setNotification("Guild disbanded.");
-        fetchGuildData(userId); // Optional: refresh
+        fetchGuildData(userId);
       }
 
     } else {
-      // Normal member leaving guild
+      // Member leaving only
       const { error } = await supabase
         .from("users")
         .update({ guild_id: null })
@@ -1977,6 +1990,7 @@ const renderFriendsTab = () => {
 >
   Leave Guild
 </button>
+
       </div>
     )}
 
