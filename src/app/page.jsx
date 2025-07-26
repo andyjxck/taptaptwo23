@@ -1244,7 +1244,12 @@ const fetchMessages = async () => {
   const { data, error } = await supabase
     .from("guild_chat")
     .select(`
-      *,
+      id,
+      message,
+      inserted_at,
+      users:user_id (
+        user_id
+      ),
       game_saves:user_id (
         profile_name,
         profile_icon
@@ -1256,11 +1261,17 @@ const fetchMessages = async () => {
 
   if (!error && data) {
     const formatted = data.map((msg) => ({
-      ...msg,
+      id: msg.id,
+      message: msg.message,
+      inserted_at: msg.inserted_at,
+      user_id: msg.users?.user_id ?? msg.user_id,
       profile_name: msg.game_saves?.profile_name || "Unknown",
       profile_icon: msg.game_saves?.profile_icon || null,
     }));
     setGuildMessages(formatted);
+  } else {
+    setGuildMessages([]); // Clear if error to avoid stale data
+    console.error("Failed to fetch messages", error);
   }
 };
 
@@ -1268,38 +1279,6 @@ useEffect(() => {
   if (!guild?.id) return;
 
   fetchMessages();
-
- useEffect(() => {
-  if (!guild?.id) return;
-
-  const fetchAndAddMessage = async (msgId) => {
-    const { data, error } = await supabase
-      .from('guild_chat')
-      .select(`
-        *,
-        users:user_id (
-          user_id
-        ),
-        game_saves:user_id (
-          profile_name,
-          profile_icon
-        )
-      `)
-      .eq('id', msgId)
-      .single();
-
-    if (!error && data) {
-      setGuildMessages((prev) => [
-        ...prev,
-        {
-          ...data,
-          user_id: data.users?.user_id || data.user_id, // fallback if no join
-          profile_name: data.game_saves?.profile_name || "Unknown",
-          profile_icon: data.game_saves?.profile_icon || null,
-        }
-      ]);
-    }
-  };
 
   const channel = supabase
     .channel(`guild_chat_${guild.id}`)
@@ -1312,7 +1291,36 @@ useEffect(() => {
         filter: `guild_id=eq.${guild.id}`,
       },
       async (payload) => {
-        await fetchAndAddMessage(payload.new.id);
+        const { data, error } = await supabase
+          .from('guild_chat')
+          .select(`
+            id,
+            message,
+            inserted_at,
+            users:user_id (
+              user_id
+            ),
+            game_saves:user_id (
+              profile_name,
+              profile_icon
+            )
+          `)
+          .eq('id', payload.new.id)
+          .single();
+
+        if (!error && data) {
+          setGuildMessages((prev) => [
+            ...prev,
+            {
+              id: data.id,
+              message: data.message,
+              inserted_at: data.inserted_at,
+              user_id: data.users?.user_id ?? data.user_id,
+              profile_name: data.game_saves?.profile_name || "Unknown",
+              profile_icon: data.game_saves?.profile_icon || null,
+            }
+          ]);
+        }
       }
     )
     .subscribe();
@@ -1321,7 +1329,7 @@ useEffect(() => {
     supabase.removeChannel(channel);
   };
 }, [guild?.id]);
-
+;
   const [notification, setNotification] = useState(null);
 const [showRaindrops, setRainDrops] = useState([]);
   const [showStats, setShowStats] = useState(false);
