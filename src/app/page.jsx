@@ -1612,20 +1612,22 @@ const handleCreateGuild = async (e) => {
   };
 
   const leaveGuild = async () => {
-  if (!guild || !userId) return;
-  // Remove user from guild (set their guild_id to null)
+  if (!userId) return;
+
   const { error } = await supabase
     .from("users")
-    .update({ guild_id: null })
-    .eq("user_id", userId);
+    .update({ guild_id: null })        // remove guild assignment
+    .eq("user_id", userId);            // target the current player only
+
   if (error) {
     setNotification("Failed to leave guild.");
   } else {
-    setGuild(null);
+    setGuild(null);                    // clear local guild state
     setNotification("You left the guild.");
-    fetchGuildData(userId); // Refresh guild data
+    fetchGuildData(userId);           // refresh user’s new state
   }
 };
+
 
   
 const renderFriendsTab = () => {
