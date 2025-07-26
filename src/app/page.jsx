@@ -1076,6 +1076,12 @@ const fetchGuildData = async (id = userId) => {
 
   const totalScore = members.reduce((sum, m) => sum + (m.house_level || 0), 0);
 
+  // 5. Update guild score in database
+await supabase
+  .from("guilds")
+  .update({ score: totalScore })
+  .eq("id", guildData.id);
+
   // 6. Set state
   if (!guildError) {
     setGuild({
