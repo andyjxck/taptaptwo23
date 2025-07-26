@@ -4186,7 +4186,7 @@ const [leaderboardData, setLeaderboardData] = useState({
   renown: [],
   coins: [],
   totalTaps: [],
-  highestHouseLevel: [],  // <-- Add this line
+  guilds: [],
 });
 
 useEffect(() => {
@@ -4215,7 +4215,7 @@ useEffect(() => {
         renown: data.renown || [],
         coins: data.coins || [],
         totalTaps: data.totalTaps || [],
-        highestHouseLevel: data.highestHouseLevel || [],
+        guilds: data.guilds || [],
       });
     } catch (error) {
       console.error("Error fetching leaderboard:", error);
@@ -4226,7 +4226,6 @@ useEffect(() => {
   const interval = setInterval(fetchLeaderboard, 5000);
   return () => clearInterval(interval);
 }, [userId, pin, activeTab]);
-
 
 const renderLeaderboard = () => (
   <>
@@ -4244,7 +4243,7 @@ const renderLeaderboard = () => (
           <option value="renown">Most Renown Tokens</option>
           <option value="coins">Most Coins Earned</option>
           <option value="totalTaps">Most Taps</option>
-          <option value="highestHouseLevel">Highest House Level</option> {/* <-- New option */}
+          <option value="guilds">Top Guild Scores</option>
         </select>
       </div>
 
@@ -4253,6 +4252,50 @@ const renderLeaderboard = () => (
           const iconObj = PROFILE_ICONS.find((ic) => ic.id === entry.profile_icon);
           const rankStr = index === 0 ? "👑" : `#${index + 1}`;
 
+          // Guild leaderboard display
+          if (leaderboardType === "guilds") {
+            return (
+              <div
+                key={entry.guild_id || entry.guild_name}
+                className="flex justify-between items-center bg-white/10 rounded-lg p-3"
+              >
+                <div className="flex items-center">
+                  <span
+                    className={`text-lg font-medium mr-2 ${
+                      index === 0
+                        ? "text-yellow-500"
+                        : index === 1
+                        ? "text-green-500"
+                        : index === 2
+                        ? "text-blue-500"
+                        : "text-black"
+                    }`}
+                  >
+                    {rankStr}
+                  </span>
+
+                  {entry.guild_icon ? (
+                    <img
+                      src={`/images/guild-icons/${entry.guild_icon}.png`}
+                      alt={entry.guild_name}
+                      className="w-8 h-8 rounded-full object-cover mr-2"
+                      title={entry.guild_name}
+                    />
+                  ) : (
+                    <i className="fas fa-users text-gray-400 text-2xl mr-2"></i>
+                  )}
+
+                  <span className="text-lg font-medium">{entry.guild_name}</span>
+                </div>
+
+                <span className="font-medium text-[#2d3748]">
+                  {formatNumberShort(entry.guild_score || 0)} points
+                </span>
+              </div>
+            );
+          }
+
+          // Player leaderboards (renown, coins, taps)
           return (
             <div
               key={entry.user_id}
@@ -4304,8 +4347,6 @@ const renderLeaderboard = () => (
                   ? `${formatNumberShort(Math.floor(entry.total_coins_earned))} coins`
                   : leaderboardType === "totalTaps"
                   ? `${formatNumberShort(entry.total_taps || 0)} taps`
-                  : leaderboardType === "highestHouseLevel"
-                  ? `Level ${entry.highest_house_level}` // <-- New display for highestHouseLevel
                   : null}
               </span>
             </div>
