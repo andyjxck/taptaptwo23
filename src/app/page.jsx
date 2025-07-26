@@ -6700,7 +6700,6 @@ const renderLeaderboard = () => (
     </button>
   </div>
 </div>
-  }}
   
 {showResetModal && renderResetModal()}
 {showHouseRenameModal && renderHouseRenameModal()}
