@@ -1786,9 +1786,7 @@ const renderFriendsTab = () => {
     {guild && (
       <div className="flex flex-col sm:flex-row sm:justify-between items-center mt-2 mb-4 gap-2">
         <span className="bg-indigo-50/60 text-indigo-900 font-bold text-lg rounded-xl px-4 py-1 border border-indigo-200 shadow">
-          Guild Score: <span className="text-indigo-800">{guild.members
-            ? guild.members.reduce((total, member) => total + (member.house_level || 0), 0)
-            : 0}</span>
+          Guild Score: <span className="text-indigo-800">{guild.score || 0}</span>
         </span>
         <button
           className="bg-red-500/80 hover:bg-red-700 text-white px-4 py-1 rounded-full text-sm shadow active:scale-95 transition"
@@ -4277,16 +4275,11 @@ const renderLeaderboard = () => (
                     {rankStr}
                   </span>
 
-                  {entry.guild_icon ? (
-                    <img
-                      src={`/images/guild-icons/${entry.guild_icon}.png`}
-                      alt={entry.guild_name}
-                      className="w-8 h-8 rounded-full object-cover mr-2"
-                      title={entry.guild_name}
-                    />
-                  ) : (
-                    <i className="fas fa-users text-gray-400 text-2xl mr-2"></i>
-                  )}
+                  <i
+  className={`fas fa-${entry.guild_icon || "users"} text-indigo-800 text-xl mr-2`}
+  title={entry.guild_name}
+/>
+
 
                   <span className="text-lg font-medium">{entry.guild_name}</span>
                 </div>
