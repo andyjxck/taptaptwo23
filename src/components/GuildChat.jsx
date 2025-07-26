@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useGuildChat } from '@/hooks/useGuildChat';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/utilities/supabaseClient';
 
 export default function GuildChat({ guildId, userId, profile_name, profile_icon }) {
   const messages = useGuildChat(guildId);
