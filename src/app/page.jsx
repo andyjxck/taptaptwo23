@@ -3631,13 +3631,6 @@ const loadGame = async () => {
           String(data.gameState.lastDailyClaim)
         );
       }
-      // ...handle more post-load logic here as needed
-  } catch (error) {
-    // Optionally handle errors here
-  } finally {
-    setLoading(false);
-  }
-};
 
 const lastActive = Number(localStorage.getItem("lastActiveTime"));
 if (lastActive && !isNaN(lastActive)) {
