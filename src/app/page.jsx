@@ -1930,14 +1930,14 @@ const renderFriendsTab = () => {
         <span className="bg-indigo-50/60 text-indigo-900 font-bold text-lg rounded-xl px-4 py-1 border border-indigo-200 shadow">
           Guild Score: <span className="text-indigo-800">{guild.score || 0}</span>
         </span>
-        <button
-          className="bg-red-500/80 hover:bg-red-700 text-white px-4 py-1 rounded-full text-sm shadow active:scale-95 transition"
-          onClick={leaveGuild}
-          disabled={guild.is_leader}
-          title={guild.is_leader ? "Leaders cannot leave (must transfer or disband)" : "Leave Guild"}
-        >
-          Leave Guild
-        </button>
+       <button
+  onClick={leaveGuild}
+  disabled={guild?.is_leader === true}
+  className="bg-red-500/80 hover:bg-red-700 text-white px-4 py-1 rounded-full text-sm shadow active:scale-95 transition"
+  title={guild?.is_leader === true ? "Leaders cannot leave (must transfer or disband)" : "Leave Guild"}
+>
+  Leave Guild
+</button>
       </div>
     )}
 
