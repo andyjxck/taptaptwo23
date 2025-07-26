@@ -6634,75 +6634,74 @@ const renderLeaderboard = () => (
 ) : null}
   </div>
 </div>
-
-{/* Toggle button */}
-<div className="fixed bottom-0 inset-x-0 flex justify-center z-50">
+{/* Fixed Bottom Toggle Button */}
+<div className="fixed bottom-0 inset-x-0 z-50 flex justify-center">
   <button
     onClick={() => setMenuOpen(!menuOpen)}
-    className="bg-black/70 text-white px-4 py-1 rounded-t-md text-xs shadow-md"
+    className={`${glassStyle} bg-white/60 text-gray-700 px-4 py-1 rounded-t-xl text-xs shadow-md backdrop-blur-md border border-white/30 transition`}
   >
     {menuOpen ? "▼ Hide" : "▲ Menu"}
   </button>
 </div>
 
-{/* Bottom Menu Content */}
-{menuOpen && (
-  <div
-    className={`${glassStyle} bg-white/20 rounded-t-2xl ${buttonGlow} p-2 pb-4 fixed bottom-6 inset-x-0 z-40 max-w-md w-full mx-auto`}
-    style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
-  >
-    <div className="flex flex-wrap justify-center gap-2 sm:space-x-4">
-      <button
-        onClick={() => setActiveTab("game")}
-        className={`w-20 py-3 rounded-xl transition-all duration-200 ${
-          activeTab === "game"
-            ? "bg-white/40 text-[#2d3748] shadow-md"
-            : "text-[#4a5568] hover:bg-white/20"
-        } flex flex-col items-center justify-center`}
-      >
-        <i className="fas fa-gamepad"></i>
-        <span className="text-xs mt-1">Game</span>
-      </button>
+{/* Bottom Menu (ALWAYS fixed to bottom) */}
+<div
+  className={`${glassStyle} bg-white/30 backdrop-blur-md rounded-t-2xl ${buttonGlow} p-2 pb-4 fixed bottom-6 inset-x-0 z-40 max-w-md w-full mx-auto transition-all duration-300 ${
+    menuOpen ? "translate-y-0" : "translate-y-full"
+  }`}
+>
+  <div className="flex flex-wrap justify-center gap-2 sm:space-x-4">
+    <button
+      onClick={() => setActiveTab("game")}
+      className={`w-20 py-3 rounded-xl transition-all duration-200 ${
+        activeTab === "game"
+          ? "bg-white/40 text-[#2d3748] shadow-md"
+          : "text-[#4a5568] hover:bg-white/20"
+      } flex flex-col items-center justify-center`}
+    >
+      <i className="fas fa-gamepad"></i>
+      <span className="text-xs mt-1">Game</span>
+    </button>
 
-      <button
-        onClick={() => setActiveTab("house")}
-        className={`w-20 py-3 rounded-xl transition-all duration-200 ${
-          activeTab === "house"
-            ? "bg-white/40 text-[#2d3748] shadow-md"
-            : "text-[#4a5568] hover:bg-white/20"
-        } flex flex-col items-center justify-center`}
-      >
-        <i className="fas fa-home"></i>
-        <span className="text-xs mt-1">House</span>
-      </button>
+    <button
+      onClick={() => setActiveTab("house")}
+      className={`w-20 py-3 rounded-xl transition-all duration-200 ${
+        activeTab === "house"
+          ? "bg-white/40 text-[#2d3748] shadow-md"
+          : "text-[#4a5568] hover:bg-white/20"
+      } flex flex-col items-center justify-center`}
+    >
+      <i className="fas fa-home"></i>
+      <span className="text-xs mt-1">House</span>
+    </button>
 
-      <button
-        onClick={() => setActiveTab("shop")}
-        className={`w-20 py-3 rounded-xl transition-all duration-200 ${
-          activeTab === "shop"
-            ? "bg-white/40 text-[#e11d48] shadow-md"
-            : "text-[#e11d48] hover:bg-white/20"
-        } flex flex-col items-center justify-center`}
-      >
-        <i className="fas fa-store"></i>
-        <span className="text-xs mt-1">Shop</span>
-      </button>
+    <button
+      onClick={() => setActiveTab("shop")}
+      className={`w-20 py-3 rounded-xl transition-all duration-200 ${
+        activeTab === "shop"
+          ? "bg-white/40 text-[#e11d48] shadow-md"
+          : "text-[#e11d48] hover:bg-white/20"
+      } flex flex-col items-center justify-center`}
+    >
+      <i className="fas fa-store"></i>
+      <span className="text-xs mt-1">Shop</span>
+    </button>
 
-      <button
-        onClick={() => setActiveTab("friends")}
-        className={`w-20 py-3 rounded-xl transition-all duration-200 ${
-          activeTab === "friends"
-            ? "bg-white/40 text-[#2d3748] shadow-md"
-            : "text-[#4a5568] hover:bg-white/20"
-        } flex flex-col items-center justify-center`}
-      >
-        <i className="fas fa-users"></i>
-        <span className="text-xs mt-1">Friends</span>
-      </button>
-    </div>
+    <button
+      onClick={() => setActiveTab("friends")}
+      className={`w-20 py-3 rounded-xl transition-all duration-200 ${
+        activeTab === "friends"
+          ? "bg-white/40 text-[#2d3748] shadow-md"
+          : "text-[#4a5568] hover:bg-white/20"
+      } flex flex-col items-center justify-center`}
+    >
+      <i className="fas fa-users"></i>
+      <span className="text-xs mt-1">Friends</span>
+    </button>
   </div>
-)}
-
+</div>
+  }}
+  
 {showResetModal && renderResetModal()}
 {showHouseRenameModal && renderHouseRenameModal()}
 {showOfflineEarnings && pendingOfflineEarnings && (
