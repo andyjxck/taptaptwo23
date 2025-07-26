@@ -1241,16 +1241,15 @@ const fetchGuildInvites = async () => {
 
 const fetchMessages = async () => {
   if (!guild?.id) return;
+
   const { data, error } = await supabase
     .from("guild_chat")
     .select(`
       id,
       message,
       inserted_at,
-      users:user_id (
-        user_id
-      ),
-      game_saves:user_id (
+      user_id,
+      game_saves:game_saves!fk_guild_chat_user_to_game_saves (
         profile_name,
         profile_icon
       )
@@ -1264,9 +1263,9 @@ const fetchMessages = async () => {
       id: msg.id,
       message: msg.message,
       inserted_at: msg.inserted_at,
-      user_id: msg.users?.user_id ?? msg.user_id, // ALWAYS FROM USERS
-      profile_name: msg.game_saves?.profile_name || "Unknown", // ONLY FROM GAME_SAVES
-      profile_icon: msg.game_saves?.profile_icon || null,      // ONLY FROM GAME_SAVES
+      user_id: msg.user_id,
+      profile_name: msg.game_saves?.profile_name || "Unknown",
+      profile_icon: msg.game_saves?.profile_icon || null,
     }));
     setGuildMessages(formatted);
   } else {
@@ -1297,10 +1296,8 @@ useEffect(() => {
             id,
             message,
             inserted_at,
-            users:user_id (
-              user_id
-            ),
-            game_saves:user_id (
+            user_id,
+            game_saves:game_saves!fk_guild_chat_user_to_game_saves (
               profile_name,
               profile_icon
             )
@@ -1315,9 +1312,9 @@ useEffect(() => {
               id: data.id,
               message: data.message,
               inserted_at: data.inserted_at,
-              user_id: data.users?.user_id ?? data.user_id, // FROM USERS
-              profile_name: data.game_saves?.profile_name || "Unknown", // FROM GAME_SAVES
-              profile_icon: data.game_saves?.profile_icon || null,      // FROM GAME_SAVES
+              user_id: data.user_id,
+              profile_name: data.game_saves?.profile_name || "Unknown",
+              profile_icon: data.game_saves?.profile_icon || null,
             }
           ]);
         }
@@ -1329,7 +1326,7 @@ useEffect(() => {
     supabase.removeChannel(channel);
   };
 }, [guild?.id]);
-;
+
   const [notification, setNotification] = useState(null);
 const [showRaindrops, setRainDrops] = useState([]);
   const [showStats, setShowStats] = useState(false);
