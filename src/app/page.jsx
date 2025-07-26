@@ -1344,7 +1344,8 @@ useEffect(() => {
 }, [guild?.id]);
 const [menuOpen, setMenuOpen] = useState(true); // open by default
   const [notification, setNotification] = useState(null);
-const [RainDrops, setRainDrops] = useState([]);
+
+  const [rainDrops, setRainDrops] = React.useState([]);
   const [showStats, setShowStats] = useState(false);
   const [activeTheme, setActiveTheme] = React.useState("heaven");
   const [showFeedback, setShowFeedback] = useState(false);
