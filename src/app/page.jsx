@@ -2112,9 +2112,10 @@ const renderFriendsTab = () => {
         <p className="text-center text-gray-600 text-sm italic">No messages yet.</p>
       ) : (
         guildMessages.map((msg, i) => {
-          const iconId = msg.game_saves?.profile_icon;
-          const icon = PROFILE_ICONS.find(ic => ic.id === iconId);
-          const name = msg.game_saves?.profile_name || "Unknown";
+      const iconId = msg.profile_icon;
+const icon = PROFILE_ICONS.find(ic => ic.id === iconId);
+const name = msg.profile_name || "Unknown";
+
 
           return (
             <div
