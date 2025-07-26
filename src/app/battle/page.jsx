@@ -156,102 +156,91 @@ const getAiAutoTapperCost = () =>
 React.useEffect(() => {
   if (gamePhase !== "playing" || gameMode !== "ai" || !currentRoom) return;
 
-  const upgradeInterval = 5000; // every 5 seconds
-  let isCancelled = false;
+const upgradeInterval = aiDifficulty === "hard" ? 2000 : aiDifficulty === "medium" ? 3000 : 4000;
+let isCancelled = false;
 
-  const upgradeTimer = setInterval(async () => {
-    // Read current state from refs
-    let coins = aiCoinsRef.current;
-    let tapPowerLevel = aiTapPowerLevelRef.current;
-    let critLevel = aiCritLevelRef.current;
-    let tapSpeedLevel = aiTapSpeedLevelRef.current;
-    let autoTapperLevel = aiAutoTapperLevelRef.current;
+const upgradeTimer = setInterval(async () => {
+  let coins = aiCoinsRef.current;
+  let tapPowerLevel = aiTapPowerLevelRef.current;
+  let critLevel = aiCritLevelRef.current;
+  let tapSpeedLevel = aiTapSpeedLevelRef.current;
+  let autoTapperLevel = aiAutoTapperLevelRef.current;
 
-    let didUpgrade = false;
+  let didUpgrade = false;
 
-    // Costs
-    const tapPowerCost = Math.floor(10 * Math.pow(1.3, tapPowerLevel - 1));
-    const critCost = Math.floor(25 * Math.pow(1.4, critLevel));
-    const tapSpeedCost = Math.floor(50 * Math.pow(1.6, tapSpeedLevel));
-    const autoTapperCost = Math.floor(100 * Math.pow(1.45, autoTapperLevel));
+  const tapPowerCost = Math.floor(10 * Math.pow(1.3, tapPowerLevel - 1));
+  const critCost = Math.floor(25 * Math.pow(1.4, critLevel));
+  const tapSpeedCost = Math.floor(50 * Math.pow(1.6, tapSpeedLevel));
+  const autoTapperCost = Math.floor(100 * Math.pow(1.45, autoTapperLevel));
 
-    // Clone new stats to update
-    let newAiCoins = coins;
-    let newTapPower = aiTapPowerRef.current;
-    let newTapPowerLvl = tapPowerLevel;
-    let newCritChance = aiCritChanceRef.current;
-    let newCritLvl = critLevel;
-    let newTapSpeedBonus = aiTapSpeedBonusRef.current;
-    let newTapSpeedLvl = tapSpeedLevel;
-    let newAutoTapper = aiAutoTapperRef.current;
-    let newAutoTapperLvl = autoTapperLevel;
+  let newAiCoins = coins;
+  let newTapPower = aiTapPowerRef.current;
+  let newTapPowerLvl = tapPowerLevel;
+  let newCritChance = aiCritChanceRef.current;
+  let newCritLvl = critLevel;
+  let newTapSpeedBonus = aiTapSpeedBonusRef.current;
+  let newTapSpeedLvl = tapSpeedLevel;
+  let newAutoTapper = aiAutoTapperRef.current;
+  let newAutoTapperLvl = autoTapperLevel;
 
-    // Try to buy upgrades if enough coins
-    if (newAiCoins >= tapPowerCost) {
-      newAiCoins -= tapPowerCost;
-      newTapPower = newTapPower + Math.floor(newTapPower * 0.16) + 2;
-      newTapPowerLvl += 1;
-      didUpgrade = true;
-      setOpponentScore(prev => prev - tapPowerCost); // Deduct from score
-      console.log("✅ AI bought Tap Power. New Coins:", newAiCoins);
-    }
+  if (newAiCoins >= tapPowerCost) {
+    newAiCoins -= tapPowerCost;
+    newTapPower += 3 + Math.floor(newTapPowerLvl * 0.5); // ✅ fixed this line
+    newTapPowerLvl += 1;
+    didUpgrade = true;
+    setOpponentScore(prev => prev - tapPowerCost);
+  }
 
-    if (newAiCoins >= critCost && newCritChance < 100) {
-      newAiCoins -= critCost;
-      newCritChance = Math.min(newCritChance + 2 + Math.floor(newCritLvl / 3), 100);
-      newCritLvl += 1;
-      didUpgrade = true;
-      setOpponentScore(prev => prev - critCost); // Deduct from score
-      console.log("✅ AI bought Crit Chance. New Coins:", newAiCoins);
-    }
+  if (newAiCoins >= critCost && newCritChance < 100) {
+    newAiCoins -= critCost;
+    newCritChance = Math.min(newCritChance + 2 + Math.floor(newCritLvl / 3), 100);
+    newCritLvl += 1;
+    didUpgrade = true;
+    setOpponentScore(prev => prev - critCost);
+  }
 
-    if (newAiCoins >= tapSpeedCost) {
-      newAiCoins -= tapSpeedCost;
-      newTapSpeedBonus = newTapSpeedBonus + 25 + Math.floor(newTapSpeedLvl * 1.35);
-      newTapSpeedLvl += 1;
-      didUpgrade = true;
-      setOpponentScore(prev => prev - tapSpeedCost); // Deduct from score
-      console.log("✅ AI bought Tap Speed. New Coins:", newAiCoins);
-    }
+  if (newAiCoins >= tapSpeedCost) {
+    newAiCoins -= tapSpeedCost;
+    newTapSpeedBonus += 30 + Math.floor(newTapSpeedLvl * 1.5);
+    newTapSpeedLvl += 1;
+    didUpgrade = true;
+    setOpponentScore(prev => prev - tapSpeedCost);
+  }
 
-    if (newAiCoins >= autoTapperCost && newAutoTapper < 50000) {
-      newAiCoins -= autoTapperCost;
-      newAutoTapper = Math.min(newAutoTapper + 30 + Math.floor(newAutoTapperLvl * 1.38), 100000);
-      newAutoTapperLvl += 1;
-      didUpgrade = true;
-      setOpponentScore(prev => prev - autoTapperCost); // Deduct from score
-      console.log("✅ AI bought Auto Tapper. New Coins:", newAiCoins);
-    }
+  if (newAiCoins >= autoTapperCost && newAutoTapper < 50000) {
+    newAiCoins -= autoTapperCost;
+    newAutoTapper += 40 + Math.floor(newAutoTapperLvl * 1.8);
+    newAutoTapperLvl += 1;
+    didUpgrade = true;
+    setOpponentScore(prev => prev - autoTapperCost);
+  }
 
-    if (!didUpgrade) return;
-    if (isCancelled) return;
+  if (!didUpgrade || isCancelled) return;
 
-    // Update React state locally
-    setAiCoins(newAiCoins);
-    setAiTapPower(newTapPower);
-    setAiTapPowerLevel(newTapPowerLvl);
-    setAiCritChance(newCritChance);
-    setAiCritLevel(newCritLvl);
-    setAiTapSpeedBonus(newTapSpeedBonus);
-    setAiTapSpeedLevel(newTapSpeedLvl);
-    setAiAutoTapper(newAutoTapper);
-    setAiAutoTapperLevel(newAutoTapperLvl);
+  setAiCoins(newAiCoins);
+  setAiTapPower(newTapPower);
+  setAiTapPowerLevel(newTapPowerLvl);
+  setAiCritChance(newCritChance);
+  setAiCritLevel(newCritLvl);
+  setAiTapSpeedBonus(newTapSpeedBonus);
+  setAiTapSpeedLevel(newTapSpeedLvl);
+  setAiAutoTapper(newAutoTapper);
+  setAiAutoTapperLevel(newAutoTapperLvl);
 
-    // Sync to DB
-    await updateAIStatsInDB({
-      roomCode: currentRoom,
-      ai_coins: newAiCoins,
-      ai_tap_power: newTapPower,
-      ai_tap_power_level: newTapPowerLvl,
-      ai_crit_chance: newCritChance,
-      ai_crit_level: newCritLvl,
-      ai_tap_speed_bonus: newTapSpeedBonus,
-      ai_tap_speed_level: newTapSpeedLvl,
-      ai_auto_tapper: newAutoTapper,
-      ai_auto_tapper_level: newAutoTapperLvl,
-      player_score,
-    });
-  }, upgradeInterval);
+  await updateAIStatsInDB({
+    roomCode: currentRoom,
+    ai_coins: newAiCoins,
+    ai_tap_power: newTapPower,
+    ai_tap_power_level: newTapPowerLvl,
+    ai_crit_chance: newCritChance,
+    ai_crit_level: newCritLvl,
+    ai_tap_speed_bonus: newTapSpeedBonus,
+    ai_tap_speed_level: newTapSpeedLvl,
+    ai_auto_tapper: newAutoTapper,
+    ai_auto_tapper_level: newAutoTapperLvl,
+    player_score,
+  });
+}, upgradeInterval);
 
   return () => {
     isCancelled = true;
