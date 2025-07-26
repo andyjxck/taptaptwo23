@@ -2305,7 +2305,7 @@ const buyRegularItem = async ({ itemId, itemType, price, userId, pin }) => {
       if (newRenownTokens < 0) newRenownTokens = 0;
 
       // Update permanentMultiplier based on new renown tokens count (1.5% per token)
-      const newPermanentMultiplier = 1 + newRenownTokens * 0.015;
+      const newPermanentMultiplier = 1 + newRenownTokens * 0.018;
 
       const updated = {
         ...prev,
@@ -4274,10 +4274,8 @@ const handleReset = useCallback(() => {
     totalCoinsEarned: gameState.totalCoinsEarned, // Do not reset this
     coinsEarnedThisRun: 0, // Reset to zero on prestige
     resets: gameState.resets + 1,
-    houseLevel: 1,
     highestHouseLevel: newHighestHouseLevel, // Update highest house level here
-    houseCoinsMultiplier: 0,
-    permanentMultiplier: 1 + newRenownTotal * 0.015, // 5% bonus per Renown Token
+    permanentMultiplier: 1 + newRenownTotal * 0.018, // 5% bonus per Renown Token
     renownTokens: newRenownTotal,
     currentSeason: 0,
     currentYear: 0,
