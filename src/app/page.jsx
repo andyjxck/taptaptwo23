@@ -1074,7 +1074,9 @@ const fetchGuildData = async (id = userId) => {
     members = memberProfiles || [];
   }
 
-  // 5. Set state
+  const totalScore = members.reduce((sum, m) => sum + (m.house_level || 0), 0);
+
+  // 6. Set state
   if (!guildError) {
     setGuild({
       id: guildData.id,
@@ -1083,6 +1085,7 @@ const fetchGuildData = async (id = userId) => {
       leader_id: guildData.leader_id,
       is_leader: userData.is_guild_leader,
       members,
+      score: totalScore, // ← attached here
     });
   }
 };
