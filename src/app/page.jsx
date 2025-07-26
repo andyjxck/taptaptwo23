@@ -1032,7 +1032,6 @@ useEffect(() => {
     }));
   }, [gameState.currentSeason, gameState.equippedTheme]);
 
-
 const fetchGuildData = async (id = userId) => {
   if (!id) return;
 
@@ -1043,23 +1042,32 @@ const fetchGuildData = async (id = userId) => {
     .eq("user_id", parseInt(id))
     .single();
 
-  if (userError || !userData.guild_id) {
+  if (userError || !userData?.guild_id) {
+    console.warn("No guild found for this user.");
     setGuild(null);
     return;
   }
+
+  const guildId = userData.guild_id;
 
   // 2. Get the guild details
   const { data: guildData, error: guildError } = await supabase
     .from("guilds")
     .select("*")
-    .eq("id", userData.guild_id)
+    .eq("id", guildId)
     .single();
+
+  if (guildError || !guildData?.id) {
+    console.warn("Failed to fetch guild data:", guildError?.message || "No data returned");
+    setGuild(null);
+    return;
+  }
 
   // 3. Get all user_ids in this guild from users table
   const { data: guildUsers, error: guildUsersError } = await supabase
     .from("users")
     .select("user_id")
-    .eq("guild_id", userData.guild_id);
+    .eq("guild_id", guildId);
 
   const userIds = guildUsers?.map(u => u.user_id) || [];
 
@@ -1076,25 +1084,28 @@ const fetchGuildData = async (id = userId) => {
 
   const totalScore = members.reduce((sum, m) => sum + (m.house_level || 0), 0);
 
-  // 5. Update guild score in database
-await supabase
-  .from("guilds")
-  .update({ score: totalScore })
-  .eq("id", guildData.id);
+  // 5. Update guild score in database (if valid)
+  const { error: updateError } = await supabase
+    .from("guilds")
+    .update({ score: totalScore })
+    .eq("id", guildId);
 
-  // 6. Set state
-  if (!guildError) {
-    setGuild({
-      id: guildData.id,
-      name: guildData.name,
-      icon: guildData.icon,
-      leader_id: guildData.leader_id,
-      is_leader: userData.is_guild_leader,
-      members,
-      score: totalScore, // ← attached here
-    });
+  if (updateError) {
+    console.error("Failed to update guild score:", updateError.message);
   }
+
+  // 6. Set local state
+  setGuild({
+    id: guildData.id,
+    name: guildData.name,
+    icon: guildData.icon,
+    leader_id: guildData.leader_id,
+    is_leader: userData.is_guild_leader,
+    members,
+    score: totalScore,
+  });
 };
+
 
 
 
