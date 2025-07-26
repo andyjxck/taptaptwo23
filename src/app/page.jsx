@@ -3,7 +3,7 @@ import AdBanner from '../components/AdBanner';
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import useSound from "use-sound"; // 👈 add this line
 import { supabase } from "@/utilities/supabaseClient";
-
+import GuildChat from '@/components/GuildChat';
 
 // Generate 25 static stars (adjust count as you wish)
 const STATIC_STARS = Array.from({ length: 25 }, (_, i) => {
@@ -1257,6 +1257,9 @@ const [playBg] = useSound("/sounds/taptaptwobg.mp3", {
   const [showBonusModal, setShowBonusModal] = useState(false);
   const [bonusCooldown, setBonusCooldown] = useState(0);
   const DISCOUNT_FACTOR = 0.8; // 20% discount
+const [showGuildChat, setShowGuildChat] = useState(false);
+const [guildMessages, setGuildMessages] = useState([]);
+const [newMessage, setNewMessage] = useState("");
 
   const getNewWeather = useCallback(() => {
     const season = gameState.currentSeason ?? 0;
@@ -1961,6 +1964,95 @@ const renderFriendsTab = () => {
         )}
       </div>
     )}
+    {guild && (
+  <>
+    {/* Chat Toggle Button */}
+    <div className="mt-6 flex justify-center">
+      <button
+        onClick={() => setShowGuildChat(prev => !prev)}
+        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-full font-semibold shadow-md transition active:scale-95"
+      >
+        <i className="fas fa-comments mr-2" /> {showGuildChat ? "Hide Chat" : "Show Chat"}
+      </button>
+    </div>
+
+   {showGuildChat && (
+  <div className="mt-4 bg-white/40 backdrop-blur-xl rounded-2xl p-4 border border-indigo-200 shadow-lg max-h-[400px] flex flex-col space-y-3 overflow-hidden">
+    <div className="font-bold text-indigo-900 text-center text-lg mb-2 flex items-center justify-center gap-2">
+      <i className="fas fa-comments" /> Guild Chat
+    </div>
+
+    {/* Messages */}
+    <div className="flex-1 overflow-y-auto px-2 py-1 space-y-2">
+      {guildMessages.length === 0 ? (
+        <p className="text-center text-gray-600 text-sm italic">No messages yet.</p>
+      ) : (
+        guildMessages.map((msg, i) => {
+          const icon = PROFILE_ICONS.find(ic => ic.id === msg.profile_icon);
+
+          return (
+            <div
+              key={i}
+              className="flex items-start gap-2 bg-white/60 px-3 py-2 rounded-xl shadow text-sm text-indigo-800"
+            >
+              {/* Icon */}
+              {icon ? (
+                icon.image ? (
+                  <img
+                    src={icon.image}
+                    alt={icon.name}
+                    className="w-8 h-8 rounded-full object-cover border border-indigo-400"
+                    title={icon.name}
+                  />
+                ) : (
+                  <span className="text-lg">{icon.emoji}</span>
+                )
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-500 border border-indigo-300">
+                  <i className="fas fa-user" />
+                </div>
+              )}
+
+              {/* Message Content */}
+              <div className="flex-1">
+                <div className="flex justify-between">
+                  <span className="font-bold">{msg.sender_name}</span>
+                  <span className="text-xs text-gray-500">
+                    {new Date(msg.inserted_at).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                </div>
+                <p>{msg.message}</p>
+              </div>
+            </div>
+          );
+        })
+      )}
+    </div>
+
+    {/* Input field */}
+    <div className="flex items-center gap-2 pt-2">
+      <input
+        type="text"
+        value={newMessage}
+        onChange={e => setNewMessage(e.target.value)}
+        onKeyDown={e => e.key === "Enter" && handleSendMessage()}
+        placeholder="Type a message..."
+        className="flex-1 px-4 py-2 rounded-full bg-white/80 border border-indigo-300 text-sm text-gray-800"
+      />
+      <button
+        onClick={handleSendMessage}
+        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full text-sm font-semibold transition"
+      >
+        Send
+      </button>
+    </div>
+  </div>
+)}
+  </>
+)}
   </div>
 )}
 </div>
@@ -2548,6 +2640,50 @@ const handleBuyIcon = async (icon) => {
     : {
         backgroundImage: themeObj.background,
       };
+const handleSendMessage = async () => {
+  if (!newMessage.trim() || !guild?.id || !userId) return;
+
+  const { error } = await supabase.from("guild_chat").insert([
+    {
+      guild_id: guild.id,
+      sender_id: userId,
+      sender_name: profileName || "Anonymous",
+      message: newMessage.trim(),
+    },
+  ]);
+
+  if (!error) setNewMessage("");
+};
+useEffect(() => {
+  if (!guild?.id) return;
+
+  const loadChat = async () => {
+    const { data } = await supabase
+      .from("guild_chat")
+      .select("*")
+      .eq("guild_id", guild.id)
+      .order("inserted_at", { ascending: true })
+      .limit(100);
+
+    if (data) setGuildMessages(data);
+  };
+
+  loadChat();
+
+  const channel = supabase
+    .channel(`guild_chat_${guild.id}`)
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'guild_chat',
+      filter: `guild_id=eq.${guild.id}`,
+    }, (payload) => {
+      setGuildMessages(prev => [...prev, payload.new]);
+    })
+    .subscribe();
+
+  return () => supabase.removeChannel(channel);
+}, [guild?.id]);
 
  function equipShopBoost(boost) {
     setActiveShopBoosts((prev) => {
