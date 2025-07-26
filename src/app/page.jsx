@@ -2222,7 +2222,7 @@ const name = msg.profile_name || "Unknown";
   />
 
   <button
-    onClick={sendMessage}
+    onClick={handleSendMessage}
     className="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-md shadow hover:bg-indigo-700 transition"
   >
     Send
