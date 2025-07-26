@@ -1226,7 +1226,7 @@ const fetchGuildInvites = async () => {
     tapSpeedBonusUpgrades: "Tap Speed Bonus Upgrades",
   };
 
-  useEffect(() => {
+ useEffect(() => {
   if (!guild?.id) return;
 
   const fetchMessages = async () => {
@@ -1257,14 +1257,40 @@ const fetchGuildInvites = async () => {
 
   const channel = supabase
     .channel(`guild_chat_${guild.id}`)
-    .on('postgres_changes', {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'guild_chat',
-      filter: `guild_id=eq.${guild.id}`,
-    }, (payload) => {
-      setGuildMessages((prev) => [...prev, payload.new]);
-    })
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'guild_chat',
+        filter: `guild_id=eq.${guild.id}`,
+      },
+      async (payload) => {
+        // Fetch the inserted message with user join info
+        const { data, error } = await supabase
+          .from('guild_chat')
+          .select(`
+            *,
+            users:user_id (
+              profile_name,
+              profile_icon
+            )
+          `)
+          .eq('id', payload.new.id)
+          .single();
+
+        if (!error && data) {
+          setGuildMessages((prev) => [
+            ...prev,
+            {
+              ...data,
+              profile_name: data.users?.profile_name || "Unknown",
+              profile_icon: data.users?.profile_icon || null,
+            }
+          ]);
+        }
+      }
+    )
     .subscribe();
 
   return () => {
