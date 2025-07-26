@@ -22,19 +22,6 @@ async function handler({ action }) {
         LIMIT 100
       `;
 
-      const house = await sql`
-        SELECT 
-          user_id, 
-          profile_name, 
-          house_name, 
-          profile_icon, 
-          highest_house_level 
-        FROM game_saves
-        WHERE highest_house_level IS NOT NULL
-        ORDER BY highest_house_level DESC
-        LIMIT 100
-      `;
-
       const taps = await sql`
         SELECT user_id, profile_name, total_taps, profile_icon
         FROM game_saves
@@ -42,7 +29,19 @@ async function handler({ action }) {
         LIMIT 100
       `;
 
-      return { coins, renown, house, taps };
+      const guilds = await sql`
+        SELECT 
+          g.name AS guild_name,
+          SUM(u.house_level) AS guild_score
+        FROM users u
+        JOIN guilds g ON u.guild_id = g.id
+        WHERE u.guild_id IS NOT NULL
+        GROUP BY g.name
+        ORDER BY guild_score DESC
+        LIMIT 100
+      `;
+
+      return { coins, renown, taps, guilds };
     }
 
     default:
