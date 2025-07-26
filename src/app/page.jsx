@@ -14,7 +14,8 @@ const STATIC_STARS = Array.from({ length: 25 }, (_, i) => {
     top: `${Math.random() * 95 + 2}%`,
     left: `${Math.random() * 95 + 2}%`,
     size,
-    export const GUILD_ICONS = [
+
+const GUILD_ICONS = [
   { id: "tree", name: "Tree", emoji: "🌳" },
   { id: "seedling", name: "Seedling", emoji: "🌱" },
   { id: "cloudMoon", name: "Cloud Moon", emoji: "🌜" },
