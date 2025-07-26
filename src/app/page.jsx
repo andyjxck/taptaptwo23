@@ -1930,11 +1930,50 @@ const renderFriendsTab = () => {
         <span className="bg-indigo-50/60 text-indigo-900 font-bold text-lg rounded-xl px-4 py-1 border border-indigo-200 shadow">
           Guild Score: <span className="text-indigo-800">{guild.score || 0}</span>
         </span>
-       <button
-  onClick={leaveGuild}
-  disabled={guild?.is_leader === true}
-  className="bg-red-500/80 hover:bg-red-700 text-white px-4 py-1 rounded-full text-sm shadow active:scale-95 transition"
-  title={guild?.is_leader === true ? "Leaders cannot leave (must transfer or disband)" : "Leave Guild"}
+      <button
+  type="button"
+  onClick={async () => {
+    if (!userId || !guild) return;
+
+    // Leader is trying to leave
+    if (userId === guild.leader_id) {
+      // 1. Delete the guild
+      const { error: deleteError } = await supabase
+        .from("guilds")
+        .delete()
+        .eq("id", guild.id);
+
+      // 2. Remove user's guild_id
+      const { error: userError } = await supabase
+        .from("users")
+        .update({ guild_id: null })
+        .eq("user_id", userId);
+
+      if (deleteError || userError) {
+        setNotification("Failed to disband guild.");
+      } else {
+        setGuild(null);
+        setNotification("Guild disbanded.");
+        fetchGuildData(userId); // Optional: refresh
+      }
+
+    } else {
+      // Normal member leaving guild
+      const { error } = await supabase
+        .from("users")
+        .update({ guild_id: null })
+        .eq("user_id", userId);
+
+      if (error) {
+        setNotification("Failed to leave guild.");
+      } else {
+        setGuild(null);
+        setNotification("You left the guild.");
+        fetchGuildData(userId);
+      }
+    }
+  }}
+  className="bg-red-600 hover:bg-red-800 text-white px-4 py-2 rounded-full text-sm shadow active:scale-95 transition"
 >
   Leave Guild
 </button>
