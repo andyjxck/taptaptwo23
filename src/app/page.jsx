@@ -2505,7 +2505,7 @@ const handleBuyTheme = async (theme) => {
   // Deduct tokens and update multiplier immediately after purchase
   setGameState((prev) => {
     const newRenownTokens = prev.renownTokens - theme.price;
-    const newPermanentMultiplier = 1 + newRenownTokens * 0.015;
+    const newPermanentMultiplier = 1 + newRenownTokens * 0.018;
 
     const updated = {
       ...prev,
@@ -2545,7 +2545,7 @@ const handleBuyIcon = async (icon) => {
 
   setGameState((prev) => {
     const newRenownTokens = prev.renownTokens - icon.price;
-    const newPermanentMultiplier = 1 + newRenownTokens * 0.015;
+    const newPermanentMultiplier = 1 + newRenownTokens * 0.018;
 
     const updated = {
       ...prev,
@@ -3561,7 +3561,7 @@ const loadGame = async () => {
     if (data.gameState) {
       // Always calculate renownTokens and permanentMultiplier based on fresh data
       const renownTokens = Number(data.gameState.renown_tokens ?? data.gameState.renownTokens) || 0;
-      const permanentMultiplier = 1 + renownTokens * 0.015;
+      const permanentMultiplier = 1 + renownTokens * 0.018;
 
       setGameState({
         ...data.gameState,
