@@ -860,7 +860,6 @@ const seasonalWeatherTables = {
 function MainComponent() {
   const [userId, setUserId] = useState(null);
   const [pin, setPin] = useState(null);
-  const [guildMessages, setGuildMessages] = useState([]);
   const [showWeatherFlash, setShowWeatherFlash] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(true);
