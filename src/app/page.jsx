@@ -1120,9 +1120,9 @@ const inviteToGuild = async (friendId) => {
     ]);
 
   if (error) {
-    alert("Failed to send invite.");
+    setNotification("Failed to send invite.");
   } else {
-    alert("Guild invite sent!");
+    setNotification("Guild invite sent!");
   }
 };
 
@@ -1165,11 +1165,11 @@ const fetchGuildInvites = async () => {
     .eq("id", inviteId);
 
   if (!userErr && !inviteErr) {
-    alert("You joined the guild!");
+    setNotification("You joined the guild!");
     fetchGuildInvites(); // Refresh invites
     fetchGuildData();    // Refresh current guild
   } else {
-    alert("Failed to join the guild.");
+    setNotification("Failed to join the guild.");
   }
 };
 
@@ -1295,7 +1295,7 @@ const handleCreateGuild = async (e) => {
 
   if (guildError) {
     console.error("Error creating guild:", guildError);
-    alert("Failed to create guild.");
+    setNotification("Failed to create guild.");
     return;
   }
 
@@ -1310,11 +1310,11 @@ const handleCreateGuild = async (e) => {
 
   if (userError) {
     console.error("Error setting user to guild:", userError);
-    alert("Guild created but failed to join.");
+    setNotification("Guild created but failed to join.");
     return;
   }
 
-  alert("Guild created!");
+  setNotification("Guild created!");
 
   // Reset form state
   setCreatingGuild(false);
@@ -1476,10 +1476,10 @@ const handleCreateGuild = async (e) => {
     .update({ guild_id: null })
     .eq("user_id", userId);
   if (error) {
-    alert("Failed to leave guild.");
+    setNotification("Failed to leave guild.");
   } else {
     setGuild(null);
-    alert("You left the guild.");
+    setNotification("You left the guild.");
     fetchGuildData(userId); // Refresh guild data
   }
 };
