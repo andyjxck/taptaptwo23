@@ -2213,22 +2213,21 @@ const name = msg.profile_name || "Unknown";
     </div>
 
     {/* Input Field */}
-    <div className="flex items-center gap-2 pt-2">
-      <input
-        type="text"
-        value={newMessage}
-        onChange={e => setNewMessage(e.target.value)}
-        onKeyDown={e => e.key === "Enter" && handleSendMessage()}
-        placeholder="Type a message..."
-        className="flex-1 px-4 py-2 rounded-full bg-white/80 border border-indigo-300 text-sm text-gray-800"
-      />
-      <button
-        onClick={handleSendMessage}
-        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full text-sm font-semibold transition"
-      >
-        Send
-      </button>
-    </div>
+    <div className="mt-2 space-y-2 sm:flex sm:items-center sm:space-y-0 sm:space-x-2">
+  <input
+    value={newMessage}
+    onChange={(e) => setNewMessage(e.target.value)}
+    className="w-full px-4 py-2 rounded-md bg-white/90 text-black placeholder-gray-500 focus:outline-none"
+    placeholder="Type a message..."
+  />
+
+  <button
+    onClick={sendMessage}
+    className="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-md shadow hover:bg-indigo-700 transition"
+  >
+    Send
+  </button>
+</div>
   </div>
 )}
 
@@ -5453,106 +5452,98 @@ const renderLeaderboard = () => (
   }
 
     // ---- MAIN SHOP RETURN ----
-    return (
-      <div className="max-w-md mx-auto mt-6">
-        {/* Weather */}
-        <div className="flex flex-col items-center justify-center mb-4">
-          <div className="text-lg font-bold mb-1">
-            Weather:{" "}
-            {typeof gameState.currentWeather === "string"
-              ? gameState.currentWeather
-              : "Clear"}
-          </div>
-          <div className="text-sm text-red-500 mb-3">{weatherDescription}</div>
-        </div>
-
-        {/* Show active boost if present */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {activeShopBoosts.map((b) => (
-            <div
-              key={b.id}
-              className="px-3 py-1 rounded-xl bg-gradient-to-br from-purple-400/80 to-purple-700/80 text-white font-semibold shadow text-sm flex items-center"
-              style={{ minWidth: "110px" }}
-            >
-              <span className="mr-2">{b.name}</span>
-              {b.expires && (
-                <span className="ml-auto text-yellow-200 font-bold">
-                  {Math.max(0, Math.floor((b.expires - Date.now()) / 60000))}m
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Stats Row */}
-        <div className="flex justify-center gap-4 mb-6">
-          <div
-            className={`${glassStyle} bg-white/80 rounded-2xl p-4 border border-gray-200 flex flex-col items-center w-36`}
-          >
-            <span className="text-3xl">🪙</span>
-            <span className="text-lg font-semibold mt-1 text-yellow-600">
-              {formatNumberShort(Math.floor(gameState.coins))}
-            </span>
-            <span className="text-xs text-yellow-600 mt-1">Coins</span>
-          </div>
-          <div
-            className={`${glassStyle} bg-white/80 rounded-2xl p-4 border border-gray-200 flex flex-col items-center w-36`}
-          >
-            <span className="text-3xl">⭐</span>
-            <span className="text-lg font-semibold mt-1 text-[#e11d48]">
-              {Math.floor(gameState.renownTokens)}
-            </span>
-            <span className="text-xs text-[#e11d48] mt-1">Renown Tokens</span>
-          </div>
-        </div>
-<AdBanner />
-        
-        {/* Main Shop Box */}
-        <div className={`${glassStyle} bg-white/80 rounded-2xl p-6 relative`}>
-          {/* Backpack Button */}
-          <button
-            onClick={() => setShopView("inventory")}
-            className="absolute right-4 top-4 p-2 rounded-full bg-white/30 border border-white/30 shadow-md backdrop-blur-lg hover:scale-110 transition z-20"
-            style={{ fontSize: 26 }}
-          >
-            🎒
-          </button>
-          <h2 className="text-2xl font-bold text-[#e11d48] mb-6">Shop</h2>
-          {/* Tabs (glassy style) */}
-          <div className="flex justify-center space-x-3 mb-6 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300">
-            {tabs.map((t) => (
-              <button
-                key={t.id}
-                className={`
-                px-5 py-2 rounded-xl font-semibold shadow border bg-white/20
-                backdrop-blur-lg
-                ${t.color}
-                ${
-                  shopView === t.id
-                    ? "ring-2 ring-offset-2 " + t.color.split(" ")[2]
-                    : "hover:bg-white/30"
-                }
-                transition
-              `}
-                onClick={() => setShopView(t.id)}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-          {/* Tab Content */}
-          <div
-            className="overflow-y-auto"
-            style={{
-              height: "50vh", // <---- force fixed height
-              paddingRight: "2px",
-            }}
-          >
-            {tabContent}
-          </div>
-        </div>
+   return (
+  <div className="max-w-md mx-auto mt-6 px-2 sm:px-0">
+    {/* Weather */}
+    <div className="flex flex-col items-center justify-center mb-4">
+      <div className="text-lg font-bold mb-1">
+        Weather:{" "}
+        {typeof gameState.currentWeather === "string"
+          ? gameState.currentWeather
+          : "Clear"}
       </div>
-    );
+      <div className="text-sm text-red-500 mb-3">{weatherDescription}</div>
+    </div>
+
+    {/* Active Boosts */}
+    <div className="flex flex-wrap gap-2 mb-4 justify-center">
+      {activeShopBoosts.map((b) => (
+        <div
+          key={b.id}
+          className="px-3 py-1 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 text-white font-semibold shadow text-sm flex items-center"
+          style={{ minWidth: "110px" }}
+        >
+          <span className="mr-2">{b.name}</span>
+          {b.expires && (
+            <span className="ml-auto text-yellow-200 font-bold">
+              {Math.max(0, Math.floor((b.expires - Date.now()) / 60000))}m
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+
+    {/* Coins + Renown */}
+    <div className="flex justify-center gap-4 mb-6">
+      <div className={`${glassStyle} bg-white/20 rounded-2xl p-4 border border-white/30 flex flex-col items-center w-36`}>
+        <span className="text-3xl">🪙</span>
+        <span className="text-lg font-semibold mt-1 text-yellow-300">
+          {formatNumberShort(Math.floor(gameState.coins))}
+        </span>
+        <span className="text-xs text-yellow-300 mt-1">Coins</span>
+      </div>
+      <div className={`${glassStyle} bg-white/20 rounded-2xl p-4 border border-white/30 flex flex-col items-center w-36`}>
+        <span className="text-3xl">⭐</span>
+        <span className="text-lg font-semibold mt-1 text-pink-400">
+          {Math.floor(gameState.renownTokens)}
+        </span>
+        <span className="text-xs text-pink-400 mt-1">Renown</span>
+      </div>
+    </div>
+
+    <AdBanner />
+
+    {/* Main Shop */}
+    <div className={`${glassStyle} bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 rounded-2xl p-6 relative border border-white/10`}>
+      {/* Inventory button */}
+      <button
+        onClick={() => setShopView("inventory")}
+        className="absolute right-4 top-4 p-2 rounded-full bg-white/30 border border-white/30 shadow-md backdrop-blur-lg hover:scale-110 transition z-20"
+        style={{ fontSize: 26 }}
+      >
+        🎒
+      </button>
+
+      <h2 className="text-2xl font-bold text-white mb-6">Shop</h2>
+
+      {/* Shop Tabs */}
+      <div className="flex justify-center gap-2 mb-6 overflow-x-auto scrollbar-thin scrollbar-thumb-white/30 pb-2">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setShopView(t.id)}
+            className={`px-5 py-2 rounded-xl font-semibold shadow border border-white/20 bg-white/10 text-white backdrop-blur-md
+              ${shopView === t.id ? "ring-2 ring-white" : "hover:bg-white/20"}
+              transition whitespace-nowrap`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Shop Tab Content */}
+      <div
+        className="overflow-y-auto scrollbar-thin scrollbar-thumb-white/20"
+        style={{
+          height: "50vh",
+          paddingRight: "2px",
+        }}
+      >
+        {tabContent}
+      </div>
+    </div>
+  </div>
+);
   };
 
   const renderProfileTab = () => {
@@ -6644,61 +6635,77 @@ const renderLeaderboard = () => (
   </div>
 </div>
 
-{/* Sticky Bottom Bar - centered */}
-<div
-  className={`${glassStyle} bg-white/20 rounded-2xl ${buttonGlow} p-2 sticky bottom-4 inset-x-0 z-40 max-w-md w-full mx-auto`}
-  style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
->
-  <div className="flex space-x-4 justify-center">
-    <button
-      onClick={() => setActiveTab("game")}
-      className={`px-6 py-3 rounded-xl transition-all duration-200 ${
-        activeTab === "game"
-          ? "bg-white/40 text-[#2d3748] shadow-md"
-          : "text-[#4a5568] hover:bg-white/20"
-      } flex flex-col items-center justify-center`}
-    >
-      <i className="fas fa-gamepad"></i>
-      <span className="block text-xs mt-1">Game</span>
-    </button>
+{/* Dropdown Bottom Menu */}
+const [menuOpen, setMenuOpen] = useState(true); // open by default
 
-    <button
-      onClick={() => setActiveTab("house")}
-      className={`px-6 py-3 rounded-xl transition-all duration-200 ${
-        activeTab === "house"
-          ? "bg-white/40 text-[#2d3748] shadow-md"
-          : "text-[#4a5568] hover:bg-white/20"
-      } flex flex-col items-center justify-center`}
-    >
-      <i className="fas fa-home"></i>
-      <span className="block text-xs mt-1">House</span>
-    </button>
-
-    <button
-      onClick={() => setActiveTab("shop")}
-      className={`px-6 py-3 rounded-xl transition-all duration-200 ${
-        activeTab === "shop"
-          ? "bg-white/40 text-[#e11d48] shadow-md"
-          : "text-[#e11d48] hover:bg-white/20"
-      } flex flex-col items-center justify-center`}
-    >
-      <i className="fas fa-store"></i>
-      <span className="block text-xs mt-1">Shop</span>
-    </button>
-
-    <button
-      onClick={() => setActiveTab("friends")}
-      className={`px-6 py-3 rounded-xl transition-all duration-200 ${
-        activeTab === "friends"
-          ? "bg-white/40 text-[#2d3748] shadow-md"
-          : "text-[#4a5568] hover:bg-white/20"
-      } flex flex-col items-center justify-center`}
-    >
-      <i className="fas fa-users"></i>
-      <span className="block text-xs mt-1">Friends</span>
-    </button>
-  </div>
+{/* Toggle button */}
+<div className="fixed bottom-0 inset-x-0 flex justify-center z-50">
+  <button
+    onClick={() => setMenuOpen(!menuOpen)}
+    className="bg-black/70 text-white px-4 py-1 rounded-t-md text-xs shadow-md"
+  >
+    {menuOpen ? "▼ Hide" : "▲ Menu"}
+  </button>
 </div>
+
+{/* Bottom Menu Content */}
+{menuOpen && (
+  <div
+    className={`${glassStyle} bg-white/20 rounded-t-2xl ${buttonGlow} p-2 pb-4 fixed bottom-6 inset-x-0 z-40 max-w-md w-full mx-auto`}
+    style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
+  >
+    <div className="flex flex-wrap justify-center gap-2 sm:space-x-4">
+      <button
+        onClick={() => setActiveTab("game")}
+        className={`w-20 py-3 rounded-xl transition-all duration-200 ${
+          activeTab === "game"
+            ? "bg-white/40 text-[#2d3748] shadow-md"
+            : "text-[#4a5568] hover:bg-white/20"
+        } flex flex-col items-center justify-center`}
+      >
+        <i className="fas fa-gamepad"></i>
+        <span className="text-xs mt-1">Game</span>
+      </button>
+
+      <button
+        onClick={() => setActiveTab("house")}
+        className={`w-20 py-3 rounded-xl transition-all duration-200 ${
+          activeTab === "house"
+            ? "bg-white/40 text-[#2d3748] shadow-md"
+            : "text-[#4a5568] hover:bg-white/20"
+        } flex flex-col items-center justify-center`}
+      >
+        <i className="fas fa-home"></i>
+        <span className="text-xs mt-1">House</span>
+      </button>
+
+      <button
+        onClick={() => setActiveTab("shop")}
+        className={`w-20 py-3 rounded-xl transition-all duration-200 ${
+          activeTab === "shop"
+            ? "bg-white/40 text-[#e11d48] shadow-md"
+            : "text-[#e11d48] hover:bg-white/20"
+        } flex flex-col items-center justify-center`}
+      >
+        <i className="fas fa-store"></i>
+        <span className="text-xs mt-1">Shop</span>
+      </button>
+
+      <button
+        onClick={() => setActiveTab("friends")}
+        className={`w-20 py-3 rounded-xl transition-all duration-200 ${
+          activeTab === "friends"
+            ? "bg-white/40 text-[#2d3748] shadow-md"
+            : "text-[#4a5568] hover:bg-white/20"
+        } flex flex-col items-center justify-center`}
+      >
+        <i className="fas fa-users"></i>
+        <span className="text-xs mt-1">Friends</span>
+      </button>
+    </div>
+  </div>
+)}
+
 {showResetModal && renderResetModal()}
 {showHouseRenameModal && renderHouseRenameModal()}
 {showOfflineEarnings && pendingOfflineEarnings && (
