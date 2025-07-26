@@ -1288,7 +1288,7 @@ const fetchMessages = async () => {
           .from('guild_chat')
           .select(`
             *,
-            users:user_id (
+            game_saves:user_id (
               profile_name,
               profile_icon
             )
