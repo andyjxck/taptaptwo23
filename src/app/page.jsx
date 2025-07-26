@@ -1264,10 +1264,7 @@ const fetchMessages = async () => {
   }
 };
 
-
-  const [rainDrops, setRainDrops] = React.useState([])
-    
-  useEffect(() => {
+useEffect(() => {
   if (!guild?.id) return;
 
   fetchMessages();
@@ -1301,8 +1298,8 @@ const fetchMessages = async () => {
             ...prev,
             {
               ...data,
-              profile_name: data.users?.profile_name || "Unknown",
-              profile_icon: data.users?.profile_icon || null,
+              profile_name: data.game_saves?.profile_name || "Unknown",
+              profile_icon: data.game_saves?.profile_icon || null,
             }
           ]);
         }
