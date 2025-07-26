@@ -1987,51 +1987,54 @@ const renderFriendsTab = () => {
       {guildMessages.length === 0 ? (
         <p className="text-center text-gray-600 text-sm italic">No messages yet.</p>
       ) : (
-        guildMessages.map((msg, i) => {
-          const icon = PROFILE_ICONS.find(ic => ic.id === msg.profile_icon);
+      guildMessages.map((msg, i) => {
+  const iconId = msg.game_saves?.profile_icon;
+  const icon = PROFILE_ICONS.find(ic => ic.id === iconId);
 
-          return (
-            <div
-              key={i}
-              className="flex items-start gap-2 bg-white/60 px-3 py-2 rounded-xl shadow text-sm text-indigo-800"
-            >
-              {/* Icon */}
-              {icon ? (
-                icon.image ? (
-                  <img
-                    src={icon.image}
-                    alt={icon.name}
-                    className="w-8 h-8 rounded-full object-cover border border-indigo-400"
-                    title={icon.name}
-                  />
-                ) : (
-                  <span className="text-lg">{icon.emoji}</span>
-                )
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-500 border border-indigo-300">
-                  <i className="fas fa-user" />
-                </div>
-              )}
-
-              {/* Message Content */}
-              <div className="flex-1">
-                <div className="flex justify-between">
-                  <span className="font-bold">{msg.sender_name}</span>
-                  <span className="text-xs text-gray-500">
-                    {new Date(msg.inserted_at).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>
-                </div>
-                <p>{msg.message}</p>
-              </div>
-            </div>
-          );
-        })
+  return (
+    <div
+      key={i}
+      className="flex items-start gap-2 bg-white/60 px-3 py-2 rounded-xl shadow text-sm text-indigo-800"
+    >
+      {/* Icon */}
+      {icon ? (
+        icon.image ? (
+          <img
+            src={icon.image}
+            alt={icon.name}
+            className="w-8 h-8 rounded-full object-cover border border-indigo-400"
+            title={icon.name}
+          />
+        ) : (
+          <span className="text-lg">{icon.emoji}</span>
+        )
+      ) : (
+        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-500 border border-indigo-300">
+          <i className="fas fa-user" />
+        </div>
       )}
-    </div>
 
+      {/* Message Content */}
+      <div className="flex-1">
+        <div className="flex justify-between">
+          <span className="font-bold">
+            {msg.game_saves?.profile_name || "Unknown"}
+          </span>
+          <span className="text-xs text-gray-500">
+            {new Date(msg.inserted_at).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </span>
+        </div>
+        <p>{msg.message}</p>
+      </div>
+    </div>
+  );
+})
+)}
+      </div>
+    
     {/* Input field */}
     <div className="flex items-center gap-2 pt-2">
       <input
@@ -2647,7 +2650,6 @@ const handleSendMessage = async () => {
     {
       guild_id: guild.id,
       sender_id: userId,
-      sender_name: profileName || "Anonymous",
       message: newMessage.trim(),
     },
   ]);
@@ -2658,14 +2660,24 @@ useEffect(() => {
   if (!guild?.id) return;
 
   const loadChat = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("guild_chat")
-      .select("*")
+      .select(`
+        id,
+        guild_id,
+        sender_id,
+        message,
+        inserted_at,
+        game_saves (
+          profile_name,
+          profile_icon
+        )
+      `)
       .eq("guild_id", guild.id)
       .order("inserted_at", { ascending: true })
       .limit(100);
 
-    if (data) setGuildMessages(data);
+    if (!error && data) setGuildMessages(data);
   };
 
   loadChat();
@@ -2677,13 +2689,32 @@ useEffect(() => {
       schema: 'public',
       table: 'guild_chat',
       filter: `guild_id=eq.${guild.id}`,
-    }, (payload) => {
-      setGuildMessages(prev => [...prev, payload.new]);
+    }, async (payload) => {
+      const { data: enriched, error } = await supabase
+        .from("guild_chat")
+        .select(`
+          id,
+          guild_id,
+          sender_id,
+          message,
+          inserted_at,
+          game_saves (
+            profile_name,
+            profile_icon
+          )
+        `)
+        .eq("id", payload.new.id)
+        .single();
+
+      if (!error && enriched) {
+        setGuildMessages(prev => [...prev, enriched]);
+      }
     })
     .subscribe();
 
   return () => supabase.removeChannel(channel);
 }, [guild?.id]);
+
 
  function equipShopBoost(boost) {
     setActiveShopBoosts((prev) => {
