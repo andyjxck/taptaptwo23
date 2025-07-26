@@ -1264,13 +1264,13 @@ const fetchMessages = async () => {
       id: msg.id,
       message: msg.message,
       inserted_at: msg.inserted_at,
-      user_id: msg.users?.user_id ?? msg.user_id,
-      profile_name: msg.game_saves?.profile_name || "Unknown",
-      profile_icon: msg.game_saves?.profile_icon || null,
+      user_id: msg.users?.user_id ?? msg.user_id, // ALWAYS FROM USERS
+      profile_name: msg.game_saves?.profile_name || "Unknown", // ONLY FROM GAME_SAVES
+      profile_icon: msg.game_saves?.profile_icon || null,      // ONLY FROM GAME_SAVES
     }));
     setGuildMessages(formatted);
   } else {
-    setGuildMessages([]); // Clear if error to avoid stale data
+    setGuildMessages([]);
     console.error("Failed to fetch messages", error);
   }
 };
@@ -1315,9 +1315,9 @@ useEffect(() => {
               id: data.id,
               message: data.message,
               inserted_at: data.inserted_at,
-              user_id: data.users?.user_id ?? data.user_id,
-              profile_name: data.game_saves?.profile_name || "Unknown",
-              profile_icon: data.game_saves?.profile_icon || null,
+              user_id: data.users?.user_id ?? data.user_id, // FROM USERS
+              profile_name: data.game_saves?.profile_name || "Unknown", // FROM GAME_SAVES
+              profile_icon: data.game_saves?.profile_icon || null,      // FROM GAME_SAVES
             }
           ]);
         }
