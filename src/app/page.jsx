@@ -1313,7 +1313,7 @@ useEffect(() => {
 }, [guild?.id]);
 ;
   const [notification, setNotification] = useState(null);
-
+const [showRaindrops, setRainDrops] = useState([]);
   const [showStats, setShowStats] = useState(false);
   const [activeTheme, setActiveTheme] = React.useState("heaven");
   const [showFeedback, setShowFeedback] = useState(false);
