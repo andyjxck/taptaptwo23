@@ -1144,6 +1144,19 @@ useEffect(() => {
   return () => clearInterval(interval);
 }, [activeTab, userId]);
 
+useEffect(() => {
+  if (activeTab !== "guilds" || !guild?.id) return;
+
+  // Fetch chat messages immediately
+  fetchMessages();
+
+  // Then set interval to refetch every 5 seconds
+  const interval = setInterval(() => {
+    fetchMessages();
+  }, 5000);
+
+  return () => clearInterval(interval);
+}, [activeTab, guild?.id]);
 
 const inviteToGuild = async (friendId) => {
   if (!guild || !guild.id) return;
