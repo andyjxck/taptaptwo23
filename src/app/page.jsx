@@ -5504,7 +5504,7 @@ const renderLeaderboard = () => (
     <AdBanner />
 
     {/* Main Shop */}
-    <div className={`${glassStyle} bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 rounded-2xl p-6 relative border border-white/10`}>
+  <div className={`${glassStyle} bg-white rounded-2xl p-5 ${buttonGlow}`}>
       {/* Inventory button */}
       <button
         onClick={() => setShopView("inventory")}
