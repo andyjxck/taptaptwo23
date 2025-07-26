@@ -860,6 +860,7 @@ const seasonalWeatherTables = {
 function MainComponent() {
   const [userId, setUserId] = useState(null);
   const [pin, setPin] = useState(null);
+  const [guildMessages, setGuildMessages] = useState([]);
   const [showWeatherFlash, setShowWeatherFlash] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -1225,6 +1226,53 @@ const fetchGuildInvites = async () => {
     critChanceUpgrades: "Critical Chance Upgrades",
     tapSpeedBonusUpgrades: "Tap Speed Bonus Upgrades",
   };
+
+  useEffect(() => {
+  if (!guild?.id) return;
+
+  const fetchMessages = async () => {
+    const { data, error } = await supabase
+      .from("guild_chat")
+      .select(`
+        *,
+        users:user_id (
+          profile_name,
+          profile_icon
+        )
+      `)
+      .eq("guild_id", guild.id)
+      .gte("inserted_at", new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString()) // last 48 hours
+      .order("inserted_at", { ascending: true });
+
+    if (!error && data) {
+      const formatted = data.map((msg) => ({
+        ...msg,
+        profile_name: msg.users?.profile_name || "Unknown",
+        profile_icon: msg.users?.profile_icon || null,
+      }));
+      setGuildMessages(formatted);
+    }
+  };
+
+  fetchMessages();
+
+  const channel = supabase
+    .channel(`guild_chat_${guild.id}`)
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'guild_chat',
+      filter: `guild_id=eq.${guild.id}`,
+    }, (payload) => {
+      setGuildMessages((prev) => [...prev, payload.new]);
+    })
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [guild?.id]);
+
 
   const [rainDrops, setRainDrops] = React.useState([]);
   const [notification, setNotification] = useState(null);
@@ -1996,66 +2044,66 @@ const renderFriendsTab = () => {
       </button>
     </div>
 
-   {showGuildChat && (
+
+  {showGuildChat && (
   <div className="mt-4 bg-white/40 backdrop-blur-xl rounded-2xl p-4 border border-indigo-200 shadow-lg max-h-[400px] flex flex-col space-y-3 overflow-hidden">
     <div className="font-bold text-indigo-900 text-center text-lg mb-2 flex items-center justify-center gap-2">
       <i className="fas fa-comments" /> Guild Chat
     </div>
 
-    {/* Messages */}
+    {/* Messages List */}
     <div className="flex-1 overflow-y-auto px-2 py-1 space-y-2">
       {guildMessages.length === 0 ? (
         <p className="text-center text-gray-600 text-sm italic">No messages yet.</p>
       ) : (
-      guildMessages.map((msg, i) => {
-  const iconId = msg.game_saves?.profile_icon;
-  const icon = PROFILE_ICONS.find(ic => ic.id === iconId);
+        guildMessages.map((msg, i) => {
+          const iconId = msg.game_saves?.profile_icon;
+          const icon = PROFILE_ICONS.find(ic => ic.id === iconId);
+          const name = msg.game_saves?.profile_name || "Unknown";
 
-  return (
-    <div
-      key={i}
-      className="flex items-start gap-2 bg-white/60 px-3 py-2 rounded-xl shadow text-sm text-indigo-800"
-    >
-      {/* Icon */}
-      {icon ? (
-        icon.image ? (
-          <img
-            src={icon.image}
-            alt={icon.name}
-            className="w-8 h-8 rounded-full object-cover border border-indigo-400"
-            title={icon.name}
-          />
-        ) : (
-          <span className="text-lg">{icon.emoji}</span>
-        )
-      ) : (
-        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-500 border border-indigo-300">
-          <i className="fas fa-user" />
-        </div>
+          return (
+            <div
+              key={i}
+              className="flex items-start gap-2 bg-white/60 px-3 py-2 rounded-xl shadow text-sm text-indigo-800"
+            >
+              {/* Profile Icon */}
+              {icon ? (
+                icon.image ? (
+                  <img
+                    src={icon.image}
+                    alt={icon.name}
+                    className="w-8 h-8 rounded-full object-cover border border-indigo-400"
+                    title={icon.name}
+                  />
+                ) : (
+                  <span className="text-lg">{icon.emoji}</span>
+                )
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-500 border border-indigo-300">
+                  <i className="fas fa-user" />
+                </div>
+              )}
+
+              {/* Message Content */}
+              <div className="flex-1">
+                <div className="flex justify-between">
+                  <span className="font-bold">{name}</span>
+                  <span className="text-xs text-gray-500">
+                    {new Date(msg.inserted_at).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                </div>
+                <p>{msg.message}</p>
+              </div>
+            </div>
+          );
+        })
       )}
-
-      {/* Message Content */}
-      <div className="flex-1">
-        <div className="flex justify-between">
-          <span className="font-bold">
-            {msg.game_saves?.profile_name || "Unknown"}
-          </span>
-          <span className="text-xs text-gray-500">
-            {new Date(msg.inserted_at).toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </span>
-        </div>
-        <p>{msg.message}</p>
-      </div>
     </div>
-  );
-})
-)}
-      </div>
-    
-    {/* Input field */}
+
+    {/* Input Field */}
     <div className="flex items-center gap-2 pt-2">
       <input
         type="text"
@@ -2074,6 +2122,7 @@ const renderFriendsTab = () => {
     </div>
   </div>
 )}
+
   </>
 )}
   </div>
