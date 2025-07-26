@@ -3591,15 +3591,6 @@ const loadGame = async () => {
         coinsEarnedThisRun: Number(data.gameState.coins_earned_this_run) || 0,
         renownTokens, // <-- the calculated value
       });
-    }
-  } catch (error) {
-    // Handle error (optional)
-  } finally {
-    setLoading(false);
-  }
-};
-
-
       // Handle quests and offline earnings as before...
 
       if (data.gameState.currentQuest) {
