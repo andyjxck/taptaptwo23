@@ -3532,7 +3532,6 @@ async function removeFriend(friendId) {
   );
 
 const loadGame = async () => {
-
   setLoading(true); // Show loading overlay
 
   if (!userId || !pin) {
@@ -3560,35 +3559,46 @@ const loadGame = async () => {
 
     const data = await response.json();
     if (data.gameState) {
+      // Always calculate renownTokens and permanentMultiplier based on fresh data
+      const renownTokens = Number(data.gameState.renown_tokens ?? data.gameState.renownTokens) || 0;
+      const permanentMultiplier = 1 + renownTokens * 0.015;
+
       setGameState({
-  ...data.gameState,
-  coins: Number(data.gameState.coins),
-  tapPower: Number(data.gameState.tap_power),
-  tapPowerUpgrades: Number(data.gameState.tap_power_upgrades) || 0,
-  autoTapper: Number(data.gameState.auto_tapper),
-  autoTapperUpgrades: Number(data.gameState.auto_tapper_upgrades) || 0,
-  critChance: Number(data.gameState.crit_chance),
-  critChanceUpgrades: Number(data.gameState.crit_chance_upgrades) || 0,
-  tapSpeedBonus: Number(data.gameState.tap_speed_bonus),
-  tapSpeedBonusUpgrades: Number(data.gameState.tap_speed_bonus_upgrades) || 0,
-  totalTaps: Number(data.gameState.total_taps),
-  totalCoinsEarned: Number(data.gameState.total_coins_earned),
-  resets: Number(data.gameState.resets),
-  permanentMultiplier: Number(data.gameState.permanent_multiplier),
-  currentSeason: Number(data.gameState.current_season),
-  houseLevel: Number(data.gameState.house_level),
-  highest_house_level:
-    Number(data.gameState.highest_house_level ?? data.gameState.house_level) || 1,
-  houseCoinsMultiplier: Number(data.gameState.house_coins_multiplier),
-  hasFirstReset: Boolean(data.gameState.has_first_reset),
-  currentWeather: data.gameState.current_weather || "Clear",
-  currentYear: Number(data.gameState.current_year) || 0,
-  houseName: data.gameState.house_name || "My Cozy Home",
-  profileName: data.gameState.profile_name || "Player",
-  coinsEarnedThisRun: Number(data.gameState.coins_earned_this_run) || 0,
-  renownTokens:
-    Number(data.gameState.renown_tokens ?? data.gameState.renownTokens) || 0,
-});
+        ...data.gameState,
+        coins: Number(data.gameState.coins),
+        tapPower: Number(data.gameState.tap_power),
+        tapPowerUpgrades: Number(data.gameState.tap_power_upgrades) || 0,
+        autoTapper: Number(data.gameState.auto_tapper),
+        autoTapperUpgrades: Number(data.gameState.auto_tapper_upgrades) || 0,
+        critChance: Number(data.gameState.crit_chance),
+        critChanceUpgrades: Number(data.gameState.crit_chance_upgrades) || 0,
+        tapSpeedBonus: Number(data.gameState.tap_speed_bonus),
+        tapSpeedBonusUpgrades: Number(data.gameState.tap_speed_bonus_upgrades) || 0,
+        totalTaps: Number(data.gameState.total_taps),
+        totalCoinsEarned: Number(data.gameState.total_coins_earned),
+        resets: Number(data.gameState.resets),
+        permanentMultiplier, // <-- always use the calculated value here
+        currentSeason: Number(data.gameState.current_season),
+        houseLevel: Number(data.gameState.house_level),
+        highest_house_level:
+          Number(data.gameState.highest_house_level ?? data.gameState.house_level) || 1,
+        houseCoinsMultiplier: Number(data.gameState.house_coins_multiplier),
+        hasFirstReset: Boolean(data.gameState.has_first_reset),
+        currentWeather: data.gameState.current_weather || "Clear",
+        currentYear: Number(data.gameState.current_year) || 0,
+        houseName: data.gameState.house_name || "My Cozy Home",
+        profileName: data.gameState.profile_name || "Player",
+        coinsEarnedThisRun: Number(data.gameState.coins_earned_this_run) || 0,
+        renownTokens, // <-- the calculated value
+      });
+    }
+  } catch (error) {
+    // Handle error (optional)
+  } finally {
+    setLoading(false);
+  }
+};
+
 
       // Handle quests and offline earnings as before...
 
