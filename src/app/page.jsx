@@ -2669,7 +2669,7 @@ const handleSendMessage = async () => {
   const { error } = await supabase.from("guild_chat").insert([
     {
       guild_id: guild.id,
-      sender_id: userId,
+      user_id: userId,
       message: newMessage.trim(),
     },
   ]);
@@ -2685,7 +2685,7 @@ useEffect(() => {
       .select(`
         id,
         guild_id,
-        sender_id,
+        user_id,
         message,
         inserted_at,
         game_saves (
@@ -2715,7 +2715,7 @@ useEffect(() => {
         .select(`
           id,
           guild_id,
-          sender_id,
+          user_id,
           message,
           inserted_at,
           game_saves (
