@@ -3535,6 +3535,8 @@ const loadGame = async () => {
   setLoading(true); // Show loading overlay
 
   if (!userId || !pin) {
+    // If you ever want to re-enable redirect, add:
+    // window.location.href = "/login";
     setLoading(false);
     return;
   }
@@ -3550,7 +3552,8 @@ const loadGame = async () => {
       if (response.status === 401) {
         localStorage.removeItem("userId");
         localStorage.removeItem("pin");
-        window.location.href = "/login";
+        // If you ever want to re-enable redirect, add:
+        // window.location.href = "/login";
         setLoading(false);
         return;
       }
@@ -3577,7 +3580,7 @@ const loadGame = async () => {
         totalTaps: Number(data.gameState.total_taps),
         totalCoinsEarned: Number(data.gameState.total_coins_earned),
         resets: Number(data.gameState.resets),
-        permanentMultiplier, // <-- always use the calculated value here
+        permanentMultiplier, // always use the calculated value here
         currentSeason: Number(data.gameState.current_season),
         houseLevel: Number(data.gameState.house_level),
         highest_house_level:
@@ -3589,7 +3592,7 @@ const loadGame = async () => {
         houseName: data.gameState.house_name || "My Cozy Home",
         profileName: data.gameState.profile_name || "Player",
         coinsEarnedThisRun: Number(data.gameState.coins_earned_this_run) || 0,
-        renownTokens, // <-- the calculated value
+        renownTokens, // the calculated value
       });
       // Handle quests and offline earnings as before...
 
@@ -3628,6 +3631,14 @@ const loadGame = async () => {
           String(data.gameState.lastDailyClaim)
         );
       }
+      // ...handle more post-load logic here as needed
+    }
+  } catch (error) {
+    // Optionally handle errors here
+  } finally {
+    setLoading(false);
+  }
+};
 
 const lastActive = Number(localStorage.getItem("lastActiveTime"));
 if (lastActive && !isNaN(lastActive)) {
@@ -4296,7 +4307,13 @@ const handleReset = useCallback(() => {
 }, [gameState, saveGame, activeShopBoosts]);
 
 const handleTap = useCallback(() => {
- if (navigator.vibrate) navigator.vibrate(50);
+  // Redirect to /login if not logged in
+  if (!userId || !pin) {
+    window.location.href = "/login";
+    return;
+  }
+
+  if (navigator.vibrate) navigator.vibrate(50);
   playClick(); // 🔊 Play sound immediately when tapped
 
   const now = Date.now();
@@ -4401,7 +4418,8 @@ const handleTap = useCallback(() => {
   setGameState(newState);
   saveGame(newState);
   localStorage.setItem("lastActiveTime", Date.now());
-}, [gameState, lastTapTimes, hasBoost]);
+}, [gameState, lastTapTimes, hasBoost, userId, pin]);
+
 
 const handleUpgrade = useCallback(
   (type, multiplier = 1) => {
