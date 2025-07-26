@@ -1239,7 +1239,7 @@ const fetchGuildInvites = async () => {
     tapSpeedBonusUpgrades: "Tap Speed Bonus Upgrades",
   };
 
- const fetchMessages = async () => {
+const fetchMessages = async () => {
   if (!guild?.id) return;
   const { data, error } = await supabase
     .from("guild_chat")
@@ -1264,10 +1264,10 @@ const fetchGuildInvites = async () => {
   }
 };
 
-  const [rainDrops, setRainDrops] = useState([]);
 
+  const [rainDrops, setRainDrops] = React.useState([])
     
-    React.useState([])useEffect(() => {
+  useEffect(() => {
   if (!guild?.id) return;
 
   fetchMessages();
