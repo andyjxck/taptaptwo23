@@ -851,39 +851,45 @@ React.useEffect(() => {
 
  React.useEffect(() => {
   let interval;
+
   if (gamePhase === "playing" && gameMode === "ai") {
-  const tapFrequencyMs = aiDifficulty === "hard" ? 200 : aiDifficulty === "medium" ? 400 : 1000;
+    const tapFrequencyMs =
+      aiDifficulty === "hard"
+        ? 200
+        : aiDifficulty === "medium"
+        ? 400
+        : 1000;
 
-  interval = setInterval(() => {
-    console.log("⏱️ AI interval running");
+    interval = setInterval(() => {
+      console.log("⏱️ AI interval running");
 
-    let aiMultiplier = 1;
-    if (aiDifficulty === "easy") aiMultiplier = 0.8;
-    else if (aiDifficulty === "medium") aiMultiplier = 1.2;
-    else if (aiDifficulty === "hard") aiMultiplier = 2;
+      let aiMultiplier = 1;
+      if (aiDifficulty === "easy") aiMultiplier = 0.9;
+      else if (aiDifficulty === "medium") aiMultiplier = 1.3;
+      else if (aiDifficulty === "hard") aiMultiplier = 2.5;
 
-    const baseTapPower = aiTapPowerRef.current || 1;
-    const tapSpeedBonus = aiTapSpeedBonusRef.current || 0;
-    const critChance = aiCritChanceRef.current || 0;
+      const baseTapPower = aiTapPowerRef.current || 1;
+      const tapSpeedBonus = aiTapSpeedBonusRef.current || 0;
+      const critChance = aiCritChanceRef.current || 0;
 
-    const effectiveTapPower = baseTapPower + Math.floor(baseTapPower * (tapSpeedBonus / 100));
-    const taps = Math.floor((Math.random() * 2 + 1) * aiMultiplier);
+      const effectiveTapPower =
+        baseTapPower + Math.floor(baseTapPower * (tapSpeedBonus / 100));
+      const taps = Math.floor((Math.random() * 2 + 1) * aiMultiplier);
 
-    let totalCoins = 0;
-    for (let i = 0; i < taps; i++) {
-      const isCrit = Math.random() * 100 < critChance;
-      const tapValue = isCrit ? effectiveTapPower * 2 : effectiveTapPower;
-      totalCoins += tapValue;
-    }
+      let totalCoins = 0;
+      for (let i = 0; i < taps; i++) {
+        const isCrit = Math.random() * 100 < critChance;
+        const tapValue = isCrit ? effectiveTapPower * 2 : effectiveTapPower;
+        totalCoins += tapValue;
+      }
 
-    setOpponentScore(prev => prev + totalCoins);
-    setAiCoins(prev => prev + totalCoins);
-  }, tapFrequencyMs);
-}
+      setOpponentScore((prev) => prev + totalCoins);
+      setAiCoins((prev) => prev + totalCoins);
+    }, tapFrequencyMs);
   }
+
   return () => clearInterval(interval);
 }, [gamePhase, gameMode, aiDifficulty, aiTapPower, aiTapSpeedBonus, aiCritChance]);
-
 
 React.useEffect(() => {
   if (gamePhase === "lobby" && isPlayerReady && isOpponentReady) {
