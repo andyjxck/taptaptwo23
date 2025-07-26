@@ -1245,20 +1245,20 @@ const fetchMessages = async () => {
     .from("guild_chat")
     .select(`
       *,
-      users:user_id (
+      game_saves:user_id (
         profile_name,
         profile_icon
       )
     `)
     .eq("guild_id", guild.id)
-    .gte("inserted_at", new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString()) // last 48 hours
+    .gte("inserted_at", new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString())
     .order("inserted_at", { ascending: true });
 
   if (!error && data) {
     const formatted = data.map((msg) => ({
       ...msg,
-      profile_name: msg.users?.profile_name || "Unknown",
-      profile_icon: msg.users?.profile_icon || null,
+      profile_name: msg.game_saves?.profile_name || "Unknown",
+      profile_icon: msg.game_saves?.profile_icon || null,
     }));
     setGuildMessages(formatted);
   }
