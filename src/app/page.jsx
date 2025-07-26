@@ -1269,6 +1269,38 @@ useEffect(() => {
 
   fetchMessages();
 
+ useEffect(() => {
+  if (!guild?.id) return;
+
+  const fetchAndAddMessage = async (msgId) => {
+    const { data, error } = await supabase
+      .from('guild_chat')
+      .select(`
+        *,
+        users:user_id (
+          user_id
+        ),
+        game_saves:user_id (
+          profile_name,
+          profile_icon
+        )
+      `)
+      .eq('id', msgId)
+      .single();
+
+    if (!error && data) {
+      setGuildMessages((prev) => [
+        ...prev,
+        {
+          ...data,
+          user_id: data.users?.user_id || data.user_id, // fallback if no join
+          profile_name: data.game_saves?.profile_name || "Unknown",
+          profile_icon: data.game_saves?.profile_icon || null,
+        }
+      ]);
+    }
+  };
+
   const channel = supabase
     .channel(`guild_chat_${guild.id}`)
     .on(
@@ -1280,29 +1312,7 @@ useEffect(() => {
         filter: `guild_id=eq.${guild.id}`,
       },
       async (payload) => {
-        // Fetch the inserted message with user join info
-        const { data, error } = await supabase
-          .from('guild_chat')
-          .select(`
-            *,
-            game_saves:user_id (
-              profile_name,
-              profile_icon
-            )
-          `)
-          .eq('id', payload.new.id)
-          .single();
-
-        if (!error && data) {
-          setGuildMessages((prev) => [
-            ...prev,
-            {
-              ...data,
-              profile_name: data.game_saves?.profile_name || "Unknown",
-              profile_icon: data.game_saves?.profile_icon || null,
-            }
-          ]);
-        }
+        await fetchAndAddMessage(payload.new.id);
       }
     )
     .subscribe();
@@ -1311,7 +1321,7 @@ useEffect(() => {
     supabase.removeChannel(channel);
   };
 }, [guild?.id]);
-;
+
   const [notification, setNotification] = useState(null);
 const [showRaindrops, setRainDrops] = useState([]);
   const [showStats, setShowStats] = useState(false);
