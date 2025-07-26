@@ -1264,7 +1264,10 @@ const fetchGuildInvites = async () => {
   }
 };
 
-  const [rainDrops, setRainDrops] = React.useState([])useEffect(() => {
+  const [rainDrops, setRainDrops] = useState([]);
+
+    
+    React.useState([])useEffect(() => {
   if (!guild?.id) return;
 
   fetchMessages();
