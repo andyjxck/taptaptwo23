@@ -1125,7 +1125,23 @@ const fetchGuildData = async (id = userId) => {
     score: totalScore,
   });
 };
+const leaveGuild = async () => {
+  if (!userId) return;
 
+  const { error } = await supabase
+    .from("users")
+    .update({ guild_id: null })        // remove guild assignment
+    .eq("user_id", userId);            // target the current player only
+
+  if (error) {
+    setNotification("Failed to leave guild.");
+  } else {
+    setGuild(null);                    // clear local guild state
+    setNotification("You left the guild.");
+    fetchGuildData(userId);           // refresh user’s new state
+  }
+};
+  
 
 
 
@@ -1611,22 +1627,6 @@ const handleCreateGuild = async (e) => {
     }, 0);
   };
 
-  const leaveGuild = async () => {
-  if (!userId) return;
-
-  const { error } = await supabase
-    .from("users")
-    .update({ guild_id: null })        // remove guild assignment
-    .eq("user_id", userId);            // target the current player only
-
-  if (error) {
-    setNotification("Failed to leave guild.");
-  } else {
-    setGuild(null);                    // clear local guild state
-    setNotification("You left the guild.");
-    fetchGuildData(userId);           // refresh user’s new state
-  }
-};
 
 
   
