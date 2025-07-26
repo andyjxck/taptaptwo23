@@ -3632,7 +3632,6 @@ const loadGame = async () => {
         );
       }
       // ...handle more post-load logic here as needed
-    }
   } catch (error) {
     // Optionally handle errors here
   } finally {
