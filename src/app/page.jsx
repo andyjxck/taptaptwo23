@@ -1239,32 +1239,33 @@ const fetchGuildInvites = async () => {
     tapSpeedBonusUpgrades: "Tap Speed Bonus Upgrades",
   };
 
- useEffect(() => {
+ const fetchMessages = async () => {
   if (!guild?.id) return;
+  const { data, error } = await supabase
+    .from("guild_chat")
+    .select(`
+      *,
+      users:user_id (
+        profile_name,
+        profile_icon
+      )
+    `)
+    .eq("guild_id", guild.id)
+    .gte("inserted_at", new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString()) // last 48 hours
+    .order("inserted_at", { ascending: true });
 
-  const fetchMessages = async () => {
-    const { data, error } = await supabase
-      .from("guild_chat")
-      .select(`
-        *,
-        users:user_id (
-          profile_name,
-          profile_icon
-        )
-      `)
-      .eq("guild_id", guild.id)
-      .gte("inserted_at", new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString()) // last 48 hours
-      .order("inserted_at", { ascending: true });
+  if (!error && data) {
+    const formatted = data.map((msg) => ({
+      ...msg,
+      profile_name: msg.users?.profile_name || "Unknown",
+      profile_icon: msg.users?.profile_icon || null,
+    }));
+    setGuildMessages(formatted);
+  }
+};
 
-    if (!error && data) {
-      const formatted = data.map((msg) => ({
-        ...msg,
-        profile_name: msg.users?.profile_name || "Unknown",
-        profile_icon: msg.users?.profile_icon || null,
-      }));
-      setGuildMessages(formatted);
-    }
-  };
+  const [rainDrops, setRainDrops] = React.useState([])useEffect(() => {
+  if (!guild?.id) return;
 
   fetchMessages();
 
@@ -1310,9 +1311,7 @@ const fetchGuildInvites = async () => {
     supabase.removeChannel(channel);
   };
 }, [guild?.id]);
-
-
-  const [rainDrops, setRainDrops] = React.useState([]);
+;
   const [notification, setNotification] = useState(null);
 
   const [showStats, setShowStats] = useState(false);
