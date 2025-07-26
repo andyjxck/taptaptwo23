@@ -922,19 +922,17 @@ if (action === "getLeaderboard") {
     LIMIT 10
   `;
 
-const topHighestHouse = await sql`
+const topGuilds = await sql`
   SELECT 
-    user_id, 
-    profile_name, 
-    profile_icon, 
-    house_name, 
-    highest_house_level
-  FROM game_saves
-  WHERE house_name IS NOT NULL AND highest_house_level IS NOT NULL
-  ORDER BY highest_house_level DESC
-  LIMIT 10
+    id,
+    name AS guild_name,
+    score AS guild_score,
+    icon AS guild_icon
+  FROM guilds
+  WHERE score IS NOT NULL
+  ORDER BY score DESC
+  LIMIT 5
 `;
-
 
 
 
@@ -959,13 +957,12 @@ const topHighestHouse = await sql`
       profile_name: row.profile_name || "Player",
       profile_icon: row.profile_icon || null,
     })),
-    highestHouse: topHighestHouse.map((row) => ({
-      user_id: row.user_id,
-      profile_name: row.profile_name || "Player",
-      profile_icon: row.profile_icon || null,
-      house_name: row.house_name || "",
-      highest_house_level: row.highest_house_level || 0,
-    })),
+ guilds: topGuilds.map((row) => ({
+  guild_id: row.id,
+  guild_name: row.guild_name,
+  guild_score: Number(row.guild_score) || 0,
+  guild_icon: row.guild_icon || null,
+})),
     totalTaps: topTotalTaps.map((row) => ({
       user_id: row.user_id,
       profile_name: row.profile_name || "Player",
