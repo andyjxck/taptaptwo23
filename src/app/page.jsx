@@ -955,11 +955,6 @@ useEffect(() => {
   const storedUserId = localStorage.getItem("userId");
   const storedPin = localStorage.getItem("pin");
 
-  if (!storedUserId || !storedPin) {
-    window.location.href = "/login";
-    return;
-  }
-
   setUserId(storedUserId);
   setPin(storedPin);
 }, []);
