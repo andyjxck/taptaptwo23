@@ -897,6 +897,9 @@ const [lastDailyClaim, setLastDailyClaim] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
     const [showRequests, setShowRequests] = useState(false);
 const [guild, setGuild] = useState(null);
+  const [profileName, setProfileName] = useState("");
+const [profileIcon, setProfileIcon] = useState("");
+
 
   const [activeTab, setActiveTab] = useState("game");
 
@@ -960,6 +963,23 @@ useEffect(() => {
   setUserId(storedUserId);
   setPin(storedPin);
 }, []);
+
+  useEffect(() => {
+  const fetchProfile = async () => {
+    const { data } = await supabase
+      .from("game_saves")
+      .select("profile_name, profile_icon")
+      .eq("user_id", userId)
+      .single();
+
+    if (data) {
+      setProfileName(data.profile_name);
+      setProfileIcon(data.profile_icon);
+    }
+  };
+
+  if (userId) fetchProfile();
+}, [userId]);
 
 
 
