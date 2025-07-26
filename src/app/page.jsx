@@ -1935,7 +1935,8 @@ const renderFriendsTab = () => {
   onClick={async () => {
     if (!userId || !guild) return;
 
-    const isLeader = userId === guild.leader_id;
+    const isLeader = Number(userId) === Number(guild.leader_id);
+
 
     if (isLeader) {
       // 1. Kick all users out of the guild
