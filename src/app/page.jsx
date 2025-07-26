@@ -1342,7 +1342,7 @@ useEffect(() => {
     supabase.removeChannel(channel);
   };
 }, [guild?.id]);
-
+const [menuOpen, setMenuOpen] = useState(true); // open by default
   const [notification, setNotification] = useState(null);
 const [showRaindrops, setRainDrops] = useState([]);
   const [showStats, setShowStats] = useState(false);
@@ -6634,9 +6634,6 @@ const renderLeaderboard = () => (
 ) : null}
   </div>
 </div>
-
-{/* Dropdown Bottom Menu */}
-const [menuOpen, setMenuOpen] = useState(true); // open by default
 
 {/* Toggle button */}
 <div className="fixed bottom-0 inset-x-0 flex justify-center z-50">
