@@ -1946,7 +1946,7 @@ const renderFriendsTab = () => {
   </div>
 )}
 </div>
-};
+);
 };
 
 const buyRegularItem = async ({ itemId, itemType, price, userId, pin }) => {
