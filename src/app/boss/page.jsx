@@ -304,39 +304,195 @@ export default function BossModePage() {
   // --- UI ---
   const availableCoins = profileData?.stats?.availableCoins || 0;
 
-  // --- Menu screens ---
-  if (!mode) {
-    return (
-      <div className="boss-bg min-h-screen flex items-center justify-center px-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
-          {/* ...PROFILE HEADER, BUTTONS, ETC... */}
-        </motion.div>
-        <style jsx global>{bossCSS}</style>
-      </div>
-    );
-  }
+if (!mode) {
+  return (
+    <div className="boss-bg min-h-screen flex items-center justify-center px-4">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
+        {profileData && (
+          <div className="relative mb-6">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+              className="w-full boss-glass-panel p-3 shadow-2xl border border-orange-500/40 flex items-center justify-between"
+            >
+              <div className="flex items-center space-x-2">
+                <div className="text-2xl">{profileData.profile.profile_icon}</div>
+                <div className="text-left">
+                  <div className="text-orange-50 font-bold text-sm">
+                    {profileData.profile.profile_name}
+                  </div>
+                  <div className="text-orange-200 text-xs">
+                    Level {profileData.profile.total_level}
+                  </div>
+                </div>
+              </div>
+              <ChevronDown className="text-orange-200" size={16} />
+            </motion.button>
+            <AnimatePresence>
+              {showProfileDropdown && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute top-full left-0 right-0 mt-2 boss-glass-panel p-4 shadow-2xl border border-orange-500/30 z-50"
+                >
+                  <div className="space-y-2 text-orange-100 text-sm">
+                    <div className="flex justify-between"><span>Boss Level:</span><span className="font-bold">{profileData.stats.bossLevel}</span></div>
+                    <div className="flex justify-between"><span>Total Coins:</span><span className="font-bold text-yellow-400">{profileData.stats.totalCoins}</span></div>
+                    <div className="flex justify-between"><span>Available:</span><span className="font-bold text-green-400">{profileData.stats.availableCoins}</span></div>
+                    <div className="flex justify-between"><span>Upgrade Level:</span><span className="font-bold">{profileData.stats.upgradeLevel}</span></div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+        <div className="boss-glass-panel p-8 shadow-3xl border border-orange-500/30">
+          <div className="text-center mb-8">
+            <h1 className="text-5xl font-black text-orange-100 mb-2" style={{ textShadow: "0 0 20px #d97706,0 0 40px #7c2d12" }}>
+              <span className="flicker">INFERNO BOSS</span>
+            </h1>
+            <p className="text-orange-300 text-lg">Dare to face the darkness?</p>
+          </div>
+          <div className="space-y-4">
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setMode("solo")}
+              className="boss-button-solo"
+            >
+              <div className="flex items-center justify-center space-x-3">
+                <Flame size={28} />
+                <div className="text-left">
+                  <div className="text-xl font-bold">Solo Inferno</div>
+                  <div className="text-sm opacity-90">Face the flames alone</div>
+                </div>
+              </div>
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setMode("coop-create")}
+              className="boss-button-coop"
+            >
+              <div className="flex items-center justify-center space-x-3">
+                <Users size={28} />
+                <div className="text-left">
+                  <div className="text-xl font-bold">Forge Alliance</div>
+                  <div className="text-sm opacity-90">Create a 5-player raid</div>
+                </div>
+              </div>
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setMode("coop-join")}
+              className="boss-button-join"
+            >
+              <div className="flex items-center justify-center space-x-3">
+                <ChevronDown size={28} />
+                <div className="text-left">
+                  <div className="text-xl font-bold">Join Alliance</div>
+                  <div className="text-sm opacity-90">Enter the battle code</div>
+                </div>
+              </div>
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
+      <style jsx global>{bossCSS}</style>
+    </div>
+  );
+}
+if (mode === "coop-create" && !currentSession) {
+  return (
+    <div className="boss-bg min-h-screen flex items-center justify-center px-4">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
+        <div className="boss-glass-panel p-8 shadow-3xl border border-orange-500/30">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-orange-100 mb-2">Forge Alliance</h2>
+            <p className="text-orange-300">Summon your raid party</p>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={handleCoopCreate}
+            disabled={coopCreating}
+            className="boss-button-coop w-full"
+          >
+            <div className="flex items-center justify-center space-x-3">
+              <Flame size={24} />
+              <span className="text-xl font-bold">
+                {coopCreating ? "Forging..." : "Create Alliance"}
+              </span>
+            </div>
+          </motion.button>
+          {coopError && (
+            <div className="text-red-200 text-center p-3 bg-red-500/20 rounded-xl border border-red-500/30 mt-4">
+              {coopError}
+            </div>
+          )}
+          <button
+            onClick={() => setMode("")}
+            className="w-full mt-4 text-orange-300 hover:text-orange-100 transition-colors"
+          >← Back to menu</button>
+        </div>
+      </motion.div>
+      <style jsx global>{bossCSS}</style>
+    </div>
+  );
+}
 
-  if (mode === "coop-create" && !currentSession) {
-    return (
-      <div className="boss-bg min-h-screen flex items-center justify-center px-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
-          {/* ...COOP CREATE UI... */}
-        </motion.div>
-        <style jsx global>{bossCSS}</style>
-      </div>
-    );
-  }
 
-  if (mode === "coop-join" && !currentSession) {
-    return (
-      <div className="boss-bg min-h-screen flex items-center justify-center px-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
-          {/* ...COOP JOIN UI... */}
-        </motion.div>
-        <style jsx global>{bossCSS}</style>
-      </div>
-    );
-  }
+if (mode === "coop-join" && !currentSession) {
+  return (
+    <div className="boss-bg min-h-screen flex items-center justify-center px-4">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
+        <div className="boss-glass-panel p-8 shadow-3xl border border-orange-500/30">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-orange-100 mb-2">Join Alliance</h2>
+            <p className="text-orange-300">Enter the battle code</p>
+          </div>
+          <div className="space-y-4">
+            <input
+              type="text"
+              value={roomCode}
+              onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+              placeholder="Enter battle code"
+              className="boss-input"
+              maxLength={6}
+            />
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleCoopJoin}
+              disabled={!roomCode || coopJoining}
+              className="boss-button-join w-full"
+            >
+              <div className="flex items-center justify-center space-x-3">
+                <Users size={24} />
+                <span className="text-xl font-bold">
+                  {coopJoining ? "Joining..." : "Join Alliance"}
+                </span>
+              </div>
+            </motion.button>
+            {coopError && (
+              <div className="text-red-200 text-center p-3 bg-red-500/20 rounded-xl border border-red-500/30">
+                {coopError}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => setMode("")}
+            className="w-full mt-4 text-orange-300 hover:text-orange-100 transition-colors"
+          >← Back to menu</button>
+        </div>
+      </motion.div>
+      <style jsx global>{bossCSS}</style>
+    </div>
+  );
+}
 
   // --- Battle UI ---
   const battleData = mode === "solo" ? localBattleData || soloProgress : currentSession;
