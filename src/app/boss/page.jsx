@@ -612,7 +612,7 @@ useEffect(() => {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => purchaseUpgradeMutation.mutate("tapPower")}
+              onClick={() => handleUpgrade("tapPower")}
               disabled={availableCoins < upgradesData?.costs?.tapPowerCost || purchaseUpgradeMutation.isLoading}
               className="boss-upgrade-btn boss-upgrade-red"
             >
@@ -625,7 +625,7 @@ useEffect(() => {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => purchaseUpgradeMutation.mutate("autoTapper")}
+              onClick={() => handleUpgrade("autoTapper")}
               disabled={availableCoins < upgradesData?.costs?.autoTapperCost || purchaseUpgradeMutation.isLoading}
               className="boss-upgrade-btn boss-upgrade-green"
             >
@@ -638,7 +638,7 @@ useEffect(() => {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => purchaseUpgradeMutation.mutate("critChance")}
+              onClick={() => handleUpgrade("critChance")}
               disabled={availableCoins < upgradesData?.costs?.critChanceCost || purchaseUpgradeMutation.isLoading || upgradesData?.stats?.critChance >= 100}
               className="boss-upgrade-btn boss-upgrade-purple"
             >
@@ -651,7 +651,7 @@ useEffect(() => {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => purchaseUpgradeMutation.mutate("tapSpeedBonus")}
+              onClick={() => handleUpgrade("tapSpeedBonus")}
               disabled={availableCoins < upgradesData?.costs?.tapSpeedBonusCost || purchaseUpgradeMutation.isLoading}
               className="boss-upgrade-btn boss-upgrade-yellow"
             >
