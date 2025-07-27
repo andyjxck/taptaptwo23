@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, Code, Flame, ChevronDown, Coins, Crown, Timer, Zap, Target, Clock, Settings
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
 
 // === CONFIG ===
 const DEMO_USER = "demo_user";
