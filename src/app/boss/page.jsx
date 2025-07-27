@@ -6,8 +6,6 @@ import {
   Users, Code, Flame, ChevronDown, Coins, Crown, Timer, Zap, Target, Clock, Settings
 } from "lucide-react";
 
-// === CONFIG ===
-const DEMO_USER = "demo_user";
 
 // === CSS iOS/arena theme at bottom ===
 
@@ -36,12 +34,26 @@ export default function BossModePage() {
 
   const autoTapperRef = useRef(null);
   const coopSyncRef = useRef(null);
+  const [userId, setUserId] = useState("");
+  const [pin, setPin] = useState("");
 
+  useEffect(() => {
+  const storedUserId = localStorage.getItem("userId");
+  const storedPin = localStorage.getItem("pin");
+
+  if (!storedUserId || !storedPin) {
+    window.location.href = "/login";
+    return;
+  }
+
+  setUserId(storedUserId);
+  setPin(storedPin);
+}, []);
   // === FETCHES ===
   // Profile
   useEffect(() => {
     setProfileLoading(true);
-    fetch(`/api/boss?action=profile&userId=${DEMO_USER}`)
+    fetch(`/api/boss?action=profile&userId=${userId}`)
       .then(r => r.json())
       .then(setProfileData)
       .finally(() => setProfileLoading(false));
@@ -51,7 +63,7 @@ export default function BossModePage() {
     let cancelled = false;
     function loadUpgrades() {
       setUpgradesLoading(true);
-      fetch(`/api/boss?action=upgrades&userId=${DEMO_USER}`)
+      fetch(`/api/boss?action=upgrades&userId=${userId}`)
         .then(r => r.json())
         .then(data => { if (!cancelled) setUpgradesData(data); })
         .finally(() => { if (!cancelled) setUpgradesLoading(false); });
@@ -66,7 +78,7 @@ export default function BossModePage() {
     setSoloLoading(true);
     let cancelled = false;
     function loadProgress() {
-      fetch(`/api/boss?action=progress&userId=${DEMO_USER}`)
+      fetch(`/api/boss?action=progress&userId=${userId}`)
         .then(r => r.json())
         .then(data => { if (!cancelled) setSoloProgress(data); })
         .finally(() => { if (!cancelled) setSoloLoading(false); });
@@ -80,7 +92,7 @@ export default function BossModePage() {
     if (!mode.startsWith("coop") || !currentSession) return;
     let cancelled = false;
     function syncSession() {
-      fetch(`/api/boss?action=coop_session&roomCode=${currentSession.room_code}&userId=${DEMO_USER}`)
+      fetch(`/api/boss?action=coop_session&roomCode=${currentSession.room_code}&userId=${userId}`)
         .then(r => r.json())
         .then(data => {
           if (!cancelled && data.session) {
@@ -143,7 +155,7 @@ export default function BossModePage() {
     fetch("/api/boss", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "solo_tap", userId: DEMO_USER, isAutoTap }),
+      body: JSON.stringify({ action: "solo_tap", userId: userId, isAutoTap }),
     })
       .then(r => r.json())
       .then(data => {
@@ -195,7 +207,7 @@ export default function BossModePage() {
       body: JSON.stringify({
         action: "coop_tap",
         roomCode: currentSession.room_code,
-        userId: DEMO_USER,
+        userId: userId,
         damage: upgradesData?.stats?.tapPower || 1,
       }),
     })
@@ -216,7 +228,7 @@ export default function BossModePage() {
     fetch("/api/boss", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "upgrade", userId: DEMO_USER, upgradeType }),
+      body: JSON.stringify({ action: "upgrade", userId: userId, upgradeType }),
     })
       .then(r => r.json())
       .then(() => refreshAll())
@@ -228,15 +240,15 @@ export default function BossModePage() {
     setProfileLoading(true);
     setUpgradesLoading(true);
     setSoloLoading(true);
-    fetch(`/api/boss?action=profile&userId=${DEMO_USER}`)
+    fetch(`/api/boss?action=profile&userId=${userId}`)
       .then(r => r.json())
       .then(setProfileData)
       .finally(() => setProfileLoading(false));
-    fetch(`/api/boss?action=upgrades&userId=${DEMO_USER}`)
+    fetch(`/api/boss?action=upgrades&userId=${userId}`)
       .then(r => r.json())
       .then(setUpgradesData)
       .finally(() => setUpgradesLoading(false));
-    fetch(`/api/boss?action=progress&userId=${DEMO_USER}`)
+    fetch(`/api/boss?action=progress&userId=${userId}`)
       .then(r => r.json())
       .then(setSoloProgress)
       .finally(() => setSoloLoading(false));
@@ -249,7 +261,7 @@ export default function BossModePage() {
     fetch("/api/boss", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "coop_create", userId: DEMO_USER }),
+      body: JSON.stringify({ action: "coop_create", userId: userId }),
     })
       .then(r => r.json())
       .then(data => {
@@ -267,7 +279,7 @@ export default function BossModePage() {
     fetch("/api/boss", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "coop_join", roomCode, userId: DEMO_USER }),
+      body: JSON.stringify({ action: "coop_join", roomCode, userId: userId }),
     })
       .then(r => r.json())
       .then(data => {
