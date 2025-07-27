@@ -6,8 +6,7 @@ import {
   Users, Flame, ChevronDown, Coins, Crown, Timer, Zap, Target, Clock, Settings
 } from "lucide-react";
 
-// --- GLOSSY DARK iOS/ARENA THEME ---
-const bossCSS = `...`; // (Keep your CSS as-is at the bottom, or just paste the original bossCSS.)
+
 
 export default function BossModePage() {
   // --- STATE ---
