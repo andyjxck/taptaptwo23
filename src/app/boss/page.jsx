@@ -10,6 +10,7 @@ import {
 
 export default function BossModePage() {
   // --- STATE ---
+  const [upgradesLoadedOnce, setUpgradesLoadedOnce] = useState(false);
   const [mode, setMode] = useState(""); // '', 'solo', 'coop-create', 'coop-join'
   const [roomCode, setRoomCode] = useState("");
   const [currentSession, setCurrentSession] = useState(null);
@@ -59,22 +60,26 @@ export default function BossModePage() {
       .then(setProfileData)
       .finally(() => setProfileLoading(false));
   }, [userReady, userId]);
+useEffect(() => {
+  if (!userReady) return;
+  let cancelled = false;
 
-  // --- UPGRADES LOADING ---
-  useEffect(() => {
-    if (!userReady) return;
-    let cancelled = false;
-    function loadUpgrades() {
-      setUpgradesLoading(true);
-      fetch(`/api/boss?action=upgrades&userId=${userId}`)
-        .then(r => r.json())
-        .then(data => { if (!cancelled) setUpgradesData(data); })
-        .finally(() => { if (!cancelled) setUpgradesLoading(false); });
-    }
-    loadUpgrades();
-    const intv = setInterval(loadUpgrades, 5000);
-    return () => { cancelled = true; clearInterval(intv); };
-  }, [userReady, userId]);
+  function loadUpgrades() {
+    setUpgradesLoading(true);
+    fetch(`/api/boss?action=upgrades&userId=${userId}`)
+      .then(r => r.json())
+      .then(data => {
+        if (!cancelled) {
+          setUpgradesData(data);
+          setUpgradesLoadedOnce(true); // <--- THIS IS THE KEY
+        }
+      })
+      .finally(() => { if (!cancelled) setUpgradesLoading(false); });
+  }
+  loadUpgrades();
+  const intv = setInterval(loadUpgrades, 5000);
+  return () => { cancelled = true; clearInterval(intv); };
+}, [userReady, userId]);
 
   // --- SOLO PROGRESS LOADING ---
   useEffect(() => {
@@ -497,7 +502,7 @@ if (mode === "coop-join" && !currentSession) {
   // --- Battle UI ---
   const battleData = mode === "solo" ? localBattleData || soloProgress : currentSession;
   const isLoading = mode === "solo" ? soloLoading : false;
-  if (isLoading || !battleData || upgradesLoading) {
+  if (!upgradesLoadedOnce || isLoading || !battleData) {
     return (
       <div className="boss-bg min-h-screen flex items-center justify-center px-4">
         <div className="text-orange-100 text-2xl animate-pulse">Summoning darkness...</div>
