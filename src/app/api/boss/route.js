@@ -90,7 +90,7 @@ export async function GET(request) {
         gameSave = data;
       }
       const tapPower = safe(gameSave.tap_power_upgrades);
-      const autoTapperDps = safe(gameSave.auto_tapper_upgrades) > 0 ? Math.floor(gameSave.auto_tapper_level * 0.5) : 0;
+      const autoTapperDps = safe(gameSave.auto_tapper_upgrades) > 0 ? Math.floor(gameSave.auto_tapper_upgrades * 0.5) : 0;
       const critChance = Math.min(safe(gameSave.crit_chance_upgrades) * 5, 100);
       const tapSpeedBonus = safe(gameSave.tap_speed_bonus_upgrades) * 30;
       const tapPowerCost = Math.floor(10 * Math.pow(1.5, tapPower));
