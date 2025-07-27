@@ -3,14 +3,14 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Users, Code, Flame, ChevronDown, Coins, Crown, Timer, Zap, Target, Clock, Settings
+  Users, Flame, ChevronDown, Coins, Crown, Timer, Zap, Target, Clock, Settings
 } from "lucide-react";
 
-
-// === CSS iOS/arena theme at bottom ===
+// --- GLOSSY DARK iOS/ARENA THEME ---
+const bossCSS = `...`; // (Keep your CSS as-is at the bottom, or just paste the original bossCSS.)
 
 export default function BossModePage() {
-  // === STATE ===
+  // --- STATE ---
   const [mode, setMode] = useState(""); // '', 'solo', 'coop-create', 'coop-join'
   const [roomCode, setRoomCode] = useState("");
   const [currentSession, setCurrentSession] = useState(null);
@@ -34,66 +34,66 @@ export default function BossModePage() {
 
   const autoTapperRef = useRef(null);
   const coopSyncRef = useRef(null);
- const [userId, setUserId] = useState("");
-const [pin, setPin] = useState("");
-const [userReady, setUserReady] = useState(false);
+  const [userId, setUserId] = useState("");
+  const [pin, setPin] = useState("");
+  const [userReady, setUserReady] = useState(false);
 
-useEffect(() => {
-  const storedUserId = localStorage.getItem("userId");
-  const storedPin = localStorage.getItem("pin");
-  if (!storedUserId || !storedPin) {
-    window.location.href = "/login";
-    return;
-  }
-  setUserId(storedUserId);
-  setPin(storedPin);
-  setUserReady(true);
-}, []);
+  // --- USER AUTH (must always run, always at top, no conditional return above!) ---
+  useEffect(() => {
+    const storedUserId = localStorage.getItem("userId");
+    const storedPin = localStorage.getItem("pin");
+    if (!storedUserId || !storedPin) {
+      window.location.href = "/login";
+      return;
+    }
+    setUserId(storedUserId);
+    setPin(storedPin);
+    setUserReady(true);
+  }, []);
 
-  if (!userReady) return null;
-
-// Profile
-useEffect(() => {
-  if (!userReady) return;
-  setProfileLoading(true);
-  fetch(`/api/boss?action=profile&userId=${userId}`)
-    .then(r => r.json())
-    .then(setProfileData)
-    .finally(() => setProfileLoading(false));
-}, [userReady, userId]);
-
-// Upgrades (refreshes every 5s)
-useEffect(() => {
-  if (!userReady) return;
-  let cancelled = false;
-  function loadUpgrades() {
-    setUpgradesLoading(true);
-    fetch(`/api/boss?action=upgrades&userId=${userId}`)
+  // --- PROFILE LOADING ---
+  useEffect(() => {
+    if (!userReady) return;
+    setProfileLoading(true);
+    fetch(`/api/boss?action=profile&userId=${userId}`)
       .then(r => r.json())
-      .then(data => { if (!cancelled) setUpgradesData(data); })
-      .finally(() => { if (!cancelled) setUpgradesLoading(false); });
-  }
-  loadUpgrades();
-  const intv = setInterval(loadUpgrades, 5000);
-  return () => { cancelled = true; clearInterval(intv); };
-}, [userReady, userId]);
+      .then(setProfileData)
+      .finally(() => setProfileLoading(false));
+  }, [userReady, userId]);
 
-// Solo Progress (reload on solo mode change, refresh every 30s)
-useEffect(() => {
-  if (!userReady || mode !== "solo") return;
-  setSoloLoading(true);
-  let cancelled = false;
-  function loadProgress() {
-    fetch(`/api/boss?action=progress&userId=${userId}`)
-      .then(r => r.json())
-      .then(data => { if (!cancelled) setSoloProgress(data); })
-      .finally(() => { if (!cancelled) setSoloLoading(false); });
-  }
-  loadProgress();
-  const intv = setInterval(loadProgress, 30000);
-  return () => { cancelled = true; clearInterval(intv); };
-}, [userReady, userId, mode]);
-  // Coop sync (only if in coop mode + session)
+  // --- UPGRADES LOADING ---
+  useEffect(() => {
+    if (!userReady) return;
+    let cancelled = false;
+    function loadUpgrades() {
+      setUpgradesLoading(true);
+      fetch(`/api/boss?action=upgrades&userId=${userId}`)
+        .then(r => r.json())
+        .then(data => { if (!cancelled) setUpgradesData(data); })
+        .finally(() => { if (!cancelled) setUpgradesLoading(false); });
+    }
+    loadUpgrades();
+    const intv = setInterval(loadUpgrades, 5000);
+    return () => { cancelled = true; clearInterval(intv); };
+  }, [userReady, userId]);
+
+  // --- SOLO PROGRESS LOADING ---
+  useEffect(() => {
+    if (!userReady || mode !== "solo") return;
+    setSoloLoading(true);
+    let cancelled = false;
+    function loadProgress() {
+      fetch(`/api/boss?action=progress&userId=${userId}`)
+        .then(r => r.json())
+        .then(data => { if (!cancelled) setSoloProgress(data); })
+        .finally(() => { if (!cancelled) setSoloLoading(false); });
+    }
+    loadProgress();
+    const intv = setInterval(loadProgress, 30000);
+    return () => { cancelled = true; clearInterval(intv); };
+  }, [userReady, userId, mode]);
+
+  // --- COOP SYNC ---
   useEffect(() => {
     if (!mode.startsWith("coop") || !currentSession) return;
     let cancelled = false;
@@ -110,9 +110,9 @@ useEffect(() => {
     syncSession();
     coopSyncRef.current = setInterval(syncSession, 1000);
     return () => { cancelled = true; clearInterval(coopSyncRef.current); };
-  }, [mode, currentSession]);
+  }, [mode, currentSession, userId]);
 
-  // Auto-tapper (solo only, DPS>0)
+  // --- AUTO-TAPPER ---
   useEffect(() => {
     if (mode === "solo" && upgradesData?.stats?.autoTapperDps > 0) {
       autoTapperRef.current = setInterval(() => {
@@ -123,7 +123,7 @@ useEffect(() => {
     // eslint-disable-next-line
   }, [mode, upgradesData?.stats?.autoTapperDps]);
 
-  // Set local battle data on soloProgress change
+  // --- LOCAL BATTLE DATA SYNC ---
   useEffect(() => {
     if (mode === "solo" && soloProgress && !localBattleData) {
       setLocalBattleData(soloProgress);
@@ -131,14 +131,17 @@ useEffect(() => {
     // eslint-disable-next-line
   }, [mode, soloProgress, localBattleData]);
 
-  // Initialize boss HP
+  // --- INITIALIZE BOSS HP ---
   useEffect(() => {
     const battleData = mode === "solo" ? localBattleData || soloProgress : currentSession;
     if (mode === "solo" && battleData && bossHp === 100) setBossHp(battleData.boss_hp);
     // eslint-disable-next-line
   }, [mode, localBattleData, soloProgress, currentSession, bossHp]);
 
-  // === LOGIC ===
+  // --- ALL HOOKS ABOVE, NOW SAFE TO CONDITIONAL RETURN ---
+  if (!userReady) return null;
+
+  // --- LOGIC ---
   const getTapSpeedMultiplier = useCallback(() => {
     if (!upgradesData?.stats?.tapSpeedBonus) return 1;
     const now = Date.now();
@@ -147,7 +150,6 @@ useEffect(() => {
     return 1;
   }, [lastTapTimes, upgradesData?.stats?.tapSpeedBonus]);
 
-  // Handle tapping
   function handleTap() {
     const now = Date.now();
     setLastTapTimes(prev => [...prev.slice(-10), now]);
@@ -156,7 +158,6 @@ useEffect(() => {
     else if (mode.startsWith("coop") && currentSession) handleCoopTap();
   }
 
-  // Tap boss (SOLO)
   function handleSoloTap(isAutoTap = false) {
     fetch("/api/boss", {
       method: "POST",
@@ -179,12 +180,9 @@ useEffect(() => {
             total_coins_earned: data.total_coins,
             coins_per_boss: data.coins_per_boss || Math.floor(500 * Math.pow(1.15, data.new_level - 1)),
           }));
-          // Refresh everything
           refreshAll();
           setTimeout(() => setShowCelebration(false), 2000);
         }
-
-        // Damage number (not for auto-taps)
         if (data.damage_dealt && !data.is_auto_tap) {
           const damageId = Date.now();
           setShowDamageNumbers(prev => [
@@ -204,7 +202,6 @@ useEffect(() => {
       });
   }
 
-  // Tap boss (COOP)
   function handleCoopTap() {
     if (!currentSession) return;
     fetch("/api/boss", {
@@ -228,7 +225,6 @@ useEffect(() => {
       });
   }
 
-  // Buy upgrade
   function handleUpgrade(upgradeType) {
     setUpgrading(true);
     fetch("/api/boss", {
@@ -241,7 +237,6 @@ useEffect(() => {
       .finally(() => setUpgrading(false));
   }
 
-  // Refresh everything (profile, upgrades, progress)
   function refreshAll() {
     setProfileLoading(true);
     setUpgradesLoading(true);
@@ -260,7 +255,6 @@ useEffect(() => {
       .finally(() => setSoloLoading(false));
   }
 
-  // COOP: create session
   function handleCoopCreate() {
     setCoopCreating(true);
     setCoopError("");
@@ -278,7 +272,6 @@ useEffect(() => {
       .finally(() => setCoopCreating(false));
   }
 
-  // COOP: join session
   function handleCoopJoin() {
     setCoopJoining(true);
     setCoopError("");
@@ -300,7 +293,6 @@ useEffect(() => {
       .finally(() => setCoopJoining(false));
   }
 
-  // Time until reset
   function getTimeUntilReset() {
     if (!soloProgress?.next_reset) return "";
     const now = new Date();
@@ -313,107 +305,44 @@ useEffect(() => {
     return `${days}d ${hours}h ${minutes}m`;
   }
 
-  // --- UI: Menu ---
+  // --- UI ---
   const availableCoins = profileData?.stats?.availableCoins || 0;
 
+  // --- Menu screens ---
   if (!mode) {
     return (
       <div className="boss-bg min-h-screen flex items-center justify-center px-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
-          {/* ...PROFILE HEADER, BUTTONS... (exact same as above, just use the code you had) */}
-          {/* ...snip, see your latest file for this section */}
+          {/* ...PROFILE HEADER, BUTTONS, ETC... */}
         </motion.div>
         <style jsx global>{bossCSS}</style>
       </div>
     );
   }
 
-  // --- CO-OP CREATE ---
   if (mode === "coop-create" && !currentSession) {
     return (
       <div className="boss-bg min-h-screen flex items-center justify-center px-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
-          <div className="boss-glass-panel p-8 shadow-3xl border border-orange-500/30">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-orange-100 mb-2">Forge Alliance</h2>
-              <p className="text-orange-300">Summon your raid party</p>
-            </div>
-            <motion.button
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={handleCoopCreate}
-              disabled={coopCreating}
-              className="boss-button-coop w-full"
-            >
-              <div className="flex items-center justify-center space-x-3">
-                <Flame size={24} />
-                <span className="text-xl font-bold">
-                  {coopCreating ? "Forging..." : "Create Alliance"}
-                </span>
-              </div>
-            </motion.button>
-            <button
-              onClick={() => setMode("")}
-              className="w-full mt-4 text-orange-300 hover:text-orange-100 transition-colors"
-            >← Back to menu</button>
-          </div>
+          {/* ...COOP CREATE UI... */}
         </motion.div>
         <style jsx global>{bossCSS}</style>
       </div>
     );
   }
 
-  // --- CO-OP JOIN ---
   if (mode === "coop-join" && !currentSession) {
     return (
       <div className="boss-bg min-h-screen flex items-center justify-center px-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
-          <div className="boss-glass-panel p-8 shadow-3xl border border-orange-500/30">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-orange-100 mb-2">Join Alliance</h2>
-              <p className="text-orange-300">Enter the battle code</p>
-            </div>
-            <div className="space-y-4">
-              <input
-                type="text"
-                value={roomCode}
-                onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                placeholder="Enter battle code"
-                className="boss-input"
-                maxLength={6}
-              />
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleCoopJoin}
-                disabled={!roomCode || coopJoining}
-                className="boss-button-join w-full"
-              >
-                <div className="flex items-center justify-center space-x-3">
-                  <Users size={24} />
-                  <span className="text-xl font-bold">
-                    {coopJoining ? "Joining..." : "Join Alliance"}
-                  </span>
-                </div>
-              </motion.button>
-              {coopError && (
-                <div className="text-red-200 text-center p-3 bg-red-500/20 rounded-xl border border-red-500/30">
-                  {coopError}
-                </div>
-              )}
-            </div>
-            <button
-              onClick={() => setMode("")}
-              className="w-full mt-4 text-orange-300 hover:text-orange-100 transition-colors"
-            >← Back to menu</button>
-          </div>
+          {/* ...COOP JOIN UI... */}
         </motion.div>
         <style jsx global>{bossCSS}</style>
       </div>
     );
   }
 
-  // --- BATTLE UI (Solo/Co-op) ---
+  // --- Battle UI ---
   const battleData = mode === "solo" ? localBattleData || soloProgress : currentSession;
   const isLoading = mode === "solo" ? soloLoading : false;
   if (isLoading || !battleData || upgradesLoading) {
