@@ -34,59 +34,65 @@ export default function BossModePage() {
 
   const autoTapperRef = useRef(null);
   const coopSyncRef = useRef(null);
-  const [userId, setUserId] = useState("");
-  const [pin, setPin] = useState("");
+ const [userId, setUserId] = useState("");
+const [pin, setPin] = useState("");
+const [userReady, setUserReady] = useState(false);
 
-  useEffect(() => {
+useEffect(() => {
   const storedUserId = localStorage.getItem("userId");
   const storedPin = localStorage.getItem("pin");
-
   if (!storedUserId || !storedPin) {
     window.location.href = "/login";
     return;
   }
-
   setUserId(storedUserId);
   setPin(storedPin);
+  setUserReady(true);
 }, []);
-  // === FETCHES ===
-  // Profile
-  useEffect(() => {
-    setProfileLoading(true);
-    fetch(`/api/boss?action=profile&userId=${userId}`)
+
+  if (!userReady) return null;
+
+// Profile
+useEffect(() => {
+  if (!userReady) return;
+  setProfileLoading(true);
+  fetch(`/api/boss?action=profile&userId=${userId}`)
+    .then(r => r.json())
+    .then(setProfileData)
+    .finally(() => setProfileLoading(false));
+}, [userReady, userId]);
+
+// Upgrades (refreshes every 5s)
+useEffect(() => {
+  if (!userReady) return;
+  let cancelled = false;
+  function loadUpgrades() {
+    setUpgradesLoading(true);
+    fetch(`/api/boss?action=upgrades&userId=${userId}`)
       .then(r => r.json())
-      .then(setProfileData)
-      .finally(() => setProfileLoading(false));
-  }, []);
-  // Upgrades (refreshes every 5s)
-  useEffect(() => {
-    let cancelled = false;
-    function loadUpgrades() {
-      setUpgradesLoading(true);
-      fetch(`/api/boss?action=upgrades&userId=${userId}`)
-        .then(r => r.json())
-        .then(data => { if (!cancelled) setUpgradesData(data); })
-        .finally(() => { if (!cancelled) setUpgradesLoading(false); });
-    }
-    loadUpgrades();
-    const intv = setInterval(loadUpgrades, 5000);
-    return () => { cancelled = true; clearInterval(intv); };
-  }, []);
-  // Solo Progress (reload on solo mode change, refresh every 30s)
-  useEffect(() => {
-    if (mode !== "solo") return;
-    setSoloLoading(true);
-    let cancelled = false;
-    function loadProgress() {
-      fetch(`/api/boss?action=progress&userId=${userId}`)
-        .then(r => r.json())
-        .then(data => { if (!cancelled) setSoloProgress(data); })
-        .finally(() => { if (!cancelled) setSoloLoading(false); });
-    }
-    loadProgress();
-    const intv = setInterval(loadProgress, 30000);
-    return () => { cancelled = true; clearInterval(intv); };
-  }, [mode]);
+      .then(data => { if (!cancelled) setUpgradesData(data); })
+      .finally(() => { if (!cancelled) setUpgradesLoading(false); });
+  }
+  loadUpgrades();
+  const intv = setInterval(loadUpgrades, 5000);
+  return () => { cancelled = true; clearInterval(intv); };
+}, [userReady, userId]);
+
+// Solo Progress (reload on solo mode change, refresh every 30s)
+useEffect(() => {
+  if (!userReady || mode !== "solo") return;
+  setSoloLoading(true);
+  let cancelled = false;
+  function loadProgress() {
+    fetch(`/api/boss?action=progress&userId=${userId}`)
+      .then(r => r.json())
+      .then(data => { if (!cancelled) setSoloProgress(data); })
+      .finally(() => { if (!cancelled) setSoloLoading(false); });
+  }
+  loadProgress();
+  const intv = setInterval(loadProgress, 30000);
+  return () => { cancelled = true; clearInterval(intv); };
+}, [userReady, userId, mode]);
   // Coop sync (only if in coop mode + session)
   useEffect(() => {
     if (!mode.startsWith("coop") || !currentSession) return;
