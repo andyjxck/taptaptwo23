@@ -41,7 +41,7 @@ export async function GET(request) {
       if (!gameSave) {
         const { data } = await supabase.from("game_saves").insert([{
           user_id: userId, profile_name: "Fire Warrior", profile_icon: "🔥",
-          tap_power_level: 1, auto_tapper_level: 0, crit_chance_upgrades: 0, tap_speed_bonus_upgrades: 0,
+          tap_power_upgrades: 1, auto_tapper_upgrades: 0, crit_chance_upgrades: 0, tap_speed_bonus_upgrades: 0,
           tap_power: 1, auto_tapper: 0, crit_chance: 0, tap_speed_bonus: 0, coins: 0,
         }]).select().single();
         gameSave = data;
@@ -55,7 +55,7 @@ export async function GET(request) {
         bossProgress = data;
       }
       // Calculate upgrade/total level, coins, etc.
-      const upgradeLevel = safe(gameSave.tap_power_level) + safe(gameSave.auto_tapper_level) + safe(gameSave.crit_chance_upgrades) + safe(gameSave.tap_speed_bonus_upgrades);
+      const upgradeLevel = safe(gameSave.tap_power_upgrades) + safe(gameSave.auto_tapper_upgrades) + safe(gameSave.crit_chance_upgrades) + safe(gameSave.tap_speed_bonus_upgrades);
       const totalLevel = safe(bossProgress.current_level) + upgradeLevel;
       const availableCoins = safe(gameSave.coins);
       if (bossProgress.total_level !== totalLevel) {
@@ -84,23 +84,23 @@ export async function GET(request) {
       let { data: gameSave } = await supabase.from("game_saves").select("*").eq("user_id", userId).single();
       if (!gameSave) {
         const { data } = await supabase.from("game_saves").insert([{
-          user_id: userId, tap_power_level: 1, auto_tapper_level: 0, crit_chance_upgrades: 0, tap_speed_bonus_upgrades: 0,
+          user_id: userId, tap_power_upgrades: 1, auto_tapper_upgrades: 0, crit_chance_upgrades: 0, tap_speed_bonus_upgrades: 0,
           tap_power: 1, auto_tapper: 0, crit_chance: 0, tap_speed_bonus: 0, coins: 0,
         }]).select().single();
         gameSave = data;
       }
-      const tapPower = safe(gameSave.tap_power_level);
-      const autoTapperDps = safe(gameSave.auto_tapper_level) > 0 ? Math.floor(gameSave.auto_tapper_level * 0.5) : 0;
+      const tapPower = safe(gameSave.tap_power_upgrades);
+      const autoTapperDps = safe(gameSave.auto_tapper_upgrades) > 0 ? Math.floor(gameSave.auto_tapper_level * 0.5) : 0;
       const critChance = Math.min(safe(gameSave.crit_chance_upgrades) * 5, 100);
       const tapSpeedBonus = safe(gameSave.tap_speed_bonus_upgrades) * 30;
       const tapPowerCost = Math.floor(10 * Math.pow(1.5, tapPower));
-      const autoTapperCost = Math.floor(50 * Math.pow(1.8, safe(gameSave.auto_tapper_level)));
+      const autoTapperCost = Math.floor(50 * Math.pow(1.8, safe(gameSave.auto_tapper_upgrades)));
       const critChanceCost = Math.floor(100 * Math.pow(2.0, safe(gameSave.crit_chance_upgrades)));
       const tapSpeedBonusCost = Math.floor(75 * Math.pow(1.7, safe(gameSave.tap_speed_bonus_upgrades)));
       return Response.json({
         upgrades: {
-          tap_power_level: tapPower,
-          auto_tapper_level: safe(gameSave.auto_tapper_level),
+          tap_power_upgrades: tapPower,
+          auto_tapper_upgrades: safe(gameSave.auto_tapper_upgrades),
           crit_chance_upgrades: safe(gameSave.crit_chance_upgrades),
           tap_speed_bonus_upgrades: safe(gameSave.tap_speed_bonus_upgrades),
         },
@@ -198,11 +198,40 @@ export async function POST(request) {
       if (!gameSave || !progress) return Response.json({ error: 'User data not found' }, { status: 404 });
       let cost = 0, updateField = '', currentLevel = 0;
       switch (upgradeType) {
-        case 'tapPower': currentLevel = safe(gameSave.tap_power_level); cost = Math.floor(10 * Math.pow(1.5, currentLevel)); updateField = 'tap_power_level'; break;
-        case 'autoTapper': currentLevel = safe(gameSave.auto_tapper_level); cost = Math.floor(50 * Math.pow(1.8, currentLevel)); updateField = 'auto_tapper_level'; break;
-        case 'critChance': currentLevel = safe(gameSave.crit_chance_upgrades); if (currentLevel >= 20) return Response.json({ error: 'Maximum crit chance reached' }, { status: 400 }); cost = Math.floor(100 * Math.pow(2.0, currentLevel)); updateField = 'crit_chance_upgrades'; break;
-        case 'tapSpeedBonus': currentLevel = safe(gameSave.tap_speed_bonus_upgrades); cost = Math.floor(75 * Math.pow(1.7, currentLevel)); updateField = 'tap_speed_bonus_upgrades'; break;
-        default: return Response.json({ error: 'Invalid upgrade type' }, { status: 400 });
+  case 'tapPower':
+    currentLevel = safe(gameSave.tap_power_upgrades);
+    cost = Math.floor(20 * Math.pow(1.07, currentLevel));
+    updateField = 'tap_power_upgrades';
+    break;
+
+  case 'autoTapper':
+    currentLevel = safe(gameSave.auto_tapper_upgrades);
+    cost = Math.floor(500 * Math.pow(1.06, currentLevel));
+    updateField = 'auto_tapper_upgrades';
+    break;
+
+  case 'critChance':
+    currentLevel = safe(gameSave.crit_chance_upgrades);
+    if (currentLevel >= 100) {
+      return Response.json({ error: 'Maximum crit chance reached' }, { status: 400 });
+    }
+    cost = currentLevel < 84
+      ? Math.floor(40 * Math.pow(1.06, currentLevel))
+      : Math.floor(40 * Math.pow(1.06, 84) * Math.pow(1.09, currentLevel - 84));
+    updateField = 'crit_chance_upgrades';
+    break;
+
+  case 'tapSpeedBonus':
+    currentLevel = safe(gameSave.tap_speed_bonus_upgrades);
+    cost = currentLevel < 69
+      ? Math.floor(80 * Math.pow(1.07, currentLevel))
+      : Math.floor(80 * Math.pow(1.07, 69) * Math.pow(1.1, currentLevel - 69));
+    updateField = 'tap_speed_bonus_upgrades';
+    break;
+
+  default:
+    return Response.json({ error: 'Invalid upgrade type' }, { status: 400 });
+
       }
       if (progress.total_coins < cost) return Response.json({ error: 'Insufficient coins' }, { status: 400 });
       const { error: updateUpgradeErr } = await supabase.from("game_saves").update({ [updateField]: currentLevel + 1 }).eq("user_id", userId);
@@ -213,7 +242,7 @@ export async function POST(request) {
     }
 
     // --- 3. SOLO BOSS TAP ---
-    if (action === "solo_tap") {
+  if (action === "solo_tap") {
       const { userId, isAutoTap = false } = body;
       if (!userId) return Response.json({ error: "User ID required" }, { status: 400 });
       let { data: progress } = await supabase.from("boss_progress").select("*").eq("user_id", userId).single();
@@ -224,9 +253,9 @@ export async function POST(request) {
       const bossMaxHp = getBossHP(currentLevel);
       let currentBossHp = progress.boss_hp || bossMaxHp;
       let actualDamage, isCrit = false;
-      if (isAutoTap) { actualDamage = gameSave.auto_tapper_level || 0; }
+      if (isAutoTap) { actualDamage = gameSave.auto_tapper || 0; }
       else {
-        actualDamage = gameSave.tap_power_level || 1;
+        actualDamage = gameSave.tap_power || 1;
         const critChance = Math.min((gameSave.crit_chance_upgrades || 0) * 5, 100);
         isCrit = Math.random() * 100 < critChance;
         if (isCrit) actualDamage *= 3;
