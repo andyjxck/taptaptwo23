@@ -541,7 +541,7 @@ export default function BossModePage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => handleUpgrade("tapPower")}
-              disabled={availableCoins < upgradesData?.costs?.tapPowerCost || handleUpgrade.isLoading}
+              disabled={availableCoins < upgradesData?.costs?.tapPowerCost || upgrading }
               className="boss-upgrade-btn boss-upgrade-red"
             >
               <div className="flex items-center justify-between mb-1"><Zap size={16} className="text-yellow-400" /><div className="text-xs font-bold text-yellow-400">{upgradesData?.costs?.tapPowerCost || 0}</div></div>
@@ -554,7 +554,7 @@ export default function BossModePage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => handleUpgrade("autoTapper")}
-              disabled={availableCoins < upgradesData?.costs?.autoTapperCost || handleUprade.isLoading}
+              disabled={availableCoins < upgradesData?.costs?.autoTapperCost || upgrading }
               className="boss-upgrade-btn boss-upgrade-green"
             >
               <div className="flex items-center justify-between mb-1"><Settings size={16} className="text-green-400" /><div className="text-xs font-bold text-yellow-400">{upgradesData?.costs?.autoTapperCost || 0}</div></div>
@@ -567,7 +567,7 @@ export default function BossModePage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => handleUpgrade("critChance")}
-              disabled={availableCoins < upgradesData?.costs?.critChanceCost || handleUprade.isLoading || upgradesData?.stats?.critChance >= 100}
+              disabled={availableCoins < upgradesData?.costs?.critChanceCost || upgrading || upgradesData?.stats?.critChance >= 100}
               className="boss-upgrade-btn boss-upgrade-purple"
             >
               <div className="flex items-center justify-between mb-1"><Target size={16} className="text-purple-400" /><div className="text-xs font-bold text-yellow-400">{upgradesData?.costs?.critChanceCost || 0}</div></div>
@@ -580,7 +580,7 @@ export default function BossModePage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => handleUpgrade("tapSpeedBonus")}
-              disabled={availableCoins < upgradesData?.costs?.tapSpeedBonusCost || handleUprade.isLoading}
+              disabled={availableCoins < upgradesData?.costs?.tapSpeedBonusCost || upgrading}
               className="boss-upgrade-btn boss-upgrade-yellow"
             >
               <div className="flex items-center justify-between mb-1"><Clock size={16} className="text-yellow-400" /><div className="text-xs font-bold text-yellow-400">{upgradesData?.costs?.tapSpeedBonusCost || 0}</div></div>
