@@ -137,9 +137,6 @@ export default function BossModePage() {
     // eslint-disable-next-line
   }, [mode, localBattleData, soloProgress, currentSession, bossHp]);
 
-  // --- ALL HOOKS ABOVE, NOW SAFE TO CONDITIONAL RETURN ---
-  if (!userReady) return null;
-
   // --- LOGIC ---
   const getTapSpeedMultiplier = useCallback(() => {
     if (!upgradesData?.stats?.tapSpeedBonus) return 1;
