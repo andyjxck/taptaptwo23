@@ -4196,7 +4196,7 @@ setShowOfflineEarnings(true); // <-- THIS IS WHAT WAS MISSING!
               <strong>
                 {(
                   (gameState.permanentMultiplier || 1) +
-                  tokensToEarn * 0.05
+                  tokensToEarn * 0.015
                 ).toFixed(2)}
                 x
               </strong>
@@ -5645,7 +5645,7 @@ const renderLeaderboard = () => (
     const tokensToEarn = getTokensFromCoins(gameState.coinsEarnedThisRun || 0);
     const canReset = tokensToEarn > 0;
     const currentMultiplier = gameState.permanentMultiplier || 1;
-    const newMultiplier = currentMultiplier + tokensToEarn * 0.05;
+    const newMultiplier = currentMultiplier + tokensToEarn * 0.015;
 
     return (
       <div className="space-y-6 p-4">
