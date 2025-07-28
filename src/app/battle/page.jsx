@@ -55,6 +55,9 @@ const [aiCoins, setAiCoins] = React.useState(0);
   const [roomCode, setRoomCode] = React.useState("");
   const [currentRoom, setCurrentRoom] = React.useState("");
   const [opponentName, setOpponentName] = React.useState("Opponent");
+  const timeLeftRef = useRef(timeLeft);
+React.useEffect(() => { timeLeftRef.current = timeLeft; }, [timeLeft]);
+
 // AI upgrades levels (start low)
 const [aiTapPower, setAiTapPower] = React.useState(1);
 const [aiTapPowerLevel, setAiTapPowerLevel] = React.useState(1);
@@ -116,22 +119,21 @@ React.useEffect(() => {
     let coins = aiCoinsRef.current;
     let tapPower = aiTapPowerRef.current;
     let tapPowerLvl = aiTapPowerLevelRef.current;
+    let currentTimeLeft = timeLeftRef.current;
+
+    // DEBUG: Log every tick so you see what values are being used
+    console.log('AI Upgrade Check', { coins, tapPower, tapPowerLvl, currentTimeLeft });
 
     // Stop all upgrades in last 5 seconds
-    if (timeLeft <= 5) return;
+    if (currentTimeLeft <= 5) return;
 
-    let didUpgrade = false;
-    // Use the **correct cost calculation** based on latest tapPowerLvl!
+    // Calculate upgrade cost
     let cost = Math.floor(10 * Math.pow(1.3, tapPowerLvl - 1));
-    // Only upgrade once per interval, remove the while loop (it can overspend and get stuck!)
     if (coins >= cost) {
       coins -= cost;
       tapPower += 3 + Math.floor(tapPowerLvl * 0.5);
       tapPowerLvl += 1;
-      didUpgrade = true;
-    }
 
-    if (didUpgrade && !isCancelled) {
       setAiCoins(coins);
       setAiTapPower(tapPower);
       setAiTapPowerLevel(tapPowerLvl);
@@ -151,7 +153,8 @@ React.useEffect(() => {
     isCancelled = true;
     clearInterval(upgradeTimer);
   };
-}, [gamePhase, gameMode, currentRoom, timeLeft, aiDifficulty, playerScore]);
+  // timeLeft is NOT in the dependency array! Use the ref.
+}, [gamePhase, gameMode, currentRoom, aiDifficulty, playerScore]);
 
 // Game timer effect
   React.useEffect(() => {
