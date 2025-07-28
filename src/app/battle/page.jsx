@@ -157,65 +157,99 @@ React.useEffect(() => {
   if (gamePhase !== "playing" || gameMode !== "ai" || !currentRoom) return;
 
 const upgradeInterval = aiDifficulty === "hard" ? 3000 : aiDifficulty === "medium" ? 3500 : 4500;
-let isCancelled = false;
+let didUpgrade = false;
 
-const upgradeTimer = setInterval(async () => {
-  let coins = aiCoinsRef.current;
-  let tapPowerLevel = aiTapPowerLevelRef.current;
-  let critLevel = aiCritLevelRef.current;
-  let tapSpeedLevel = aiTapSpeedLevelRef.current;
-  let autoTapperLevel = aiAutoTapperLevelRef.current;
+// Don't upgrade in the last 5 seconds
+if (timeLeft <= 5) return;
 
-  let didUpgrade = false;
+// Calculate value for each upgrade
+const tapPowerValue = 3 + Math.floor(newTapPowerLvl * 0.5);
+const tapSpeedValue = 30 + Math.floor(newTapSpeedLvl * 1.5);
+const critValue = (newCritChance < 100) ? (2 + Math.floor(newCritLvl / 3)) : 0;
+const autoTapperValue = (newAutoTapper < 50000) ? (40 + Math.floor(newAutoTapperLvl * 1.8)) : 0;
 
-  const tapPowerCost = Math.floor(10 * Math.pow(1.3, tapPowerLevel - 1));
-  const critCost = Math.floor(25 * Math.pow(1.4, critLevel));
-  const tapSpeedCost = Math.floor(50 * Math.pow(1.6, tapSpeedLevel));
-  const autoTapperCost = Math.floor(100 * Math.pow(1.45, autoTapperLevel));
-
-  let newAiCoins = coins;
-  let newTapPower = aiTapPowerRef.current;
-  let newTapPowerLvl = tapPowerLevel;
-  let newCritChance = aiCritChanceRef.current;
-  let newCritLvl = critLevel;
-  let newTapSpeedBonus = aiTapSpeedBonusRef.current;
-  let newTapSpeedLvl = tapSpeedLevel;
-  let newAutoTapper = aiAutoTapperRef.current;
-  let newAutoTapperLvl = autoTapperLevel;
-
-  if (newAiCoins >= tapPowerCost) {
-    newAiCoins -= tapPowerCost;
-    newTapPower += 3 + Math.floor(newTapPowerLvl * 0.5); // ✅ fixed this line
-    newTapPowerLvl += 1;
-    didUpgrade = true;
-    setOpponentScore(prev => prev - tapPowerCost);
+// Build upgrade options
+let upgradeOptions = [
+  {
+    name: "tapPower",
+    cost: tapPowerCost,
+    value: tapPowerValue / tapPowerCost,
+    canBuy: newAiCoins >= tapPowerCost,
+    apply: () => {
+      newAiCoins -= tapPowerCost;
+      newTapPower += tapPowerValue;
+      newTapPowerLvl += 1;
+      setOpponentScore(prev => prev - tapPowerCost);
+    }
+  },
+  {
+    name: "tapSpeed",
+    cost: tapSpeedCost,
+    value: tapSpeedValue / tapSpeedCost,
+    canBuy: newAiCoins >= tapSpeedCost,
+    apply: () => {
+      newAiCoins -= tapSpeedCost;
+      newTapSpeedBonus += tapSpeedValue;
+      newTapSpeedLvl += 1;
+      setOpponentScore(prev => prev - tapSpeedCost);
+    }
+  },
+  {
+    name: "crit",
+    cost: critCost,
+    value: critValue / critCost,
+    canBuy: newAiCoins >= critCost && newCritChance < 100,
+    apply: () => {
+      newAiCoins -= critCost;
+      newCritChance = Math.min(newCritChance + critValue, 100);
+      newCritLvl += 1;
+      setOpponentScore(prev => prev - critCost);
+    }
+  },
+  {
+    name: "autoTapper",
+    cost: autoTapperCost,
+    value: autoTapperValue / autoTapperCost,
+    canBuy: newAiCoins >= autoTapperCost && newAutoTapper < 50000,
+    apply: () => {
+      newAiCoins -= autoTapperCost;
+      newAutoTapper += autoTapperValue;
+      newAutoTapperLvl += 1;
+      setOpponentScore(prev => prev - autoTapperCost);
+    }
   }
+].filter(upg => upg.canBuy && upg.value > 0);
 
-  if (newAiCoins >= critCost && newCritChance < 100) {
-    newAiCoins -= critCost;
-    newCritChance = Math.min(newCritChance + 2 + Math.floor(newCritLvl / 3), 100);
-    newCritLvl += 1;
-    didUpgrade = true;
-    setOpponentScore(prev => prev - critCost);
+// Sort by best value
+upgradeOptions.sort((a, b) => b.value - a.value);
+
+// Is the AI behind?
+const aiIsBehind = (opponentScore || 0) > (playerScore || 0) + 2000; // adjust threshold as you like
+
+if (aiIsBehind) {
+  // Aggressive: Buy as many as possible in priority order, only if good value
+  for (let i = 0; i < upgradeOptions.length; i++) {
+    while (
+      upgradeOptions[i].canBuy &&
+      newAiCoins >= upgradeOptions[i].cost &&
+      upgradeOptions[i].value > 0.02
+    ) {
+      upgradeOptions[i].apply();
+      didUpgrade = true;
+      // Update canBuy status in this tick (simulate next buy)
+      upgradeOptions[i].canBuy = newAiCoins >= upgradeOptions[i].cost;
+    }
   }
-
-  if (newAiCoins >= tapSpeedCost) {
-    newAiCoins -= tapSpeedCost;
-    newTapSpeedBonus += 30 + Math.floor(newTapSpeedLvl * 1.5);
-    newTapSpeedLvl += 1;
+} else {
+  // Conservative: Only buy the single best value upgrade, if worth it
+  if (upgradeOptions.length && upgradeOptions[0].value > 0.02) {
+    upgradeOptions[0].apply();
     didUpgrade = true;
-    setOpponentScore(prev => prev - tapSpeedCost);
   }
+}
 
-  if (newAiCoins >= autoTapperCost && newAutoTapper < 50000) {
-    newAiCoins -= autoTapperCost;
-    newAutoTapper += 40 + Math.floor(newAutoTapperLvl * 1.8);
-    newAutoTapperLvl += 1;
-    didUpgrade = true;
-    setOpponentScore(prev => prev - autoTapperCost);
-  }
+if (!didUpgrade || isCancelled) return;
 
-  if (!didUpgrade || isCancelled) return;
 
   setAiCoins(newAiCoins);
   setAiTapPower(newTapPower);
