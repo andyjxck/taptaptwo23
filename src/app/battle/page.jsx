@@ -103,7 +103,7 @@ const opponentPercent = 100 - playerPercent;
 // --- AI Upgrade Cost Functions (using refs) ---
 const getAiTapPowerCost = () =>
   Math.floor(10 * Math.pow(1.3, aiTapPowerLevelRef.current - 1));
-
+// --- AI UPGRADE LOGIC ---
 React.useEffect(() => {
   if (gamePhase !== "playing" || gameMode !== "ai" || !currentRoom) return;
 
@@ -113,27 +113,25 @@ React.useEffect(() => {
   const upgradeTimer = setInterval(async () => {
     let coins = aiCoinsRef.current;
     let tapPower = aiTapPowerRef.current;
-    let tapPowerLvl = aiTapPowerLevel; // use state directly
-    let cost = getAiTapPowerCost();
+    let tapPowerLvl = aiTapPowerLevelRef.current; // <--- Make a ref for this below if you haven't!
 
     // Stop all upgrades in last 5 seconds
     if (timeLeft <= 5) return;
 
-    // Aggressive AI: Always upgrade if it can afford it
-    let upgrades = 0;
-    while (coins >= cost && !isCancelled) {
-      coins -= cost;
+    let didUpgrade = false;
+    while (coins >= Math.floor(10 * Math.pow(1.3, tapPowerLvl - 1))) {
+      // Do upgrade
+      coins -= Math.floor(10 * Math.pow(1.3, tapPowerLvl - 1));
       tapPower += 3 + Math.floor(tapPowerLvl * 0.5);
       tapPowerLvl += 1;
-      upgrades++;
-      cost = Math.floor(10 * Math.pow(1.3, tapPowerLvl - 1)); // update for next level
+      didUpgrade = true;
     }
 
-    if (upgrades > 0) {
+    if (didUpgrade && !isCancelled) {
       setAiCoins(coins);
       setAiTapPower(tapPower);
       setAiTapPowerLevel(tapPowerLvl);
-      setOpponentScore(coins); // show remaining coins on scoreboard
+      setOpponentScore(coins); // If you want to show AI's coin balance to user
 
       await updateAIStatsInDB({
         roomCode: currentRoom,
@@ -149,7 +147,6 @@ React.useEffect(() => {
     isCancelled = true;
     clearInterval(upgradeTimer);
   };
-  // only timeLeft, aiDifficulty, gamePhase, gameMode, currentRoom, playerScore dependencies are needed
 }, [gamePhase, gameMode, currentRoom, timeLeft, aiDifficulty, playerScore]);
 
 // Game timer effect
