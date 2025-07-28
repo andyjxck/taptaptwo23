@@ -60,8 +60,10 @@ const [aiTapPower, setAiTapPower] = React.useState(1);
 const [aiTapPowerLevel, setAiTapPowerLevel] = React.useState(1);
 const aiCoinsRef = React.useRef(aiCoins);
   const aiTapPowerRef = React.useRef(aiTapPower);
+  const aiTapPowerLevelRef = useRef(aiTapPowerLevel);
 React.useEffect(() => { aiCoinsRef.current = aiCoins; }, [aiCoins]);
 React.useEffect(() => { aiTapPowerRef.current = aiTapPower; }, [aiTapPower]);
+  React.useEffect(() => { aiTapPowerLevelRef.current = aiTapPowerLevel; }, [aiTapPowerLevel]);
   const updateAIStatsInDB = async ({
   roomCode,
   ai_coins,
@@ -113,15 +115,17 @@ React.useEffect(() => {
   const upgradeTimer = setInterval(async () => {
     let coins = aiCoinsRef.current;
     let tapPower = aiTapPowerRef.current;
-    let tapPowerLvl = aiTapPowerLevelRef.current; // <--- Make a ref for this below if you haven't!
+    let tapPowerLvl = aiTapPowerLevelRef.current;
 
     // Stop all upgrades in last 5 seconds
     if (timeLeft <= 5) return;
 
     let didUpgrade = false;
-    while (coins >= Math.floor(10 * Math.pow(1.3, tapPowerLvl - 1))) {
-      // Do upgrade
-      coins -= Math.floor(10 * Math.pow(1.3, tapPowerLvl - 1));
+    // Use the **correct cost calculation** based on latest tapPowerLvl!
+    let cost = Math.floor(10 * Math.pow(1.3, tapPowerLvl - 1));
+    // Only upgrade once per interval, remove the while loop (it can overspend and get stuck!)
+    if (coins >= cost) {
+      coins -= cost;
       tapPower += 3 + Math.floor(tapPowerLvl * 0.5);
       tapPowerLvl += 1;
       didUpgrade = true;
@@ -131,7 +135,7 @@ React.useEffect(() => {
       setAiCoins(coins);
       setAiTapPower(tapPower);
       setAiTapPowerLevel(tapPowerLvl);
-      setOpponentScore(coins); // If you want to show AI's coin balance to user
+      setOpponentScore(coins);
 
       await updateAIStatsInDB({
         roomCode: currentRoom,
@@ -651,7 +655,6 @@ const resetToStart = () => {
   
 React.useEffect(() => {
   let interval;
-
   if (gamePhase === "playing" && gameMode === "ai") {
     const tapFrequencyMs =
       aiDifficulty === "hard"
@@ -661,34 +664,26 @@ React.useEffect(() => {
         : 350;
 
     interval = setInterval(() => {
-      // AI tap logic
       let aiMultiplier = 1;
       if (aiDifficulty === "easy") aiMultiplier = 0.8;
       else if (aiDifficulty === "medium") aiMultiplier = 1.2;
       else if (aiDifficulty === "hard") aiMultiplier = 1.7;
 
-      // Calculate coins per tap (same as tapPower for now)
       const tapPower = aiTapPowerRef.current || 1;
-
-      // AI taps between 1-2 times per interval, scaled by difficulty
       const taps = Math.floor((Math.random() * 2 + 1) * aiMultiplier);
 
-      // Total coins to award to AI
       const coinsToAdd = tapPower * taps;
 
-      // Update AI's coins (for AI display)
-      setAiCoins(prev => prev + coinsToAdd);
-
-      // Set as opponentScore (so it displays on the right)
-      setOpponentScore(prev => prev + coinsToAdd);
-
-      // You can add any floating number effect here if you want
-
+      setAiCoins(prev => {
+        const newCoins = prev + coinsToAdd;
+        setOpponentScore(newCoins); // Always show latest coins
+        return newCoins;
+      });
     }, tapFrequencyMs);
   }
-
   return () => clearInterval(interval);
 }, [gamePhase, gameMode, aiDifficulty]);
+
 
 
 React.useEffect(() => {
