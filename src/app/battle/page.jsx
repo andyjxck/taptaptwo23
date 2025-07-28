@@ -67,11 +67,13 @@ const aiCoinsRef = React.useRef(aiCoins);
 React.useEffect(() => { aiCoinsRef.current = aiCoins; }, [aiCoins]);
 React.useEffect(() => { aiTapPowerRef.current = aiTapPower; }, [aiTapPower]);
   React.useEffect(() => { aiTapPowerLevelRef.current = aiTapPowerLevel; }, [aiTapPowerLevel]);
-  const updateAIStatsInDB = async ({
+const updateAIStatsInDB = async ({
   roomCode,
   ai_coins,
   ai_tap_power,
+  ai_tap_power_level,
   player_score,
+  userId,
 }) => {
   try {
     const res = await fetch('/api/battle', {
@@ -82,7 +84,9 @@ React.useEffect(() => { aiTapPowerRef.current = aiTapPower; }, [aiTapPower]);
         code: roomCode,
         ai_coins,
         ai_tap_power,
+        ai_tap_power_level,
         player_score,
+        userId,
       }),
     });
 
