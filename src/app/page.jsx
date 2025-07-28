@@ -3638,9 +3638,12 @@ if (lastActive && !isNaN(lastActive)) {
       seconds: offlineSeconds,
       coins: coins,
     });
+setShowOfflineEarnings(true); // <-- THIS IS WHAT WAS MISSING!
   }
   localStorage.removeItem("lastActiveTime");
 }
+
+
 
 
       if (data.gameState.boost_active_until) {
