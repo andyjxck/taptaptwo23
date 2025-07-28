@@ -149,6 +149,7 @@ React.useEffect(() => {
         ai_tap_power: tapPower,
         ai_tap_power_level: tapPowerLvl,
         player_score: playerScore,
+        userId,
       });
     }
   }, upgradeInterval);
