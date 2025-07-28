@@ -146,14 +146,13 @@ const opponentPercent = 100 - playerPercent;
   
  // AI Upgrade Cost Functions (use refs inside the effect)
 const getAiTapPowerCost = () =>
-  Math.floor(10 * Math.pow(1.2, aiTapPowerLevelRef.current - 1));
+  Math.floor(10 * Math.pow(aiTapPowerLevelRef.current - 1, 1.2) || 10 * Math.pow(1.3, aiTapPowerLevelRef.current - 1));
 const getAiCritCost = () =>
   Math.floor(25 * Math.pow(1.3, aiCritLevelRef.current));
 const getAiTapSpeedCost = () =>
-  Math.floor(50 * Math.pow(1.5, aiTapSpeedLevelRef.current));
+  Math.floor(50 * Math.pow(1.4, aiTapSpeedLevelRef.current));
 const getAiAutoTapperCost = () =>
-  Math.floor(100 * Math.pow(1.35, aiAutoTapperLevelRef.current));
-
+  Math.floor(100 * Math.pow(1.45, aiAutoTapperLevelRef.current));
 React.useEffect(() => {
   if (gamePhase !== "playing" || gameMode !== "ai" || !currentRoom) return;
 
@@ -842,13 +841,13 @@ React.useEffect(() => {
  React.useEffect(() => {
   let interval;
 
- const tapFrequencyMs =
-  aiDifficulty === "hard"
-    ? 100 // was 300
-    : aiDifficulty === "medium"
-    ? 180 // was 500
-    : 300; // was 1000
-
+  if (gamePhase === "playing" && gameMode === "ai") {
+    const tapFrequencyMs =
+      aiDifficulty === "hard"
+        ? 300
+        : aiDifficulty === "medium"
+        ? 500
+        : 1000;
 
     interval = setInterval(() => {
       console.log("⏱️ AI interval running");
