@@ -713,9 +713,6 @@ const resetToStart = () => {
 
       const baseTapPower = aiTapPowerRef.current || 1;
       const taps = Math.floor((Math.random() * 2 + 1) * aiMultiplier);
-
-      setOpponentScore((prev) => prev + totalCoins);
-      setAiCoins((prev) => prev + totalCoins);
     }, tapFrequencyMs);
   }
 
