@@ -5650,7 +5650,7 @@ const renderLeaderboard = () => (
     return (
       <div className="space-y-6 p-4">
         {/* Title */}
-        <div className="text-center text-lg text-[#4a5568] mb-6">
+        <div className="text-center text-lg text-[#939599] mb-6">
           Reset your progress to gain Renown Tokens!
         </div>
 
@@ -5661,7 +5661,7 @@ const renderLeaderboard = () => (
         </p>
 
         {/* Explanation */}
-        <p className="text-center text-sm text-[#4a5568] max-w-md mx-auto">
+        <p className="text-center text-sm text-[#939599] max-w-md mx-auto">
           You earn <strong>1 Token per 5,000,000 Coins Earned</strong>.
           <br />
           Each Token boosts your income by <strong>2%</strong>.
@@ -5695,14 +5695,14 @@ const renderLeaderboard = () => (
         </button>
 
         {/* Show current multiplier */}
-        <div className="text-center text-[#4a5568] mt-4">
+        <div className="text-center text-[#939599] mt-4">
           <strong>Your current multiplier:</strong>{" "}
           {currentMultiplier.toFixed(2)}x
         </div>
 
         {/* Show new multiplier after reset */}
         {canReset && (
-          <div className="text-center text-[#4a5568] mt-1">
+          <div className="text-center text-[#939599] mt-1">
             <strong>Your new multiplier:</strong> {newMultiplier.toFixed(2)}x
           </div>
         )}
@@ -5778,7 +5778,7 @@ const renderLeaderboard = () => (
               style={{ width: `${progress}%` }}
             />
           </div>
-          <p className="text-center text-sm text-[#4a5568] mt-1">
+          <p className="text-center text-sm text-[#939599] mt-1">
             {Math.floor(gameState.coins).toLocaleString()} /{" "}
             {nextUpgradeCost.toLocaleString()} coins
           </p>
@@ -5918,7 +5918,7 @@ const renderLeaderboard = () => (
               }}
               placeholder="Enter house name"
               maxLength={30}
-              className="w-full px-4 py-2 rounded-xl bg-white/40 border border-white/30 text-[#2d3748] placeholder-[#4a5568]/50 focus:outline-none focus:ring-2 focus:ring-purple-300"
+              className="w-full px-4 py-2 rounded-xl bg-white/40 border border-white/30 text-[#2d3748] placeholder-[#939599]/50 focus:outline-none focus:ring-2 focus:ring-purple-300"
             />
             {houseNameError && (
               <p className="text-red-500 text-sm mt-1">{houseNameError}</p>
@@ -5932,7 +5932,7 @@ const renderLeaderboard = () => (
                 setNewHouseName("");
                 setHouseNameError("");
               }}
-              className="px-4 py-2 rounded-lg text-[#4a5568] hover:bg-white/20 transition-all duration-200"
+              className="px-4 py-2 rounded-lg text-[#939599] hover:bg-white/20 transition-all duration-200"
             >
               Cancel
             </button>
@@ -6195,7 +6195,7 @@ const renderLeaderboard = () => (
 
   <button
     onClick={() => setShowResetModal(true)}
-    className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200 relative`}
+    className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#939599] hover:text-[#2d3748] transition duration-200 relative`}
     aria-label="Reset progress"
   >
     <i className="fas fa-sync-alt"></i>
@@ -6221,7 +6221,7 @@ const renderLeaderboard = () => (
   {/* NEW Battle Button */}
   <a
     href="/battle"
-    className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200`}
+    className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#939599] hover:text-[#2d3748] transition duration-200`}
     aria-label="Battle Mode"
   >
     <i className="fas fa-crosshairs"></i>
@@ -6229,7 +6229,7 @@ const renderLeaderboard = () => (
 
   <button
     onClick={() => setActiveTab("leaderboard")}
-    className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200`}
+    className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#939599] hover:text-[#2d3748] transition duration-200`}
   >
     <i className="fas fa-trophy"></i>
   </button>
@@ -6237,7 +6237,7 @@ const renderLeaderboard = () => (
   <div className="relative">
     <button
       onClick={() => setShowDropdown((prev) => !prev)}
-      className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#4a5568] hover:text-[#2d3748] transition duration-200`}
+      className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#939599] hover:text-[#2d3748] transition duration-200`}
       aria-label="Open menu"
     >
       <i className="fas fa-bars"></i>
@@ -6250,35 +6250,35 @@ const renderLeaderboard = () => (
       >
         <a
           href="/help"
-          className="block px-4 py-2 text-[#4a5568] hover:bg-gray-100"
+          className="block px-4 py-2 text-[#939599] hover:bg-gray-100"
         >
           <i className="fas fa-question mr-2"></i> Help
         </a>
 
         <a
           href="/notice-board"
-          className="block px-4 py-2 text-[#4a5568] hover:bg-gray-100"
+          className="block px-4 py-2 text-[#939599] hover:bg-gray-100"
         >
           <i className="fas fa-bullhorn mr-2"></i> Notice Board
         </a>
 
         <button
           onClick={() => setShowFeedback(true)}
-          className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
+          className="w-full text-left px-4 py-2 text-[#939599] hover:bg-gray-100"
         >
           <i className="fas fa-comment-alt mr-2"></i> Feedback
         </button>
 
         <button
           onClick={() => setActiveTab("profile")}
-          className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
+          className="w-full text-left px-4 py-2 text-[#939599] hover:bg-gray-100"
         >
           <i className="fas fa-user mr-2"></i> Profile
         </button>
 
         <button
           onClick={() => setMuted((m) => !m)}
-          className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
+          className="w-full text-left px-4 py-2 text-[#939599] hover:bg-gray-100"
           aria-label={muted ? "Unmute sounds" : "Mute sounds"}
         >
           <i className={`fas mr-2 ${muted ? "fa-volume-mute" : "fa-volume-up"}`}></i>
@@ -6291,7 +6291,7 @@ const renderLeaderboard = () => (
             localStorage.removeItem("pin");
             window.location.href = "/login";
           }}
-          className="w-full text-left px-4 py-2 text-[#4a5568] hover:bg-gray-100"
+          className="w-full text-left px-4 py-2 text-[#939599] hover:bg-gray-100"
         >
           <i className="fas fa-sign-out-alt mr-2"></i> Logout
         </button>
@@ -6303,7 +6303,7 @@ const renderLeaderboard = () => (
 
   {["game", "house", "leaderboard"].includes(activeTab) && (
     <div className="text-center">
-      <h2 className="text-2xl mb-4 font-crimson-text text-[#4a5568]">
+      <h2 className="text-2xl mb-4 font-crimson-text text-[#939599]">
         {gameState.equippedTheme && gameState.equippedTheme !== "seasons"
           ? CUSTOM_THEMES[gameState.equippedTheme]?.name ||
             gameState.equippedTheme.charAt(0).toUpperCase() +
@@ -6317,7 +6317,7 @@ const renderLeaderboard = () => (
             ]}
       </h2>
 
-      <div className="flex flex-col md:flex-row md:items-center md:justify-center gap-2 text-[#4a5568] text-lg mb-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-center gap-2 text-[#939599] text-lg mb-6">
         <div>
           <span className="font-semibold">Year:</span>{" "}
           {Number.isFinite(gameState.currentYear)
@@ -6334,7 +6334,7 @@ const renderLeaderboard = () => (
         </div>
       </div>
 
-      <div className="text-[#4a5568] text-sm mt-2">{weatherDescription}</div>
+      <div className="text-[#939599] text-sm mt-2">{weatherDescription}</div>
 
       <div
         className="grid grid-cols-3 max-w-xs mx-auto mt-6 mb-12"
@@ -6432,7 +6432,7 @@ const renderLeaderboard = () => (
               </span>{" "}
               Quest
             </h2>
-            <div className="text-[#4a5568] mb-3">{currentQuest.description}</div>
+            <div className="text-[#939599] mb-3">{currentQuest.description}</div>
 
             <div className="flex items-center justify-center gap-2 mb-3">
               {/* Progress Bar */}
@@ -6605,11 +6605,11 @@ const renderLeaderboard = () => (
                         </button>
                         {tooltipVisibleFor === type && <Tooltip text={UPGRADE_DESCRIPTIONS[type]} />}
                       </h3>
-                      <span className="text-sm text-[#4a5568] font-semibold">
+                      <span className="text-sm text-[#939599] font-semibold">
                         Level {upgradeLevel + 1}
                       </span>
                     </div>
-                    <p className="text-sm text-[#4a5568]">Current: {currentValueFormatted}</p>
+                    <p className="text-sm text-[#939599]">Current: {currentValueFormatted}</p>
                     <button
                       onClick={() => handleUpgrade(type, multiplier)}
                       disabled={!canAfford}
@@ -6659,7 +6659,7 @@ const renderLeaderboard = () => (
       className={`w-20 py-3 rounded-xl transition-all duration-200 ${
         activeTab === "game"
           ? "bg-white/40 text-[#2d3748] shadow-md"
-          : "text-[#4a5568] hover:bg-white/20"
+          : "text-[#939599] hover:bg-white/20"
       } flex flex-col items-center justify-center`}
     >
       <i className="fas fa-gamepad"></i>
@@ -6671,7 +6671,7 @@ const renderLeaderboard = () => (
       className={`w-20 py-3 rounded-xl transition-all duration-200 ${
         activeTab === "house"
           ? "bg-white/40 text-[#2d3748] shadow-md"
-          : "text-[#4a5568] hover:bg-white/20"
+          : "text-[#939599] hover:bg-white/20"
       } flex flex-col items-center justify-center`}
     >
       <i className="fas fa-home"></i>
@@ -6695,7 +6695,7 @@ const renderLeaderboard = () => (
       className={`w-20 py-3 rounded-xl transition-all duration-200 ${
         activeTab === "friends"
           ? "bg-white/40 text-[#2d3748] shadow-md"
-          : "text-[#4a5568] hover:bg-white/20"
+          : "text-[#939599] hover:bg-white/20"
       } flex flex-col items-center justify-center`}
     >
       <i className="fas fa-users"></i>
@@ -6725,7 +6725,7 @@ const renderLeaderboard = () => (
       }}
     >
       <h3 className="text-xl font-medium text-[#2d3748] mb-4">Offline Earnings!</h3>
-      <p className="mb-4 text-lg text-[#4a5568] text-center">
+      <p className="mb-4 text-lg text-[#939599] text-center">
         You were offline for{" "}
         {formatDuration(pendingOfflineEarnings.seconds)}.
         <br />
