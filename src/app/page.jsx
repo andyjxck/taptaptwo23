@@ -2667,8 +2667,8 @@ const handleBuyIcon = async (icon) => {
 
     tapSpeedBonus: (level) =>
       level < 69
-        ? Math.floor(80 * Math.pow(1.07, level))
-        : Math.floor(80 * Math.pow(1.07, 69) * Math.pow(1.1, level - 69)),
+        ? Math.floor(80 * Math.pow(1.05, level))
+        : Math.floor(80 * Math.pow(1.05, 350) * Math.pow(1, level - 350)),
   };
 
   const weatherDescription = (() => {
@@ -4435,14 +4435,14 @@ const handleUpgrade = useCallback(
       switch (type) {
         case "tapPower": {
           const level = state.tapPowerUpgrades + 1;
-          const gain = 0.7 + level * 0.07;
+          const gain = 0.75 + level * 0.09;
           state.tapPower = Math.round((state.tapPower + gain) * 10) / 10;
           state.tapPowerUpgrades += 1;
           break;
         }
         case "autoTapper": {
           const level = state.autoTapperUpgrades + 1;
-          const gain = 1.5 + level * 1.35;
+          const gain = 1.6 + level * 1.4;
           state.autoTapper = Math.round(state.autoTapper + gain);
           state.autoTapperUpgrades += 1;
           break;
@@ -4465,7 +4465,7 @@ const handleUpgrade = useCallback(
         case "tapSpeedBonus": {
           const level = state.tapSpeedBonusUpgrades + 1;
           const startValue = level === 1 ? 2 : 0;
-          const gain = startValue + level * 0.25;
+          const gain = startValue + level * 0.33;
           state.tapSpeedBonus =
             Math.round((state.tapSpeedBonus + gain) * 10) / 10;
           state.tapSpeedBonusUpgrades += 1;
