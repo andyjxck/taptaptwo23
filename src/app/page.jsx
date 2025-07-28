@@ -4435,14 +4435,14 @@ const handleUpgrade = useCallback(
       switch (type) {
         case "tapPower": {
           const level = state.tapPowerUpgrades + 1;
-          const gain = 0.75 + level * 0.09;
+          const gain = 0.8 + level * 0.115;
           state.tapPower = Math.round((state.tapPower + gain) * 10) / 10;
           state.tapPowerUpgrades += 1;
           break;
         }
         case "autoTapper": {
           const level = state.autoTapperUpgrades + 1;
-          const gain = 1.6 + level * 1.4;
+          const gain = 1.7 + level * 1.45;
           state.autoTapper = Math.round(state.autoTapper + gain);
           state.autoTapperUpgrades += 1;
           break;
@@ -4451,7 +4451,7 @@ const handleUpgrade = useCallback(
           const current = state.critChance || 0;
           const level = state.critChanceUpgrades + 1;
           const startValue = 5;
-          const maxLevel = 400;
+          const maxLevel = 300;
           const maxValue = 100;
           const gainPerLevel = (maxValue - startValue) / maxLevel;
           const newCritChance = startValue + gainPerLevel * level;
