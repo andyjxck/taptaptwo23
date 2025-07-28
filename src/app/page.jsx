@@ -4380,7 +4380,7 @@ const handleTap = useCallback(() => {
 
   const newSeason = Math.floor(combinedLevel / 50) % 4;
 
-  const weatherChangeChance = 0.03;
+  const weatherChangeChance = 0.016;
   let newWeather = gameState.currentWeather;
   if (Math.random() < weatherChangeChance) {
     newWeather = getNewWeather();
