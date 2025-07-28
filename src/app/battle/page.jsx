@@ -692,7 +692,7 @@ const resetToStart = () => {
 
 
   
- React.useEffect(() => {
+React.useEffect(() => {
   let interval;
 
   if (gamePhase === "playing" && gameMode === "ai") {
@@ -704,20 +704,35 @@ const resetToStart = () => {
         : 350;
 
     interval = setInterval(() => {
-      console.log("⏱️ AI interval running");
-
+      // AI tap logic
       let aiMultiplier = 1;
       if (aiDifficulty === "easy") aiMultiplier = 0.8;
       else if (aiDifficulty === "medium") aiMultiplier = 1.2;
       else if (aiDifficulty === "hard") aiMultiplier = 1.7;
 
-      const baseTapPower = aiTapPowerRef.current || 1;
+      // Calculate coins per tap (same as tapPower for now)
+      const tapPower = aiTapPowerRef.current || 1;
+
+      // AI taps between 1-2 times per interval, scaled by difficulty
       const taps = Math.floor((Math.random() * 2 + 1) * aiMultiplier);
+
+      // Total coins to award to AI
+      const coinsToAdd = tapPower * taps;
+
+      // Update AI's coins (for AI display)
+      setAiCoins(prev => prev + coinsToAdd);
+
+      // Set as opponentScore (so it displays on the right)
+      setOpponentScore(prev => prev + coinsToAdd);
+
+      // You can add any floating number effect here if you want
+
     }, tapFrequencyMs);
   }
 
   return () => clearInterval(interval);
-}, [gamePhase, gameMode, aiDifficulty, aiTapPower, ]);
+}, [gamePhase, gameMode, aiDifficulty]);
+
 
 React.useEffect(() => {
   if (gamePhase === "lobby" && isPlayerReady && isOpponentReady) {
