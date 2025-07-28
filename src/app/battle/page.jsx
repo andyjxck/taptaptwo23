@@ -111,76 +111,36 @@ React.useEffect(() => {
   let isCancelled = false;
 
   const upgradeTimer = setInterval(async () => {
-    // Get latest refs
     let coins = aiCoinsRef.current;
     let tapPower = aiTapPowerRef.current;
-    let tapPowerLvl = aiTapPowerLevelRef.current;
-    let aiScore = opponentScore; // AI's current coins
-    let player = playerScore;
+    let tapPowerLvl = aiTapPowerLevel; // use state directly
+    let cost = getAiTapPowerCost();
 
     // Stop all upgrades in last 5 seconds
     if (timeLeft <= 5) return;
 
-    // How far behind/ahead?
-    const scoreDiff = aiScore - player;
-    const isBehind = aiScore < player;
-    const isAhead = aiScore > player;
-
-    // Max upgrades per tick (simulate "spam" if behind)
-    let maxUpgrades =
-      aiDifficulty === "hard"
-        ? (isBehind ? 4 : isAhead ? 1 : 2)
-        : aiDifficulty === "medium"
-        ? (isBehind ? 3 : isAhead ? 1 : 2)
-        : (isBehind ? 2 : isAhead ? 1 : 1);
-
-    // If very far behind, get more desperate
-    if (scoreDiff < -1000) maxUpgrades += 1;
-    if (scoreDiff < -5000) maxUpgrades += 2;
-
+    // Aggressive AI: Always upgrade if it can afford it
     let upgrades = 0;
-    let newCoins = coins;
-    let newTapPower = tapPower;
-    let newTapPowerLvl = tapPowerLvl;
-  
-    // Decision weights: what is the "smart" buy order?
-    // If far behind, bias towards Tap Power and Tap Speed to catch up.
-    // If ahead, upgrade only if cost is "low" compared to coins, otherwise save.
-    const priorities = [
-      { key: "tapPower", cost: getAiTapPowerCost(), should: true },
-    ];
-
-    // Shuffle a little to make less "robotic"
-    if (Math.random() < 0.5) priorities.reverse();
-
-    for (let i = 0; i < priorities.length && upgrades < maxUpgrades; i++) {
-      const { key, cost, should } = priorities[i];
-      if (!should) continue;
-      if (newCoins < cost) continue;
-
-      // If ahead, be conservative, only upgrade if price is cheap (<20% of coins)
-      if (isAhead && cost > newCoins * 0.2) continue;
-
-      if (key === "tapPower") {
-        newCoins -= cost;
-        newTapPower += 3 + Math.floor(newTapPowerLvl * 0.5);
-        newTapPowerLvl += 1;
-        upgrades++;
-        setOpponentScore((prev) => prev - cost);
-      }
+    while (coins >= cost && !isCancelled) {
+      coins -= cost;
+      tapPower += 3 + Math.floor(tapPowerLvl * 0.5);
+      tapPowerLvl += 1;
+      upgrades++;
+      cost = Math.floor(10 * Math.pow(1.3, tapPowerLvl - 1)); // update for next level
     }
 
-    // Only update state and DB if upgrades happened
-    if (upgrades > 0 && !isCancelled) {
-      setAiCoins(newCoins);
-      setAiTapPower(newTapPower);
-      setAiTapPowerLevel(newTapPowerLvl);
+    if (upgrades > 0) {
+      setAiCoins(coins);
+      setAiTapPower(tapPower);
+      setAiTapPowerLevel(tapPowerLvl);
+      setOpponentScore(coins); // show remaining coins on scoreboard
+
       await updateAIStatsInDB({
         roomCode: currentRoom,
-        ai_coins: newCoins,
-        ai_tap_power: newTapPower,
-        ai_tap_power_level: newTapPowerLvl,
-        player_score,
+        ai_coins: coins,
+        ai_tap_power: tapPower,
+        ai_tap_power_level: tapPowerLvl,
+        player_score: playerScore,
       });
     }
   }, upgradeInterval);
@@ -189,8 +149,8 @@ React.useEffect(() => {
     isCancelled = true;
     clearInterval(upgradeTimer);
   };
-}, [gamePhase, gameMode, currentRoom, timeLeft, aiDifficulty, opponentScore, playerScore]);
-
+  // only timeLeft, aiDifficulty, gamePhase, gameMode, currentRoom, playerScore dependencies are needed
+}, [gamePhase, gameMode, currentRoom, timeLeft, aiDifficulty, playerScore]);
 
 // Game timer effect
   React.useEffect(() => {
