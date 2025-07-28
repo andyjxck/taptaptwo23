@@ -4465,7 +4465,7 @@ const handleUpgrade = useCallback(
         case "tapSpeedBonus": {
           const level = state.tapSpeedBonusUpgrades + 1;
           const startValue = level === 1 ? 2 : 0;
-          const gain = startValue + level * 0.33;
+          const gain = startValue + level * 1.33;
           state.tapSpeedBonus =
             Math.round((state.tapSpeedBonus + gain) * 10) / 10;
           state.tapSpeedBonusUpgrades += 1;
