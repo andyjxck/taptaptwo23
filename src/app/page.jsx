@@ -1336,7 +1336,7 @@ useEffect(() => {
     supabase.removeChannel(channel);
   };
 }, [guild?.id]);
-const [menuOpen, setMenuOpen] = useState(true); // open by default
+const [menuOpen, setMenuOpen] = useState(false); // open by default
   const [notification, setNotification] = useState(null);
 
   const [rainDrops, setRainDrops] = React.useState([]);
