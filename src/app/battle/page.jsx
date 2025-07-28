@@ -156,7 +156,7 @@ const getAiAutoTapperCost = () =>
 React.useEffect(() => {
   if (gamePhase !== "playing" || gameMode !== "ai" || !currentRoom) return;
 
-const upgradeInterval = aiDifficulty === "hard" ? 2000 : aiDifficulty === "medium" ? 3000 : 4000;
+const upgradeInterval = aiDifficulty === "hard" ? 3000 : aiDifficulty === "medium" ? 3500 : 4500;
 let isCancelled = false;
 
 const upgradeTimer = setInterval(async () => {
@@ -844,18 +844,18 @@ React.useEffect(() => {
   if (gamePhase === "playing" && gameMode === "ai") {
     const tapFrequencyMs =
       aiDifficulty === "hard"
-        ? 200
+        ? 300
         : aiDifficulty === "medium"
-        ? 400
+        ? 500
         : 1000;
 
     interval = setInterval(() => {
       console.log("⏱️ AI interval running");
 
       let aiMultiplier = 1;
-      if (aiDifficulty === "easy") aiMultiplier = 0.9;
-      else if (aiDifficulty === "medium") aiMultiplier = 1.3;
-      else if (aiDifficulty === "hard") aiMultiplier = 2.5;
+      if (aiDifficulty === "easy") aiMultiplier = 0.8;
+      else if (aiDifficulty === "medium") aiMultiplier = 1.2;
+      else if (aiDifficulty === "hard") aiMultiplier = 1.7;
 
       const baseTapPower = aiTapPowerRef.current || 1;
       const tapSpeedBonus = aiTapSpeedBonusRef.current || 0;
