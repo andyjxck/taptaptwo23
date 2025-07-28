@@ -416,8 +416,6 @@ playClick();
   }
 
   // Calculate coins earned
-  let coinsEarned = tapPower;
-  coinsEarned += Math.floor(coinsEarned * (tapSpeedBonus / 100));
   const isCrit = Math.random() * 100 < critChance;
   if (isCrit) coinsEarned *= 2;
 
@@ -717,8 +715,6 @@ const resetToStart = () => {
       else if (aiDifficulty === "hard") aiMultiplier = 1.7;
 
       const baseTapPower = aiTapPowerRef.current || 1;
-      const effectiveTapPower =
-        baseTapPower + Math.floor(baseTapPower * (tapSpeedBonus / 100));
       const taps = Math.floor((Math.random() * 2 + 1) * aiMultiplier);
 
       let totalCoins = 0;
