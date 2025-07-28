@@ -888,7 +888,6 @@ const [newGuildIcon, setNewGuildIcon] = useState("robot"); // default icon
   const [friendsLoading, setFriendsLoading] = useState(true);
   const [friendError, setFriendError] = useState(null);
     const [showFriendsList, setShowFriendsList] = useState(false);
-   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 const [pendingRequests, setPendingRequests] = useState([]);
 const [searchQuery, setSearchQuery] = useState('');
 const [searchResults, setSearchResults] = useState([]);
@@ -1350,10 +1349,6 @@ const [menuOpen, setMenuOpen] = useState(true); // open by default
   const [lastTapTimes, setLastTapTimes] = useState([]);
   const [showResetModal, setShowResetModal] = useState(false);
   const [showMaddoxModal, setShowMaddoxModal] = useState(false);
-
-useEffect(() => {
-  setShowWelcomeModal(true);
-}, []);
                                                      
  const [muted, setMuted] = useState(false);
   const [playClick] = useSound("/sounds/click.wav", { volume: muted ? 0 : 0.4 });
@@ -6835,59 +6830,6 @@ const renderLeaderboard = () => (
           disabled={hardResetLoading}
         >
           {hardResetLoading ? "Resetting..." : "Confirm"}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-{showWelcomeModal && (
-  <div className="fixed inset-x-0 top-0 z-50 flex justify-center p-4 pointer-events-none">
-    <div
-      className="
-        bg-gradient-to-br from-purple-400/50 via-purple-200/40 to-purple-600/60
-        backdrop-blur-xl rounded-2xl p-7 max-w-sm w-full border border-white/30 shadow-lg relative pointer-events-auto
-      "
-      style={{
-        background:
-          "linear-gradient(135deg, rgba(192,132,252,0.95), rgba(139,92,246,0.75), rgba(59,7,100,0.7))",
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
-        boxShadow: "0 8px 32px 0 rgba(124,58,237,0.18)",
-      }}
-    >
-      <h2 className="text-xl font-semibold text-white mb-4 text-center">🚨 Battle Mode is Live!</h2>
-
-      <p className="text-white mb-4 text-center font-semibold">
-        Our brand new <span className="text-purple-200 font-bold">Battle Mode</span> is now available to play!
-        <br /><br />
-        Tap it out in real-time against your friends or face off against AI opponents.
-        <br /><br />
-        Earn <span className="text-yellow-300 font-bold">Renown Tokens</span> by winning matches — these carry back to the main game.
-      </p>
-
-      <p className="text-white mb-4 text-center font-semibold">
-        💬 Use code <span className="bg-purple-700 px-2 rounded font-mono">battle</span> in the shop for extra rewards with this update!
-      </p>
-
-      <p className="text-white mb-6 text-center font-semibold">
-        Early test version. Expect bugs. Please report any issues you find!
-      </p>
-
-      <div className="flex justify-center mb-4">
-        <a
-          href="/battle"
-          className="px-4 py-2 rounded-lg bg-yellow-400 hover:bg-yellow-500 text-black font-bold transition"
-        >
-          Play Battle Mode
-        </a>
-      </div>
-
-      <div className="flex justify-center">
-        <button
-          onClick={() => setShowWelcomeModal(false)}
-          className="px-4 py-2 rounded-lg bg-purple-700 hover:bg-purple-800 text-white transition"
-        >
-          Close
         </button>
       </div>
     </div>
