@@ -1142,25 +1142,21 @@ if (gamePhase === "playing") {
             style={{ animationDelay: "2s" }}
           />
         </div>
-   {/* TIMER at the very top, centered */}
-        <div className="z-10 w-full flex justify-center mb-3">
-          <div className="font-mono text-2xl sm:text-3xl tracking-widest bg-black/30 px-6 py-2 rounded-md border border-white/20 select-none shadow-lg text-white">
-            {formatTime(timeLeft)}
-          </div>
-        </div>
+
         {/* Scoreboard */}
-        <div className="z-10 mt-[110px] max-w-md mx-auto text-white select-none space-y-3 w-full">
-          <div className="backdrop-blur-xl bg-white/10 border border-white/20 p-2 shadow-xl rounded-xl flex justify-between items-center text-xs sm:text-sm font-bold">
+        <div className="z-10 max-w-2xl mx-auto w-full px-3 select-none mt-2">
+          <div className="backdrop-blur-xl bg-white/10 border border-white/20 p-4 shadow-xl rounded-2xl flex justify-between items-center text-xs sm:text-base font-bold w-full">
             {/* Player 1 */}
             <div className="flex items-center space-x-1">
               <i className="fas fa-user text-yellow-400"></i>
               <span>{playerName}</span>
-              <span className="text-yellow-300 text-sm sm:text-base">
+              <span className="text-yellow-300 text-base">
                 {(playerScore || 0).toLocaleString()}
               </span>
             </div>
+
             {/* Progress Bar */}
-            <div className="relative flex-1 mx-2 h-3 rounded-full bg-gray-800 overflow-hidden">
+            <div className="relative flex-1 mx-4 h-4 rounded-full bg-gray-800 overflow-hidden">
               <div
                 className="absolute left-0 top-0 bottom-0 bg-yellow-400 transition-all duration-500"
                 style={{ width: `${playerPercent}%` }}
@@ -1170,6 +1166,7 @@ if (gamePhase === "playing") {
                 style={{ width: `${opponentPercent}%` }}
               />
             </div>
+
             {/* Player 2 */}
             <div className="flex items-center space-x-1 justify-end">
               <i
@@ -1180,7 +1177,7 @@ if (gamePhase === "playing") {
                 }
               ></i>
               <span>{opponentName}</span>
-              <span className="text-pink-300 text-sm sm:text-base">
+              <span className="text-pink-300 text-base">
                 {gameMode === "ai"
                   ? (aiCoins || 0).toLocaleString()
                   : (opponentScore || 0).toLocaleString()}
@@ -1188,10 +1185,16 @@ if (gamePhase === "playing") {
             </div>
           </div>
         </div>
-        
 
-        {/* Tap Button - always center */}
-        <div className="flex flex-1 flex-col justify-center items-center z-10 mt-6 relative max-w-md mx-auto w-full">
+        {/* Timer */}
+        <div className="z-10 max-w-2xl mx-auto w-full flex justify-center mt-3 mb-1">
+          <div className="font-mono text-2xl sm:text-3xl tracking-widest bg-black/30 px-6 py-2 rounded-lg border border-white/20 text-white select-none shadow-md">
+            {formatTime(timeLeft)}
+          </div>
+        </div>
+
+        {/* Centered Tap Button */}
+        <div className="flex flex-1 justify-center items-center z-10 mt-2 relative max-w-md mx-auto w-full">
           <button
             onClick={() => {
               if (navigator.vibrate) navigator.vibrate(250);
@@ -1200,7 +1203,7 @@ if (gamePhase === "playing") {
             onMouseDown={(e) => {
               e.preventDefault();
             }}
-            className="w-[180px] h-[180px] rounded-full bg-white/30 backdrop-blur-xl border border-white/20 relative overflow-hidden transition-all duration-200 active:scale-95 shadow-2xl group mb-6"
+            className="w-[180px] h-[180px] rounded-full bg-white/30 backdrop-blur-xl border border-white/20 relative overflow-hidden transition-all duration-200 active:scale-95 shadow-2xl group flex items-center justify-center"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
             <div className="absolute inset-0 flex items-center justify-center">
@@ -1208,35 +1211,38 @@ if (gamePhase === "playing") {
             </div>
             <i className="fas fa-swords text-6xl text-white relative z-10 drop-shadow"></i>
           </button>
+        </div>
 
-          {/* Tap Power Upgrade Button: large, centered, just below tap button */}
+        {/* Centered Tap Power Upgrade Button */}
+        <div className="z-10 max-w-md mx-auto w-full flex justify-center mt-8 mb-4">
           <button
-            onClick={upgradeTapPower}
+            onClick={() => upgradeTapPower()}
             disabled={playerScore < getTapPowerCost()}
             className={`
-              w-full max-w-xs mt-1 px-6 py-4 rounded-2xl font-bold
-              bg-gradient-to-r from-orange-400/80 to-yellow-400/90 text-white
-              border border-yellow-300 shadow-lg
-              text-lg tracking-wider
-              transition-all duration-200
-              ${playerScore < getTapPowerCost() ? "opacity-50 cursor-not-allowed" : "hover:scale-105 active:scale-95"}
+              flex flex-col items-center justify-center w-full max-w-sm px-6 py-5 rounded-2xl bg-white/20 border border-white/30
+              font-bold text-lg text-white shadow-xl backdrop-blur-xl
+              transition-all duration-200 hover:bg-white/30 active:scale-95
+              ${playerScore < getTapPowerCost() ? "opacity-50 cursor-not-allowed" : "hover:scale-105"}
             `}
+            style={{
+              minWidth: 0,
+              maxWidth: 360,
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+            }}
           >
-            💪 Upgrade Tap Power
-            <span className="ml-2 font-normal text-sm text-white/80">
-              (Lv. {tapPowerLevel}) - Cost: {getTapPowerCost()}
-            </span>
-            <div className="block text-xs mt-1 text-yellow-200 font-semibold">
-              +{tapPower} per tap
-            </div>
+            <span className="text-3xl mb-1">💪</span>
+            <span className="mb-1">Upgrade Tap Power</span>
+            <span className="text-xs text-white/80 mb-1">Lv.{tapPowerLevel} &bull; +{tapPower} per tap</span>
+            <span className="text-yellow-300 text-sm mb-0">{getTapPowerCost()} coins</span>
           </button>
         </div>
 
-        {/* Timer + Leave stacked, then Mute below */}
-        <div className="z-10 max-w-md mx-auto flex flex-col items-center text-white gap-2 mt-6 mb-6">
+        {/* Leave + Mute */}
+        <div className="z-10 max-w-md mx-auto flex flex-col items-center text-white gap-2 mt-1 mb-2">
           <button
             onClick={resetToStart}
-            className="flex items-center px-4 py-1 bg-red-500/80 text-white text-sm rounded-full hover:bg-red-500 active:scale-95 transition-all duration-200 backdrop-blur-xl border border-white/20"
+            className="flex items-center px-4 py-2 bg-red-500/80 text-white text-sm rounded-full hover:bg-red-500 active:scale-95 transition-all duration-200 backdrop-blur-xl border border-white/20 shadow"
           >
             <i className="fas fa-times mr-1" /> Leave
           </button>
