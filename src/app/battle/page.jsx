@@ -844,10 +844,10 @@ React.useEffect(() => {
   if (gamePhase === "playing" && gameMode === "ai") {
     const tapFrequencyMs =
       aiDifficulty === "hard"
-        ? 300
+        ? 100
         : aiDifficulty === "medium"
-        ? 500
-        : 1000;
+        ? 250
+        : 350;
 
     interval = setInterval(() => {
       console.log("⏱️ AI interval running");
