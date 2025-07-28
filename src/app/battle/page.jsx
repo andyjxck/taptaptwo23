@@ -407,7 +407,8 @@ const handleTap = async () => {
   if (gamePhase !== "playing") return;
 
   const now = Date.now();
-playClick();
+  playClick();
+
   // Animation throttle
   if (now - lastAnimationTimeRef.current > 150) {
     setIsAnimating(true);
@@ -415,6 +416,8 @@ playClick();
     setTimeout(() => setIsAnimating(false), 150);
   }
 
+  // This is the coins you get per tap, always just tapPower now
+  const coinsEarned = tapPower;
 
   // Update local or AI score
   if (gameMode === "ai") {
@@ -449,26 +452,23 @@ playClick();
   // Update total taps count
   setTotalTapsInGame(prev => prev + 1);
 
-// Spawn floating number (more widely spread)
-const id = now + Math.random();
+  // Spawn floating number (remove isCrit)
+  const id = now + Math.random();
+  const angle = Math.random() * 2 * Math.PI;
+  const distance = Math.random() * 150 + 50; // 50 to 200px from center
+  const x = Math.cos(angle) * distance;
+  const y = Math.sin(angle) * distance;
 
-// Pick a random angle and distance from center to spread in a circular area
-const angle = Math.random() * 2 * Math.PI;
-const distance = Math.random() * 150 + 50; // 50 to 200px from center
+  setFloatingNumbers(prev => [
+    ...prev,
+    { id, value: coinsEarned, x, y }
+  ]);
 
-const x = Math.cos(angle) * distance;
-const y = Math.sin(angle) * distance;
-
-setFloatingNumbers(prev => [
-  ...prev,
-  { id, value: coinsEarned, isCrit, x, y }
-]);
-
-// Remove floating number after 1 second
-setTimeout(() => {
-  setFloatingNumbers(prev => prev.filter(num => num.id !== id));
-}, 1000);
+  setTimeout(() => {
+    setFloatingNumbers(prev => prev.filter(num => num.id !== id));
+  }, 1000);
 };
+
 
 // Flush batched player score updates every 100ms (only multiplayer mode)
 React.useEffect(() => {
@@ -1055,16 +1055,13 @@ if (gamePhase === "lobby") {
             <summary className="cursor-pointer text-center text-white font-bold py-2 hover:underline">
               Game Rules
             </summary>
-            <div className="mt-4 text-white/80 text-sm leading-relaxed space-y-1">
-              <p>• Tap the main button to earn coins</p>
-              <p>• Use coins to buy upgrades during the game</p>
-              <p>• 💪 Tap Power: Your coins per tap</p>
-              <p>• ⚡ Crit Chance: 5% chance to double coins</p>
-              <p>• 🚀 Tap Speed: Bonus coins per tap</p>
-              <p>• 🤖 Auto Tapper: Coins per second</p>
-              <p>• Player with most coins when time runs out wins!</p>
-              <p>• Winner earns 10 tokens, loser earns 3</p>
-            </div>
+     <div className="mt-4 text-white/80 text-sm leading-relaxed space-y-1">
+  <p>• Tap the main button to earn coins</p>
+  <p>• Use coins to upgrade your Tap Power</p>
+  <p>• Player with most coins when time runs out wins!</p>
+  <p>• Winner earns 10 tokens, loser earns 3</p>
+</div>
+
           </details>
 
           {/* Buttons */}
@@ -1239,24 +1236,21 @@ if (gamePhase === "playing") {
           </button>
         </div>
 
-        {/* Floating Numbers */}
-        {floatingNumbers.map((num) => (
-          <div
-            key={num.id}
-            className={`absolute pointer-events-none font-bold text-xl sm:text-2xl drop-shadow-lg ${
-              num.isCrit ? "text-yellow-300" : "text-green-300"
-            }`}
-            style={{
-              left: `calc(50% + ${num.x}px)`,
-              top: `calc(50% + ${num.y}px)`,
-              transform: "translate(-50%, -50%)",
-              animation: "floatUp 1s ease-out forwards",
-            }}
-          >
-            +{num.value}
-            {num.isCrit && " ⚡"}
-          </div>
-        ))}
+ {floatingNumbers.map((num) => (
+  <div
+    key={num.id}
+    className="absolute pointer-events-none font-bold text-xl sm:text-2xl drop-shadow-lg text-green-300"
+    style={{
+      left: `calc(50% + ${num.x}px)`,
+      top: `calc(50% + ${num.y}px)`,
+      transform: "translate(-50%, -50%)",
+      animation: "floatUp 1s ease-out forwards",
+    }}
+  >
+    +{num.value}
+  </div>
+))}
+
 
         <style jsx global>{`
           @keyframes floatUp {
