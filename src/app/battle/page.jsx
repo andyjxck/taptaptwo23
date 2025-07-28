@@ -42,13 +42,6 @@ const [aiCoins, setAiCoins] = React.useState(0);
   // Player upgrades
   const [tapPower, setTapPower] = React.useState(1);
   const [tapPowerLevel, setTapPowerLevel] = React.useState(1);
-  const [critChance, setCritChance] = React.useState(0);
-  const [critLevel, setCritLevel] = React.useState(0);
-  const [tapSpeedBonus, setTapSpeedBonus] = React.useState(0);
-  const [tapSpeedLevel, setTapSpeedLevel] = React.useState(0);
-  const [autoTapper, setAutoTapper] = React.useState(0);
-  const [autoTapperLevel, setAutoTapperLevel] = React.useState(0);
-
   const [isAnimating, setIsAnimating] = React.useState(false);
   const [upgradesPurchased, setUpgradesPurchased] = React.useState(0);
   const [floatingNumbers, setFloatingNumbers] = React.useState([]);
@@ -65,44 +58,14 @@ const [aiCoins, setAiCoins] = React.useState(0);
 // AI upgrades levels (start low)
 const [aiTapPower, setAiTapPower] = React.useState(1);
 const [aiTapPowerLevel, setAiTapPowerLevel] = React.useState(1);
-
-const [aiCritChance, setAiCritChance] = React.useState(0);
-const [aiCritLevel, setAiCritLevel] = React.useState(0);
-
-const [aiTapSpeedBonus, setAiTapSpeedBonus] = React.useState(0);
-const [aiTapSpeedLevel, setAiTapSpeedLevel] = React.useState(0);
-  const [aiAutoTapper, setAiAutoTapper] = React.useState(0);
-const [aiAutoTapperLevel, setAiAutoTapperLevel] = React.useState(1);
 const aiCoinsRef = React.useRef(aiCoins);
-const aiCritChanceRef = React.useRef(aiCritChance);
-const aiCritLevelRef = React.useRef(aiCritLevel);
-const aiTapPowerLevelRef = React.useRef(aiTapPowerLevel);
-const aiTapSpeedLevelRef = React.useRef(aiTapSpeedLevel);
-const aiAutoTapperLevelRef = React.useRef(aiAutoTapperLevel);
   const aiTapPowerRef = React.useRef(aiTapPower);
-  const aiTapSpeedBonusRef = React.useRef(aiTapSpeedBonus);
-
-const aiAutoTapperRef = React.useRef(aiAutoTapper);
 React.useEffect(() => { aiCoinsRef.current = aiCoins; }, [aiCoins]);
-React.useEffect(() => { aiCritChanceRef.current = aiCritChance; }, [aiCritChance]);
-React.useEffect(() => { aiCritLevelRef.current = aiCritLevel; }, [aiCritLevel]);
-React.useEffect(() => { aiTapPowerLevelRef.current = aiTapPowerLevel; }, [aiTapPowerLevel]);
-React.useEffect(() => { aiTapSpeedLevelRef.current = aiTapSpeedLevel; }, [aiTapSpeedLevel]);
-React.useEffect(() => { aiAutoTapperLevelRef.current = aiAutoTapperLevel; }, [aiAutoTapperLevel]);
-React.useEffect(() => { aiAutoTapperRef.current = aiAutoTapper; }, [aiAutoTapper]);
-React.useEffect(() => { aiTapSpeedBonusRef.current = aiTapSpeedBonus; }, [aiTapSpeedBonus]);
 React.useEffect(() => { aiTapPowerRef.current = aiTapPower; }, [aiTapPower]);
   const updateAIStatsInDB = async ({
   roomCode,
   ai_coins,
   ai_tap_power,
-  ai_tap_power_level,
-  ai_crit_chance,
-  ai_crit_level,
-  ai_tap_speed_bonus,
-  ai_tap_speed_level,
-  ai_auto_tapper,
-  ai_auto_tapper_level,
   player_score,
 }) => {
   try {
@@ -114,13 +77,6 @@ React.useEffect(() => { aiTapPowerRef.current = aiTapPower; }, [aiTapPower]);
         code: roomCode,
         ai_coins,
         ai_tap_power,
-        ai_tap_power_level,
-        ai_crit_chance,
-        ai_crit_level,
-        ai_tap_speed_bonus,
-        ai_tap_speed_level,
-        ai_auto_tapper,
-        ai_auto_tapper_level,
         player_score,
       }),
     });
@@ -147,12 +103,6 @@ const opponentPercent = 100 - playerPercent;
 // --- AI Upgrade Cost Functions (using refs) ---
 const getAiTapPowerCost = () =>
   Math.floor(10 * Math.pow(1.3, aiTapPowerLevelRef.current - 1));
-const getAiCritCost = () =>
-  Math.floor(25 * Math.pow(1.4, aiCritLevelRef.current));
-const getAiTapSpeedCost = () =>
-  Math.floor(50 * Math.pow(1.6, aiTapSpeedLevelRef.current));
-const getAiAutoTapperCost = () =>
-  Math.floor(100 * Math.pow(1.45, aiAutoTapperLevelRef.current));
 
 React.useEffect(() => {
   if (gamePhase !== "playing" || gameMode !== "ai" || !currentRoom) return;
@@ -165,12 +115,6 @@ React.useEffect(() => {
     let coins = aiCoinsRef.current;
     let tapPower = aiTapPowerRef.current;
     let tapPowerLvl = aiTapPowerLevelRef.current;
-    let critChance = aiCritChanceRef.current;
-    let critLvl = aiCritLevelRef.current;
-    let tapSpeedBonus = aiTapSpeedBonusRef.current;
-    let tapSpeedLvl = aiTapSpeedLevelRef.current;
-    let autoTapper = aiAutoTapperRef.current;
-    let autoTapperLvl = aiAutoTapperLevelRef.current;
     let aiScore = opponentScore; // AI's current coins
     let player = playerScore;
 
@@ -198,21 +142,12 @@ React.useEffect(() => {
     let newCoins = coins;
     let newTapPower = tapPower;
     let newTapPowerLvl = tapPowerLvl;
-    let newCritChance = critChance;
-    let newCritLvl = critLvl;
-    let newTapSpeedBonus = tapSpeedBonus;
-    let newTapSpeedLvl = tapSpeedLvl;
-    let newAutoTapper = autoTapper;
-    let newAutoTapperLvl = autoTapperLvl;
-
+  
     // Decision weights: what is the "smart" buy order?
     // If far behind, bias towards Tap Power and Tap Speed to catch up.
     // If ahead, upgrade only if cost is "low" compared to coins, otherwise save.
     const priorities = [
       { key: "tapPower", cost: getAiTapPowerCost(), should: true },
-      { key: "tapSpeed", cost: getAiTapSpeedCost(), should: true },
-      { key: "crit", cost: getAiCritCost(), should: critChance < 100 },
-      { key: "autoTapper", cost: getAiAutoTapperCost(), should: autoTapper < 50000 },
     ];
 
     // Shuffle a little to make less "robotic"
@@ -233,27 +168,6 @@ React.useEffect(() => {
         upgrades++;
         setOpponentScore((prev) => prev - cost);
       }
-      if (key === "tapSpeed") {
-        newCoins -= cost;
-        newTapSpeedBonus += 30 + Math.floor(newTapSpeedLvl * 1.5);
-        newTapSpeedLvl += 1;
-        upgrades++;
-        setOpponentScore((prev) => prev - cost);
-      }
-      if (key === "crit") {
-        newCoins -= cost;
-        newCritChance = Math.min(newCritChance + 2 + Math.floor(newCritLvl / 3), 100);
-        newCritLvl += 1;
-        upgrades++;
-        setOpponentScore((prev) => prev - cost);
-      }
-      if (key === "autoTapper") {
-        newCoins -= cost;
-        newAutoTapper += 40 + Math.floor(newAutoTapperLvl * 1.8);
-        newAutoTapperLvl += 1;
-        upgrades++;
-        setOpponentScore((prev) => prev - cost);
-      }
     }
 
     // Only update state and DB if upgrades happened
@@ -261,24 +175,11 @@ React.useEffect(() => {
       setAiCoins(newCoins);
       setAiTapPower(newTapPower);
       setAiTapPowerLevel(newTapPowerLvl);
-      setAiCritChance(newCritChance);
-      setAiCritLevel(newCritLvl);
-      setAiTapSpeedBonus(newTapSpeedBonus);
-      setAiTapSpeedLevel(newTapSpeedLvl);
-      setAiAutoTapper(newAutoTapper);
-      setAiAutoTapperLevel(newAutoTapperLvl);
-
       await updateAIStatsInDB({
         roomCode: currentRoom,
         ai_coins: newCoins,
         ai_tap_power: newTapPower,
         ai_tap_power_level: newTapPowerLvl,
-        ai_crit_chance: newCritChance,
-        ai_crit_level: newCritLvl,
-        ai_tap_speed_bonus: newTapSpeedBonus,
-        ai_tap_speed_level: newTapSpeedLvl,
-        ai_auto_tapper: newAutoTapper,
-        ai_auto_tapper_level: newAutoTapperLvl,
         player_score,
       });
     }
@@ -406,12 +307,6 @@ useEffect(() => {
           setAiCoins(data.ai_coins || 0);
           setAiTapPower(data.ai_tap_power || 1);
           setAiTapPowerLevel(data.ai_tap_power_level || 1);
-          setAiCritChance(data.ai_crit_chance || 0);
-          setAiCritLevel(data.ai_crit_level || 0);
-          setAiTapSpeedBonus(data.ai_tap_speed_bonus || 0);
-          setAiTapSpeedLevel(data.ai_tap_speed_level || 0);
-          setAiAutoTapper(data.ai_auto_tapper || 0);
-          setAiAutoTapperLevel(data.ai_auto_tapper_level || 1);
         }
       }
     )
@@ -494,11 +389,7 @@ useEffect(() => {
   // Calculate upgrade costs (1.3x multiplier)
   const getTapPowerCost = () =>
     Math.floor(10 * Math.pow(1.2, tapPowerLevel - 1));
-  const getCritCost = () => Math.floor(25 * Math.pow(1.3, critLevel));
-  const getTapSpeedCost = () => Math.floor(50 * Math.pow(1.5, tapSpeedLevel));
-  const getAutoTapperCost = () =>
-    Math.floor(100 * Math.pow(1.35, autoTapperLevel));
-
+  
   // Generate random room code
   const generateRoomCode = () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -603,39 +494,6 @@ React.useEffect(() => {
     setPlayerScore(prev => prev - cost);
     setTapPower(prev => prev + Math.floor(prev * 0.16) + 2); // +35% +2
     setTapPowerLevel(prev => prev + 1);
-    setUpgradesPurchased(prev => prev + 1);
-  }
-};
-
-const upgradeCritChance = () => {
-  const cost = getCritCost();
-  if (playerScore >= cost && critChance < 100) {
-    playUpgrade()
-    setPlayerScore(prev => prev - cost);
-    setCritChance(prev => Math.min(prev + 2 + Math.floor(critLevel / 3), 100)); // +5%, scaling slightly
-    setCritLevel(prev => prev + 1);
-    setUpgradesPurchased(prev => prev + 1);
-  }
-};
-
-const upgradeTapSpeed = () => {
-  const cost = getTapSpeedCost();
-  if (playerScore >= cost) {
-    playUpgrade()
-    setPlayerScore(prev => prev - cost);
-    setTapSpeedBonus(prev => prev + 25 + Math.floor(tapSpeedLevel * 1.3)); // scales faster
-    setTapSpeedLevel(prev => prev + 1);
-    setUpgradesPurchased(prev => prev + 1);
-  }
-};
-
-const upgradeAutoTapper = () => {
-  const cost = getAutoTapperCost();
-  if (playerScore >= cost && autoTapper < 50000) {
-    playUpgrade()
-    setPlayerScore(prev => prev - cost);
-    setAutoTapper(prev => Math.min(prev + 30 + Math.floor(autoTapperLevel * 1.34), 100000)); // growth scaling
-    setAutoTapperLevel(prev => prev + 1);
     setUpgradesPurchased(prev => prev + 1);
   }
 };
@@ -808,24 +666,10 @@ const startGame = () => {
   setFloatingNumbers([]);
   setTapPower(1);
   setTapPowerLevel(1);
-  setCritChance(0);
-  setCritLevel(0);
-  setTapSpeedBonus(0);
-  setTapSpeedLevel(0);
-  setAutoTapper(0);
-  setAutoTapperLevel(0);
-
   // 🧠 Reset AI state
   setAiCoins(0);
   setAiTapPower(1);
-  setAiTapSpeedBonus(0);
-  setAiAutoTapper(0);
-  setAiCritChance(0);
   setAiTapPowerLevel(1);
-  setAiTapSpeedLevel(0);
-  setAiAutoTapperLevel(1);
-  setAiCritLevel(0);
-
   fetchRoomStatus(); 
 };
 
@@ -844,42 +688,15 @@ const resetToStart = () => {
   setFloatingNumbers([]);
   setTapPower(1);
   setTapPowerLevel(1);
-  setCritChance(0);
-  setCritLevel(0);
-  setTapSpeedBonus(0);
-  setTapSpeedLevel(0);
-  setAutoTapper(0);
-  setAutoTapperLevel(0);
-
   // 🧠 Reset AI state
   setAiCoins(0);
   setAiTapPower(1);
-  setAiTapSpeedBonus(0);
-  setAiAutoTapper(0);
-  setAiCritChance(0);
   setAiTapPowerLevel(1);
-  setAiTapSpeedLevel(0);
-  setAiAutoTapperLevel(1);
-  setAiCritLevel(0);
 };
   
 
 
-// Auto tapper effect without tapBatchRef
-React.useEffect(() => {
-  let interval;
-  if (gamePhase === "playing" && autoTapper > 0) {
-    interval = setInterval(() => {
-      setPlayerScore(prev => prev + autoTapper);
-      setTotalTapsInGame(prev => prev + 1);
-
-      // No tapBatchRef batching, so no backend sync here.
-      // If you want backend sync, add separate logic.
-    }, 1000);
-  }
-  return () => clearInterval(interval);
-}, [gamePhase, autoTapper]);
-
+  
  React.useEffect(() => {
   let interval;
 
@@ -900,9 +717,6 @@ React.useEffect(() => {
       else if (aiDifficulty === "hard") aiMultiplier = 1.7;
 
       const baseTapPower = aiTapPowerRef.current || 1;
-      const tapSpeedBonus = aiTapSpeedBonusRef.current || 0;
-      const critChance = aiCritChanceRef.current || 0;
-
       const effectiveTapPower =
         baseTapPower + Math.floor(baseTapPower * (tapSpeedBonus / 100));
       const taps = Math.floor((Math.random() * 2 + 1) * aiMultiplier);
@@ -920,7 +734,7 @@ React.useEffect(() => {
   }
 
   return () => clearInterval(interval);
-}, [gamePhase, gameMode, aiDifficulty, aiTapPower, aiTapSpeedBonus, aiCritChance]);
+}, [gamePhase, gameMode, aiDifficulty, aiTapPower, ]);
 
 React.useEffect(() => {
   if (gamePhase === "lobby" && isPlayerReady && isOpponentReady) {
@@ -996,12 +810,6 @@ const fetchRoomStatus = async () => {
         setAiCoins(room.ai_coins || 0);
         setAiTapPower(room.ai_tap_power || 1);
         setAiTapPowerLevel(room.ai_tap_power_level || 1);
-        setAiCritChance(room.ai_crit_chance || 0);
-        setAiCritLevel(room.ai_crit_level || 0);
-        setAiTapSpeedBonus(room.ai_tap_speed_bonus || 0);
-        setAiTapSpeedLevel(room.ai_tap_speed_level || 0);
-        setAiAutoTapper(room.ai_auto_tapper || 0);
-        setAiAutoTapperLevel(room.ai_auto_tapper_level || 1);
       }
     }
   } catch (err) {
@@ -1334,37 +1142,14 @@ if (gamePhase === "playing") {
             style={{ animationDelay: "2s" }}
           />
         </div>
-
-        {/* Top-left upgrade button */}
-        <div className="absolute top-2 left-2 z-20">
-          <UpgradeButton
-            title="Tap Power"
-            level={tapPowerLevel}
-            cost={getTapPowerCost()}
-            description={`+${tapPower} per tap`}
-            onClick={() => upgradeTapPower()}
-            disabled={playerScore < getTapPowerCost()}
-            position=""
-            icon="💪"
-            glassy
-          />
+   {/* TIMER at the very top, centered */}
+        <div className="z-10 w-full flex justify-center mb-3">
+          <div className="font-mono text-2xl sm:text-3xl tracking-widest bg-black/30 px-6 py-2 rounded-md border border-white/20 select-none shadow-lg text-white">
+            {formatTime(timeLeft)}
+          </div>
         </div>
-
-<UpgradeButton
-  title="Critical Hit"
-  level={critLevel}
-  cost={getCritCost()}
-  description={`${critChance}% crit chance`}
-  onClick={() => upgradeCritChance()}
-  disabled={playerScore < getCritCost() || critChance >= 100}
-  position="absolute top-2 right-2"
-  icon="⚡"
-  glassy
-/>
-
-        {/* Scoreboard below top buttons */}
-<div className="z-10 mt-[110px] max-w-md mx-auto text-white select-none space-y-3 w-full">
-          {/* Scoreboard - horizontal layout */}
+        {/* Scoreboard */}
+        <div className="z-10 mt-[110px] max-w-md mx-auto text-white select-none space-y-3 w-full">
           <div className="backdrop-blur-xl bg-white/10 border border-white/20 p-2 shadow-xl rounded-xl flex justify-between items-center text-xs sm:text-sm font-bold">
             {/* Player 1 */}
             <div className="flex items-center space-x-1">
@@ -1374,8 +1159,7 @@ if (gamePhase === "playing") {
                 {(playerScore || 0).toLocaleString()}
               </span>
             </div>
-
-            {/* Progress Bar (thin and centered) */}
+            {/* Progress Bar */}
             <div className="relative flex-1 mx-2 h-3 rounded-full bg-gray-800 overflow-hidden">
               <div
                 className="absolute left-0 top-0 bottom-0 bg-yellow-400 transition-all duration-500"
@@ -1386,7 +1170,6 @@ if (gamePhase === "playing") {
                 style={{ width: `${opponentPercent}%` }}
               />
             </div>
-
             {/* Player 2 */}
             <div className="flex items-center space-x-1 justify-end">
               <i
@@ -1405,74 +1188,67 @@ if (gamePhase === "playing") {
             </div>
           </div>
         </div>
+        
 
-     {/* Centered Tap Button */}
-<div className="flex flex-1 justify-center items-center z-10 mt-6 relative max-w-md mx-auto w-full">
-  <button
-    onClick={() => {
-      if (navigator.vibrate) navigator.vibrate(250);
-      handleTap();
-    }}
-    onMouseDown={(e) => {
-      e.preventDefault();
-    }}
-    className="w-[180px] h-[180px] rounded-full bg-white/30 backdrop-blur-xl border border-white/20 relative overflow-hidden transition-all duration-200 active:scale-95 shadow-2xl group"
-  >
-    <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
-    <div className="absolute inset-0 flex items-center justify-center">
-      <div className="w-28 h-28 bg-gradient-to-r from-red-400 to-yellow-400 rounded-full animate-pulse opacity-50"></div>
-    </div>
-    <i className="fas fa-swords text-6xl text-white relative z-10 drop-shadow"></i>
-  </button>
-</div>
+        {/* Tap Button - always center */}
+        <div className="flex flex-1 flex-col justify-center items-center z-10 mt-6 relative max-w-md mx-auto w-full">
+          <button
+            onClick={() => {
+              if (navigator.vibrate) navigator.vibrate(250);
+              handleTap();
+            }}
+            onMouseDown={(e) => {
+              e.preventDefault();
+            }}
+            className="w-[180px] h-[180px] rounded-full bg-white/30 backdrop-blur-xl border border-white/20 relative overflow-hidden transition-all duration-200 active:scale-95 shadow-2xl group mb-6"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-28 h-28 bg-gradient-to-r from-red-400 to-yellow-400 rounded-full animate-pulse opacity-50"></div>
+            </div>
+            <i className="fas fa-swords text-6xl text-white relative z-10 drop-shadow"></i>
+          </button>
 
-        {/* Bottom-left upgrade button */}
-        <UpgradeButton
-          title="Tap Speed"
-          level={tapSpeedLevel}
-          cost={getTapSpeedCost()}
-          description={`+${tapSpeedBonus}% bonus`}
-          onClick={() => upgradeTapSpeed()}
-          disabled={playerScore < getTapSpeedCost() || tapSpeedLevel >= 50}
-          position="absolute bottom-2 left-2"
-          icon="🚀"
-          glassy
-        />
+          {/* Tap Power Upgrade Button: large, centered, just below tap button */}
+          <button
+            onClick={upgradeTapPower}
+            disabled={playerScore < getTapPowerCost()}
+            className={`
+              w-full max-w-xs mt-1 px-6 py-4 rounded-2xl font-bold
+              bg-gradient-to-r from-orange-400/80 to-yellow-400/90 text-white
+              border border-yellow-300 shadow-lg
+              text-lg tracking-wider
+              transition-all duration-200
+              ${playerScore < getTapPowerCost() ? "opacity-50 cursor-not-allowed" : "hover:scale-105 active:scale-95"}
+            `}
+          >
+            💪 Upgrade Tap Power
+            <span className="ml-2 font-normal text-sm text-white/80">
+              (Lv. {tapPowerLevel}) - Cost: {getTapPowerCost()}
+            </span>
+            <div className="block text-xs mt-1 text-yellow-200 font-semibold">
+              +{tapPower} per tap
+            </div>
+          </button>
+        </div>
 
-        {/* Bottom-right upgrade button */}
-        <UpgradeButton
-          title="Auto Tapper"
-          level={autoTapperLevel}
-          cost={getAutoTapperCost()}
-          description={`${autoTapper}/sec`}
-          onClick={() => upgradeAutoTapper()}
-          disabled={playerScore < getAutoTapperCost() || autoTapper >= 100000}
-          position="absolute bottom-2 right-2"
-          icon="🤖"
-          glassy
-        />
+        {/* Timer + Leave stacked, then Mute below */}
+        <div className="z-10 max-w-md mx-auto flex flex-col items-center text-white gap-2 mt-6 mb-6">
+          <button
+            onClick={resetToStart}
+            className="flex items-center px-4 py-1 bg-red-500/80 text-white text-sm rounded-full hover:bg-red-500 active:scale-95 transition-all duration-200 backdrop-blur-xl border border-white/20"
+          >
+            <i className="fas fa-times mr-1" /> Leave
+          </button>
 
-   {/* Timer + Leave stacked, then Mute below */}
-<div className="z-10 max-w-md mx-auto flex flex-col items-center text-white gap-2 mt-6 mb-6">
-  <div className="font-mono text-2xl sm:text-3xl tracking-widest bg-black/30 px-4 py-1 rounded-md border border-white/20 select-none">
-    {formatTime(timeLeft)} {/* format like 00:25 */}
-  </div>
-
-  <button
-    onClick={resetToStart}
-    className="flex items-center px-4 py-1 bg-red-500/80 text-white text-sm rounded-full hover:bg-red-500 active:scale-95 transition-all duration-200 backdrop-blur-xl border border-white/20"
-  >
-    <i className="fas fa-times mr-1" /> Leave
-  </button>
-
-  <button
-    onClick={() => setMuted((m) => !m)}
-    className="flex items-center justify-center px-4 py-1 text-[#4a5568] hover:bg-gray-100 rounded-full border border-white/20"
-    aria-label={muted ? "Unmute sounds" : "Mute sounds"}
-  >
-    <i className={`fas ${muted ? "fa-volume-mute" : "fa-volume-up"}`}></i>
-  </button>
-</div>
+          <button
+            onClick={() => setMuted((m) => !m)}
+            className="flex items-center justify-center px-4 py-1 text-[#4a5568] hover:bg-gray-100 rounded-full border border-white/20"
+            aria-label={muted ? "Unmute sounds" : "Mute sounds"}
+          >
+            <i className={`fas ${muted ? "fa-volume-mute" : "fa-volume-up"}`}></i>
+          </button>
+        </div>
 
         {/* Floating Numbers */}
         {floatingNumbers.map((num) => (
