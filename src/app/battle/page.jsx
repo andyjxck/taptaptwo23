@@ -291,13 +291,6 @@ React.useEffect(() => {
 }, [gamePhase, gameMode, currentRoom, timeLeft, aiDifficulty, opponentScore, playerScore]);
 
 
-  return () => {
-    isCancelled = true;
-    clearInterval(upgradeTimer);
-  };
-}, [gamePhase, gameMode, currentRoom]);
-
-
 // Game timer effect
   React.useEffect(() => {
     let interval;
