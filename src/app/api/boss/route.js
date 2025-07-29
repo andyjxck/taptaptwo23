@@ -265,48 +265,97 @@ export async function POST(request) {
     }
 
     // --- 3. SOLO BOSS TAP ---
-  if (action === "solo_tap") {
-      const { userId, isAutoTap = false } = body;
-      if (!userId) return Response.json({ error: "User ID required" }, { status: 400 });
-      let { data: progress } = await supabase.from("boss_progress").select("*").eq("user_id", userId).single();
-      if (!progress) return Response.json({ error: "User progress not found" }, { status: 404 });
-      let { data: gameSave } = await supabase.from("game_saves").select("*").eq("user_id", userId).single();
-      if (!gameSave) return Response.json({ error: "Upgrades not found" }, { status: 404 });
-      const currentLevel = progress.current_level;
-      const bossMaxHp = getBossHP(currentLevel);
-      let currentBossHp = progress.boss_hp || bossMaxHp;
-      let actualDamage, isCrit = false;
-      if (isAutoTap) { actualDamage = gameSave.auto_tapper || 0; }
-      else {
-        actualDamage = gameSave.tap_power || 1;
-        const critChance = Math.min((gameSave.crit_chance_upgrades || 0) * 5, 100);
-        isCrit = Math.random() * 100 < critChance;
-        if (isCrit) actualDamage *= 3;
-      }
-      let newBossHp = Math.max(0, currentBossHp - actualDamage);
-      const isBossDefeated = newBossHp === 0;
-      if (!isBossDefeated) {
-        await supabase.from("boss_progress").update({ boss_hp: newBossHp }).eq("user_id", userId);
-        return Response.json({ success: true, damage_dealt: actualDamage, was_crit: isCrit, boss_defeated: false, current_boss_hp: newBossHp, boss_max_hp: bossMaxHp, is_auto_tap: isAutoTap, });
-      }
-      const coinsPerBoss = getCoinsPerBoss(currentLevel);
-      const newTotalCoins = (progress.total_coins || 0) + coinsPerBoss;
-           const newLevel = currentLevel + 1;
-      const newWeeklyBest = Math.max(progress.weekly_best_level || 1, newLevel);
-      // --- NEW: Scale by tap power
-      const tapPower = await getPlayerTapPower(userId);
-      const nextBossHp = 250 * (tapPower || 1);
-      await supabase.from("boss_progress").update({
-        current_level: newLevel, boss_hp: nextBossHp, boss_max_hp: nextBossHp,
-        total_coins: newTotalCoins, weekly_best_level: newWeeklyBest,
-      }).eq("user_id", userId);
+// --- 3. SOLO BOSS TAP ---
+if (action === "solo_tap") {
+  const { userId, isAutoTap = false } = body;
+  if (!userId) return Response.json({ error: "User ID required" }, { status: 400 });
 
-      return Response.json({
-        success: true, boss_defeated: true, coins_earned: coinsPerBoss, total_coins: newTotalCoins,
-        new_level: newLevel, current_boss_hp: nextBossHp, boss_max_hp: nextBossHp,
-        boss_emoji: getBossEmoji(newLevel), weekly_best: newWeeklyBest, damage_dealt: actualDamage, was_crit: isCrit, is_auto_tap: isAutoTap,
-      });
-    }
+  // Get progress and upgrades
+  let { data: progress } = await supabase.from("boss_progress").select("*").eq("user_id", userId).single();
+  if (!progress) return Response.json({ error: "User progress not found" }, { status: 404 });
+
+  let { data: gameSave } = await supabase.from("game_saves").select("*").eq("user_id", userId).single();
+  if (!gameSave) return Response.json({ error: "Upgrades not found" }, { status: 404 });
+
+  const currentLevel = progress.current_level;
+  const bossMaxHp = getBossHP(currentLevel);
+  let currentBossHp = progress.boss_hp ?? bossMaxHp;
+
+  // Determine tap damage and crit
+  let actualDamage, isCrit = false;
+  if (isAutoTap) {
+    actualDamage = gameSave.auto_tapper || 0;
+  } else {
+    actualDamage = gameSave.tap_power || 1;
+    const critChance = Math.min((gameSave.crit_chance_upgrades || 0) * 5, 100);
+    isCrit = Math.random() * 100 < critChance;
+    if (isCrit) actualDamage *= 3;
+  }
+
+  // Subtract damage
+  let newBossHp = Math.max(0, currentBossHp - actualDamage);
+  const isBossDefeated = newBossHp === 0;
+
+  if (!isBossDefeated) {
+    // Just update HP, no coins
+    await supabase.from("boss_progress").update({ boss_hp: newBossHp }).eq("user_id", userId);
+    return Response.json({
+      success: true,
+      damage_dealt: actualDamage,
+      was_crit: isCrit,
+      boss_defeated: false,
+      current_boss_hp: newBossHp,
+      boss_max_hp: bossMaxHp,
+      is_auto_tap: isAutoTap,
+    });
+  }
+
+  // --- Boss Defeated! ---
+  // Give coins and progress to next level
+
+  const coinsPerBoss = getCoinsPerBoss(currentLevel);
+  const newTotalCoins = (progress.total_coins || 0) + coinsPerBoss;
+  const { data: gameSaveBefore } = await supabase.from("game_saves").select("coins").eq("user_id", userId).single();
+  const newAvailableCoins = (gameSaveBefore?.coins || 0) + coinsPerBoss;
+
+  // Level up, weekly best
+  const newLevel = currentLevel + 1;
+  const newWeeklyBest = Math.max(progress.weekly_best_level || 1, newLevel);
+
+  // Calculate next boss HP (scaling with tap power)
+  const tapPower = await getPlayerTapPower(userId);
+  const nextBossHp = 250 * (tapPower || 1);
+
+  // Update progress and coins
+  await supabase.from("boss_progress").update({
+    current_level: newLevel,
+    boss_hp: nextBossHp,
+    boss_max_hp: nextBossHp,
+    total_coins: newTotalCoins,
+    weekly_best_level: newWeeklyBest,
+  }).eq("user_id", userId);
+
+  await supabase.from("game_saves").update({
+    coins: newAvailableCoins,
+  }).eq("user_id", userId);
+
+  return Response.json({
+    success: true,
+    boss_defeated: true,
+    coins_earned: coinsPerBoss,
+    total_coins: newTotalCoins,
+    available_coins: newAvailableCoins,
+    new_level: newLevel,
+    current_boss_hp: nextBossHp,
+    boss_max_hp: nextBossHp,
+    boss_emoji: getBossEmoji(newLevel),
+    weekly_best: newWeeklyBest,
+    damage_dealt: actualDamage,
+    was_crit: isCrit,
+    is_auto_tap: isAutoTap,
+  });
+}
+
 
     // --- 4. CO-OP CREATE ---
     if (action === "coop_create") {
