@@ -109,10 +109,7 @@ const updateAIStatsInDB = async ({
 const playerPercent = Math.round((playerScore / totalScore) * 100);
 const opponentPercent = 100 - playerPercent;
   
-// --- AI Upgrade Cost Functions (using refs) ---
-const getAiTapPowerCost = () =>
-  Math.floor(10 * Math.pow(1.3, aiTapPowerLevelRef.current - 1));
-// --- AI UPGRADE LOGIC ---
+// --- AI // --- AI UPGRADE LOGIC ---
 React.useEffect(() => {
   if (gamePhase !== "playing" || gameMode !== "ai" || !currentRoom) return;
 
@@ -125,19 +122,25 @@ React.useEffect(() => {
     let tapPowerLvl = aiTapPowerLevelRef.current;
     let currentTimeLeft = timeLeftRef.current;
 
-    // DEBUG: Log every tick so you see what values are being used
+    // DEBUG
     console.log('AI Upgrade Check', { coins, tapPower, tapPowerLvl, currentTimeLeft });
 
-    // Stop all upgrades in last 5 seconds
-    if (currentTimeLeft <= 5) return;
+    // Stop upgrades in last 15 seconds
+    if (currentTimeLeft <= 15) return;
 
-    // Calculate upgrade cost
-    let cost = Math.floor(10 * Math.pow(1.3, tapPowerLvl - 1));
-    if (coins >= cost) {
+    let upgradesBought = 0;
+
+    while (upgradesBought < 4) {
+      const cost = Math.floor(10 * Math.pow(1.3, tapPowerLvl - 1));
+      if (coins < cost) break;
+
       coins -= cost;
       tapPower += 3 + Math.floor(tapPowerLvl * 0.5);
       tapPowerLvl += 1;
+      upgradesBought++;
+    }
 
+    if (upgradesBought > 0) {
       setAiCoins(coins);
       setAiTapPower(tapPower);
       setAiTapPowerLevel(tapPowerLvl);
@@ -158,9 +161,7 @@ React.useEffect(() => {
     isCancelled = true;
     clearInterval(upgradeTimer);
   };
-  // timeLeft is NOT in the dependency array! Use the ref.
 }, [gamePhase, gameMode, currentRoom, aiDifficulty, playerScore]);
-
 // Game timer effect
   React.useEffect(() => {
     let interval;
