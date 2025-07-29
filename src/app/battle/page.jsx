@@ -109,7 +109,6 @@ const updateAIStatsInDB = async ({
 const playerPercent = Math.round((playerScore / totalScore) * 100);
 const opponentPercent = 100 - playerPercent;
   
-// --- AI UPGRADE LOGIC ---
 // 🔁 Track player score and tap power via refs
 const playerScoreRef = useRef(playerScore);
 useEffect(() => {
@@ -144,7 +143,7 @@ React.useEffect(() => {
       return;
     }
 
-    // 🎯 Fetch current states
+    // 🎯 Current values
     let coins = aiCoinsRef.current;
     let tapPower = aiTapPowerRef.current;
     let tapPowerLvl = aiTapPowerLevelRef.current;
@@ -153,15 +152,17 @@ React.useEffect(() => {
     const playerCoins = playerScoreRef.current || 0;
 
     const scoreGap = playerCoins - coins;
-    const maxAllowedGap = 10_000;
 
-    // 🔁 Catch-up boost
-    if (scoreGap > maxAllowedGap) {
-      const boostFactor = Math.min(Math.log10(scoreGap), 6); // cap boost
-      const extraCoins = Math.min(Math.floor(boostFactor * 5000), 20000);
-      const extraPower = Math.min(Math.floor(boostFactor * 5), 20);
+    // 🪃 CATCH-UP BOOST SECTION
+    const gapThreshold = 10_000;
+    if (scoreGap > gapThreshold) {
+      const severity = scoreGap / gapThreshold; // e.g. 3x threshold = 3.0
+      const boostFactor = Math.min(Math.log10(severity + 1), 2.5); // Log scale cap
 
-      console.log(`🪃 Boomerang Boost! +${extraCoins} coins, +${extraPower} power`);
+      const extraCoins = Math.floor(boostFactor * scoreGap * 0.4);  // ⚖️ Tweak multiplier
+      const extraPower = Math.floor(boostFactor * 8);               // ⚖️ Tweak multiplier
+
+      console.log(`🪃 AI BOOST: +${extraCoins} coins, +${extraPower} tap power`);
 
       coins += extraCoins;
       tapPower += extraPower;
@@ -187,10 +188,10 @@ React.useEffect(() => {
         console.error("❌ Boost sync failed", err);
       }
 
-      return; // ✅ Skip normal upgrades
+      return; // ✅ Skip normal upgrade after a boost
     }
 
-    // 🧠 Normal upgrade decision
+    // 🧠 NORMAL UPGRADE LOGIC
     const shouldUpgrade = tapPower <= playerTapPower || coins < playerCoins;
     if (!shouldUpgrade) {
       console.log("🟡 AI strong enough — no upgrade");
@@ -216,7 +217,7 @@ React.useEffect(() => {
     }
 
     if (upgradesBought > 0) {
-      console.log(`✅ AI bought ${upgradesBought} upgrades — now level ${newTapPowerLvl}`);
+      console.log(`✅ AI upgraded ${upgradesBought}x to level ${newTapPowerLvl}`);
 
       setAiCoins(newCoins);
       setAiTapPower(newTapPower);
@@ -247,6 +248,7 @@ React.useEffect(() => {
 
   return () => clearInterval(upgradeTimer);
 }, [gamePhase, gameMode, currentRoom, aiDifficulty]);
+
 
   React.useEffect(() => {
     let interval;
