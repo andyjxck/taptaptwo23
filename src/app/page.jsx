@@ -116,56 +116,56 @@ const CUSTOM_THEME_WEATHER_RENAMES = {
   // Add more custom themes here
 };
 
-const BOOSTS = [
-  {
-    id: "autotapper_24h",
-    name: "2x Auto Tapper (24h)",
-    description:
-      "Doubles your auto tapper output for 24 hours. Stackable, but cannot be active twice at once.",
-    effect: "autoTapper",
-    multiplier: 2,
-    price: 200,
-    duration: 24 * 60 * 60 * 1000, // 24 hours in ms
-    isPermanent: false,
-    isLimited: false,
-  },
-  {
-    id: "tappower_24h",
-    name: "2x Tap Power (24h)",
-    description:
-      "Doubles your tap power output for 24 hours. Stackable, but cannot be active twice at once.",
-    effect: "tapPower",
-    multiplier: 2,
-    price: 200,
-    duration: 24 * 60 * 60 * 1000, // 24 hours in ms
-    isPermanent: false,
-    isLimited: false,
-  },
-  {
-    id: "renown_24h",
-    name: "2x Renown (24h)",
-    description:
-      "Doubles Renown for 24h. Can be stacked with Tap Power and Auto Tapper",
-    effect: "renownTokens",
-    multiplier: 2,
-    price: 250,
-    duration: 24 * 60 * 60 * 1000, // 24 hours in ms
-    isPermanent: false,
-    isLimited: true,
-  },
-  {
-    id: "tappower_p",
-    name: "2x Tap Power (permanent)",
-    description:
-      "Doubles your Tap Power output permanently. Cannot be stacked with 24h Boosts. Disables upon enabling a 24h Boost.",
-    effect: "tapPowerPerm",
-    multiplier: 2,
-    price: 200,
-    duration: null,
-    isPermanent: true,
-    isLimited: true,
-  },
-];
+//const BOOSTS = [
+//  {
+  //  id: "autotapper_24h",
+  //  name: "2x Auto Tapper (24h)",
+  //  description:
+  //    "Doubles your auto tapper output for 24 hours. Stackable, but cannot be active twice at once.",
+  //  effect: "autoTapper",
+  //  multiplier: 2,
+  //  price: 200,
+  //  duration: 24 * 60 * 60 * 1000, // 24 hours in ms
+  //  isPermanent: false,
+   // isLimited: false,
+ // },
+ // {
+ //   id: "tappower_24h",
+   // name: "2x Tap Power (24h)",
+//    description:
+  //    "Doubles your tap power output for 24 hours. Stackable, but cannot be active twice at once.",
+    //effect: "tapPower",
+//    multiplier: 2,
+  //  price: 200,
+    //duration: 24 * 60 * 60 * 1000, // 24 hours in ms
+    //isPermanent: false,
+//    isLimited: false,
+  //},
+ // {
+   // id: "renown_24h",
+//    name: "2x Renown (24h)",
+  //  description:
+    //  "Doubles Renown for 24h. Can be stacked with Tap Power and Auto Tapper",
+   // effect: "renownTokens",
+ //   multiplier: 2,
+//    price: 250,
+ //   duration: 24 * 60 * 60 * 1000, // 24 hours in ms
+   // isPermanent: false,
+ //   isLimited: true,
+//  },
+//  {
+ //   id: "tappower_p",
+   // name: "2x Tap Power (permanent)",
+ //   description:
+   //   "Doubles your Tap Power output permanently. Cannot be stacked with 24h Boosts. Disables upon enabling a 24h Boost.",
+//    effect: "tapPowerPerm",
+  //  multiplier: 2,
+    //price: 200,
+//    duration: null,
+  //  isPermanent: true,
+    //isLimited: true,
+//  },
+//];
 
 const CUSTOM_THEMES = {
   heaven: {
@@ -901,11 +901,27 @@ const [profileIcon, setProfileIcon] = useState("");
 
 
   const [activeTab, setActiveTab] = useState("game");
+useEffect(() => {
+  if (showGuildChat) {
+    // When chat is open, lock scrolling on the main page
+    document.body.style.overflow = "hidden";
+  } else {
+    // When chat is closed, allow scrolling again
+    document.body.style.overflow = "";
+  }
+  // Clean up in case something weird happens
+  return () => {
+    document.body.style.overflow = "";
+  };
+}, [showGuildChat]);
 
 
 // Fetch friends list and pending requests only when userId is set
 useEffect(() => {
   if (!userId) return;
+
+  // Always load guild info with friendtab
+  fetchGuildData(userId);
 
   // Fetch Friends List
   setFriendsLoading(true);
@@ -932,6 +948,7 @@ useEffect(() => {
   fetchPendingRequests();
 
 }, [userId]);
+
 
   useEffect(() => {
   if (showRequests) {
@@ -4738,7 +4755,7 @@ const renderLeaderboard = () => (
     },
     {
       id: "profileIcons",
-      label: "Profile Icons",
+      label: "Icons",
       color: "border-green-200 text-green-600 ring-green-400",
     },
     {
@@ -5399,7 +5416,7 @@ const renderLeaderboard = () => (
           </div>
           {/* Profile Icons */}
           <div>
-            <h4 className="font-semibold mb-2 text-green-500">Profile Icons</h4>
+            <h4 className="font-semibold mb-2 text-green-500">Icons</h4>
             <div className="space-y-2">
               {(ownedIcons || []).length === 0 && (
                 <div className="text-gray-400 text-sm">No icons owned.</div>
@@ -5503,9 +5520,6 @@ const renderLeaderboard = () => (
         <span className="text-xs text-pink-400 mt-1">Renown</span>
       </div>
     </div>
-
-    <AdBanner />
-
     {/* Main Shop */}
   <div className={`${glassStyle} bg-white rounded-2xl p-6 ${buttonGlow}`}>
       {/* Inventory button */}
@@ -5545,6 +5559,7 @@ const renderLeaderboard = () => (
         {tabContent}
       </div>
     </div>
+           <AdBanner />
   </div>
 );
   };
@@ -5707,6 +5722,7 @@ const renderLeaderboard = () => (
           </div>
         )}
       </div>
+
     );
   };
 
@@ -5721,7 +5737,6 @@ const renderLeaderboard = () => (
   return (
     
     <div className={`${glassStyle} bg-white rounded-2xl p-5 ${buttonGlow}`}>
-            <AdBanner />
       {/* Daily Bonus Section */}
       <div className="my-6 flex flex-col items-center">
         {bonusCooldown === 0 ? (
@@ -5890,6 +5905,7 @@ const renderLeaderboard = () => (
             </div>
           )}
         </div>
+                 <AdBanner />
       </div>
     </div>
   );
