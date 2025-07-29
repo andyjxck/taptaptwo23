@@ -133,13 +133,20 @@ React.useEffect(() => {
     const coins = aiCoinsRef.current;
     const tapPower = aiTapPowerRef.current;
     const tapPowerLvl = aiTapPowerLevelRef.current;
-    const playerTapPower = tapPower || 1;
+    const playerTapPower = tapPowerRef.current || 1;
     const playerCoins = playerScoreRef.current || 0;
 
     const shouldUpgrade = tapPower <= playerTapPower || coins < playerCoins;
 
     if (!shouldUpgrade) {
       console.log("🟡 AI strong enough — no upgrade");
+      return;
+    }
+
+    const scoreGap = playerCoins - coins;
+    const maxAllowedGap = 100000; // tune this number based on testing
+    if (scoreGap > maxAllowedGap) {
+      console.log("🚫 Too far behind — skipping upgrades to catch up");
       return;
     }
 
@@ -188,6 +195,7 @@ React.useEffect(() => {
 
   return () => clearInterval(upgradeTimer);
 }, [gamePhase, gameMode, currentRoom, aiDifficulty]);
+
   React.useEffect(() => {
     let interval;
     if (gamePhase === "playing" && timeLeft > 0) {
