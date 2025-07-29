@@ -183,7 +183,7 @@ React.useEffect(() => {
     try {
       console.log("📡 Sending AI stats to backend...");
       const res = await updateAIStatsInDB({
-        roomCode: currentRoom,
+        code: currentRoom,
         ai_coins: coins,
         ai_tap_power: tapPower,
         ai_tap_power_level: tapPowerLvl,
