@@ -119,7 +119,8 @@ useEffect(() => {
 }, [tapPowerLevel]);
 
 React.useEffect(() => {
-  if (gamePhase !== "playing" || gameMode !== "ai" || !currentRoom) return;
+if (gameMode !== "ai" || !currentRoom) return;
+
 
   const upgradeInterval =
     aiDifficulty === "hard" ? 1750 :
