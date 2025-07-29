@@ -119,32 +119,24 @@ useEffect(() => {
 }, [tapPowerLevel]);
 
 React.useEffect(() => {
-  console.log("👀 AI upgrade effect mounted");
+  // ✅ Only run once all conditions are met
+  const shouldRun =
+    gamePhase === "playing" &&
+    gameMode === "ai" &&
+    !!currentRoom &&
+    !!aiDifficulty;
 
-  if (gamePhase !== "playing") {
-    console.log("🚫 Not in playing phase");
-    return;
-  }
+  if (!shouldRun) return;
 
-  if (gameMode !== "ai") {
-    console.log("🤖 Not in AI mode");
-    return;
-  }
-
-  if (!currentRoom) {
-    console.log("❌ No room code");
-    return;
-  }
+  console.log("✅ Starting AI upgrade interval");
 
   const upgradeInterval =
     aiDifficulty === "hard" ? 1750 :
     aiDifficulty === "medium" ? 2500 :
     3400;
 
-  console.log("⏱️ Starting AI upgrade interval every", upgradeInterval, "ms");
-
   const upgradeTimer = setInterval(async () => {
-    console.log("🌀 AI upgrade interval triggered");
+    console.log("🚀 AI upgrade check running...");
 
     const currentTimeLeft = timeLeftRef.current;
     if (currentTimeLeft <= 15) {
@@ -155,11 +147,7 @@ React.useEffect(() => {
     const currentPlayerLevel = tapPowerLevel;
     const lastPlayerLevel = playerTapPowerLevelRef.current;
 
-    console.log("📊 Tap power level check:", { currentPlayerLevel, lastPlayerLevel });
-
-    if (currentPlayerLevel <= lastPlayerLevel) {
-      return;
-    }
+    if (currentPlayerLevel <= lastPlayerLevel) return;
 
     if (Math.random() < 0.02) {
       console.log("🎲 AI randomly skipped upgrade");
@@ -182,7 +170,7 @@ React.useEffect(() => {
     tapPower += Math.floor(tapPower * 0.16) + 2;
     tapPowerLvl += 1;
 
-    console.log(`✅ AI upgraded to level ${tapPowerLvl} (cost: ${cost})`);
+    console.log(`✅ AI upgraded to level ${tapPowerLvl}`);
 
     setAiCoins(coins);
     setAiTapPower(tapPower);
@@ -208,13 +196,11 @@ React.useEffect(() => {
     } catch (err) {
       console.error("❌ Failed to update AI stats in DB", err);
     }
+
   }, upgradeInterval);
 
-  return () => {
-    console.log("🧹 Cleared AI upgrade interval");
-    clearInterval(upgradeTimer);
-  };
-}, [gamePhase, gameMode, currentRoom, aiDifficulty, tapPowerLevel]);
+  return () => clearInterval(upgradeTimer);
+}, [gamePhase, gameMode, currentRoom, aiDifficulty, tapPowerLevel]); // ✅ Dependency array stays the same
 
   React.useEffect(() => {
     let interval;
