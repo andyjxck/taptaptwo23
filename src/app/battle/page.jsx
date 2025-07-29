@@ -110,6 +110,11 @@ const playerPercent = Math.round((playerScore / totalScore) * 100);
 const opponentPercent = 100 - playerPercent;
   
 // --- AI UPGRADE LOGIC ---
+const playerScoreRef = useRef(playerScore);
+useEffect(() => {
+  playerScoreRef.current = playerScore;
+}, [playerScore]);
+
 React.useEffect(() => {
   if (gamePhase !== "playing" || gameMode !== "ai" || !currentRoom) return;
 
@@ -129,25 +134,17 @@ React.useEffect(() => {
     const tapPower = aiTapPowerRef.current;
     const tapPowerLvl = aiTapPowerLevelRef.current;
     const playerTapPower = tapPowerRef.current || 1;
-    const playerScoreRefVal = playerScore; // already in deps
+    const playerCoins = playerScoreRef.current || 0;
 
-    const shouldUpgrade =
-      tapPower <= playerTapPower || coins < playerScoreRefVal;
+    const shouldUpgrade = tapPower <= playerTapPower || coins < playerCoins;
 
     if (!shouldUpgrade) {
-      console.log("🟡 AI is strong enough — skipping upgrade");
+      console.log("🟡 AI strong enough — no upgrade");
       return;
     }
 
-    console.log("🔻 AI is weaker — upgrading now");
-    console.log({
-      coins,
-      tapPower,
-      tapPowerLvl,
-      currentTimeLeft,
-      playerTapPower,
-      playerScore: playerScoreRefVal,
-    });
+    console.log("🔻 AI losing — upgrading");
+    console.log({ coins, tapPower, tapPowerLvl, playerTapPower, playerCoins });
 
     let newCoins = coins;
     let newTapPower = tapPower;
@@ -165,35 +162,32 @@ React.useEffect(() => {
     }
 
     if (upgradesBought > 0) {
-      console.log(`✅ AI upgraded ${upgradesBought} time(s)`);
+      console.log(`✅ AI upgraded ${upgradesBought}x`);
 
-      // Sync state
       setAiCoins(newCoins);
       setAiTapPower(newTapPower);
       setAiTapPowerLevel(newTapPowerLvl);
       setOpponentScore(newCoins);
 
-      // Sync refs
       aiCoinsRef.current = newCoins;
       aiTapPowerRef.current = newTapPower;
       aiTapPowerLevelRef.current = newTapPowerLvl;
 
-      // DB update
       await updateAIStatsInDB({
         roomCode: currentRoom,
         ai_coins: newCoins,
         ai_tap_power: newTapPower,
         ai_tap_power_level: newTapPowerLvl,
-        player_score: playerScoreRefVal,
+        player_score: playerCoins,
         userId,
       });
     } else {
-      console.log("❌ AI could not afford any upgrade");
+      console.log("❌ AI couldn't afford upgrade");
     }
   }, upgradeInterval);
 
   return () => clearInterval(upgradeTimer);
-}, [gamePhase, gameMode, currentRoom, aiDifficulty, playerScore]);
+}, [gamePhase, gameMode, currentRoom, aiDifficulty]);
   React.useEffect(() => {
     let interval;
     if (gamePhase === "playing" && timeLeft > 0) {
