@@ -37,6 +37,33 @@ export default function BossModePage() {
   const [userId, setUserId] = useState("");
   const [pin, setPin] = useState("");
   const [userReady, setUserReady] = useState(false);
+function formatNumberShort(num) {
+  if (num < 1_000) return num.toString();
+
+  const abbreviations = [
+    { value: 1e33, symbol: "Dc" }, // Decillion
+    { value: 1e30, symbol: "Nn" }, // Nonillion
+    { value: 1e27, symbol: "Oc" }, // Octillion
+    { value: 1e24, symbol: "Sp" }, // Septillion
+    { value: 1e21, symbol: "Sx" }, // Sextillion
+    { value: 1e18, symbol: "Qi" }, // Quintillion
+    { value: 1e15, symbol: "Qa" }, // Quadrillion
+    { value: 1e12, symbol: "T" }, // Trillion
+    { value: 1e9, symbol: "B" }, // Billion
+    { value: 1e6, symbol: "M" }, // Million
+    { value: 1e3, symbol: "K" },
+  ];
+
+  for (let i = 0; i < abbreviations.length; i++) {
+    if (num >= abbreviations[i].value) {
+      return (
+        (num / abbreviations[i].value).toFixed(1).replace(/\.0$/, "") +
+        abbreviations[i].symbol
+      );
+    }
+  }
+  return num.toString();
+}
 
   // --- USER AUTH (must always run, always at top, no conditional return above!) ---
   useEffect(() => {
@@ -143,13 +170,14 @@ useEffect(() => {
   }, [mode, localBattleData, soloProgress, currentSession, bossHp]);
 
   // --- LOGIC ---
-  const getTapSpeedMultiplier = useCallback(() => {
-    if (!upgradesData?.stats?.tapSpeedBonus) return 1;
-    const now = Date.now();
-    const recentTaps = lastTapTimes.filter((time) => now - time < 1000).length;
-    if (recentTaps >= 3) return 1 + upgradesData.stats.tapSpeedBonus / 100;
-    return 1;
-  }, [lastTapTimes, upgradesData?.stats?.tapSpeedBonus]);
+ const getTapSpeedMultiplier = useCallback(() => {
+  if (!upgradesData?.stats?.tapSpeedBonus) return 1;
+  const now = Date.now();
+  const recentTaps = lastTapTimes.filter((time) => now - time < 1000).length;
+  // Only apply bonus if you tap 5 or more times in the last second
+  if (recentTaps >= 5) return 1 + upgradesData.stats.tapSpeedBonus / 100;
+  return 1;
+}, [lastTapTimes, upgradesData?.stats?.tapSpeedBonus]);
 
   function handleTap() {
     const now = Date.now();
@@ -344,8 +372,8 @@ if (!mode) {
                 >
                   <div className="space-y-2 text-orange-100 text-sm">
                     <div className="flex justify-between"><span>Boss Level:</span><span className="font-bold">{profileData.stats.bossLevel}</span></div>
-                    <div className="flex justify-between"><span>Total Coins:</span><span className="font-bold text-yellow-400">{profileData.stats.totalCoins}</span></div>
-                    <div className="flex justify-between"><span>Available:</span><span className="font-bold text-green-400">{profileData.stats.availableCoins}</span></div>
+                    <div classN<div className="flex justify-between"><span>Total Coins:</span><span className="font-bold text-yellow-400">{formatNumberShort(profileData.stats.totalCoins)}</span></div>
+<div className="flex justify-between"><span>Available:</span><span className="font-bold text-green-400">{formatNumberShort(availableCoins)}</span></div>
                     <div className="flex justify-between"><span>Upgrade Level:</span><span className="font-bold">{profileData.stats.upgradeLevel}</span></div>
                   </div>
                 </motion.div>
@@ -571,7 +599,7 @@ if (mode === "coop-join" && !currentSession) {
               </div>
               <div className="flex items-center space-x-1">
                 <Coins size={14} className="text-yellow-400" />
-                <span className="text-xs opacity-80">{availableCoins} coins</span>
+                <span className="text-xs opacity-80">{formatNumberShort(availableCoins)} coins</span>
               </div>
             </div>
             {mode === "solo" && (
@@ -638,7 +666,7 @@ if (mode === "coop-join" && !currentSession) {
           <div className="mb-6">
             <div className="flex justify-between text-orange-100 mb-2 text-sm">
               <span className="font-bold">Boss HP</span>
-              <span>{bossHp} / {battleData.boss_max_hp || battleData.boss_hp}</span>
+              <span>{formatNumberShort(bossHp)} / {formatNumberShort(battleData.boss_max_hp || battleData.boss_hp)}</span>
             </div>
             <div className="w-full boss-hp-bar">
               <motion.div
@@ -686,68 +714,105 @@ if (mode === "coop-join" && !currentSession) {
             )}
           </div>
         </motion.div>
-        {/* Upgrades Panel */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="boss-glass-panel p-4 shadow-2xl border border-orange-500/30"
-        >
-          <h3 className="text-xl font-bold text-orange-100 mb-3 text-center">⚔️ UPGRADES ⚔️</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {/* Tap Power */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => handleUpgrade("tapPower")}
-              disabled={availableCoins < upgradesData?.costs?.tapPowerCost || upgrading }
-              className="boss-upgrade-btn boss-upgrade-red"
-            >
-              <div className="flex items-center justify-between mb-1"><Zap size={16} className="text-yellow-400" /><div className="text-xs font-bold text-yellow-400">{upgradesData?.costs?.tapPowerCost || 0}</div></div>
-              <div className="text-xs font-bold">Tap Power</div>
-              <div className="text-xs opacity-80">Lv.{upgradesData?.upgrades?.tap_power_level || 1}</div>
-              <div className="text-xs opacity-70">{upgradesData?.stats?.tapPower || 1} DMG</div>
-            </motion.button>
-            {/* Auto Tapper */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => handleUpgrade("autoTapper")}
-              disabled={availableCoins < upgradesData?.costs?.autoTapperCost || upgrading }
-              className="boss-upgrade-btn boss-upgrade-green"
-            >
-              <div className="flex items-center justify-between mb-1"><Settings size={16} className="text-green-400" /><div className="text-xs font-bold text-yellow-400">{upgradesData?.costs?.autoTapperCost || 0}</div></div>
-              <div className="text-xs font-bold">Auto Tapper</div>
-              <div className="text-xs opacity-80">Lv.{upgradesData?.upgrades?.auto_tapper_level || 0}</div>
-              <div className="text-xs opacity-70">{upgradesData?.stats?.autoTapperDps || 0} DPS</div>
-            </motion.button>
-            {/* Crit Chance */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => handleUpgrade("critChance")}
-              disabled={availableCoins < upgradesData?.costs?.critChanceCost || upgrading || upgradesData?.stats?.critChance >= 100}
-              className="boss-upgrade-btn boss-upgrade-purple"
-            >
-              <div className="flex items-center justify-between mb-1"><Target size={16} className="text-purple-400" /><div className="text-xs font-bold text-yellow-400">{upgradesData?.costs?.critChanceCost || 0}</div></div>
-              <div className="text-xs font-bold">Crit Chance</div>
-              <div className="text-xs opacity-80">Lv.{upgradesData?.upgrades?.crit_chance_upgrades || 0}</div>
-              <div className="text-xs opacity-70">{upgradesData?.stats?.critChance || 0}%</div>
-            </motion.button>
-            {/* Tap Speed Bonus */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => handleUpgrade("tapSpeedBonus")}
-              disabled={availableCoins < upgradesData?.costs?.tapSpeedBonusCost || upgrading}
-              className="boss-upgrade-btn boss-upgrade-yellow"
-            >
-              <div className="flex items-center justify-between mb-1"><Clock size={16} className="text-yellow-400" /><div className="text-xs font-bold text-yellow-400">{upgradesData?.costs?.tapSpeedBonusCost || 0}</div></div>
-              <div className="text-xs font-bold">Speed Bonus</div>
-              <div className="text-xs opacity-80">Lv.{upgradesData?.upgrades?.tap_speed_bonus_upgrades || 0}</div>
-              <div className="text-xs opacity-70">+{upgradesData?.stats?.tapSpeedBonus || 0}%</div>
-            </motion.button>
-          </div>
-        </motion.div>
+     {/* Upgrades Panel */}
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  className="boss-glass-panel p-4 shadow-2xl border border-orange-500/30"
+>
+  <h3 className="text-xl font-bold text-orange-100 mb-3 text-center">⚔️ UPGRADES ⚔️</h3>
+  <div className="grid grid-cols-2 gap-2">
+    {/* Tap Power */}
+    <motion.button
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={() => handleUpgrade("tapPower")}
+      disabled={availableCoins < upgradesData?.costs?.tapPowerCost || upgrading }
+      className="boss-upgrade-btn boss-upgrade-red"
+    >
+      <div className="flex items-center justify-between mb-1">
+        <Zap size={16} className="text-yellow-400" />
+        <div className="text-xs font-bold text-yellow-400">
+          {formatNumberShort(upgradesData?.costs?.tapPowerCost || 0)}
+        </div>
+      </div>
+      <div className="text-xs font-bold">Tap Power</div>
+      <div className="text-xs opacity-80">
+        Lv.{formatNumberShort(upgradesData?.upgrades?.tap_power_level || 1)}
+      </div>
+      <div className="text-xs opacity-70">
+        {formatNumberShort(upgradesData?.stats?.tapPower || 1)} DMG
+      </div>
+    </motion.button>
+    {/* Auto Tapper */}
+    <motion.button
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={() => handleUpgrade("autoTapper")}
+      disabled={availableCoins < upgradesData?.costs?.autoTapperCost || upgrading }
+      className="boss-upgrade-btn boss-upgrade-green"
+    >
+      <div className="flex items-center justify-between mb-1">
+        <Settings size={16} className="text-green-400" />
+        <div className="text-xs font-bold text-yellow-400">
+          {formatNumberShort(upgradesData?.costs?.autoTapperCost || 0)}
+        </div>
+      </div>
+      <div className="text-xs font-bold">Auto Tapper</div>
+      <div className="text-xs opacity-80">
+        Lv.{formatNumberShort(upgradesData?.upgrades?.auto_tapper_level || 0)}
+      </div>
+      <div className="text-xs opacity-70">
+        {formatNumberShort(upgradesData?.stats?.autoTapperDps || 0)} DPS
+      </div>
+    </motion.button>
+    {/* Crit Chance */}
+    <motion.button
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={() => handleUpgrade("critChance")}
+      disabled={availableCoins < upgradesData?.costs?.critChanceCost || upgrading || upgradesData?.stats?.critChance >= 100}
+      className="boss-upgrade-btn boss-upgrade-purple"
+    >
+      <div className="flex items-center justify-between mb-1">
+        <Target size={16} className="text-purple-400" />
+        <div className="text-xs font-bold text-yellow-400">
+          {formatNumberShort(upgradesData?.costs?.critChanceCost || 0)}
+        </div>
+      </div>
+      <div className="text-xs font-bold">Crit Chance</div>
+      <div className="text-xs opacity-80">
+        Lv.{formatNumberShort(upgradesData?.upgrades?.crit_chance_upgrades || 0)}
+      </div>
+      <div className="text-xs opacity-70">
+        {formatNumberShort(upgradesData?.stats?.critChance || 0)}%
+      </div>
+    </motion.button>
+    {/* Tap Speed Bonus */}
+    <motion.button
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={() => handleUpgrade("tapSpeedBonus")}
+      disabled={availableCoins < upgradesData?.costs?.tapSpeedBonusCost || upgrading}
+      className="boss-upgrade-btn boss-upgrade-yellow"
+    >
+      <div className="flex items-center justify-between mb-1">
+        <Clock size={16} className="text-yellow-400" />
+        <div className="text-xs font-bold text-yellow-400">
+          {formatNumberShort(upgradesData?.costs?.tapSpeedBonusCost || 0)}
+        </div>
+      </div>
+      <div className="text-xs font-bold">Speed Bonus</div>
+      <div className="text-xs opacity-80">
+        Lv.{formatNumberShort(upgradesData?.upgrades?.tap_speed_bonus_upgrades || 0)}
+      </div>
+      <div className="text-xs opacity-70">
+        +{formatNumberShort(upgradesData?.stats?.tapSpeedBonus || 0)}%
+      </div>
+    </motion.button>
+  </div>
+</motion.div>
+
         {/* Celebration Animation */}
         <AnimatePresence>
           {showCelebration && (
