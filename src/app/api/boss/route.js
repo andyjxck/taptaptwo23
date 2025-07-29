@@ -17,6 +17,23 @@ function getNextWeeklyReset() {
   nextWeek.setHours(0, 0, 0, 0);
   return nextWeek.toISOString();
 }
+
+// --- NEW: Helpers to fetch tap power(s) ---
+async function getPlayerTapPower(userId) {
+  const { data } = await supabase.from("game_saves").select("tap_power").eq("user_id", userId).single();
+  return data?.tap_power || 1;
+}
+async function getPlayersTotalTapPower(userIds) {
+  if (!Array.isArray(userIds) || userIds.length === 0) return 1;
+  const { data } = await supabase
+    .from("game_saves")
+    .select("tap_power, user_id")
+    .in("user_id", userIds);
+  if (!data || data.length === 0) return 1;
+  return data.reduce((sum, row) => sum + (row.tap_power || 1), 0);
+}
+
+
 function generateRoomCode() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let result = "";
@@ -113,19 +130,25 @@ export async function GET(request) {
     if (action === "progress") {
       if (!userId) return Response.json({ error: "User ID required" }, { status: 400 });
       let { data: progress } = await supabase.from("boss_progress").select("*").eq("user_id", userId).single();
-      if (!progress) {
-        const bossHp = getBossHP(1);
+          if (!progress) {
+        // --- NEW: Scale by tap power
+        const tapPower = await getPlayerTapPower(userId);
+        const bossHp = 250 * (tapPower || 1);
         const { data } = await supabase.from("boss_progress").insert([{
           user_id: userId, current_level: 1, boss_hp: bossHp, boss_max_hp: bossHp,
           total_coins: 0, weekly_best_level: 1, last_reset_date: new Date().toISOString(),
         }]).select().single();
         progress = data;
       }
-      if (progress.boss_hp === null) {
-        const bossHp = getBossHP(progress.current_level);
+
+          if (progress.boss_hp === null) {
+        // --- NEW: Scale by tap power
+        const tapPower = await getPlayerTapPower(userId);
+        const bossHp = 250 * (tapPower || 1);
         await supabase.from("boss_progress").update({ boss_hp: bossHp, boss_max_hp: bossHp }).eq("user_id", userId);
         progress.boss_hp = bossHp; progress.boss_max_hp = bossHp;
       }
+
       const bossMaxHp = getBossHP(progress.current_level);
       const coinsPerBoss = getCoinsPerBoss(progress.current_level);
       const bossEmoji = getBossEmoji(progress.current_level);
@@ -268,13 +291,16 @@ export async function POST(request) {
       }
       const coinsPerBoss = getCoinsPerBoss(currentLevel);
       const newTotalCoins = (progress.total_coins || 0) + coinsPerBoss;
-      const newLevel = currentLevel + 1;
+           const newLevel = currentLevel + 1;
       const newWeeklyBest = Math.max(progress.weekly_best_level || 1, newLevel);
-      const nextBossHp = getBossHP(newLevel);
+      // --- NEW: Scale by tap power
+      const tapPower = await getPlayerTapPower(userId);
+      const nextBossHp = 250 * (tapPower || 1);
       await supabase.from("boss_progress").update({
         current_level: newLevel, boss_hp: nextBossHp, boss_max_hp: nextBossHp,
         total_coins: newTotalCoins, weekly_best_level: newWeeklyBest,
       }).eq("user_id", userId);
+
       return Response.json({
         success: true, boss_defeated: true, coins_earned: coinsPerBoss, total_coins: newTotalCoins,
         new_level: newLevel, current_boss_hp: nextBossHp, boss_max_hp: nextBossHp,
@@ -292,14 +318,17 @@ export async function POST(request) {
         const { data: exists } = await supabase.from("boss_coop_sessions").select("room_code").eq("room_code", roomCode).eq("is_active", true);
         if (!exists || exists.length === 0) break;
       }
-      const level = 1;
-      const bossHp = getBossHP(level);
+          const level = 1;
       const playersArr = [userId];
+      // --- NEW: Scale by total tap power
+      const totalTapPower = await getPlayersTotalTapPower(playersArr);
+      const bossHp = 250 * (totalTapPower || 1);
       const { data: session, error: insertErr } = await supabase.from("boss_coop_sessions").insert([{
         room_code: roomCode,
         boss_hp: bossHp, boss_max_hp: bossHp, boss_level: level,
         players: playersArr, is_active: true, total_coins: 0,
       }]).select().single();
+
       if (insertErr) throw insertErr;
       return Response.json({
         success: true,
@@ -361,14 +390,18 @@ export async function POST(request) {
       const bossDefeated = newHp === 0;
       let updatedSession, coinsEarned = 0;
       if (bossDefeated) {
-        const newLevel = (sessionData.boss_level || 1) + 1;
-        const newBossHp = getBossHP(newLevel);
+                const newLevel = (sessionData.boss_level || 1) + 1;
+        const playersArr = Array.isArray(sessionData.players) ? sessionData.players : [];
+        // --- NEW: Scale by total tap power
+        const totalTapPower = await getPlayersTotalTapPower(playersArr);
+        const newBossHp = 250 * (totalTapPower || 1);
         coinsEarned = getCoopCoinsPerBoss(sessionData.boss_level || 1);
         const newTotalCoins = (sessionData.total_coins || 0) + coinsEarned;
         const { data: updateArr } = await supabase.from("boss_coop_sessions").update({
           boss_level: newLevel, boss_hp: newBossHp, boss_max_hp: newBossHp, total_coins: newTotalCoins,
         }).eq("room_code", sessionData.room_code).select();
         updatedSession = updateArr[0];
+
       } else {
         const { data: updateArr } = await supabase.from("boss_coop_sessions").update({ boss_hp: newHp })
           .eq("room_code", sessionData.room_code).select();
