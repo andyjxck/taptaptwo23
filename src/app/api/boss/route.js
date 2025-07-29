@@ -264,15 +264,23 @@ export async function POST(request) {
       return Response.json({ success: true, upgrades: updatedGameSave, costPaid: cost, remainingCoins: progress.total_coins - cost });
     }
 
-    // --- 3. SOLO BOSS TAP ---
-// --- 3. SOLO BOSS TAP ---
+ // --- 3. SOLO BOSS TAP ---
 if (action === "solo_tap") {
   const { userId, isAutoTap = false } = body;
   if (!userId) return Response.json({ error: "User ID required" }, { status: 400 });
 
-  // Get progress and upgrades
   let { data: progress } = await supabase.from("boss_progress").select("*").eq("user_id", userId).single();
   if (!progress) return Response.json({ error: "User progress not found" }, { status: 404 });
+
+  // --- PREVENT FREE COIN EXPLOIT ---
+  if (progress.boss_hp <= 0) {
+    return Response.json({
+      success: false,
+      error: "Boss already defeated. Please reload.",
+      current_boss_hp: progress.boss_hp,
+      needs_reload: true,
+    }, { status: 409 });
+  }
 
   let { data: gameSave } = await supabase.from("game_saves").select("*").eq("user_id", userId).single();
   if (!gameSave) return Response.json({ error: "Upgrades not found" }, { status: 404 });
@@ -292,12 +300,10 @@ if (action === "solo_tap") {
     if (isCrit) actualDamage *= 3;
   }
 
-  // Subtract damage
   let newBossHp = Math.max(0, currentBossHp - actualDamage);
   const isBossDefeated = newBossHp === 0;
 
   if (!isBossDefeated) {
-    // Just update HP, no coins
     await supabase.from("boss_progress").update({ boss_hp: newBossHp }).eq("user_id", userId);
     return Response.json({
       success: true,
@@ -310,15 +316,12 @@ if (action === "solo_tap") {
     });
   }
 
-  // --- Boss Defeated! ---
-  // Give coins and progress to next level
-
+  // --- Boss Defeated ---
   const coinsPerBoss = getCoinsPerBoss(currentLevel);
   const newTotalCoins = (progress.total_coins || 0) + coinsPerBoss;
   const { data: gameSaveBefore } = await supabase.from("game_saves").select("coins").eq("user_id", userId).single();
   const newAvailableCoins = (gameSaveBefore?.coins || 0) + coinsPerBoss;
 
-  // Level up, weekly best
   const newLevel = currentLevel + 1;
   const newWeeklyBest = Math.max(progress.weekly_best_level || 1, newLevel);
 
@@ -326,7 +329,6 @@ if (action === "solo_tap") {
   const tapPower = await getPlayerTapPower(userId);
   const nextBossHp = 250 * (tapPower || 1);
 
-  // Update progress and coins
   await supabase.from("boss_progress").update({
     current_level: newLevel,
     boss_hp: nextBossHp,
