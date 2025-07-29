@@ -154,17 +154,15 @@ React.useEffect(() => {
     const playerCoins = playerScoreRef.current || 0;
 
     const scoreGap = playerCoins - coins;
+if (scoreGap > maxAllowedGap) {
+  const boostFactor = Math.min(Math.log10(scoreGap), 6); // cap boost factor
+  const extraCoins = Math.min(Math.floor(boostFactor * 5000), 20000);
+  const extraPower = Math.min(Math.floor(boostFactor * 5), 20);
 
-    // 🎣 Add "catch-up" logic if too far behind
-    const maxAllowedGap = 1_000;
-    if (scoreGap > maxAllowedGap) {
-      const boostFactor = Math.min(Math.log10(scoreGap), 7); // cap boost
-      const extraCoins = Math.floor(boostFactor * 15000);
-      const extraPower = Math.floor(boostFactor * 10);
+  console.log(`🟢 AI comeback boost: +${extraCoins} coins, +${extraPower} power`);
 
-      coins += extraCoins;
-      tapPower += extraPower;
-
+  newCoins += extraCoins;
+  newTapPower += extraPower;
       console.log(`🪃 Boomerang Boost! +${extraCoins} coins, +${extraPower} tap power`);
 
       setAiCoins(coins);
