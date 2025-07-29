@@ -110,6 +110,8 @@ const playerPercent = Math.round((playerScore / totalScore) * 100);
 const opponentPercent = 100 - playerPercent;
   
 // --- AI UPGRADE LOGIC ---
+
+// ✅ [UNCHANGED] Track latest player upgrade level using ref
 const playerTapPowerLevelRef = useRef(tapPowerLevel);
 useEffect(() => {
   playerTapPowerLevelRef.current = tapPowerLevel;
@@ -137,44 +139,44 @@ React.useEffect(() => {
       return; // player didn't upgrade
     }
 
-    // 2% chance to skip upgrade
+    // ✅ [UNCHANGED] 2% chance to skip matching the upgrade
     if (Math.random() < 0.02) {
       console.log("🎲 AI randomly skipped upgrade");
-      playerTapPowerLevelRef.current = currentPlayerLevel;
-      return;
+      return; // ❌ FIXED: removed premature ref update here
     }
 
-    // AI state
+    // ✅ [UNCHANGED] Grab AI state from refs
     let newCoins = aiCoinsRef.current;
     let newTapPower = aiTapPowerRef.current;
     let newTapPowerLvl = aiTapPowerLevelRef.current;
-    let upgradesBought = 0;
 
     const cost = Math.floor(10 * Math.pow(1.3, newTapPowerLvl - 1));
+
+    // ✅ [FIXED] Don't mark player upgrade as matched if AI can't afford it
     if (newCoins < cost) {
       console.log("❌ AI cannot afford upgrade");
-      playerTapPowerLevelRef.current = currentPlayerLevel;
-      return;
+      return; // ❌ FIXED: removed premature ref update here
     }
 
-    // Buy just one upgrade to match player
+    // ✅ [UNCHANGED] Buy 1 upgrade
     newCoins -= cost;
     newTapPower += Math.floor(newTapPower * 0.16) + 2;
     newTapPowerLvl += 1;
-    upgradesBought = 1;
 
     console.log(`✅ AI upgraded to level ${newTapPowerLvl}`);
 
-    // Update refs + state
+    // ✅ [UNCHANGED] Update state
     setAiCoins(newCoins);
     setAiTapPower(newTapPower);
     setAiTapPowerLevel(newTapPowerLvl);
     setOpponentScore(newCoins);
 
+    // ✅ [UNCHANGED] Sync refs
     aiCoinsRef.current = newCoins;
     aiTapPowerRef.current = newTapPower;
     aiTapPowerLevelRef.current = newTapPowerLvl;
 
+    // ✅ [FIXED] NOW mark player level as matched AFTER upgrade succeeds
     playerTapPowerLevelRef.current = currentPlayerLevel;
 
     await updateAIStatsInDB({
