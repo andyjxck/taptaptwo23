@@ -111,7 +111,7 @@ const opponentPercent = 100 - playerPercent;
   
 // --- AI UPGRADE LOGIC ---
 
-// Track player's score and tap power with refs
+// 🔁 Track player score and tap power via refs
 const playerScoreRef = useRef(playerScore);
 useEffect(() => {
   playerScoreRef.current = playerScore;
@@ -145,29 +145,60 @@ React.useEffect(() => {
       return;
     }
 
-    const coins = aiCoinsRef.current;
-    const tapPower = aiTapPowerRef.current;
-    const tapPowerLvl = aiTapPowerLevelRef.current;
+    // 🎯 Fetch current states
+    let coins = aiCoinsRef.current;
+    let tapPower = aiTapPowerRef.current;
+    let tapPowerLvl = aiTapPowerLevelRef.current;
 
     const playerTapPower = tapPowerRef.current || 1;
     const playerCoins = playerScoreRef.current || 0;
 
-    const shouldUpgrade = tapPower <= playerTapPower || coins < playerCoins;
-
-    if (!shouldUpgrade) {
-      console.log("🟡 AI is strong enough — skipping upgrade");
-      return;
-    }
-
     const scoreGap = playerCoins - coins;
-    const maxAllowedGap = 100000;
 
+    // 🎣 Add "catch-up" logic if too far behind
+    const maxAllowedGap = 100_000;
     if (scoreGap > maxAllowedGap) {
-      console.log("🚫 AI too far behind — skipping upgrades to conserve");
+      const boostFactor = Math.min(Math.log10(scoreGap), 5); // cap boost
+      const extraCoins = Math.floor(boostFactor * 5000);
+      const extraPower = Math.floor(boostFactor * 5);
+
+      coins += extraCoins;
+      tapPower += extraPower;
+
+      console.log(`🪃 Boomerang Boost! +${extraCoins} coins, +${extraPower} tap power`);
+
+      setAiCoins(coins);
+      setAiTapPower(tapPower);
+      setOpponentScore(coins);
+
+      aiCoinsRef.current = coins;
+      aiTapPowerRef.current = tapPower;
+
+      try {
+        await updateAIStatsInDB({
+          roomCode: currentRoom,
+          ai_coins: coins,
+          ai_tap_power: tapPower,
+          ai_tap_power_level: tapPowerLvl,
+          player_score: playerCoins,
+          userId,
+        });
+        console.log("✅ AI boost synced");
+      } catch (err) {
+        console.error("❌ Boost sync failed", err);
+      }
+
+      return; // skip regular upgrade after catch-up
+    }
+
+    // 🧠 Decide if AI should upgrade normally
+    const shouldUpgrade = tapPower <= playerTapPower || coins < playerCoins;
+    if (!shouldUpgrade) {
+      console.log("🟡 AI strong enough — no upgrade");
       return;
     }
 
-    console.log("🔻 AI behind — upgrading...");
+    console.log("🔧 AI upgrading...");
     console.log({ coins, tapPower, tapPowerLvl, playerTapPower, playerCoins });
 
     let newCoins = coins;
@@ -186,7 +217,7 @@ React.useEffect(() => {
     }
 
     if (upgradesBought > 0) {
-      console.log(`✅ AI upgraded ${upgradesBought}x to level ${newTapPowerLvl}`);
+      console.log(`✅ AI bought ${upgradesBought} upgrades — now level ${newTapPowerLvl}`);
 
       setAiCoins(newCoins);
       setAiTapPower(newTapPower);
@@ -198,8 +229,7 @@ React.useEffect(() => {
       aiTapPowerLevelRef.current = newTapPowerLvl;
 
       try {
-        console.log("📡 Sending AI stats to backend...");
-        const res = await updateAIStatsInDB({
+        await updateAIStatsInDB({
           roomCode: currentRoom,
           ai_coins: newCoins,
           ai_tap_power: newTapPower,
@@ -207,14 +237,13 @@ React.useEffect(() => {
           player_score: playerCoins,
           userId,
         });
-        console.log("✅ AI stats updated successfully", res);
+        console.log("✅ AI upgrades synced");
       } catch (err) {
-        console.error("❌ Failed to update AI stats in DB", err);
+        console.error("❌ Upgrade sync failed", err);
       }
     } else {
-      console.log("❌ AI couldn't afford any upgrades");
+      console.log("❌ AI couldn't afford upgrade");
     }
-
   }, upgradeInterval);
 
   return () => clearInterval(upgradeTimer);
