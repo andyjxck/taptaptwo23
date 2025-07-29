@@ -138,8 +138,8 @@ React.useEffect(() => {
 
   const upgradeTimer = setInterval(async () => {
     const currentTimeLeft = timeLeftRef.current;
-    if (currentTimeLeft <= 15) {
-      console.log("⏳ Skipping upgrades: under 15 seconds left");
+    if (currentTimeLeft <= 5) {
+      console.log("⏳ Skipping upgrades: under 5 seconds left");
       return;
     }
 
