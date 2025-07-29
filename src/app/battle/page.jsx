@@ -110,8 +110,6 @@ const playerPercent = Math.round((playerScore / totalScore) * 100);
 const opponentPercent = 100 - playerPercent;
   
 // --- AI UPGRADE LOGIC ---
-// --- AI UPGRADE LOGIC ---
-// --- AI UPGRADE LOGIC ---
 React.useEffect(() => {
   if (gamePhase !== "playing" || gameMode !== "ai" || !currentRoom) return;
 
@@ -131,15 +129,25 @@ React.useEffect(() => {
     const tapPower = aiTapPowerRef.current;
     const tapPowerLvl = aiTapPowerLevelRef.current;
     const playerTapPower = tapPowerRef.current || 1;
+    const playerScoreRefVal = playerScore; // already in deps
 
-    const isLosing = tapPower < playerTapPower;
-    if (!isLosing) {
-      console.log("🟡 AI tap power is equal or higher — no upgrade");
+    const shouldUpgrade =
+      tapPower <= playerTapPower || coins < playerScoreRefVal;
+
+    if (!shouldUpgrade) {
+      console.log("🟡 AI is strong enough — skipping upgrade");
       return;
     }
 
-    console.log("🔻 AI tap power is lower — upgrading now");
-    console.log({ coins, tapPower, tapPowerLvl, currentTimeLeft, playerTapPower });
+    console.log("🔻 AI is weaker — upgrading now");
+    console.log({
+      coins,
+      tapPower,
+      tapPowerLvl,
+      currentTimeLeft,
+      playerTapPower,
+      playerScore: playerScoreRefVal,
+    });
 
     let newCoins = coins;
     let newTapPower = tapPower;
@@ -159,21 +167,24 @@ React.useEffect(() => {
     if (upgradesBought > 0) {
       console.log(`✅ AI upgraded ${upgradesBought} time(s)`);
 
+      // Sync state
       setAiCoins(newCoins);
       setAiTapPower(newTapPower);
       setAiTapPowerLevel(newTapPowerLvl);
       setOpponentScore(newCoins);
 
+      // Sync refs
       aiCoinsRef.current = newCoins;
       aiTapPowerRef.current = newTapPower;
       aiTapPowerLevelRef.current = newTapPowerLvl;
 
+      // DB update
       await updateAIStatsInDB({
         roomCode: currentRoom,
         ai_coins: newCoins,
         ai_tap_power: newTapPower,
         ai_tap_power_level: newTapPowerLvl,
-        player_score: playerScore,
+        player_score: playerScoreRefVal,
         userId,
       });
     } else {
