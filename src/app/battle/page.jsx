@@ -110,58 +110,69 @@ const playerPercent = Math.round((playerScore / totalScore) * 100);
 const opponentPercent = 100 - playerPercent;
   
 // --- AI // --- AI UPGRADE LOGIC ---
+// --- AI UPGRADE LOGIC ---
 React.useEffect(() => {
   if (gamePhase !== "playing" || gameMode !== "ai" || !currentRoom) return;
 
-  const upgradeInterval = aiDifficulty === "hard" ? 1750 : aiDifficulty === "medium" ? 2500 : 3400;
-  let isCancelled = false;
+  const upgradeInterval =
+    aiDifficulty === "hard" ? 1750 :
+    aiDifficulty === "medium" ? 2500 :
+    3400;
 
   const upgradeTimer = setInterval(async () => {
-    let coins = aiCoinsRef.current;
-    let tapPower = aiTapPowerRef.current;
-    let tapPowerLvl = aiTapPowerLevelRef.current;
-    let currentTimeLeft = timeLeftRef.current;
+    const coins = aiCoinsRef.current;
+    const tapPower = aiTapPowerRef.current;
+    const tapPowerLvl = aiTapPowerLevelRef.current;
+    const currentTimeLeft = timeLeftRef.current;
 
-    // DEBUG
-    console.log('AI Upgrade Check', { coins, tapPower, tapPowerLvl, currentTimeLeft });
+    const cost = Math.floor(10 * Math.pow(1.3, tapPowerLvl - 1));
 
-    // Stop upgrades in last 15 seconds
-    if (currentTimeLeft <= 15) return;
+    console.log("🔁 AI Upgrade Tick");
+    console.log({ coins, tapPower, tapPowerLvl, currentTimeLeft, cost });
+
+    if (currentTimeLeft <= 15) {
+      console.log("⏳ Skipped upgrade: under 15 seconds left");
+      return;
+    }
 
     let upgradesBought = 0;
+    let newCoins = coins;
+    let newTapPower = tapPower;
+    let newTapPowerLvl = tapPowerLvl;
 
     while (upgradesBought < 4) {
-      const cost = Math.floor(10 * Math.pow(1.3, tapPowerLvl - 1));
-      if (coins < cost) break;
+      const cost = Math.floor(10 * Math.pow(1.3, newTapPowerLvl - 1));
+      if (newCoins < cost) break;
 
-      coins -= cost;
-      tapPower += Math.floor(tapPower * 0.16) + 2;;
-      tapPowerLvl += 1;
+      newCoins -= cost;
+      newTapPower += Math.floor(newTapPower * 0.16) + 2;
+      newTapPowerLvl += 1;
       upgradesBought++;
     }
 
     if (upgradesBought > 0) {
-      setAiCoins(coins);
-      setAiTapPower(tapPower);
-      setAiTapPowerLevel(tapPowerLvl);
-      setOpponentScore(coins);
+      console.log(`✅ Upgraded ${upgradesBought} times`);
+      setAiCoins(newCoins);
+      setAiTapPower(newTapPower);
+      setAiTapPowerLevel(newTapPowerLvl);
+      setOpponentScore(newCoins);
 
       await updateAIStatsInDB({
         roomCode: currentRoom,
-        ai_coins: coins,
-        ai_tap_power: tapPower,
-        ai_tap_power_level: tapPowerLvl,
+        ai_coins: newCoins,
+        ai_tap_power: newTapPower,
+        ai_tap_power_level: newTapPowerLvl,
         player_score: playerScore,
         userId,
       });
+    } else {
+      console.log("❌ Could not afford upgrade");
     }
   }, upgradeInterval);
 
-  return () => {
-    isCancelled = true;
-    clearInterval(upgradeTimer);
-  };
+  return () => clearInterval(upgradeTimer);
 }, [gamePhase, gameMode, currentRoom, aiDifficulty, playerScore]);
+
 // Game timer effect
   React.useEffect(() => {
     let interval;
