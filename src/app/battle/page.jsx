@@ -154,6 +154,7 @@ React.useEffect(() => {
     const playerCoins = playerScoreRef.current || 0;
 
     const scoreGap = playerCoins - coins;
+const maxAllowedGap = 10_000;
 if (scoreGap > maxAllowedGap) {
   const boostFactor = Math.min(Math.log10(scoreGap), 6); // cap boost factor
   const extraCoins = Math.min(Math.floor(boostFactor * 5000), 20000);
