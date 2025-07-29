@@ -115,8 +115,7 @@ const CUSTOM_THEME_WEATHER_RENAMES = {
   },
   // Add more custom themes here
 };
-
-//const BOOSTS = [
+const BOOSTS = [
 //  {
   //  id: "autotapper_24h",
   //  name: "2x Auto Tapper (24h)",
@@ -165,7 +164,7 @@ const CUSTOM_THEME_WEATHER_RENAMES = {
   //  isPermanent: true,
     //isLimited: true,
 //  },
-//];
+];
 
 const CUSTOM_THEMES = {
   heaven: {
