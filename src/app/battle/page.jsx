@@ -110,8 +110,7 @@ const playerPercent = Math.round((playerScore / totalScore) * 100);
 const opponentPercent = 100 - playerPercent;
   
 // --- AI UPGRADE LOGIC ---
-
-// ✅ [UNCHANGED] Track latest player upgrade level using ref
+// 🟢 Track player's tap power level via ref
 const playerTapPowerLevelRef = useRef(tapPowerLevel);
 useEffect(() => {
   playerTapPowerLevelRef.current = tapPowerLevel;
@@ -132,65 +131,69 @@ React.useEffect(() => {
       return;
     }
 
+    // 🟡 Track current vs previous player tap level
     const currentPlayerLevel = tapPowerLevel;
     const lastPlayerLevel = playerTapPowerLevelRef.current;
 
     if (currentPlayerLevel <= lastPlayerLevel) {
-      return; // player didn't upgrade
+      // 🔴 No upgrade detected, skip
+      return;
     }
 
-    // ✅ [UNCHANGED] 2% chance to skip matching the upgrade
+    // 🟢 2% random skip
     if (Math.random() < 0.02) {
       console.log("🎲 AI randomly skipped upgrade");
-      return; // ❌ FIXED: removed premature ref update here
+      playerTapPowerLevelRef.current = currentPlayerLevel;
+      return;
     }
 
-    // ✅ [UNCHANGED] Grab AI state from refs
-    let newCoins = aiCoinsRef.current;
-    let newTapPower = aiTapPowerRef.current;
-    let newTapPowerLvl = aiTapPowerLevelRef.current;
+    // 🟡 Fetch AI state from refs
+    let coins = aiCoinsRef.current;
+    let tapPower = aiTapPowerRef.current;
+    let tapPowerLvl = aiTapPowerLevelRef.current;
 
-    const cost = Math.floor(10 * Math.pow(1.3, newTapPowerLvl - 1));
+    const cost = Math.floor(10 * Math.pow(1.3, tapPowerLvl - 1));
 
-    // ✅ [FIXED] Don't mark player upgrade as matched if AI can't afford it
-    if (newCoins < cost) {
-      console.log("❌ AI cannot afford upgrade");
-      return; // ❌ FIXED: removed premature ref update here
+    // 🟡 Can AI afford upgrade?
+    if (coins < cost) {
+      console.log("❌ AI can't afford upgrade");
+      playerTapPowerLevelRef.current = currentPlayerLevel;
+      return;
     }
 
-    // ✅ [UNCHANGED] Buy 1 upgrade
-    newCoins -= cost;
-    newTapPower += Math.floor(newTapPower * 0.16) + 2;
-    newTapPowerLvl += 1;
+    // 🟢 Perform single upgrade
+    coins -= cost;
+    tapPower += Math.floor(tapPower * 0.16) + 2;
+    tapPowerLvl += 1;
 
-    console.log(`✅ AI upgraded to level ${newTapPowerLvl}`);
+    console.log(`✅ AI upgraded to level ${tapPowerLvl}`);
 
-    // ✅ [UNCHANGED] Update state
-    setAiCoins(newCoins);
-    setAiTapPower(newTapPower);
-    setAiTapPowerLevel(newTapPowerLvl);
-    setOpponentScore(newCoins);
+    // 🟡 Update state and refs
+    setAiCoins(coins);
+    setAiTapPower(tapPower);
+    setAiTapPowerLevel(tapPowerLvl);
+    setOpponentScore(coins); // optional: replace with something else if needed
 
-    // ✅ [UNCHANGED] Sync refs
-    aiCoinsRef.current = newCoins;
-    aiTapPowerRef.current = newTapPower;
-    aiTapPowerLevelRef.current = newTapPowerLvl;
+    aiCoinsRef.current = coins;
+    aiTapPowerRef.current = tapPower;
+    aiTapPowerLevelRef.current = tapPowerLvl;
 
-    // ✅ [FIXED] NOW mark player level as matched AFTER upgrade succeeds
+    // 🟡 Mark that AI responded to player's upgrade
     playerTapPowerLevelRef.current = currentPlayerLevel;
 
+    // 🟢 Optional DB sync
     await updateAIStatsInDB({
       roomCode: currentRoom,
-      ai_coins: newCoins,
-      ai_tap_power: newTapPower,
-      ai_tap_power_level: newTapPowerLvl,
+      ai_coins: coins,
+      ai_tap_power: tapPower,
+      ai_tap_power_level: tapPowerLvl,
       player_score: playerScore,
       userId,
     });
   }, upgradeInterval);
 
   return () => clearInterval(upgradeTimer);
-}, [gamePhase, gameMode, currentRoom, aiDifficulty, tapPowerLevel]);
+}, [gamePhase, gameMode, currentRoom, aiDifficulty, tapPowerLevel]); // 🟡 Dependency added
 
   React.useEffect(() => {
     let interval;
