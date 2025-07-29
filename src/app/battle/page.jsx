@@ -110,7 +110,6 @@ const playerPercent = Math.round((playerScore / totalScore) * 100);
 const opponentPercent = 100 - playerPercent;
   
 // --- AI UPGRADE LOGIC ---
-
 // 🔁 Track player score and tap power via refs
 const playerScoreRef = useRef(playerScore);
 useEffect(() => {
@@ -154,17 +153,18 @@ React.useEffect(() => {
     const playerCoins = playerScoreRef.current || 0;
 
     const scoreGap = playerCoins - coins;
-const maxAllowedGap = 10_000;
-if (scoreGap > maxAllowedGap) {
-  const boostFactor = Math.min(Math.log10(scoreGap), 6); // cap boost factor
-  const extraCoins = Math.min(Math.floor(boostFactor * 5000), 20000);
-  const extraPower = Math.min(Math.floor(boostFactor * 5), 20);
+    const maxAllowedGap = 10_000;
 
-  console.log(`🟢 AI comeback boost: +${extraCoins} coins, +${extraPower} power`);
+    // 🔁 Catch-up boost
+    if (scoreGap > maxAllowedGap) {
+      const boostFactor = Math.min(Math.log10(scoreGap), 6); // cap boost
+      const extraCoins = Math.min(Math.floor(boostFactor * 5000), 20000);
+      const extraPower = Math.min(Math.floor(boostFactor * 5), 20);
 
-  newCoins += extraCoins;
-  newTapPower += extraPower;
-      console.log(`🪃 Boomerang Boost! +${extraCoins} coins, +${extraPower} tap power`);
+      console.log(`🪃 Boomerang Boost! +${extraCoins} coins, +${extraPower} power`);
+
+      coins += extraCoins;
+      tapPower += extraPower;
 
       setAiCoins(coins);
       setAiTapPower(tapPower);
@@ -187,10 +187,10 @@ if (scoreGap > maxAllowedGap) {
         console.error("❌ Boost sync failed", err);
       }
 
-      return; // skip regular upgrade after catch-up
+      return; // ✅ Skip normal upgrades
     }
 
-    // 🧠 Decide if AI should upgrade normally
+    // 🧠 Normal upgrade decision
     const shouldUpgrade = tapPower <= playerTapPower || coins < playerCoins;
     if (!shouldUpgrade) {
       console.log("🟡 AI strong enough — no upgrade");
@@ -247,7 +247,6 @@ if (scoreGap > maxAllowedGap) {
 
   return () => clearInterval(upgradeTimer);
 }, [gamePhase, gameMode, currentRoom, aiDifficulty]);
-
 
   React.useEffect(() => {
     let interval;
