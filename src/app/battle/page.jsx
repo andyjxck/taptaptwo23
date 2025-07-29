@@ -135,7 +135,7 @@ React.useEffect(() => {
       if (coins < cost) break;
 
       coins -= cost;
-      tapPower += 3 + Math.floor(tapPowerLvl * 0.5);
+      tapPower += Math.floor(tapPower * 0.16) + 2;;
       tapPowerLvl += 1;
       upgradesBought++;
     }
@@ -662,37 +662,38 @@ const resetToStart = () => {
 
 
   
+// --- AI TAPPING LOGIC ---
 React.useEffect(() => {
-  let interval;
-  if (gamePhase === "playing" && gameMode === "ai") {
-    const tapFrequencyMs =
-      aiDifficulty === "hard"
-        ? 100
-        : aiDifficulty === "medium"
-        ? 250
-        : 350;
+  if (gamePhase !== "playing" || gameMode !== "ai") return;
 
-    interval = setInterval(() => {
-      let aiMultiplier = 1;
-      if (aiDifficulty === "easy") aiMultiplier = 0.8;
-      else if (aiDifficulty === "medium") aiMultiplier = 1.2;
-      else if (aiDifficulty === "hard") aiMultiplier = 1.7;
+  let intervalId;
 
-      const tapPower = aiTapPowerRef.current || 1;
-      const taps = Math.floor((Math.random() * 2 + 1) * aiMultiplier);
+  const getRandomInterval = () => {
+    if (aiDifficulty === "easy") {
+      return Math.floor(Math.random() * (333 - 200 + 1)) + 200;
+    } else if (aiDifficulty === "medium") {
+      return Math.floor(Math.random() * (200 - 143 + 1)) + 143;
+    } else {
+      return Math.floor(Math.random() * (125 - 90 + 1)) + 90;
+    }
+  };
 
-      const coinsToAdd = tapPower * taps;
+  const scheduleNextTap = () => {
+    const tapPower = aiTapPowerRef.current || 1;
 
-      setAiCoins(prev => {
-        const newCoins = prev + coinsToAdd;
-        setOpponentScore(newCoins); // Always show latest coins
-        return newCoins;
-      });
-    }, tapFrequencyMs);
-  }
-  return () => clearInterval(interval);
+    setAiCoins(prev => {
+      const newCoins = prev + tapPower;
+      setOpponentScore(newCoins);
+      return newCoins;
+    });
+
+    intervalId = setTimeout(scheduleNextTap, getRandomInterval());
+  };
+
+  scheduleNextTap();
+
+  return () => clearTimeout(intervalId);
 }, [gamePhase, gameMode, aiDifficulty]);
-
 
 
 React.useEffect(() => {
