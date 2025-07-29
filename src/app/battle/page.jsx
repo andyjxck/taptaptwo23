@@ -119,7 +119,6 @@ useEffect(() => {
 }, [tapPowerLevel]);
 
 React.useEffect(() => {
-  // ✅ Only run once all conditions are met
   const shouldRun =
     gamePhase === "playing" &&
     gameMode === "ai" &&
@@ -200,7 +199,7 @@ React.useEffect(() => {
   }, upgradeInterval);
 
   return () => clearInterval(upgradeTimer);
-}, [gamePhase, gameMode, currentRoom, aiDifficulty, tapPowerLevel]); // ✅ Dependency array stays the same
+}, [gamePhase, gameMode, currentRoom, aiDifficulty]); // ⬅️ 🔥 Remove tapPowerLevel
 
   React.useEffect(() => {
     let interval;
