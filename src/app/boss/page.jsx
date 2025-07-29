@@ -372,7 +372,7 @@ if (!mode) {
                 >
                   <div className="space-y-2 text-orange-100 text-sm">
                     <div className="flex justify-between"><span>Boss Level:</span><span className="font-bold">{profileData.stats.bossLevel}</span></div>
-                    <div classN<div className="flex justify-between"><span>Total Coins:</span><span className="font-bold text-yellow-400">{formatNumberShort(profileData.stats.totalCoins)}</span></div>
+                <div className="flex justify-between"><span>Total Coins:</span><span className="font-bold text-yellow-400">{formatNumberShort(profileData.stats.totalCoins)}</span></div>
 <div className="flex justify-between"><span>Available:</span><span className="font-bold text-green-400">{formatNumberShort(availableCoins)}</span></div>
                     <div className="flex justify-between"><span>Upgrade Level:</span><span className="font-bold">{profileData.stats.upgradeLevel}</span></div>
                   </div>
