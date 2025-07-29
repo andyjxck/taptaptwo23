@@ -110,13 +110,28 @@ const playerPercent = Math.round((playerScore / totalScore) * 100);
 const opponentPercent = 100 - playerPercent;
   
 // --- AI UPGRADE LOGIC ---
+
+// Track player's score and tap power with refs
 const playerScoreRef = useRef(playerScore);
 useEffect(() => {
   playerScoreRef.current = playerScore;
 }, [playerScore]);
 
+const tapPowerRef = useRef(tapPowerLevel);
+useEffect(() => {
+  tapPowerRef.current = tapPowerLevel;
+}, [tapPowerLevel]);
+
 React.useEffect(() => {
-  if (gamePhase !== "playing" || gameMode !== "ai" || !currentRoom) return;
+  const shouldRun =
+    gamePhase === "playing" &&
+    gameMode === "ai" &&
+    !!currentRoom &&
+    !!aiDifficulty;
+
+  if (!shouldRun) return;
+
+  console.log("✅ AI upgrade interval started");
 
   const upgradeInterval =
     aiDifficulty === "hard" ? 1750 :
@@ -126,31 +141,33 @@ React.useEffect(() => {
   const upgradeTimer = setInterval(async () => {
     const currentTimeLeft = timeLeftRef.current;
     if (currentTimeLeft <= 15) {
-      console.log("⏳ Skipped upgrade: under 15 seconds left");
+      console.log("⏳ Skipping upgrades: under 15 seconds left");
       return;
     }
 
     const coins = aiCoinsRef.current;
     const tapPower = aiTapPowerRef.current;
     const tapPowerLvl = aiTapPowerLevelRef.current;
+
     const playerTapPower = tapPowerRef.current || 1;
     const playerCoins = playerScoreRef.current || 0;
 
     const shouldUpgrade = tapPower <= playerTapPower || coins < playerCoins;
 
     if (!shouldUpgrade) {
-      console.log("🟡 AI strong enough — no upgrade");
+      console.log("🟡 AI is strong enough — skipping upgrade");
       return;
     }
 
     const scoreGap = playerCoins - coins;
-    const maxAllowedGap = 100000; // tune this number based on testing
+    const maxAllowedGap = 100000;
+
     if (scoreGap > maxAllowedGap) {
-      console.log("🚫 Too far behind — skipping upgrades to catch up");
+      console.log("🚫 AI too far behind — skipping upgrades to conserve");
       return;
     }
 
-    console.log("🔻 AI losing — upgrading");
+    console.log("🔻 AI behind — upgrading...");
     console.log({ coins, tapPower, tapPowerLvl, playerTapPower, playerCoins });
 
     let newCoins = coins;
@@ -169,7 +186,7 @@ React.useEffect(() => {
     }
 
     if (upgradesBought > 0) {
-      console.log(`✅ AI upgraded ${upgradesBought}x`);
+      console.log(`✅ AI upgraded ${upgradesBought}x to level ${newTapPowerLvl}`);
 
       setAiCoins(newCoins);
       setAiTapPower(newTapPower);
@@ -180,21 +197,29 @@ React.useEffect(() => {
       aiTapPowerRef.current = newTapPower;
       aiTapPowerLevelRef.current = newTapPowerLvl;
 
-      await updateAIStatsInDB({
-        roomCode: currentRoom,
-        ai_coins: newCoins,
-        ai_tap_power: newTapPower,
-        ai_tap_power_level: newTapPowerLvl,
-        player_score: playerCoins,
-        userId,
-      });
+      try {
+        console.log("📡 Sending AI stats to backend...");
+        const res = await updateAIStatsInDB({
+          roomCode: currentRoom,
+          ai_coins: newCoins,
+          ai_tap_power: newTapPower,
+          ai_tap_power_level: newTapPowerLvl,
+          player_score: playerCoins,
+          userId,
+        });
+        console.log("✅ AI stats updated successfully", res);
+      } catch (err) {
+        console.error("❌ Failed to update AI stats in DB", err);
+      }
     } else {
-      console.log("❌ AI couldn't afford upgrade");
+      console.log("❌ AI couldn't afford any upgrades");
     }
+
   }, upgradeInterval);
 
   return () => clearInterval(upgradeTimer);
 }, [gamePhase, gameMode, currentRoom, aiDifficulty]);
+
 
   React.useEffect(() => {
     let interval;
