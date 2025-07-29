@@ -10,6 +10,8 @@ import {
 
 export default function BossModePage() {
   // --- STATE ---
+  const [canTap, setCanTap] = useState(true);
+
   const [upgradesLoadedOnce, setUpgradesLoadedOnce] = useState(false);
   const [mode, setMode] = useState(""); // '', 'solo', 'coop-create', 'coop-join'
   const [roomCode, setRoomCode] = useState("");
@@ -180,56 +182,75 @@ useEffect(() => {
 }, [lastTapTimes, upgradesData?.stats?.tapSpeedBonus]);
 
   function handleTap() {
-    const now = Date.now();
-    setLastTapTimes(prev => [...prev.slice(-10), now]);
-    setTapCount(prev => prev + 1);
-    if (mode === "solo" && soloProgress) handleSoloTap(false);
-    else if (mode.startsWith("coop") && currentSession) handleCoopTap();
-  }
+  if (!canTap) return; // Don't allow spamming
+  const now = Date.now();
+  setLastTapTimes(prev => [...prev.slice(-10), now]);
+  setTapCount(prev => prev + 1);
+  if (mode === "solo" && soloProgress) handleSoloTap(false);
+  else if (mode.startsWith("coop") && currentSession) handleCoopTap();
+}
 
-  function handleSoloTap(isAutoTap = false) {
-    fetch("/api/boss", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "solo_tap", userId: userId, isAutoTap }),
+
+ function handleSoloTap(isAutoTap = false) {
+  if (!canTap) return; // Prevent taps when not allowed
+
+  setCanTap(false); // Disable further taps until resolved
+
+  fetch("/api/boss", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "solo_tap", userId: userId, isAutoTap }),
+  })
+    .then(r => r.json())
+    .then(data => {
+      // If server says boss already dead, block taps and reload solo progress
+      if (data.needs_reload) {
+        setCanTap(false);
+        refreshAll(); // This loads the new boss state
+        return;
+      }
+
+      if (typeof data.current_boss_hp === "number") setBossHp(data.current_boss_hp);
+
+      if (data.boss_defeated) {
+        setShowCelebration(true);
+        setBossHp(data.current_boss_hp);
+        setLocalBattleData((prev) => ({
+          ...(prev || soloProgress),
+          current_level: data.new_level,
+          boss_hp: data.current_boss_hp,
+          boss_max_hp: data.boss_max_hp,
+          boss_emoji: data.boss_emoji,
+          total_coins_earned: data.total_coins,
+          coins_per_boss: data.coins_per_boss || Math.floor(500 * Math.pow(1.15, data.new_level - 1)),
+        }));
+        refreshAll(); // Reload profile, upgrades, progress, etc
+        setTimeout(() => setShowCelebration(false), 2000);
+        setCanTap(true); // Re-enable after loading (or you can delay a bit if you want)
+        return;
+      }
+
+      if (data.damage_dealt && !data.is_auto_tap) {
+        const damageId = Date.now();
+        setShowDamageNumbers(prev => [
+          ...prev,
+          {
+            id: damageId,
+            damage: data.damage_dealt,
+            isCrit: data.was_crit,
+            x: Math.random() * 200 - 100,
+            y: Math.random() * 100 - 50,
+          },
+        ]);
+        setTimeout(() => {
+          setShowDamageNumbers(prev => prev.filter((d) => d.id !== damageId));
+        }, 1500);
+      }
+      setCanTap(true); // Only re-enable if boss not dead
     })
-      .then(r => r.json())
-      .then(data => {
-        if (typeof data.current_boss_hp === "number") setBossHp(data.current_boss_hp);
+    .catch(() => setCanTap(true)); // Always re-enable on error
+}
 
-        if (data.boss_defeated) {
-          setShowCelebration(true);
-          setBossHp(data.current_boss_hp);
-          setLocalBattleData((prev) => ({
-            ...(prev || soloProgress),
-            current_level: data.new_level,
-            boss_hp: data.current_boss_hp,
-            boss_max_hp: data.boss_max_hp,
-            boss_emoji: data.boss_emoji,
-            total_coins_earned: data.total_coins,
-            coins_per_boss: data.coins_per_boss || Math.floor(500 * Math.pow(1.15, data.new_level - 1)),
-          }));
-          refreshAll();
-          setTimeout(() => setShowCelebration(false), 2000);
-        }
-        if (data.damage_dealt && !data.is_auto_tap) {
-          const damageId = Date.now();
-          setShowDamageNumbers(prev => [
-            ...prev,
-            {
-              id: damageId,
-              damage: data.damage_dealt,
-              isCrit: data.was_crit,
-              x: Math.random() * 200 - 100,
-              y: Math.random() * 100 - 50,
-            },
-          ]);
-          setTimeout(() => {
-            setShowDamageNumbers(prev => prev.filter((d) => d.id !== damageId));
-          }, 1500);
-        }
-      });
-  }
 
   function handleCoopTap() {
     if (!currentSession) return;
@@ -681,12 +702,13 @@ if (mode === "coop-join" && !currentSession) {
           </div>
           {/* Strike Button */}
           <div className="relative mb-6">
-            <motion.button
-              whileHover={{ scale: 1.07 }}
-              whileTap={{ scale: 0.94, rotate: [0, -5, 5, 0] }}
-              onClick={handleTap}
-              className="boss-strike-button"
-            >
+           <motion.button
+  whileHover={{ scale: 1.07 }}
+  whileTap={{ scale: 0.94, rotate: [0, -5, 5, 0] }}
+  onClick={handleTap}
+  disabled={!canTap || bossHp === 0}
+  className="boss-strike-button"
+>
               <div className="absolute inset-0 boss-strike-gloss"></div>
               <div className="relative z-10 flex flex-col items-center justify-center h-full">
                 <motion.div
