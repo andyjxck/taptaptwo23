@@ -110,8 +110,6 @@ const playerPercent = Math.round((playerScore / totalScore) * 100);
 const opponentPercent = 100 - playerPercent;
   
 // --- AI UPGRADE LOGIC ---
-
-// --- AI UPGRADE LOGIC ---
 // 🟢 Track player's tap power level via ref
 const playerTapPowerLevelRef = useRef(tapPowerLevel);
 useEffect(() => {
@@ -119,15 +117,22 @@ useEffect(() => {
 }, [tapPowerLevel]);
 
 React.useEffect(() => {
-  const shouldRun =
-    gamePhase === "playing" &&
-    gameMode === "ai" &&
-    !!currentRoom &&
-    !!aiDifficulty;
+  if (
+    gamePhase !== "playing" ||
+    gameMode !== "ai" ||
+    !currentRoom ||
+    !aiDifficulty
+  ) {
+    console.log("❌ Skipping AI upgrade: missing conditions", {
+      gamePhase,
+      gameMode,
+      currentRoom,
+      aiDifficulty,
+    });
+    return;
+  }
 
-  if (!shouldRun) return;
-
-  console.log("✅ Starting AI upgrade interval");
+  console.log("✅ AI UPGRADE LOOP STARTED");
 
   const upgradeInterval =
     aiDifficulty === "hard" ? 1750 :
@@ -135,18 +140,20 @@ React.useEffect(() => {
     3400;
 
   const upgradeTimer = setInterval(async () => {
-    console.log("🚀 AI upgrade check running...");
+    console.log("🚀 AI upgrade tick");
 
     const currentTimeLeft = timeLeftRef.current;
     if (currentTimeLeft <= 15) {
-      console.log("⏳ Skipped upgrade: under 15 seconds left");
+      console.log("⏳ Skipped: under 15s left");
       return;
     }
 
     const currentPlayerLevel = tapPowerLevel;
     const lastPlayerLevel = playerTapPowerLevelRef.current;
 
-    if (currentPlayerLevel <= lastPlayerLevel) return;
+    if (currentPlayerLevel <= lastPlayerLevel) {
+      return; // player didn’t upgrade
+    }
 
     if (Math.random() < 0.02) {
       console.log("🎲 AI randomly skipped upgrade");
@@ -174,7 +181,7 @@ React.useEffect(() => {
     setAiCoins(coins);
     setAiTapPower(tapPower);
     setAiTapPowerLevel(tapPowerLvl);
-    setOpponentScore(coins);
+    setOpponentScore(coins); // optional
 
     aiCoinsRef.current = coins;
     aiTapPowerRef.current = tapPower;
@@ -191,15 +198,15 @@ React.useEffect(() => {
         player_score: playerScore,
         userId,
       });
-      console.log("✅ AI stats updated successfully", res);
+      console.log("✅ AI stats updated", res);
     } catch (err) {
-      console.error("❌ Failed to update AI stats in DB", err);
+      console.error("❌ Failed to update AI stats", err);
     }
 
   }, upgradeInterval);
 
   return () => clearInterval(upgradeTimer);
-}, [gamePhase, gameMode, currentRoom, aiDifficulty]); // ⬅️ 🔥 Remove tapPowerLevel
+}, [gamePhase, gameMode, currentRoom, aiDifficulty]);
 
   React.useEffect(() => {
     let interval;
