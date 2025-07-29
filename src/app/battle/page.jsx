@@ -111,6 +111,7 @@ const opponentPercent = 100 - playerPercent;
   
 // --- AI UPGRADE LOGIC ---
 // --- AI UPGRADE LOGIC ---
+// --- AI UPGRADE LOGIC ---
 React.useEffect(() => {
   if (gamePhase !== "playing" || gameMode !== "ai" || !currentRoom) return;
 
@@ -129,15 +130,16 @@ React.useEffect(() => {
     const coins = aiCoinsRef.current;
     const tapPower = aiTapPowerRef.current;
     const tapPowerLvl = aiTapPowerLevelRef.current;
+    const playerTapPower = tapPowerRef.current || 1;
 
-    const isLosing = coins < playerScore;
+    const isLosing = tapPower < playerTapPower;
     if (!isLosing) {
-      console.log("🟡 AI is winning or tied — no upgrade");
+      console.log("🟡 AI tap power is equal or higher — no upgrade");
       return;
     }
 
-    console.log("🔻 AI is losing — upgrading now");
-    console.log({ coins, tapPower, tapPowerLvl, currentTimeLeft });
+    console.log("🔻 AI tap power is lower — upgrading now");
+    console.log({ coins, tapPower, tapPowerLvl, currentTimeLeft, playerTapPower });
 
     let newCoins = coins;
     let newTapPower = tapPower;
@@ -180,7 +182,7 @@ React.useEffect(() => {
   }, upgradeInterval);
 
   return () => clearInterval(upgradeTimer);
-}, [gamePhase, gameMode, currentRoom, aiDifficulty, playerScore]);// Game timer effect
+}, [gamePhase, gameMode, currentRoom, aiDifficulty, playerScore]);
   React.useEffect(() => {
     let interval;
     if (gamePhase === "playing" && timeLeft > 0) {
