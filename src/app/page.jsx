@@ -2603,7 +2603,7 @@ const handleBuyIcon = async (icon) => {
         background:
           "linear-gradient(120deg,rgba(220,220,220,0.25),rgba(170,170,170,0.13))",
         backdropFilter: "blur(4px)",
-        opacity: 0.72,
+        opacity: 0.4,
         transition: "opacity 0.5s",
       }}
     >
@@ -7205,7 +7205,7 @@ const renderLeaderboard = () => (
     rgba(180, 180, 180, 0.4) 100%
   );
   backdrop-filter: blur(3px);
-  opacity: 0.6;
+  opacity: 0.3;
   transition: opacity 0.5s;
   pointer-events: none;
 }
