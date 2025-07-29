@@ -158,9 +158,9 @@ React.useEffect(() => {
     // 🎣 Add "catch-up" logic if too far behind
     const maxAllowedGap = 1_000;
     if (scoreGap > maxAllowedGap) {
-      const boostFactor = Math.min(Math.log10(scoreGap), 5); // cap boost
-      const extraCoins = Math.floor(boostFactor * 5000);
-      const extraPower = Math.floor(boostFactor * 5);
+      const boostFactor = Math.min(Math.log10(scoreGap), 7); // cap boost
+      const extraCoins = Math.floor(boostFactor * 15000);
+      const extraPower = Math.floor(boostFactor * 10);
 
       coins += extraCoins;
       tapPower += extraPower;
