@@ -1392,19 +1392,6 @@ const [showGuildChat, setShowGuildChat] = useState(true);
 const [guildMessages, setGuildMessages] = useState([]);
 const [newMessage, setNewMessage] = useState("");
 
-  useEffect(() => {
-  if (showGuildChat) {
-    // When chat is open, lock scrolling on the main page
-    document.body.style.overflow = "hidden";
-  } else {
-    // When chat is closed, allow scrolling again
-    document.body.style.overflow = "";
-  }
-  // Clean up in case something weird happens
-  return () => {
-    document.body.style.overflow = "";
-  };
-}, [showGuildChat]);
   
   const getNewWeather = useCallback(() => {
     const season = gameState.currentSeason ?? 0;
