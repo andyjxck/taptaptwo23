@@ -133,7 +133,7 @@ React.useEffect(() => {
     const coins = aiCoinsRef.current;
     const tapPower = aiTapPowerRef.current;
     const tapPowerLvl = aiTapPowerLevelRef.current;
-    const playerTapPower = tapPowerRef.current || 1;
+    const playerTapPower = tapPower || 1;
     const playerCoins = playerScoreRef.current || 0;
 
     const shouldUpgrade = tapPower <= playerTapPower || coins < playerCoins;
