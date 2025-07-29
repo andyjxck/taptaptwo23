@@ -1388,7 +1388,7 @@ const [playBg] = useSound("/sounds/taptaptwobg.mp3", {
   const [showBonusModal, setShowBonusModal] = useState(false);
   const [bonusCooldown, setBonusCooldown] = useState(0);
   const DISCOUNT_FACTOR = 0.8; // 20% discount
-const [showGuildChat, setShowGuildChat] = useState(false);
+const [showGuildChat, setShowGuildChat] = useState(true);
 const [guildMessages, setGuildMessages] = useState([]);
 const [newMessage, setNewMessage] = useState("");
 
