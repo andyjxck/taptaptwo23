@@ -116,7 +116,7 @@ const CUSTOM_THEME_WEATHER_RENAMES = {
   // Add more custom themes here
 };
 const BOOSTS = [
-//  {
+  //{
   //  id: "autotapper_24h",
   //  name: "2x Auto Tapper (24h)",
   //  description:
@@ -163,7 +163,7 @@ const BOOSTS = [
 //    duration: null,
   //  isPermanent: true,
     //isLimited: true,
-//  },
+// },
 ];
 
 const CUSTOM_THEMES = {
@@ -900,19 +900,7 @@ const [profileIcon, setProfileIcon] = useState("");
 
 
   const [activeTab, setActiveTab] = useState("game");
-useEffect(() => {
-  if (showGuildChat) {
-    // When chat is open, lock scrolling on the main page
-    document.body.style.overflow = "hidden";
-  } else {
-    // When chat is closed, allow scrolling again
-    document.body.style.overflow = "";
-  }
-  // Clean up in case something weird happens
-  return () => {
-    document.body.style.overflow = "";
-  };
-}, [showGuildChat]);
+
 
 
 // Fetch friends list and pending requests only when userId is set
@@ -1404,6 +1392,20 @@ const [showGuildChat, setShowGuildChat] = useState(false);
 const [guildMessages, setGuildMessages] = useState([]);
 const [newMessage, setNewMessage] = useState("");
 
+  useEffect(() => {
+  if (showGuildChat) {
+    // When chat is open, lock scrolling on the main page
+    document.body.style.overflow = "hidden";
+  } else {
+    // When chat is closed, allow scrolling again
+    document.body.style.overflow = "";
+  }
+  // Clean up in case something weird happens
+  return () => {
+    document.body.style.overflow = "";
+  };
+}, [showGuildChat]);
+  
   const getNewWeather = useCallback(() => {
     const season = gameState.currentSeason ?? 0;
     const weatherOptions =
