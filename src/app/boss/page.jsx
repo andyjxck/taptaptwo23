@@ -65,9 +65,7 @@ export default function BossModePage() {
   const [coopJoining, setCoopJoining] = useState(false);
   const [coopCreating, setCoopCreating] = useState(false);
 
-  // --- BUTTON LOCK ---
-  const [canTap, setCanTap] = useState(true);
-
+  // --- BUTTON LOCK -
   // --- Loading wheel state ---
   const [pageLoading, setPageLoading] = useState(true);
 
@@ -130,13 +128,24 @@ export default function BossModePage() {
     return () => { cancelled = true; clearInterval(interval); };
   }, [mode, currentSession, userReady, userId]);
 
-  // --- AUTO-TAPPER FOR SOLO ---
-  useEffect(() => {
-    if (!soloProgress || !upgradesData?.stats?.autoTapperDps || upgradesData.stats.autoTapperDps <= 0 || mode !== "solo") return;
-    const interval = setInterval(() => handleSoloTap(true), 1000);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line
-  }, [soloProgress, upgradesData, mode, canTap]);
+// --- AUTO-TAPPER FOR SOLO ---
+useEffect(() => {
+  // Only run if SOLO mode, auto tapper is active, and boss is alive
+  if (
+    mode !== "solo" ||
+    !soloProgress ||
+    !upgradesData?.stats?.autoTapperDps ||
+    upgradesData.stats.autoTapperDps <= 0 ||
+    soloProgress.boss_hp <= 0
+  ) return;
+
+  const interval = setInterval(() => {
+    handleSoloTap(true);
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, [mode, soloProgress?.boss_hp, upgradesData?.stats?.autoTapperDps]);
+
 
   // --- TAP SPEED BONUS ---
   const [lastTapTimes, setLastTapTimes] = useState([]);
@@ -201,48 +210,59 @@ function handleSoloTap(isAutoTap = false) {
     });
 }
 
-  // --- COOP TAP HANDLER ---
-  function handleCoopTap() {
-    if (!canTap || !currentSession || currentSession.boss_hp <= 0) return;
-    setCanTap(false);
-    fetch("/api/boss", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "coop_tap",
-        roomCode: currentSession.room_code,
-        userId: userId,
-        damage: upgradesData?.stats?.tapPower || 1
-      })
-    }).then(r => r.json()).then(data => {
+// --- COOP TAP HANDLER ---
+function handleCoopTap() {
+  if (!currentSession || currentSession.boss_hp <= 0) return;
+
+  fetch("/api/boss", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "coop_tap",
+      roomCode: currentSession.room_code,
+      userId: userId,
+      damage: upgradesData?.stats?.tapPower || 1
+    })
+  })
+    .then(r => r.json())
+    .then(data => {
       if (data.boss_defeated) {
         setShowCelebration(true);
         setTimeout(() => setShowCelebration(false), 1600);
-        // Reload coop session state
+
+        // Reload coop session state after boss defeat
         fetch(`/api/boss?action=coop_session&roomCode=${currentSession.room_code}&userId=${userId}`)
           .then(r => r.json())
-          .then(res => res.session && setCurrentSession(res.session))
-          .finally(() => setCanTap(true));
-        fetch(`/api/boss?action=profile&userId=${userId}`).then(r => r.json()).then(setProfileData);
+          .then(res => res.session && setCurrentSession(res.session));
+
+        // Also refresh profile/coins
+        fetch(`/api/boss?action=profile&userId=${userId}`)
+          .then(r => r.json())
+          .then(setProfileData);
+
         setTapCount(0);
         return;
       }
+
       setCurrentSession(prev => ({ ...prev, boss_hp: data.current_boss_hp }));
       setTapCount(prev => prev + 1);
+
       if (data.damage_dealt) {
         const dmgId = Date.now();
-        setShowDamageNumbers(prev => [...prev, {
-          id: dmgId,
-          damage: data.damage_dealt,
-          isCrit: data.was_crit,
-          x: Math.random() * 120 - 60,
-          y: Math.random() * 60 - 30,
-        }]);
+        setShowDamageNumbers(prev => [
+          ...prev,
+          {
+            id: dmgId,
+            damage: data.damage_dealt,
+            isCrit: data.was_crit,
+            x: Math.random() * 120 - 60,
+            y: Math.random() * 60 - 30,
+          },
+        ]);
         setTimeout(() => setShowDamageNumbers(prev => prev.filter(d => d.id !== dmgId)), 1200);
       }
-      setCanTap(true);
-    }).catch(() => setCanTap(true));
-  }
+    });
+}
 
   // --- TAP BUTTON HANDLER (solo/coop) ---
   function handleTap() {
@@ -714,29 +734,28 @@ function handleSoloTap(isAutoTap = false) {
           </div>
 
           {/* Strike Action Button */}
-          <div className="relative mb-6">
-            <motion.button
-              whileHover={{ scale: 1.07 }}
-              whileTap={{ scale: 0.94, rotate: [0, -5, 5, 0] }}
-              onClick={handleTap}
-              disabled={!canTap || battleData.boss_hp <= 0}
-              className="boss-strike-button"
-            >
-              <div className="absolute inset-0 boss-strike-gloss"></div>
-              <div className="relative z-10 flex flex-col items-center justify-center h-full">
-                <motion.div
-                  animate={{ scale: [1, 1.2, 1], textShadow: ["0 0 10px #fbbf24", "0 0 24px #fbbf24", "0 0 10px #fbbf24"] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                  className="text-5xl mb-2"
-                >
-                  🔥
-                </motion.div>
-                <div className="text-lg font-black tracking-wider drop-shadow-lg">STRIKE!</div>
-                <div className="text-xs opacity-90 mt-1">
-                  {upgradesData?.stats?.tapPower || 1} DMG
-                </div>
-              </div>
-            </motion.button>
+         <motion.button
+  whileHover={{ scale: 1.07 }}
+  whileTap={{ scale: 0.94, rotate: [0, -5, 5, 0] }}
+  onClick={handleTap}
+  disabled={battleData.boss_hp <= 0 || soloLoading} // Only block if boss dead or loading
+  className="boss-strike-button"
+>
+  <div className="absolute inset-0 boss-strike-gloss"></div>
+  <div className="relative z-10 flex flex-col items-center justify-center h-full">
+    <motion.div
+      animate={{ scale: [1, 1.2, 1], textShadow: ["0 0 10px #fbbf24", "0 0 24px #fbbf24", "0 0 10px #fbbf24"] }}
+      transition={{ duration: 1.5, repeat: Infinity }}
+      className="text-5xl mb-2"
+    >
+      🔥
+    </motion.div>
+    <div className="text-lg font-black tracking-wider drop-shadow-lg">STRIKE!</div>
+    <div className="text-xs opacity-90 mt-1">
+      {upgradesData?.stats?.tapPower || 1} DMG
+    </div>
+  </div>
+</motion.button>
           </div>
           <div className="text-orange-200 space-y-1 text-sm">
             <div>
