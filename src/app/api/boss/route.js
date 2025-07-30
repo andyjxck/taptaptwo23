@@ -1,4 +1,5 @@
 import { supabase } from "@/utilities/supabaseClient";
+import { NextResponse } from "next/server";
 
 // ---------- HELPERS ----------
 function safe(val) { return (typeof val === "number" && !isNaN(val) ? val : 0); }
@@ -44,7 +45,7 @@ export async function GET(request) {
 
   try {
     if (action === "profile") {
-      if (!userId) return Response.json({ error: "userId required" }, { status: 400 });
+      if (!userId) return NextResponse.json({ error: "userId required" }, { status: 400 });
       let { data: gameSave } = await supabase.from("game_saves").select("*").eq("user_id", userId).single();
       if (!gameSave) {
         const { data } = await supabase.from("game_saves").insert([{
@@ -70,7 +71,7 @@ export async function GET(request) {
       if (bossProgress.total_level !== totalLevel) {
         await supabase.from("boss_progress").update({ total_level: totalLevel }).eq("user_id", userId);
       }
-      return Response.json({
+      return NextResponse.json({
         profile: {
           user_id: gameSave.user_id,
           profile_name: gameSave.profile_name,
@@ -88,7 +89,7 @@ export async function GET(request) {
     }
 
     if (action === "upgrades") {
-      if (!userId) return Response.json({ error: 'User ID required' }, { status: 400 });
+      if (!userId) return NextResponse.json({ error: 'User ID required' }, { status: 400 });
       let { data: gameSave } = await supabase.from("game_saves").select("*").eq("user_id", userId).single();
       if (!gameSave) {
         const { data } = await supabase.from("game_saves").insert([{
@@ -97,7 +98,7 @@ export async function GET(request) {
         }]).select().single();
         gameSave = data;
       }
-      return Response.json({
+      return NextResponse.json({
         upgrades: {
           tap_power_upgrades: safe(gameSave.tap_power_upgrades),
           auto_tapper_upgrades: safe(gameSave.auto_tapper_upgrades),
@@ -114,7 +115,7 @@ export async function GET(request) {
     }
 
     if (action === "progress") {
-      if (!userId) return Response.json({ error: "User ID required" }, { status: 400 });
+      if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
       let { data: progress } = await supabase.from("boss_progress").select("*").eq("user_id", userId).single();
       if (!progress) {
         const tapPower = await getPlayerTapPower(userId);
@@ -131,7 +132,7 @@ export async function GET(request) {
         await supabase.from("boss_progress").update({ boss_hp: bossHp, boss_max_hp: bossHp }).eq("user_id", userId);
         progress.boss_hp = bossHp; progress.boss_max_hp = bossHp;
       }
-      return Response.json({
+      return NextResponse.json({
         success: true,
         current_level: progress.current_level,
         boss_hp: progress.boss_hp,
@@ -146,15 +147,15 @@ export async function GET(request) {
     }
 
     if (action === "coop_session") {
-      if (!roomCode) return Response.json({ error: 'Room code is required' }, { status: 400 });
-      if (!userId) return Response.json({ error: 'User ID is required' }, { status: 400 });
+      if (!roomCode) return NextResponse.json({ error: 'Room code is required' }, { status: 400 });
+      if (!userId) return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
       const { data: sessions } = await supabase.from("boss_coop_sessions").select("*")
         .eq("room_code", roomCode.toUpperCase()).eq("is_active", true);
-      if (!sessions || sessions.length === 0) return Response.json({ error: 'Session not found' }, { status: 404 });
+      if (!sessions || sessions.length === 0) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
       const sessionData = sessions[0];
       const players = Array.isArray(sessionData.players) ? sessionData.players : [];
-      if (!players.includes(userId)) return Response.json({ error: 'User not in this session' }, { status: 403 });
-      return Response.json({
+      if (!players.includes(userId)) return NextResponse.json({ error: 'User not in this session' }, { status: 403 });
+      return NextResponse.json({
         success: true,
         session: {
           ...sessionData,
@@ -164,9 +165,9 @@ export async function GET(request) {
       });
     }
 
-    return Response.json({ error: "Invalid action" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
-    return Response.json({ error: error.message || "Unknown error" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Unknown error" }, { status: 500 });
   }
 }
 
@@ -178,15 +179,15 @@ export async function POST(request) {
 
  if (action === "solo_tap") {
   const { userId, damage } = body;
-  if (!userId) return Response.json({ error: "User ID required" }, { status: 400 });
-  if (typeof damage !== "number" || damage <= 0) return Response.json({ error: "Valid damage required" }, { status: 400 });
+  if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
+  if (typeof damage !== "number" || damage <= 0) return NextResponse.json({ error: "Valid damage required" }, { status: 400 });
 
   // Fetch current boss progress
   let { data: progress } = await supabase.from("boss_progress").select("*").eq("user_id", userId).single();
-  if (!progress) return Response.json({ error: "User progress not found" }, { status: 404 });
+  if (!progress) return NextResponse.json({ error: "User progress not found" }, { status: 404 });
 
   if (safe(progress.boss_hp) <= 0) {
-    return Response.json({
+    return NextResponse.json({
       success: false,
       error: "Boss already defeated. Please reload.",
       current_boss_hp: progress.boss_hp,
@@ -204,7 +205,7 @@ export async function POST(request) {
 
   if (!isBossDefeated) {
     await supabase.from("boss_progress").update({ boss_hp: newBossHp }).eq("user_id", userId);
-    return Response.json({
+    return NextResponse.json({
       success: true,
       damage_dealt: damage,
       boss_defeated: false,
@@ -239,7 +240,7 @@ export async function POST(request) {
     coins: newCoins,
   }).eq("user_id", userId);
 
-  return Response.json({
+  return NextResponse.json({
     success: true,
     boss_defeated: true,
     coins_earned: coinsEarned,
@@ -255,7 +256,7 @@ export async function POST(request) {
 
     if (action === "coop_create") {
       const { userId } = body;
-      if (!userId) return Response.json({ error: "User ID required" }, { status: 400 });
+      if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
       let roomCode;
       while (true) {
         roomCode = generateRoomCode();
@@ -272,7 +273,7 @@ export async function POST(request) {
         players: playersArr, is_active: true, total_coins: 0,
       }]).select().single();
       if (insertErr) throw insertErr;
-      return Response.json({
+      return NextResponse.json({
         success: true,
         session: {
           ...session,
@@ -284,17 +285,17 @@ export async function POST(request) {
 
     if (action === "coop_join") {
       const { roomCode, userId } = body;
-      if (!roomCode) return Response.json({ error: 'Room code is required' }, { status: 400 });
-      if (!userId) return Response.json({ error: 'User ID is required' }, { status: 400 });
+      if (!roomCode) return NextResponse.json({ error: 'Room code is required' }, { status: 400 });
+      if (!userId) return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
       const { data: sessions } = await supabase.from("boss_coop_sessions").select("*")
         .eq("room_code", roomCode.toUpperCase()).eq("is_active", true);
-      if (!sessions || sessions.length === 0) return Response.json({ error: 'Room not found or inactive' }, { status: 404 });
+      if (!sessions || sessions.length === 0) return NextResponse.json({ error: 'Room not found or inactive' }, { status: 404 });
       const session = sessions[0];
       const currentPlayers = Array.isArray(session.players) ? session.players : [];
       if (currentPlayers.length >= 5 && !currentPlayers.includes(userId))
-        return Response.json({ error: 'Room is full' }, { status: 400 });
+        return NextResponse.json({ error: 'Room is full' }, { status: 400 });
       if (currentPlayers.includes(userId)) {
-        return Response.json({
+        return NextResponse.json({
           success: true,
           session: {
             ...session,
@@ -306,7 +307,7 @@ export async function POST(request) {
       const newPlayers = [...currentPlayers, userId];
       const { data: updatedSessionArr } = await supabase.from("boss_coop_sessions").update({ players: newPlayers }).eq("room_code", session.room_code).select();
       const updatedSession = updatedSessionArr[0];
-      return Response.json({
+      return NextResponse.json({
         success: true,
         session: {
           ...updatedSession,
@@ -318,21 +319,21 @@ export async function POST(request) {
 
   if (action === "coop_tap") {
   const { roomCode, userId, damage } = body;
-  if (!roomCode) return Response.json({ error: 'Room code is required' }, { status: 400 });
-  if (!userId) return Response.json({ error: 'User ID is required' }, { status: 400 });
-  if (typeof damage !== "number" || damage <= 0) return Response.json({ error: "Valid damage required" }, { status: 400 });
+  if (!roomCode) return NextResponse.json({ error: 'Room code is required' }, { status: 400 });
+  if (!userId) return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+  if (typeof damage !== "number" || damage <= 0) return NextResponse.json({ error: "Valid damage required" }, { status: 400 });
 
   const { data: sessions } = await supabase.from("boss_coop_sessions").select("*")
     .eq("room_code", roomCode.toUpperCase()).eq("is_active", true);
 
-  if (!sessions || sessions.length === 0) return Response.json({ error: 'Session not found' }, { status: 404 });
+  if (!sessions || sessions.length === 0) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
 
   const sessionData = sessions[0];
   const players = Array.isArray(sessionData.players) ? sessionData.players : [];
-  if (!players.includes(userId)) return Response.json({ error: 'User not in this session' }, { status: 403 });
+  if (!players.includes(userId)) return NextResponse.json({ error: 'User not in this session' }, { status: 403 });
 
   if (safe(sessionData.boss_hp) <= 0) {
-    return Response.json({
+    return NextResponse.json({
       success: false,
       error: "Boss already defeated. Wait for server to spawn new boss.",
       current_boss_hp: sessionData.boss_hp,
@@ -382,7 +383,7 @@ export async function POST(request) {
     }).eq("room_code", sessionData.room_code).select();
     updatedSession = updateArr[0];
 
-    return Response.json({
+    return NextResponse.json({
       success: true,
       boss_defeated: true,
       coins_earned: totalRewardPool,
@@ -396,7 +397,7 @@ export async function POST(request) {
   }
 
   // Normal response if boss not defeated
-  return Response.json({
+  return NextResponse.json({
     success: true,
     boss_defeated: false,
     coins_earned: 0,
@@ -409,9 +410,9 @@ export async function POST(request) {
 }
 
 
-    return Response.json({ error: "Invalid action" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
-    return Response.json({ error: error.message || "Unknown error" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Unknown error" }, { status: 500 });
   }
 }
 
