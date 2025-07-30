@@ -749,7 +749,7 @@ const resetToStart = () => {
 
 
   
-// --- AI TAPPING LOGIC ---
+// --- AI TAPPING LOGIC (25% faster) ---
 React.useEffect(() => {
   if (gamePhase !== "playing" || gameMode !== "ai") return;
 
@@ -757,11 +757,14 @@ React.useEffect(() => {
 
   const getRandomInterval = () => {
     if (aiDifficulty === "easy") {
-      return Math.floor(Math.random() * (333 - 200 + 1)) + 200;
+      // Was 200-333ms, now 150-249ms
+      return Math.floor(Math.random() * (249 - 150 + 1)) + 150;
     } else if (aiDifficulty === "medium") {
-      return Math.floor(Math.random() * (200 - 143 + 1)) + 143;
+      // Was 143-200ms, now 107-150ms
+      return Math.floor(Math.random() * (150 - 107 + 1)) + 107;
     } else {
-      return Math.floor(Math.random() * (125 - 90 + 1)) + 90;
+      // Was 90-125ms, now 67-93ms
+      return Math.floor(Math.random() * (93 - 67 + 1)) + 67;
     }
   };
 
