@@ -1,4 +1,3 @@
-"use client";
 import React, { useState, useEffect } from "react";
 import AdBanner from "@/components/AdBanner";
 
@@ -29,11 +28,12 @@ const weatherEffects = [
 // Glass table wrapper for consistent style
 const GlassTable = ({ children }) => (
   <div className="rounded-xl shadow-lg overflow-x-auto bg-white/10 backdrop-blur-[8px] border border-white/30 my-2">
-    <table className="min-w-full text-sm text-gray-100">
+    <table className="min-w-full text-sm text-gray-700">
       {children}
     </table>
   </div>
 );
+
 
 const helpSections = [
   {
