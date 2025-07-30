@@ -149,139 +149,37 @@ useEffect(() => {
 }, [mode, soloProgress?.boss_hp, upgradesData?.stats?.autoTapperDps]);
 
 
-  // --- TAP SPEED BONUS ---
-  const [lastTapTimes, setLastTapTimes] = useState([]);
-  const getTapSpeedMultiplier = useCallback(() => {
-    if (!upgradesData?.stats?.tapSpeedBonus) return 1;
-    const now = Date.now();
-    const recentTaps = lastTapTimes.filter(t => now - t < 1000).length;
-    if (recentTaps >= 5) return 1 + upgradesData.stats.tapSpeedBonus / 100;
-    return 1;
-  }, [lastTapTimes, upgradesData?.stats?.tapSpeedBonus]);
+{showDamageNumbers.map(dmg => (
+  <motion.div
+    key={dmg.id}
+    initial={{ opacity: 1, y: 0, scale: 1 }}
+    animate={{ opacity: 0, y: -80, scale: 1.5 }}
+    exit={{ opacity: 0 }}
+    transition={{ duration: 1.2, ease: "easeOut" }}
+    className={`absolute text-3xl font-black pointer-events-none z-20 ${
+      dmg.isCrit
+        ? "text-yellow-300 drop-shadow-lg"
+        : dmg.isSpeedBonus
+        ? "text-green-300 drop-shadow"
+        : "text-orange-200"
+    }`}
+    style={{
+      left: `calc(50% + ${dmg.x}px)`,
+      top: `calc(40% + ${dmg.y}px)`,
+      textShadow: dmg.isCrit
+        ? "0 0 20px #fbbf24"
+        : dmg.isSpeedBonus
+        ? "0 0 10px #bbf7d0"
+        : "0 0 10px #fb923c"
+    }}
+  >
+    {dmg.isCrit && "💥"}
+    {dmg.damage}
+    {dmg.isSpeedBonus && !dmg.isCrit && " ⚡"}
+    {dmg.isCrit && " 💥"}
+  </motion.div>
+))}
 
-function handleSoloTap(isAutoTap = false) {
-  if (soloLoading || !soloProgress || soloProgress.boss_hp <= 0) return;
-
-  // Mark this tap with a number
-  soloTapRequestCounter.current += 1;
-  const thisTap = soloTapRequestCounter.current;
-
-  fetch("/api/boss", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "solo_tap", userId, isAutoTap }),
-  })
-    .then(r => r.json())
-    .then(data => {
-      // --- Only use the most recent tap result! ---
-      if (thisTap !== soloTapRequestCounter.current) return; // ignore out-of-date
-
-      // (rest of your logic)
-      if (data.boss_defeated) {
-        setShowCelebration(true);
-        setTimeout(() => setShowCelebration(false), 1600);
-
-        // Refresh boss state
-        fetch(`/api/boss?action=progress&userId=${userId}`)
-          .then(r => r.json())
-          .then(newBoss => setSoloProgress(newBoss));
-        fetch(`/api/boss?action=profile&userId=${userId}`)
-          .then(r => r.json())
-          .then(setProfileData);
-        setTapCount(0);
-        return;
-      }
-
-      setSoloProgress(prev => ({
-        ...prev,
-        boss_hp: data.current_boss_hp,
-      }));
-      setTapCount(prev => prev + (isAutoTap ? 0 : 1));
-
-      if (data.damage_dealt && !isAutoTap) {
-        const dmgId = Date.now();
-        setShowDamageNumbers(prev => [
-          ...prev,
-          {
-            id: dmgId,
-            damage: data.damage_dealt,
-            isCrit: data.was_crit,
-            x: Math.random() * 120 - 60,
-            y: Math.random() * 60 - 30,
-          },
-        ]);
-        setTimeout(() => setShowDamageNumbers(prev => prev.filter(d => d.id !== dmgId)), 1200);
-      }
-    });
-}
-function handleCoopTap() {
-  if (!currentSession || currentSession.boss_hp <= 0) return;
-
-  // Mark this tap with a number
-  coopTapRequestCounter.current += 1;
-  const thisTap = coopTapRequestCounter.current;
-
-  fetch("/api/boss", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action: "coop_tap",
-      roomCode: currentSession.room_code,
-      userId: userId,
-      damage: upgradesData?.stats?.tapPower || 1
-    })
-  })
-    .then(r => r.json())
-    .then(data => {
-      // --- Only use the most recent tap result! ---
-      if (thisTap !== coopTapRequestCounter.current) return; // ignore out-of-date
-
-      if (data.boss_defeated) {
-        setShowCelebration(true);
-        setTimeout(() => setShowCelebration(false), 1600);
-
-        // Reload coop session state after boss defeat
-        fetch(`/api/boss?action=coop_session&roomCode=${currentSession.room_code}&userId=${userId}`)
-          .then(r => r.json())
-          .then(res => res.session && setCurrentSession(res.session));
-
-        // Also refresh profile/coins
-        fetch(`/api/boss?action=profile&userId=${userId}`)
-          .then(r => r.json())
-          .then(setProfileData);
-
-        setTapCount(0);
-        return;
-      }
-
-      setCurrentSession(prev => ({ ...prev, boss_hp: data.current_boss_hp }));
-      setTapCount(prev => prev + 1);
-
-      if (data.damage_dealt) {
-        const dmgId = Date.now();
-        setShowDamageNumbers(prev => [
-          ...prev,
-          {
-            id: dmgId,
-            damage: data.damage_dealt,
-            isCrit: data.was_crit,
-            x: Math.random() * 120 - 60,
-            y: Math.random() * 60 - 30,
-          },
-        ]);
-        setTimeout(() => setShowDamageNumbers(prev => prev.filter(d => d.id !== dmgId)), 1200);
-      }
-    });
-}
-
-
-  // --- TAP BUTTON HANDLER (solo/coop) ---
-  function handleTap() {
-    const now = Date.now();
-    setLastTapTimes(prev => [...prev.slice(-10), now]);
-    if (mode === "solo" && soloProgress) handleSoloTap(false);
-    if (mode === "coop" && currentSession) handleCoopTap();
-  }
 
   // --- COOP CREATE ---
   function handleCoopCreate() {
