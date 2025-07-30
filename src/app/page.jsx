@@ -4643,7 +4643,7 @@ const renderLeaderboard = () => (
                     ? entry.guild_name
                     : entry.profile_name || "Player"}
                 </span>
-                <span className="text-xs text-gray-400">{isGuild ? null : `(${entry.user_id})`}</span>
+                <span className="text-xs text-white-400">{isGuild ? null : `(${entry.user_id})`}</span>
                 <span className="font-bold text-purple-700 text-sm mt-1">
                   {leaderboardType === "renown"
                     ? `${entry.renown_tokens} ⭐`
@@ -4717,7 +4717,7 @@ const renderLeaderboard = () => (
                     {isGuild ? entry.guild_name : entry.profile_name || "Player"}
                   </span>
                   {isGuild ? null : (
-                    <span className="text-xs text-gray-400 truncate">{entry.user_id}</span>
+                    <span className="text-xs text-white-400 truncate">{entry.user_id}</span>
                   )}
                 </div>
               </div>
