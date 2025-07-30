@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import AdBanner from "../components/AdBanner";
+import AdBanner from "@/components/AdBanner";
 
 // Dynamic background for seasons (using Spring as default here)
 const seasonBackgrounds = {
