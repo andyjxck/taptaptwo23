@@ -733,50 +733,51 @@ function handleCoopTap() {
             </div>
           </div>
 
-          {/* Strike Action Button */}
-         <motion.button
-  whileHover={{ scale: 1.07 }}
-  whileTap={{ scale: 0.94, rotate: [0, -5, 5, 0] }}
-  onClick={handleTap}
-  disabled={battleData.boss_hp <= 0 || soloLoading} // Only block if boss dead or loading
-  className="boss-strike-button"
->
-  <div className="absolute inset-0 boss-strike-gloss"></div>
-  <div className="relative z-10 flex flex-col items-center justify-center h-full">
-    <motion.div
-      animate={{ scale: [1, 1.2, 1], textShadow: ["0 0 10px #fbbf24", "0 0 24px #fbbf24", "0 0 10px #fbbf24"] }}
-      transition={{ duration: 1.5, repeat: Infinity }}
-      className="text-5xl mb-2"
-    >
-      🔥
-    </motion.div>
-    <div className="text-lg font-black tracking-wider drop-shadow-lg">STRIKE!</div>
-    <div className="text-xs opacity-90 mt-1">
-      {upgradesData?.stats?.tapPower || 1} DMG
+        {/* Strike Action Button */}
+<div className="relative mb-6">
+  <motion.button
+    whileHover={{ scale: 1.07 }}
+    whileTap={{ scale: 0.94, rotate: [0, -5, 5, 0] }}
+    onClick={handleTap}
+    disabled={battleData.boss_hp <= 0 || soloLoading} // Only block if boss dead or loading
+    className="boss-strike-button"
+  >
+    <div className="absolute inset-0 boss-strike-gloss"></div>
+    <div className="relative z-10 flex flex-col items-center justify-center h-full">
+      <motion.div
+        animate={{ scale: [1, 1.2, 1], textShadow: ["0 0 10px #fbbf24", "0 0 24px #fbbf24", "0 0 10px #fbbf24"] }}
+        transition={{ duration: 1.5, repeat: Infinity }}
+        className="text-5xl mb-2"
+      >
+        🔥
+      </motion.div>
+      <div className="text-lg font-black tracking-wider drop-shadow-lg">STRIKE!</div>
+      <div className="text-xs opacity-90 mt-1">
+        {upgradesData?.stats?.tapPower || 1} DMG
+      </div>
     </div>
+  </motion.button>
+</div>
+<div className="text-orange-200 space-y-1 text-sm">
+  <div>
+    Strikes: {tapCount} | +{formatNumberShort(battleData.coins_per_boss)} coins per boss
   </div>
-</motion.button>
-          </div>
-          <div className="text-orange-200 space-y-1 text-sm">
-            <div>
-              Strikes: {tapCount} | +{formatNumberShort(battleData.coins_per_boss)} coins per boss
-            </div>
-            {tapSpeedMultiplier > 1 && (
-              <motion.div
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 0.5, repeat: Infinity }}
-                className="text-yellow-400 font-bold"
-              >
-                🔥 SPEED BONUS: {Math.round((tapSpeedMultiplier - 1) * 100)}% 🔥
-              </motion.div>
-            )}
-            {upgradesData?.stats?.autoTapperDps > 0 && (
-              <div className="text-green-400">
-                ⚡ Auto-Strike: {formatNumberShort(upgradesData.stats.autoTapperDps)} DPS
-              </div>
-            )}
-          </div>
-        </motion.div>
+  {tapSpeedMultiplier > 1 && (
+    <motion.div
+      animate={{ scale: [1, 1.05, 1] }}
+      transition={{ duration: 0.5, repeat: Infinity }}
+      className="text-yellow-400 font-bold"
+    >
+      🔥 SPEED BONUS: {Math.round((tapSpeedMultiplier - 1) * 100)}% 🔥
+    </motion.div>
+  )}
+  {upgradesData?.stats?.autoTapperDps > 0 && (
+    <div className="text-green-400">
+      ⚡ Auto-Strike: {formatNumberShort(upgradesData.stats.autoTapperDps)} DPS
+    </div>
+  )}
+</div>
+
 
         {/* Upgrades Panel (view-only in boss mode) */}
         <motion.div
