@@ -2641,11 +2641,7 @@ const handleBuyIcon = async (icon) => {
         ? Math.floor(40 * Math.pow(1.06, level))
         : Math.floor(40 * Math.pow(1.06, 84) * Math.pow(1.09, level - 84)),
 
-    tapSpeedBonus: (level) =>
-      level < 250
-        ? Math.floor(80 * Math.pow(1.06, level))
-        : Math.floor(80 * Math.pow(1.06, 250) * Math.pow(1.85, level - 250)),
-  };
+  tapSpeedBonus: (level) => Math.floor(80 * Math.pow(1.06, level)),
 
   const weatherDescription = (() => {
     const weather =
