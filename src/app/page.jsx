@@ -4573,127 +4573,170 @@ useEffect(() => {
 
 const renderLeaderboard = () => (
   <>
-    <div className={`${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow}`}>
-      <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#2d3748]">
-        Leaderboard
-      </h2>
+    <div className={`${glassStyle} bg-gradient-to-br from-[#e0e7ff]/70 to-white/40 rounded-3xl px-2 py-8 sm:p-8 ${buttonGlow} shadow-2xl max-w-2xl mx-auto relative`}>
 
-      <div className="mb-4">
+      {/* Title */}
+      <div className="flex flex-col items-center mb-6">
+        <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-indigo-800 via-purple-600 to-pink-500 drop-shadow tracking-wider mb-1">
+          Leaderboard
+        </h2>
+        <span className="uppercase tracking-wide text-xs font-bold text-[#8577aa]/60 letter-spacing-tight">Global Rankings</span>
+      </div>
+
+      {/* Select leaderboard type */}
+      <div className="flex justify-center mb-6">
         <select
           value={leaderboardType}
           onChange={(e) => setLeaderboardType(e.target.value)}
-          className="w-full px-4 py-2 rounded-xl bg-white/40 border border-white/30 text-[#2d3748]"
+          className="rounded-xl px-5 py-2 bg-white/60 font-semibold text-indigo-800 border border-white/30 shadow focus:outline-none focus:ring-2 focus:ring-indigo-200 transition w-full max-w-xs"
         >
-          <option value="renown">Most Renown Tokens</option>
-          <option value="coins">Most Coins Earned</option>
-          <option value="totalTaps">Most Taps</option>
-          <option value="guilds">Top Guild Scores</option>
+          <option value="renown">🏆 Most Renown Tokens</option>
+          <option value="coins">🪙 Most Coins Earned</option>
+          <option value="totalTaps">👆 Most Taps</option>
+          <option value="guilds">🛡️ Top Guild Scores</option>
         </select>
       </div>
 
-      <div className="space-y-2">
-        {leaderboardData[leaderboardType].map((entry, index) => {
-          const iconObj = PROFILE_ICONS.find((ic) => ic.id === entry.profile_icon);
-          const rankStr = index === 0 ? "👑" : `#${index + 1}`;
+      {/* Top 3 podium */}
+      {leaderboardData[leaderboardType].length > 2 && (
+        <div className="flex justify-center gap-4 mb-10 mt-4">
+          {[1, 0, 2].map((podiumIdx, pos) => {
+            const entry = leaderboardData[leaderboardType][podiumIdx];
+            if (!entry) return <div className="w-20" key={podiumIdx} />;
+            const iconObj = PROFILE_ICONS.find((ic) => ic.id === entry.profile_icon);
+            const isGuild = leaderboardType === "guilds";
+            const crown = pos === 1 ? "👑" : pos === 0 ? "🥈" : "🥉";
+            const podiumColors = [
+              "bg-gradient-to-br from-[#e5e7eb] to-[#c7d2fe]",
+              "bg-gradient-to-br from-[#fef08a] via-[#fca5a5] to-[#e879f9]",
+              "bg-gradient-to-br from-[#a7f3d0] to-[#fef9c3]",
+            ];
 
-          // Guild leaderboard display
-          if (leaderboardType === "guilds") {
             return (
               <div
-                key={entry.guild_id || entry.guild_name}
-                className="flex justify-between items-center bg-white/10 rounded-lg p-3"
+                key={podiumIdx}
+                className={`flex flex-col items-center px-2 ${pos === 1 ? "scale-110 z-10" : "scale-100 z-0"} transition-transform`}
               >
-                <div className="flex items-center">
-                  <span
-                    className={`text-lg font-medium mr-2 ${
-                      index === 0
-                        ? "text-yellow-500"
-                        : index === 1
-                        ? "text-green-500"
-                        : index === 2
-                        ? "text-blue-500"
-                        : "text-black"
-                    }`}
-                  >
-                    {rankStr}
-                  </span>
-
-                  <i
-  className={`fas fa-${entry.guild_icon || "users"} text-indigo-800 text-xl mr-2`}
-  title={entry.guild_name}
-/>
-
-
-                  <span className="text-lg font-medium">{entry.guild_name}</span>
+                <div className={`w-20 h-20 rounded-full shadow-xl border-4 border-white ${podiumColors[pos]} flex items-center justify-center`}>
+                  {isGuild ? (
+                    <i className={`fas fa-${entry.guild_icon || "users"} text-3xl text-indigo-900`} title={entry.guild_name} />
+                  ) : iconObj ? (
+                    iconObj.image ? (
+                      <img
+                        src={iconObj.image}
+                        alt={iconObj.name}
+                        className="w-16 h-16 rounded-full object-cover"
+                        title={iconObj.name}
+                      />
+                    ) : (
+                      <span className="text-4xl">{iconObj.emoji}</span>
+                    )
+                  ) : (
+                    <i className="fas fa-user-circle text-gray-400 text-4xl"></i>
+                  )}
                 </div>
-
-                <span className="font-medium text-[#2d3748]">
-                  {formatNumberShort(entry.guild_score || 0)} points
+                <span className={`mt-2 text-2xl font-bold ${pos === 1 ? "text-yellow-500" : pos === 0 ? "text-gray-400" : "text-orange-400"}`}>
+                  {crown}
+                </span>
+                <span className="mt-1 text-center font-bold text-indigo-900 text-base truncate max-w-[80px]">
+                  {isGuild
+                    ? entry.guild_name
+                    : entry.profile_name || "Player"}
+                </span>
+                <span className="text-xs text-gray-400">{isGuild ? null : `(${entry.user_id})`}</span>
+                <span className="font-bold text-purple-700 text-sm mt-1">
+                  {leaderboardType === "renown"
+                    ? `${entry.renown_tokens} ⭐`
+                    : leaderboardType === "coins"
+                    ? `${formatNumberShort(Math.floor(entry.total_coins_earned))}🪙`
+                    : leaderboardType === "totalTaps"
+                    ? `${formatNumberShort(entry.total_taps || 0)}👆`
+                    : leaderboardType === "guilds"
+                    ? `${formatNumberShort(entry.guild_score || 0)} pts`
+                    : ""}
                 </span>
               </div>
             );
-          }
+          })}
+        </div>
+      )}
 
-          // Player leaderboards (renown, coins, taps)
+      {/* Main List */}
+      <div className="space-y-3">
+        {leaderboardData[leaderboardType].map((entry, index) => {
+          const iconObj = PROFILE_ICONS.find((ic) => ic.id === entry.profile_icon);
+          const isPodium = index <= 2;
+          const isGuild = leaderboardType === "guilds";
+          const highlight =
+            index === 0
+              ? "bg-gradient-to-br from-yellow-200/80 to-yellow-100/30"
+              : index === 1
+              ? "bg-gradient-to-br from-gray-200/80 to-gray-100/30"
+              : index === 2
+              ? "bg-gradient-to-br from-orange-100/80 to-yellow-50/30"
+              : "bg-white/10";
+          const border =
+            index === 0
+              ? "border-yellow-400"
+              : index === 1
+              ? "border-gray-400"
+              : index === 2
+              ? "border-orange-300"
+              : "border-transparent";
+          const rankStr = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`;
+
           return (
             <div
-              key={entry.user_id}
-              className="flex justify-between items-center bg-white/10 rounded-lg p-3"
+              key={isGuild ? (entry.guild_id || entry.guild_name) : entry.user_id}
+              className={`flex justify-between items-center rounded-xl px-4 py-3 shadow-md border ${highlight} ${border} ${isPodium ? "ring-2 ring-purple-200" : ""} transition`}
+              style={{ filter: isPodium ? "brightness(1.12)" : "none" }}
             >
-              <div className="flex items-center">
-                <span
-                  className={`text-lg font-medium mr-2 ${
-                    index === 0
-                      ? "text-yellow-500"
-                      : index === 1
-                      ? "text-green-500"
-                      : index === 2
-                      ? "text-blue-500"
-                      : "text-black"
-                  }`}
-                >
-                  {rankStr}
-                </span>
-
-                {iconObj ? (
+              <div className="flex items-center min-w-0 gap-3">
+                <span className={`font-bold text-lg min-w-[40px] text-center ${isPodium ? "text-purple-700" : "text-gray-500"}`}>{rankStr}</span>
+                {isGuild ? (
+                  <i
+                    className={`fas fa-${entry.guild_icon || "users"} text-indigo-700 text-xl`}
+                    title={entry.guild_name}
+                  />
+                ) : iconObj ? (
                   iconObj.image ? (
                     <img
                       src={iconObj.image}
                       alt={iconObj.name}
-                      className="w-8 h-8 rounded-full object-cover mr-2"
+                      className="w-9 h-9 rounded-full object-cover"
                       title={iconObj.name}
                     />
                   ) : (
-                    <span className="text-2xl mr-2" title={iconObj.name}>
-                      {iconObj.emoji}
-                    </span>
+                    <span className="text-2xl" title={iconObj.name}>{iconObj.emoji}</span>
                   )
                 ) : (
-                  <i className="fas fa-user-circle text-gray-400 text-2xl mr-2"></i>
+                  <i className="fas fa-user-circle text-gray-400 text-2xl"></i>
                 )}
-
-                <div>
-                  <span className="text-lg font-medium">
-                    {entry.profile_name || "Player"} ({entry.user_id})
+                <div className="flex flex-col min-w-0">
+                  <span className={`font-semibold ${isPodium ? "text-indigo-900" : "text-[#2d3748]"}`}>
+                    {isGuild ? entry.guild_name : entry.profile_name || "Player"}
                   </span>
+                  {isGuild ? null : (
+                    <span className="text-xs text-gray-400 truncate">{entry.user_id}</span>
+                  )}
                 </div>
               </div>
-
-              <span className="font-medium text-[#2d3748]">
+              <span className="font-bold text-right text-indigo-900 text-lg sm:text-xl">
                 {leaderboardType === "renown"
-                  ? `${entry.renown_tokens} Renown`
+                  ? `${entry.renown_tokens} ⭐`
                   : leaderboardType === "coins"
-                  ? `${formatNumberShort(Math.floor(entry.total_coins_earned))} coins`
+                  ? `${formatNumberShort(Math.floor(entry.total_coins_earned))}🪙`
                   : leaderboardType === "totalTaps"
-                  ? `${formatNumberShort(entry.total_taps || 0)} taps`
-                  : null}
+                  ? `${formatNumberShort(entry.total_taps || 0)}👆`
+                  : leaderboardType === "guilds"
+                  ? `${formatNumberShort(entry.guild_score || 0)} pts`
+                  : ""}
               </span>
             </div>
           );
         })}
       </div>
     </div>
-
     <AdBanner />
   </>
 );
@@ -4714,8 +4757,91 @@ const renderLeaderboard = () => (
   const limitedStock = gameState.limitedStock || {};
 
   // --- Main Shop Data ---
-  const SHOP_THEMES = [ /* ... your theme objects ... */ ];
-
+  const SHOP_THEMES = [
+    {
+      id: "seasons",
+      name: "Seasons Cycle",
+      emoji: "🔄",
+      price: 0,
+      currency: "renownTokens",
+      isLimited: false,
+    },
+    {
+      id: "heaven",
+      name: "Heaven",
+      emoji: CUSTOM_THEMES.heaven.icon,
+      price: 20,
+      currency: "renownTokens",
+      isLimited: false,
+    },
+    {
+      id: "maddoxtheme",
+      name: "Maddox",
+      emoji: CUSTOM_THEMES.maddoxtheme.icon,
+      price: 250,
+      currency: "renownTokens",
+      isLimited: true,
+      stock: limitedStock["maddoxtheme"] ?? 10,
+    },
+    {
+      id: "hell",
+      name: "Hell",
+      emoji: CUSTOM_THEMES.hell.icon,
+      price: 1000,
+      currency: "renownTokens",
+      isLimited: true,
+      stock: limitedStock["hell"] ?? 5,
+    },
+    {
+      id: "space",
+      name: "Space",
+      emoji: CUSTOM_THEMES.space.icon,
+      price: 30,
+      currency: "renownTokens",
+      isLimited: false,
+    },
+    {
+      id: "city_night",
+      name: "City Night",
+      emoji: CUSTOM_THEMES.city_night.icon,
+      price: 250,
+      currency: "renownTokens",
+      isLimited: true,
+      stock: limitedStock["city_night"] ?? 10,
+    },
+    {
+      id: "midnight",
+      name: "Midnight",
+      emoji: CUSTOM_THEMES.midnight.icon,
+      price: 28,
+      currency: "renownTokens",
+      isLimited: false,
+    },
+    {
+      id: "island",
+      name: "Island",
+      emoji: CUSTOM_THEMES.island.icon,
+      price: 24,
+      currency: "renownTokens",
+      isLimited: false,
+    },
+    {
+      id: "barn",
+      name: "Barn",
+      emoji: CUSTOM_THEMES.barn.icon,
+      price: 18,
+      currency: "renownTokens",
+      isLimited: false,
+    },
+    {
+      id: "city",
+      name: "City",
+      emoji: CUSTOM_THEMES.city.icon,
+      price: 20,
+      currency: "renownTokens",
+      isLimited: false,
+    },
+  ];
   const ownedIcons = gameState.ownedProfileIcons || [];
   const equippedIcon = gameState.profileIcon || null;
   const ownedThemes = gameState.ownedThemes || ["seasons"];
