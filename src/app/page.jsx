@@ -6416,349 +6416,335 @@ an andysocial game
 
 
   {["tap", "house", "leaderboard"].includes(activeTab) && (
-    <div className="text-center">
-      <h2 className="text-2xl mb-4 font-crimson-text text-[#939599]">
-        {gameState.equippedTheme && gameState.equippedTheme !== "seasons"
-          ? CUSTOM_THEMES[gameState.equippedTheme]?.name ||
-            gameState.equippedTheme.charAt(0).toUpperCase() +
-              gameState.equippedTheme.slice(1)
-          : SEASONS[
-              Number.isInteger(gameState.currentSeason) &&
-              gameState.currentSeason >= 0 &&
-              gameState.currentSeason < SEASONS.length
-                ? gameState.currentSeason
-                : 0
-            ]}
-      </h2>
+  <div className="text-center">
+    <h2 className="text-3xl mb-5 font-crimson-text text-purple-700 drop-shadow tracking-wide">
+      {gameState.equippedTheme && gameState.equippedTheme !== "seasons"
+        ? CUSTOM_THEMES[gameState.equippedTheme]?.name ||
+          gameState.equippedTheme.charAt(0).toUpperCase() +
+            gameState.equippedTheme.slice(1)
+        : SEASONS[
+            Number.isInteger(gameState.currentSeason) &&
+            gameState.currentSeason >= 0 &&
+            gameState.currentSeason < SEASONS.length
+              ? gameState.currentSeason
+              : 0
+          ]}
+    </h2>
 
-      <div
-        className="grid grid-cols-3 max-w-xs mx-auto mt-6 mb-12"
-        style={{ gap: "5px" }}
-      >
-        {[
-          { icon: "🪙", value: Math.floor(gameState.coins) },
-          { icon: "👆", value: gameState.totalTaps },
-          { icon: "🔄", value: gameState.resets },
-          { icon: "🏠", value: gameState.houseLevel },
-          { icon: "⭐", value: Math.floor(gameState.renownTokens) },
-          { icon: "✴️", value: gameState.permanentMultiplier.toFixed(2) },
-        ].map(({ icon, value }, idx) => (
-          <div
-            key={idx}
-            className={`${glassStyle} bg-gray-300/30 rounded-xl p-1.5 text-center border border-gray-400/50 backdrop-blur-md shadow-md`}
-            style={{ transformOrigin: "center" }}
-          >
-            <span className="text-2xl select-none">{icon}</span>
-            <p className="text-md font-semibold mt-1">{formatNumberShort(value)}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  )}
-
-  <div className="max-w-md mx-auto">
-    {activeTab === "tap" ? (
-      <div className="flex flex-col items-center justify-center space-y-6">
-        <div className="relative">
-   <button
-  onClick={() => {
-    if (navigator.vibrate) navigator.vibrate(50);
-
-    const storedUserId = localStorage.getItem("userId");
-    const storedPin = localStorage.getItem("pin");
-
-    if (!storedUserId || !storedPin) {
-      window.location.href = "/login";
-      return;
-    }
-
-    handleTap();
-  }}
-  className={`
-    tappable-main-btn group relative w-[220px] h-[220px] rounded-full flex items-center justify-center
-    border-[6px] border-white/30
-    bg-gradient-to-br from-white/80 via-white/60 to-gray-300/90
-    shadow-xl
-    overflow-hidden
-    transition-transform active:scale-95
-    hover:shadow-[0_20px_50px_10px_rgba(80,80,180,0.28)]
-    outline-none focus-visible:ring-4 focus-visible:ring-purple-400
-    select-none
-  `}
-  style={{ WebkitTapHighlightColor: "transparent" }}
->
-  {/* Spinning Energy Ring */}
-  <span className={`
-    tappable-spin absolute z-0 inset-0 rounded-full pointer-events-none
-    ${
-      gameState.equippedTheme && gameState.equippedTheme !== "seasons"
-        ? CUSTOM_THEMES[gameState.equippedTheme]?.buttonGlow
-        : SEASONAL_THEMES[gameState.currentSeason].buttonGlow
-    }
-    opacity-30 border-4 border-transparent ring-8 ring-[rgba(140,120,255,0.10)]
-  `} />
-  
-  {/* Inner Glass Rim */}
-  <span className="absolute z-10 inset-4 rounded-full bg-white/40 border-2 border-white/50 blur-[2px] opacity-70 pointer-events-none"/>
-  
-  {/* Gloss Highlight */}
-  <span className="absolute z-20 top-8 left-10 w-32 h-16 rounded-full bg-white/70 blur-xl opacity-25 pointer-events-none group-hover:opacity-50 transition-opacity"/>
-  
-  {/* Shine Sweep */}
-  <span className="absolute z-30 inset-0 rounded-full pointer-events-none">
-    <span className="tappable-shine" />
-  </span>
-  
-  {/* Center Icon */}
-  <span className="relative z-40 flex items-center justify-center select-none">
-    {gameState.equippedTheme && gameState.equippedTheme !== "seasons" ? (
-      <span className="text-7xl drop-shadow-lg group-active:scale-110 transition-transform duration-150">
-        {CUSTOM_THEMES[gameState.equippedTheme]?.icon || "❓"}
-      </span>
-    ) : (
-      <i
-        className={`fas ${SEASONAL_THEMES[gameState.currentSeason].icon} text-7xl ${
-          gameState.currentSeason === 0
-            ? "text-green-400"
-            : gameState.currentSeason === 1
-            ? "text-yellow-400"
-            : gameState.currentSeason === 2
-            ? "text-orange-400"
-            : "text-blue-400"
-        } drop-shadow-lg group-active:scale-110 transition-transform duration-150`}
-      />
-    )}
-  </span>
-  
-  {/* Button rim shadow */}
-  <span className="absolute z-0 inset-0 rounded-full shadow-[0_0_32px_14px_rgba(80,80,140,0.14)] pointer-events-none"/>
-  
-  {/* 3D bottom edge */}
-  <span className="absolute bottom-0 left-0 right-0 h-10 rounded-b-full bg-gradient-to-t from-gray-300/70 to-transparent z-10 pointer-events-none"/>
-</button>
-
-
-
-          {hasBoost && (
-            <div className="absolute -top-2 -right-2 bg-pink-400 text-white rounded-full px-2 py-1 text-xs">
-              {Math.floor(boostTimeLeft / 60)}:
-              {(boostTimeLeft % 60).toString().padStart(2, "0")}
-            </div>
-          )}
+    <div
+      className="grid grid-cols-3 max-w-xs mx-auto mt-6 mb-10 gap-3
+        bg-gradient-to-br from-white/70 via-purple-100/60 to-purple-200/40
+        border border-white/50 shadow-xl rounded-2xl p-3
+        backdrop-blur"
+    >
+      {[
+        { icon: "🪙", value: Math.floor(gameState.coins) },
+        { icon: "👆", value: gameState.totalTaps },
+        { icon: "🔄", value: gameState.resets },
+        { icon: "🏠", value: gameState.houseLevel },
+        { icon: "⭐", value: Math.floor(gameState.renownTokens) },
+        { icon: "✴️", value: gameState.permanentMultiplier.toFixed(2) },
+      ].map(({ icon, value }, idx) => (
+        <div
+          key={idx}
+          className="flex flex-col items-center justify-center rounded-xl px-2 py-2
+            bg-white/50 border border-white/70 shadow
+            transition hover:scale-105 hover:bg-purple-200/80
+            backdrop-blur"
+        >
+          <span className="text-2xl select-none drop-shadow">{icon}</span>
+          <p className="text-md font-bold mt-0.5 text-[#403258]">{formatNumberShort(value)}</p>
         </div>
+      ))}
+    </div>
+  </div>
+)}
 
-        {!hasBoost && currentQuest && (
-          <div className={`${glassStyle} bg-white/20 rounded-xl p-4 mb-4 text-center shadow`}>
-            <h2 className="text-xl text-[#2d3748] mb-2">
-              <span role="img" aria-label="gift">
-                🎁
-              </span>{" "}
-              Quest
-            </h2>
-            <div className="text-[#939599] mb-3">{currentQuest.description}</div>
-
-            <div className="flex items-center justify-center gap-2 mb-3">
-              {/* Progress Bar */}
-              <div className="flex-1">
-                {(() => {
-                  const questTemplate = QUEST_TEMPLATES.find((q) => q.id === currentQuest.id);
-                  let progress = 0;
-                  if (questTemplate && currentQuest.targetAmount !== undefined) {
-                    if (questTemplate.id === "combined_level") {
-                      const combined =
-                        (gameState.tapPowerUpgrades || 0) +
-                        (gameState.autoTapperUpgrades || 0) +
-                        (gameState.critChanceUpgrades || 0) +
-                        (gameState.tapSpeedBonusUpgrades || 0);
-                      progress = Math.min(
-                        ((combined - currentQuest.startCombined) / currentQuest.targetAmount) * 100,
-                        100
-                      );
-                    } else if (questTemplate.id === "earn_coins") {
-                      const earned = gameState.totalCoinsEarned - currentQuest.startCoins;
-                      progress = Math.min((earned / currentQuest.targetAmount) * 100, 100);
-                    } else if (questTemplate.id === "upgrade_house") {
-                      const upgradesDone = gameState.houseLevel - currentQuest.startLevel;
-                      progress = Math.max(Math.min((upgradesDone / currentQuest.targetAmount) * 100, 100), 0);
-                    } else if (currentQuest.startLevel !== undefined) {
-                      let level = 0;
-                      if (questTemplate.id === "upgrade_tap_power") {
-                        level = gameState.tapPowerUpgrades || 0;
-                      } else if (questTemplate.id === "upgrade_auto_tapper") {
-                        level = gameState.autoTapperUpgrades || 0;
-                      } else if (questTemplate.id === "upgrade_crit_chance") {
-                        level = gameState.critChanceUpgrades || 0;
-                      } else if (questTemplate.id === "upgrade_tap_speed") {
-                        level =
-                          gameState.tapSpeedBonusUpgrades || gameState.tap_speed_bonus_upgrades || 0;
-                      }
-                      progress = Math.min(((level - currentQuest.startLevel) / currentQuest.targetAmount) * 100, 100);
-                    }
-                  }
-
-                  progress = Math.max(progress, 0);
-
-                  return (
-                    <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden relative">
-                      <div
-                        className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-300"
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
-                  );
-                })()}
-              </div>
-
-              {/* Sync/Refresh Button */}
-              <button
-                onClick={() => {
-                  const newQuest = generateQuest(gameState);
-                  setCurrentQuest(newQuest);
-                  setCanClaimQuest(false);
-                  localStorage.setItem("currentQuest", JSON.stringify(newQuest));
-                  saveGame({
-                    ...gameState,
-                    currentQuest: newQuest,
-                    canClaimQuest: false,
-                  });
-                  setNotification("Quest refreshed!");
-                }}
-                aria-label="Refresh Quest"
-                title="Refresh Quest"
-                className="ml-2 flex items-center justify-center bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-full p-2 transition duration-150 shadow"
-                style={{
-                  fontSize: "1.25rem",
-                  width: "32px",
-                  height: "32px",
-                  minWidth: "32px",
-                  minHeight: "32px",
-                }}
-              >
-                <i className="fas fa-sync-alt text-gray-400"></i>
-              </button>
-            </div>
-
-            {/* Claim button only if complete */}
-            {canClaimQuest && (
-              <button
-                onClick={claimQuestReward}
-                className="px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-green-500 to-green-600 text-white shadow hover:shadow-xl transition-all duration-200"
-              >
-                Claim 10x Boost!
-              </button>
+<div className="max-w-md mx-auto">
+  {activeTab === "tap" ? (
+    <div className="flex flex-col items-center justify-center space-y-6">
+      {/* Main Tap Button (Unchanged) */}
+      <div className="relative">
+        <button
+          onClick={() => {
+            if (navigator.vibrate) navigator.vibrate(50);
+            const storedUserId = localStorage.getItem("userId");
+            const storedPin = localStorage.getItem("pin");
+            if (!storedUserId || !storedPin) {
+              window.location.href = "/login";
+              return;
+            }
+            handleTap();
+          }}
+          className={`
+            tappable-main-btn group relative w-[220px] h-[220px] rounded-full flex items-center justify-center
+            border-[6px] border-white/30
+            bg-gradient-to-br from-white/80 via-white/60 to-gray-300/90
+            shadow-xl
+            overflow-hidden
+            transition-transform active:scale-95
+            hover:shadow-[0_20px_50px_10px_rgba(80,80,180,0.28)]
+            outline-none focus-visible:ring-4 focus-visible:ring-purple-400
+            select-none
+          `}
+          style={{ WebkitTapHighlightColor: "transparent" }}
+        >
+          {/* Spinning Energy Ring */}
+          <span className={`
+            tappable-spin absolute z-0 inset-0 rounded-full pointer-events-none
+            ${
+              gameState.equippedTheme && gameState.equippedTheme !== "seasons"
+                ? CUSTOM_THEMES[gameState.equippedTheme]?.buttonGlow
+                : SEASONAL_THEMES[gameState.currentSeason].buttonGlow
+            }
+            opacity-30 border-4 border-transparent ring-8 ring-[rgba(140,120,255,0.10)]
+          `} />
+          {/* Inner Glass Rim */}
+          <span className="absolute z-10 inset-4 rounded-full bg-white/40 border-2 border-white/50 blur-[2px] opacity-70 pointer-events-none"/>
+          {/* Gloss Highlight */}
+          <span className="absolute z-20 top-8 left-10 w-32 h-16 rounded-full bg-white/70 blur-xl opacity-25 pointer-events-none group-hover:opacity-50 transition-opacity"/>
+          {/* Shine Sweep */}
+          <span className="absolute z-30 inset-0 rounded-full pointer-events-none">
+            <span className="tappable-shine" />
+          </span>
+          {/* Center Icon */}
+          <span className="relative z-40 flex items-center justify-center select-none">
+            {gameState.equippedTheme && gameState.equippedTheme !== "seasons" ? (
+              <span className="text-7xl drop-shadow-lg group-active:scale-110 transition-transform duration-150">
+                {CUSTOM_THEMES[gameState.equippedTheme]?.icon || "❓"}
+              </span>
+            ) : (
+              <i
+                className={`fas ${SEASONAL_THEMES[gameState.currentSeason].icon} text-7xl ${
+                  gameState.currentSeason === 0
+                    ? "text-green-400"
+                    : gameState.currentSeason === 1
+                    ? "text-yellow-400"
+                    : gameState.currentSeason === 2
+                    ? "text-orange-400"
+                    : "text-blue-400"
+                } drop-shadow-lg group-active:scale-110 transition-transform duration-150`}
+              />
             )}
+          </span>
+          {/* Button rim shadow */}
+          <span className="absolute z-0 inset-0 rounded-full shadow-[0_0_32px_14px_rgba(80,80,140,0.14)] pointer-events-none"/>
+          {/* 3D bottom edge */}
+          <span className="absolute bottom-0 left-0 right-0 h-10 rounded-b-full bg-gradient-to-t from-gray-300/70 to-transparent z-10 pointer-events-none"/>
+        </button>
+        {hasBoost && (
+          <div className="absolute -top-2 -right-2 bg-pink-500 text-white rounded-full px-2 py-1 text-xs shadow-lg">
+            {Math.floor(boostTimeLeft / 60)}:{(boostTimeLeft % 60).toString().padStart(2, "0")}
           </div>
         )}
-
-        <div className={`w-full ${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow}`}>
-          <h2 className="text-2xl font-crimson-text mb-4 text-center text-[#2d3748]">
-            Upgrades
+      </div>
+      {/* Quest Box */}
+      {!hasBoost && currentQuest && (
+        <div className="w-full rounded-2xl p-6 mb-1
+            bg-gradient-to-br from-white/80 via-purple-100/70 to-fuchsia-100/50
+            border border-fuchsia-200/50 shadow-xl
+            backdrop-blur
+            flex flex-col items-center"
+        >
+          <h2 className="text-xl text-fuchsia-700 mb-2 font-bold flex items-center gap-2">
+            <span role="img" aria-label="gift">🎁</span> Quest
           </h2>
-          <div className="text-center text-sm text-gray-500 font-semibold mb-4">
-            Combined Upgrade Level: {combinedLevel}
-          </div>
-          <div className="flex gap-2 mb-4">
-            {[1, 10, 100, "Max"].map((val) => (
-              <button
-                key={val}
-                onClick={() => setUpgradeMultiplier(val === "Max" ? "Max" : val)}
-                className={`px-3 py-1 rounded font-bold
-                  ${
-                    upgradeMultiplier === val
-                      ? "bg-[#059669] text-white"
-                      : "bg-gray-200 text-gray-700"
+          <div className="text-[#7c539f] mb-3 text-center font-medium">{currentQuest.description}</div>
+          <div className="flex items-center justify-center gap-2 mb-3 w-full">
+            {/* Progress Bar */}
+            <div className="flex-1">
+              {(() => {
+                const questTemplate = QUEST_TEMPLATES.find((q) => q.id === currentQuest.id);
+                let progress = 0;
+                if (questTemplate && currentQuest.targetAmount !== undefined) {
+                  if (questTemplate.id === "combined_level") {
+                    const combined =
+                      (gameState.tapPowerUpgrades || 0) +
+                      (gameState.autoTapperUpgrades || 0) +
+                      (gameState.critChanceUpgrades || 0) +
+                      (gameState.tapSpeedBonusUpgrades || 0);
+                    progress = Math.min(
+                      ((combined - currentQuest.startCombined) / currentQuest.targetAmount) * 100,
+                      100
+                    );
+                  } else if (questTemplate.id === "earn_coins") {
+                    const earned = gameState.totalCoinsEarned - currentQuest.startCoins;
+                    progress = Math.min((earned / currentQuest.targetAmount) * 100, 100);
+                  } else if (questTemplate.id === "upgrade_house") {
+                    const upgradesDone = gameState.houseLevel - currentQuest.startLevel;
+                    progress = Math.max(Math.min((upgradesDone / currentQuest.targetAmount) * 100, 100), 0);
+                  } else if (currentQuest.startLevel !== undefined) {
+                    let level = 0;
+                    if (questTemplate.id === "upgrade_tap_power") {
+                      level = gameState.tapPowerUpgrades || 0;
+                    } else if (questTemplate.id === "upgrade_auto_tapper") {
+                      level = gameState.autoTapperUpgrades || 0;
+                    } else if (questTemplate.id === "upgrade_crit_chance") {
+                      level = gameState.critChanceUpgrades || 0;
+                    } else if (questTemplate.id === "upgrade_tap_speed") {
+                      level =
+                        gameState.tapSpeedBonusUpgrades || gameState.tap_speed_bonus_upgrades || 0;
+                    }
+                    progress = Math.min(((level - currentQuest.startLevel) / currentQuest.targetAmount) * 100, 100);
                   }
-                  hover:bg-[#34d399] transition`}
-              >
-                x{val}
-              </button>
-            ))}
-          </div>
-          <div className="grid grid-cols-1 gap-4">
-            {Object.entries(UPGRADE_COSTS).map(([type, costFn]) => {
-              const upgradeLevel = gameState[`${type}Upgrades`] || 0;
-              let multiplier =
-                upgradeMultiplier === "Max"
-                  ? getMaxAffordableUpgrades(type, upgradeLevel, gameState.coins)
-                  : upgradeMultiplier;
-
-              const totalCost = getTotalUpgradeCost(type, upgradeLevel, multiplier);
-              const canAfford = gameState.coins >= totalCost;
-              const currentValueRaw = gameState[type] || 0;
-
-              const roundedValue =
-                type === "critChance"
-                  ? currentValueRaw
-                  : Math.round(currentValueRaw * 10) / 10;
-
-              const currentValueShort = formatNumberShort(roundedValue);
-
-              const currentValueFormatted =
-                type === "critChance" ? `${currentValueShort}%` : currentValueShort;
-
-              return (
-                <div
-                  key={type}
-                  className={`${glassStyle} bg-white/10 rounded-xl p-4 border border-white/30`}
-                >
-                  <div className="flex flex-col space-y-2">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-medium text-lg text-[#2d3748] flex items-center relative">
-                        {type === "tapPower"
-                          ? "Tap Power"
-                          : type === "autoTapper"
-                          ? "Auto Tapper"
-                          : type === "critChance"
-                          ? "Critical Chance"
-                          : "Tap Speed Bonus"}
-
-                        <button
-                          onMouseEnter={() => setTooltipVisibleFor(type)}
-                          onMouseLeave={() => setTooltipVisibleFor(null)}
-                          onFocus={() => setTooltipVisibleFor(type)}
-                          onBlur={() => setTooltipVisibleFor(null)}
-                          onClick={() =>
-                            setTooltipVisibleFor((prev) => (prev === type ? null : type))
-                          }
-                          aria-label={`Info about ${type}`}
-                          className="ml-2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                          style={{ fontSize: "0.8rem" }}
-                        >
-                          <i className="fas fa-info-circle" />
-                        </button>
-                        {tooltipVisibleFor === type && <Tooltip text={UPGRADE_DESCRIPTIONS[type]} />}
-                      </h3>
-                      <span className="text-sm text-[#939599] font-semibold">
-                        Level {upgradeLevel + 1}
-                      </span>
-                    </div>
-                    <p className="text-sm text-[#939599]">Current: {currentValueFormatted}</p>
-                    <button
-                      onClick={() => handleUpgrade(type, multiplier)}
-                      disabled={!canAfford}
-                      className={upgradeButtonStyle(canAfford)}
-                    >
-                      {`Buy${multiplier > 1 ? ` x${multiplier}` : ""} (${formatNumberShort(totalCost)})`}
-                    </button>
+                }
+                progress = Math.max(progress, 0);
+                return (
+                  <div className="w-full h-3 bg-white/30 border border-purple-100 rounded-full overflow-hidden relative shadow-sm">
+                    <div
+                      className="h-full bg-gradient-to-r from-fuchsia-400 via-purple-400 to-purple-600 transition-all duration-300"
+                      style={{ width: `${progress}%` }}
+                    />
                   </div>
-                </div>
-              );
-            })}
+                );
+              })()}
+            </div>
+            {/* Sync/Refresh Button */}
+            <button
+              onClick={() => {
+                const newQuest = generateQuest(gameState);
+                setCurrentQuest(newQuest);
+                setCanClaimQuest(false);
+                localStorage.setItem("currentQuest", JSON.stringify(newQuest));
+                saveGame({
+                  ...gameState,
+                  currentQuest: newQuest,
+                  canClaimQuest: false,
+                });
+                setNotification("Quest refreshed!");
+              }}
+              aria-label="Refresh Quest"
+              title="Refresh Quest"
+              className="ml-2 flex items-center justify-center bg-white/60 hover:bg-white border border-fuchsia-100 rounded-full p-2 transition shadow"
+              style={{
+                fontSize: "1.25rem",
+                width: "32px",
+                height: "32px",
+                minWidth: "32px",
+                minHeight: "32px",
+              }}
+            >
+              <i className="fas fa-sync-alt text-purple-400"></i>
+            </button>
           </div>
+          {/* Claim button only if complete */}
+          {canClaimQuest && (
+            <button
+              onClick={claimQuestReward}
+              className="px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white shadow hover:shadow-xl transition-all duration-200 mt-2"
+            >
+              Claim 10x Boost!
+            </button>
+          )}
+        </div>
+      )}
+      {/* Upgrades Box */}
+      <div className={`w-full rounded-2xl p-6 bg-gradient-to-br from-purple-100/70 via-white/60 to-fuchsia-100/60 border border-purple-200/30 shadow-2xl ${buttonGlow} backdrop-blur-md`}>
+        <h2 className="text-2xl font-crimson-text mb-4 text-center text-purple-900 drop-shadow">
+          Upgrades
+        </h2>
+        <div className="text-center text-sm text-purple-600 font-semibold mb-4">
+          Combined Upgrade Level: <span className="font-bold">{combinedLevel}</span>
+        </div>
+        <div className="flex gap-2 mb-4 justify-center">
+          {[1, 10, 100, "Max"].map((val) => (
+            <button
+              key={val}
+              onClick={() => setUpgradeMultiplier(val === "Max" ? "Max" : val)}
+              className={`px-3 py-1 rounded font-bold
+                ${
+                  upgradeMultiplier === val
+                    ? "bg-gradient-to-br from-fuchsia-500 to-purple-600 text-white shadow"
+                    : "bg-purple-100/80 text-purple-700 hover:bg-purple-200"
+                }
+                transition`}
+            >
+              x{val}
+            </button>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 gap-4">
+          {Object.entries(UPGRADE_COSTS).map(([type, costFn]) => {
+            const upgradeLevel = gameState[`${type}Upgrades`] || 0;
+            let multiplier =
+              upgradeMultiplier === "Max"
+                ? getMaxAffordableUpgrades(type, upgradeLevel, gameState.coins)
+                : upgradeMultiplier;
+            const totalCost = getTotalUpgradeCost(type, upgradeLevel, multiplier);
+            const canAfford = gameState.coins >= totalCost;
+            const currentValueRaw = gameState[type] || 0;
+            const roundedValue =
+              type === "critChance"
+                ? currentValueRaw
+                : Math.round(currentValueRaw * 10) / 10;
+            const currentValueShort = formatNumberShort(roundedValue);
+            const currentValueFormatted =
+              type === "critChance" ? `${currentValueShort}%` : currentValueShort;
+            return (
+              <div
+                key={type}
+                className={`rounded-xl p-4 bg-white/30 border border-purple-200/40 shadow-md flex flex-col space-y-2 items-center backdrop-blur`}
+              >
+                <div className="flex justify-between items-center w-full">
+                  <h3 className="font-semibold text-lg text-purple-900 flex items-center">
+                    {type === "tapPower"
+                      ? "Tap Power"
+                      : type === "autoTapper"
+                      ? "Auto Tapper"
+                      : type === "critChance"
+                      ? "Critical Chance"
+                      : "Tap Speed Bonus"}
+                    <button
+                      onMouseEnter={() => setTooltipVisibleFor(type)}
+                      onMouseLeave={() => setTooltipVisibleFor(null)}
+                      onFocus={() => setTooltipVisibleFor(type)}
+                      onBlur={() => setTooltipVisibleFor(null)}
+                      onClick={() =>
+                        setTooltipVisibleFor((prev) => (prev === type ? null : type))
+                      }
+                      aria-label={`Info about ${type}`}
+                      className="ml-2 text-purple-400 hover:text-purple-700 focus:outline-none"
+                      style={{ fontSize: "0.9rem" }}
+                    >
+                      <i className="fas fa-info-circle" />
+                    </button>
+                    {tooltipVisibleFor === type && <Tooltip text={UPGRADE_DESCRIPTIONS[type]} />}
+                  </h3>
+                  <span className="text-sm text-purple-400 font-semibold">
+                    Level {upgradeLevel + 1}
+                  </span>
+                </div>
+                <p className="text-sm text-purple-700">Current: {currentValueFormatted}</p>
+                <button
+                  onClick={() => handleUpgrade(type, multiplier)}
+                  disabled={!canAfford}
+                  className={`w-full px-4 py-2 rounded-xl font-semibold transition
+                    ${
+                      canAfford
+                        ? "bg-gradient-to-r from-purple-500 via-fuchsia-500 to-purple-700 text-white hover:scale-105 shadow"
+                        : "bg-gray-200/70 text-gray-400 cursor-not-allowed"
+                    }`}
+                >
+                  {`Buy${multiplier > 1 ? ` x${multiplier}` : ""} (${formatNumberShort(totalCost)})`}
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
-    ) : activeTab === "leaderboard" ? (
-      renderLeaderboard()
-    ) : activeTab === "house" ? (
-      renderHouseTab()
-    ) : activeTab === "shop" ? (
-      renderShopTab()
-   ) : activeTab === "profile" ? (
-  renderProfileTab()
-) : (activeTab === "friends" || activeTab === "guilds") ? (
-  renderFriendsTab({ friends, guild, inviteToGuild })
-) : null}
-  </div>
+    </div>
+  ) : activeTab === "leaderboard" ? (
+    renderLeaderboard()
+  ) : activeTab === "house" ? (
+    renderHouseTab()
+  ) : activeTab === "shop" ? (
+    renderShopTab()
+  ) : activeTab === "profile" ? (
+    renderProfileTab()
+  ) : (activeTab === "friends" || activeTab === "guilds") ? (
+    renderFriendsTab({ friends, guild, inviteToGuild })
+  ) : null}
+</div>
 </div>
 
 {showResetModal && renderResetModal()}
