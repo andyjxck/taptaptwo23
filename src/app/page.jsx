@@ -490,7 +490,7 @@ const PROFILE_ICONS = [
     name: "Special Logo",
     emoji: null,
     image:
-      "https://ucarecdn.com/7bdd361d-c411-41ce-b066-c1d20f88e3a7/-/format/auto/",
+      "https://ucarecdn.com/af9e3e7b-6303-4643-afbe-61d3a28941ff/-/format/auto/",
     price: 1500,
     currency: "renownTokens",
     isLimited: true,
@@ -6247,7 +6247,7 @@ const renderHouseTab = () => {
            {/* LOGO - centered */}
       <div className="flex flex-col items-center mt-2 mb-4">
         <img
-          src="https://ucarecdn.com/7bdd361d-c411-41ce-b066-c1d20f88e3a7/-/format/auto/"
+          src="https://ucarecdn.com/af9e3e7b-6303-4643-afbe-61d3a28941ff/-/format/auto/"
           alt="Tap Tap Two Logo"
           className="h-24 object-contain"
         />
