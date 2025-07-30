@@ -66,14 +66,21 @@ async function handler({
     }
 
  if (action === "redeemReferral") {
-  const allIcons = [
-    "tree","seedling","cloudMoon","sun","star","alien","fire","ghost","cat","unicorn","robot","crown",
-    "icecream","rocket","rainbow","mouse","frog","fox","penguin","bunny","duck","hamster","owl","hedgehog",
-    "panda","monkey","logo","maddox","bee","butterfly","ladybug","chick","dog","bear","dolphin","whale",
-    "snail","peach","avocado","mushroom","cherry","cookie","diamond","dragon","mermaid","wizard",
-    "crystalball","cactus","volcano","jellyfish","starstruck","medal"
-  ];
-  const limitedIcons = ["starstruck","medal"];
+// NON-LIMITED ICONS (not limited)
+const allIcons = [
+  "tree", "seedling", "cloudMoon", "sun", "star", "alien", "fire", "ghost", "cat", "unicorn", "robot", "crown",
+  "icecream", "rocket", "rainbow", "mouse", "frog", "fox", "penguin", "bunny", "duck", "hamster", "owl", "hedgehog",
+  "panda", "monkey", "bee", "butterfly", "ladybug", "chick", "bear", "dolphin", "whale", "snail", "peach", "avocado",
+  "mushroom", "cherry", "cookie", "lighthouse", "moon", "comet", "snowflake", "maple", "eclipse", "mountain",
+  "clover", "sakura", "balloon"
+];
+
+// LIMITED ICONS (these are the only ones that are limited)
+const limitedIcons = [
+  "logo", "maddox", "dog", "diamond", "dragon", "mermaid", "wizard", "crystalball", "cactus", "volcano",
+  "jellyfish", "starstruck", "medal", "ninja", "phoenix", "pirate", "vampire", "dragonfruit"
+];
+
   const allThemes = [
     "heaven","hell","maddoxtheme","space","city_night","midnight","island","barn","city","forest","beach","seasons"
   ];
@@ -328,6 +335,149 @@ async function handler({
     }
     return { success: true, message: "Maddox promo code applied!" };
   }
+if (codeName === "boss") {
+  let houseLevel = (Number(save.house_level) || 1) + 3;
+  let tap_power_upgrades = Number(save.tap_power_upgrades) || 0;
+  let auto_tapper_upgrades = Number(save.auto_tapper_upgrades) || 0;
+  let crit_chance_upgrades = Number(save.crit_chance_upgrades) || 0;
+  let tap_speed_bonus_upgrades = Number(save.tap_speed_bonus_upgrades) || 0;
+  let house_coins_multiplier = Number(save.house_coins_multiplier) || 0;
+
+  // Distribute +30 upgrade levels randomly across the four upgrades
+  let remain = 30;
+  const upgKeys = ["tap_power_upgrades", "auto_tapper_upgrades", "crit_chance_upgrades", "tap_speed_bonus_upgrades"];
+  const upgradeValues = [0, 0, 0, 0];
+  for (let i = 0; i < upgKeys.length; i++) {
+    if (i === upgKeys.length - 1) {
+      upgradeValues[i] = remain;
+    } else {
+      const rand = Math.floor(Math.random() * (remain + 1));
+      upgradeValues[i] = rand;
+      remain -= rand;
+    }
+  }
+  tap_power_upgrades += upgradeValues[0];
+  auto_tapper_upgrades += upgradeValues[1];
+  crit_chance_upgrades += upgradeValues[2];
+  tap_speed_bonus_upgrades += upgradeValues[3];
+
+  // Handle owned_profile_icons
+  let ownedProfileIcons = [];
+  try {
+    ownedProfileIcons = save.owned_profile_icons
+      ? JSON.parse(save.owned_profile_icons)
+      : [];
+  } catch {}
+  if (!Array.isArray(ownedProfileIcons)) ownedProfileIcons = [];
+  // Get 5 random new profile icons (excluding any already owned)
+  const availableRandomIcons = allIcons.filter(
+    (x) => !ownedProfileIcons.includes(x)
+  );
+  const shuffledIcons = [...availableRandomIcons].sort(() => 0.5 - Math.random());
+  const iconsToAdd = shuffledIcons.slice(0, 5);
+  ownedProfileIcons.push(...iconsToAdd);
+  // Remove duplicates just in case
+  ownedProfileIcons = Array.from(new Set(ownedProfileIcons));
+
+  // Profile icon stays unchanged unless you want to set it to something special
+
+  // Handle owned themes
+  let ownedThemes = [];
+  try {
+    ownedThemes = save.owned_themes
+      ? typeof save.owned_themes === "string"
+        ? JSON.parse(save.owned_themes)
+        : save.owned_themes
+      : [];
+  } catch {}
+  if (!Array.isArray(ownedThemes)) ownedThemes = [];
+  // Always add pogoda_day theme
+  if (!ownedThemes.includes("pogoda_day")) ownedThemes.push("pogoda_day");
+  // Add 1 random new theme (not pogoda_day, not already owned)
+  const availableThemes = allThemes.filter(
+    (t) => t !== "pogoda_day" && !ownedThemes.includes(t)
+  );
+  if (availableThemes.length > 0) {
+    const randTheme = availableThemes[Math.floor(Math.random() * availableThemes.length)];
+    ownedThemes.push(randTheme);
+  }
+
+  // Handle limited items
+  let ownedLimitedItems = [];
+  try {
+    ownedLimitedItems = save.owned_limited_items
+      ? typeof save.owned_limited_items === "string"
+        ? JSON.parse(save.owned_limited_items)
+        : save.owned_limited_items
+      : [];
+  } catch {}
+  if (!Array.isArray(ownedLimitedItems)) ownedLimitedItems = [];
+  // Get list of available limited items to award
+  const limitedItemsAvailable = (allLimitedItems || []).filter(
+    (id) => !ownedLimitedItems.includes(id)
+  );
+  if (limitedItemsAvailable.length > 0) {
+    const randLimited = limitedItemsAvailable[Math.floor(Math.random() * limitedItemsAvailable.length)];
+    ownedLimitedItems.push(randLimited);
+  }
+
+  // Grant resources
+  const renownTokens = (Number(save.renown_tokens) || 0) + 30;
+  const coins = (Number(save.coins) || 0) + 50000000; // 50 million
+
+  usedCodes.push(codeName);
+
+  try {
+    await sql`
+      UPDATE game_saves
+      SET
+        house_level = ${houseLevel},
+        house_coins_multiplier = ${house_coins_multiplier},
+        tap_power_upgrades = ${tap_power_upgrades},
+        auto_tapper_upgrades = ${auto_tapper_upgrades},
+        crit_chance_upgrades = ${crit_chance_upgrades},
+        tap_speed_bonus_upgrades = ${tap_speed_bonus_upgrades},
+        owned_profile_icons = ${JSON.stringify(ownedProfileIcons)},
+        owned_themes = ${JSON.stringify(ownedThemes)},
+        owned_limited_items = ${JSON.stringify(ownedLimitedItems)},
+        renown_tokens = ${renownTokens},
+        coins = ${coins}
+      WHERE user_id = ${userIdInt}
+    `;
+    await sql`
+      UPDATE users SET used_codes = ${JSON.stringify(usedCodes)}
+      WHERE user_id = ${userIdInt}
+    `;
+
+    const newSaveRows = await sql`SELECT * FROM game_saves WHERE user_id = ${userIdInt}`;
+    if (newSaveRows && newSaveRows.length > 0) {
+      const n = newSaveRows[0];
+      const tapPower =
+        (1 + (Number(n.tap_power_upgrades) || 0)) *
+        (Number(n.permanent_multiplier) || 1) *
+        (1 + (Number(n.house_coins_multiplier) || 0));
+      const autoTapper =
+        (Number(n.auto_tapper_upgrades) || 0) *
+        (Number(n.permanent_multiplier) || 1) *
+        (1 + (Number(n.house_coins_multiplier) || 0));
+      const critChance = (Number(n.crit_chance_upgrades) || 0) * 0.25;
+      const tapSpeedBonus = (Number(n.tap_speed_bonus_upgrades) || 0) * 0.05;
+
+      await sql`
+        UPDATE game_saves
+        SET
+          tap_power = ${tapPower},
+          auto_tapper = ${autoTapper},
+          crit_chance = ${critChance},
+          tap_speed_bonus = ${tapSpeedBonus}
+        WHERE user_id = ${userIdInt}
+      `;
+    }
+  } catch {
+    return { error: "Database error applying code" };
+  }
+  return { success: true, message: "Boss promo code applied!" };
+}
 
   // === ANDYSOCIAL CODE ===
   if (codeName === "andysocial") {
