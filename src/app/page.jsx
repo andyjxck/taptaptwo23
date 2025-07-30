@@ -5526,97 +5526,98 @@ const renderLeaderboard = () => (
 );
   };
 
-  const renderProfileTab = () => {
-    // Find the icon object for the currently equipped icon
-    const equippedIconObj =
-      PROFILE_ICONS.find((ic) => ic.id === gameState.profileIcon) || null;
+ const renderProfileTab = () => {
+  // Find the icon object for the currently equipped icon
+  const equippedIconObj =
+    PROFILE_ICONS.find((ic) => ic.id === gameState.profileIcon) || null;
 
-    return (
-      <div
-        className={`${glassStyle} bg-white/20 rounded-2xl p-6 ${buttonGlow} space-y-6`}
-      >
-        <h2 className="text-2xl font-crimson-text text-center text-[#2d3748]">
-          Profile
-        </h2>
+  return (
+    <div className={`${glassStyle} bg-gradient-to-br from-white/80 via-purple-100/80 to-white/70 rounded-3xl p-7 ${buttonGlow} shadow-2xl border border-white/20 backdrop-blur-xl max-w-lg mx-auto space-y-8`}>
+      {/* Heading */}
+      <h2 className="text-3xl font-crimson-text text-center text-[#4527A0] drop-shadow tracking-wider mb-4">
+        Profile
+      </h2>
 
-        <div className="flex flex-col items-center">
-          {/* Profile Icon */}
-          {equippedIconObj ? (
-            equippedIconObj.image ? (
-              <img
-                src={equippedIconObj.image}
-                alt={equippedIconObj.name}
-                className="w-20 h-20 rounded-full object-cover mb-2"
-                title={equippedIconObj.name}
-              />
-            ) : (
-              <span className="text-[5rem] mb-2" title={equippedIconObj.name}>
-                {equippedIconObj.emoji}
-              </span>
-            )
-          ) : (
-            <i className="fas fa-user-circle text-gray-400 text-[5rem] mb-2"></i>
-          )}
-
-          {/* Editable Name */}
-          <div className="w-full max-w-xs">
-            <label className="block text-gray-600 font-medium mb-1">Name</label>
-            <input
-              type="text"
-              value={gameState.profileName}
-              onChange={(e) =>
-                setGameState((prev) => ({
-                  ...prev,
-                  profileName: e.target.value,
-                }))
-              }
-              maxLength={20}
-              className="w-full px-4 py-2 rounded-xl border border-white/30 bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-300 text-[#2d3748]"
+      {/* Profile Icon */}
+      <div className="flex flex-col items-center">
+        {equippedIconObj ? (
+          equippedIconObj.image ? (
+            <img
+              src={equippedIconObj.image}
+              alt={equippedIconObj.name}
+              className="w-28 h-28 rounded-full object-cover mb-2 shadow-lg border-4 border-purple-200"
+              title={equippedIconObj.name}
             />
-          </div>
-
-          {/* Save button and Change Pin + Hard Reset buttons */}
-          <div className="flex flex-col items-center space-y-4 mt-4">
-            {/* Save button */}
-            <button
-              onClick={() => {
-                saveGame({ ...gameState });
-                setNotification("Profile saved!");
-              }}
-              className="w-full max-w-xs px-6 py-2 rounded-lg bg-gradient-to-r from-green-400 to-green-500 text-white font-semibold shadow hover:shadow-lg transition"
-            >
-              Save
-            </button>
-
-            {/* Change Pin and Hard Reset side by side */}
-            <div className="flex w-full max-w-xs gap-4">
-              <button
-                onClick={() => {
-                  setPinErrorMessage("");
-                  setPinSuccessMessage("");
-                  setCurrentPinInput("");
-                  setNewPinInput("");
-                  setConfirmPinInput("");
-                  setShowChangePinModal(true);
-                }}
-                className="flex-1 px-6 py-2 rounded-lg bg-purple-500 text-white font-semibold shadow hover:bg-purple-400 transition"
-              >
-                Change Pin
-              </button>
-
-              <button
-                onClick={() => setShowHardResetModal(true)}
-                className="flex-1 px-6 py-2 rounded-lg bg-red-500 text-white font-bold shadow hover:bg-red-400 transition"
-              >
-                HARD RESET
-              </button>
-            </div>
-          </div>
-        </div>
-         <AdBanner />
+          ) : (
+            <span className="text-[5.5rem] mb-2 drop-shadow" title={equippedIconObj.name}>
+              {equippedIconObj.emoji}
+            </span>
+          )
+        ) : (
+          <i className="fas fa-user-circle text-gray-300 text-[5.5rem] mb-2 drop-shadow"></i>
+        )}
       </div>
-    );
-  };
+
+      {/* Editable Name */}
+      <div className="w-full max-w-xs mx-auto">
+        <label className="block text-purple-800 font-bold mb-2 tracking-wide text-lg">Name</label>
+        <input
+          type="text"
+          value={gameState.profileName}
+          onChange={(e) =>
+            setGameState((prev) => ({
+              ...prev,
+              profileName: e.target.value,
+            }))
+          }
+          maxLength={20}
+          className="w-full px-4 py-3 rounded-xl border-2 border-purple-200 bg-white/70 backdrop-blur-sm text-[#2d3748] font-semibold shadow focus:outline-none focus:ring-2 focus:ring-purple-400 transition"
+          placeholder="Enter your name"
+        />
+      </div>
+
+      {/* Save Button */}
+      <div className="flex flex-col items-center space-y-6 mt-4 w-full max-w-xs mx-auto">
+        <button
+          onClick={() => {
+            saveGame({ ...gameState });
+            setNotification("Profile saved!");
+          }}
+          className="w-full px-8 py-3 rounded-xl bg-gradient-to-r from-green-400 via-green-500 to-green-600 text-white font-extrabold shadow-xl hover:shadow-2xl active:scale-95 transition"
+        >
+          Save
+        </button>
+
+        {/* Change Pin & Hard Reset Side by Side */}
+        <div className="flex gap-4 w-full">
+          <button
+            onClick={() => {
+              setPinErrorMessage("");
+              setPinSuccessMessage("");
+              setCurrentPinInput("");
+              setNewPinInput("");
+              setConfirmPinInput("");
+              setShowChangePinModal(true);
+            }}
+            className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 text-white font-bold shadow hover:bg-purple-500 transition active:scale-95"
+          >
+            Change Pin
+          </button>
+          <button
+            onClick={() => setShowHardResetModal(true)}
+            className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-red-400 via-red-500 to-red-600 text-white font-bold shadow hover:bg-red-500 transition active:scale-95"
+          >
+            HARD RESET
+          </button>
+        </div>
+      </div>
+      <div className="mt-8">
+        <AdBanner />
+      </div>
+    </div>
+  );
+};
+
 
   const renderResetTab = () => {
     const tokensToEarn = getTokensFromCoins(gameState.coinsEarnedThisRun || 0);
