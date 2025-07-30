@@ -2,16 +2,16 @@
 import React, { useState, useEffect } from "react";
 import AdBanner from "@/components/AdBanner";
 
-// Dynamic background for seasons (using Spring as default here)
+// Season backgrounds: more lively, with animated gradient and overlay
 const seasonBackgrounds = {
-  Spring: "from-[#d8b4fe] via-[#c084fc] to-[#a78bfa]",
-  Summer: "from-[#fde68a] via-[#fcd34d] to-[#fbbf24]",
-  Autumn: "from-[#fdba74] via-[#fb923c] to-[#f97316]",
-  Winter: "from-[#bfdbfe] via-[#93c5fd] to-[#60a5fa]"
+  Spring: "from-[#e0c3fc] via-[#8ec5fc] to-[#a1c4fd]",
+  Summer: "from-[#fceabb] via-[#f8b500] to-[#fccb90]",
+  Autumn: "from-[#ffecd2] via-[#fcb69f] to-[#ff6e7f]",
+  Winter: "from-[#e0eafc] via-[#cfdef3] to-[#a1c4fd]"
 };
 const currentSeason = "Spring";
 
-// Weather effects data
+// Weather effects data for tables
 const weatherEffects = [
   { name: "Clear", effect: "No effects – normal gameplay." },
   { name: "Rain", effect: "Slows tap speed, -10% earnings." },
@@ -26,7 +26,15 @@ const weatherEffects = [
   { name: "Foggy", effect: "Lowers critical chance by 5%." }
 ];
 
-// All help sections: id, title, icon, content, last update date
+// Glass table wrapper for consistent style
+const GlassTable = ({ children }) => (
+  <div className="rounded-xl shadow-lg overflow-x-auto bg-white/10 backdrop-blur-[8px] border border-white/30 my-2">
+    <table className="min-w-full text-sm text-gray-100">
+      {children}
+    </table>
+  </div>
+);
+
 const helpSections = [
   {
     id: 1,
@@ -39,7 +47,7 @@ const helpSections = [
           <li>The more you tap, the more coins you get – every tap matters.</li>
           <li>Spend coins to buy <b>upgrades</b> that boost your coin earnings, tapping speed, and more.</li>
           <li>Your progress continues even when offline – the <b>Auto Tapper</b> upgrade keeps earning for you.</li>
-          <li>Keep upgrading, complete <b>quests</b>, and <b>reset</b> your progress to earn <span className="text-purple-600 font-semibold">Renown Tokens</span> for powerful permanent rewards.</li>
+          <li>Keep upgrading, complete <b>quests</b>, and <b>reset</b> your progress to earn <span className="text-purple-300 font-semibold">Renown Tokens</span> for permanent rewards.</li>
         </ul>
       </>
     ),
@@ -51,41 +59,46 @@ const helpSections = [
     icon: "fas fa-bolt",
     content: (
       <>
-        <p className="mb-3">Upgrades cost coins and improve different aspects of your game:</p>
-        <table className="w-full table-fixed border-collapse mb-3 text-sm">
+        <p className="mb-3">Upgrades cost coins and improve your game. All prices scale up with each purchase:</p>
+        <GlassTable>
           <thead>
-            <tr className="bg-purple-100 text-left">
-              <th className="p-2">Upgrade</th>
-              <th className="p-2">Effect</th>
-              <th className="p-2">Notes</th>
+            <tr className="bg-white/10 text-left">
+              <th className="p-2 font-semibold">Upgrade</th>
+              <th className="p-2 font-semibold">Effect</th>
+              <th className="p-2 font-semibold">Notes</th>
             </tr>
           </thead>
-          <tbody className="bg-white/80">
-            <tr>
+          <tbody>
+            <tr className="hover:bg-white/10">
               <td className="p-2 font-semibold">Tap Power</td>
               <td className="p-2">Increases coins earned per tap.</td>
-              <td className="p-2">Each level adds a flat amount to coin gain.</td>
+              <td className="p-2">Each level adds a flat amount. Cost: 20c +7%/level.</td>
             </tr>
-            <tr>
+            <tr className="hover:bg-white/10">
               <td className="p-2 font-semibold">Auto Tapper</td>
-              <td className="p-2">Automatically generates coins every second.</td>
-              <td className="p-2">Earn coins passively even when not tapping.</td>
+              <td className="p-2">Earn coins passively every second.</td>
+              <td className="p-2">500c +6%/level.</td>
             </tr>
-            <tr>
+            <tr className="hover:bg-white/10">
               <td className="p-2 font-semibold">Critical Chance</td>
-              <td className="p-2">Chance for taps to be "critical" and give bonus coins.</td>
-              <td className="p-2">Critical taps give 2.5× coins. Max critical chance is 100%.</td>
+              <td className="p-2">Chance for 2.5× coin taps.</td>
+              <td className="p-2">40c +6%/level (tougher after 84).</td>
             </tr>
-            <tr>
+            <tr className="hover:bg-white/10">
               <td className="p-2 font-semibold">Tap Speed Bonus</td>
-              <td className="p-2">Increases how quickly you can tap effectively.</td>
-              <td className="p-2">Helps achieve tap streaks; weather can impact it.</td>
+              <td className="p-2">Lets you tap faster.</td>
+              <td className="p-2">80c +6%/level (tougher after 250).</td>
+            </tr>
+            <tr className="hover:bg-white/10">
+              <td className="p-2 font-semibold">House</td>
+              <td className="p-2">Boosts ALL coin earnings.</td>
+              <td className="p-2">+10%/level, cost: 1,000c +50%/level.</td>
             </tr>
           </tbody>
-        </table>
+        </GlassTable>
         <ul className="list-disc pl-5 space-y-2">
-          <li><b>Tip:</b> You can buy most upgrades in bulk using the <b>x1/x10/x100</b> buttons for convenience.</li>
-          <li>Each upgrade level increases in price as it gets higher, so plan your spending wisely.</li>
+          <li>You can buy upgrades in bulk using the <b>x1/x10/x100</b> buttons.</li>
+          <li>Plan your spending: each upgrade gets more expensive!</li>
         </ul>
       </>
     ),
@@ -97,31 +110,31 @@ const helpSections = [
     icon: "fas fa-cloud-sun",
     content: (
       <>
-        <p className="mb-3">The game cycles through <b>4 seasons</b>, each with unique weather patterns and effects on gameplay:</p>
+        <p className="mb-3">The game cycles through <b>4 seasons</b>, each with unique weather patterns and effects:</p>
         <ul className="list-disc pl-5 mb-4 space-y-2">
-          <li><span className="font-semibold text-green-700">Spring:</span> Balanced weather with light rain and clear skies.</li>
-          <li><span className="font-semibold text-yellow-600">Summer:</span> Mostly sunny and windy – boosts coin gains and tap speed.</li>
-          <li><span className="font-semibold text-red-600">Autumn:</span> More clouds, rain, and fog – slightly lowers earnings and critical chance.</li>
-          <li><span className="font-semibold text-blue-600">Winter:</span> Snow and hail are common – some bonuses are reduced and critical taps may be disabled.</li>
+          <li><span className="font-semibold text-green-400">Spring:</span> Balanced weather, light rain, clear skies.</li>
+          <li><span className="font-semibold text-yellow-300">Summer:</span> Sunny and windy – boosts coins/tap speed.</li>
+          <li><span className="font-semibold text-orange-400">Autumn:</span> More clouds, rain, fog – slightly lowers earnings/crit chance.</li>
+          <li><span className="font-semibold text-blue-300">Winter:</span> Snow/hail common – some bonuses reduced, crits may be disabled.</li>
         </ul>
-        <h3 className="text-lg font-semibold text-gray-700 mb-2">Weather Effects</h3>
-        <table className="w-full table-fixed border-collapse mb-2 text-sm">
+        <h3 className="text-base font-semibold text-gray-100 mb-2">Weather Effects</h3>
+        <GlassTable>
           <thead>
-            <tr className="bg-purple-100 text-left">
-              <th className="p-2">Weather</th>
-              <th className="p-2">Effect on Gameplay</th>
+            <tr>
+              <th className="p-2 font-semibold">Weather</th>
+              <th className="p-2 font-semibold">Effect</th>
             </tr>
           </thead>
-          <tbody className="bg-white/80">
+          <tbody>
             {weatherEffects.map(({ name, effect }) => (
-              <tr key={name}>
-                <td className="p-2 font-medium">{name}</td>
+              <tr key={name} className="hover:bg-white/10">
+                <td className="p-2">{name}</td>
                 <td className="p-2">{effect}</td>
               </tr>
             ))}
           </tbody>
-        </table>
-        <p className="text-gray-600 text-sm">*Weather can temporarily increase or decrease your tapping speed, coin earnings, or critical chance as listed above.</p>
+        </GlassTable>
+        <p className="text-gray-300 text-xs">Weather temporarily boosts or reduces tap speed, coins, or crit chance as listed above.</p>
       </>
     ),
     last_updated: "30/07/2025"
@@ -132,20 +145,14 @@ const helpSections = [
     icon: "fas fa-scroll",
     content: (
       <>
-        <p className="mb-3"><b>Quests</b> are special goals that challenge you and provide rewards. Completing a quest grants a <span className="text-green-600 font-semibold">10× coin boost for 10 minutes</span> as a reward.</p>
-        <p className="mb-3">New quests appear regularly. Quest types include:</p>
+        <p className="mb-3"><b>Quests</b> are goals that reward a <span className="text-green-300 font-semibold">10× coin boost for 10 min</span> when completed.</p>
+        <p className="mb-2">Quest types include:</p>
         <ul className="list-disc pl-5 mb-3 space-y-2">
-          <li><b>Combined Upgrade Level:</b> Reach a target total level across all upgrades.</li>
-          <li><b>Tap Power Upgrades:</b> Purchase a certain number of Tap Power upgrades.</li>
-          <li><b>Auto Tapper Upgrades:</b> Purchase a certain number of Auto Tapper upgrades.</li>
-          <li><b>Critical Chance Upgrades:</b> Increase your Critical Chance upgrade to a target level.</li>
-          <li><b>Tap Speed Bonus Upgrades:</b> Increase your Tap Speed Bonus upgrade to a target level.</li>
-          <li><b>House Upgrades:</b> Upgrade your House a certain number of times.</li>
-          <li><b>Earn Coins:</b> Accumulate a specified amount of coins.</li>
+          <li>Combined Upgrade Level</li>
+          <li>Tap Power / Auto Tapper / Crit Chance / Tap Speed / House Upgrades</li>
+          <li>Earn a target amount of coins</li>
         </ul>
-        <p className="mb-2">Quest progress starts counting from when the quest is received – everyone starts fresh for fairness.</p>
-        <p className="mb-2"><b>You can refresh quests</b> to get new ones at any time, but note that current quest progress will be lost when you do.</p>
-        <p className="mb-2 text-gray-700"><i>Remember to claim your quest reward</i> once a quest is complete, so you get that big coin boost!</p>
+        <p>Progress only counts once the quest appears. You can refresh quests (but lose current progress). Remember to claim your reward when done!</p>
       </>
     ),
     last_updated: "30/07/2025"
@@ -156,15 +163,13 @@ const helpSections = [
     icon: "fas fa-sync-alt",
     content: (
       <>
-        <p className="mb-3">When you <b>reset</b> your game (often called a "prestige"), you lose all your coins and upgrades, but earn <b>Renown Tokens</b> in return. Renown Tokens give permanent bonuses and can be spent in the Shop.</p>
+        <p className="mb-3">Reset (prestige) wipes coins/upgrades but earns <b>Renown Tokens</b> for permanent boosts and cosmetics.</p>
         <ul className="list-disc pl-5 mb-3 space-y-2">
-          <li>The first token requires earning <b>50,000,000 coins</b> in one run. Each subsequent token requires <b>double</b> the coins of the previous (e.g. 2nd token at 100M, 3rd at 200M, etc.).</li>
-          <li>You can only reset once you've earned enough for at least one token. It's best to wait until you can gain several tokens at once for a bigger boost.</li>
-          <li>Each token gives a <span className="text-indigo-600 font-semibold">+1.5% permanent boost</span> to all future coin earnings (tokens stack multiplicatively with no cap).</li>
-          <li>All Renown Tokens you earn are kept forever – they do <u>not</u> reset when you prestige again.</li>
+          <li>1st token: <b>50,000,000 coins</b>. Each next token doubles the requirement.</li>
+          <li>Each token: <span className="text-indigo-300 font-semibold">+1.5% all coin gains</span> (stacks forever).</li>
+          <li>Tokens are kept on every future reset.</li>
         </ul>
-        <p className="mb-3">Renown Tokens can be spent in the <b>Shop</b> to buy exclusive <span className="text-purple-600 font-semibold">cosmetics</span> (themes, icons, etc.) and powerful <span className="text-green-600 font-semibold">permanent upgrades</span>.</p>
-        <p className="text-red-700 font-semibold">**Note:** Resetting wipes your coins and upgrades, but **Renown Tokens and any cosmetics** you've purchased remain safe.</p>
+        <p>Spend Renown in the Shop for cosmetics or permanent upgrades. <span className="text-pink-200 font-bold">Resetting does NOT erase Renown or purchases!</span></p>
       </>
     ),
     last_updated: "30/07/2025"
@@ -175,12 +180,11 @@ const helpSections = [
     icon: "fas fa-home",
     content: (
       <>
-        <p className="mb-3">Your House is a special upgrade representing your home base. Upgrading your house increases your overall coin <b>multiplier</b>, so all coin earnings are boosted.</p>
+        <p className="mb-3">The <b>House</b> is your personal hub. Each level is <span className="text-blue-200 font-bold">+10% all coin earnings</span> (stacks).</p>
         <ul className="list-disc pl-5 mb-3 space-y-2">
-          <li>Each House level adds roughly <b>+10% to your coin earnings</b>, and these multipliers stack as your house grows.</li>
-          <li>House upgrade costs increase exponentially with each level, so higher levels will be pricey.</li>
-          <li>You can <b>rename your house</b> anytime just for fun (this is a cosmetic change).</li>
-          <li>If your House is at least level 2, you have the option to <span className="text-yellow-700 font-semibold">sacrifice</span> 1 house level to double your next offline earnings (see Offline Earnings section).</li>
+          <li>Upgrade cost: 1,000c, increases +50%/level.</li>
+          <li>Rename your house any time (cosmetic).</li>
+          <li>If House is 2+, you can <span className="text-yellow-400">sacrifice 1 level</span> to double offline earnings.</li>
         </ul>
       </>
     ),
@@ -192,14 +196,12 @@ const helpSections = [
     icon: "fas fa-moon",
     content: (
       <>
-        <p className="mb-3">When you return to the game after being offline, you gain coins based on your Auto Tapper level and the time you were away (up to a max of 3 hours of offline gains).</p>
-        <p className="mb-3"><b>Want to double those offline coins?</b> You can choose to <span className="text-yellow-700 font-semibold">sacrifice</span> some progress the moment you come back:</p>
+        <p className="mb-3">Gain coins when offline (max 3h at a time). When you come back, you can double rewards by:</p>
         <ul className="list-disc pl-5 mb-3 space-y-2">
-          <li><b>Option 1:</b> Sacrifice <b>10 levels</b> from one of your upgrades (Tap Power, Auto Tapper, Crit Chance, or Tap Speed Bonus).</li>
-          <li><b>Option 2:</b> Sacrifice <b>1 House level</b> (only if your House is level 2 or above).</li>
+          <li>Sacrificing <b>10 levels</b> from any upgrade</li>
+          <li>Or 1 <b>House level</b> (if House is 2+)</li>
         </ul>
-        <p className="mb-3"><i>Choose wisely!</i> Any levels you sacrifice are lost permanently. This trade can be worth it for an immediate coin boost, but you'll need to rebuild those levels later.</p>
-        <p className="text-gray-700 text-sm">*(The sacrifice option is only offered once per offline collection — right when you log back in.)*</p>
+        <p className="text-yellow-200">This is optional and offered once per offline claim. Any levels sacrificed are permanent.</p>
       </>
     ),
     last_updated: "30/07/2025"
@@ -210,14 +212,14 @@ const helpSections = [
     icon: "fas fa-gift",
     content: (
       <>
-        <p className="mb-3">You can claim a free bonus once every 24 hours (the daily bonus resets at 2:00 PM server time). Daily bonuses can include:</p>
+        <p className="mb-3">Claim your daily bonus (resets 2PM server):</p>
         <ul className="list-disc pl-5 mb-3 space-y-2">
-          <li>Free upgrade levels (+1 to +10 to a random upgrade).</li>
-          <li>Bonus coins (get an extra 10%, 25%, or 50% of your current coin total).</li>
-          <li>Free House levels (+1 to +3 added to your House level).</li>
-          <li>Temporary coin multipliers (earnings boosted by 10%, 50%, or even 500% for 24 hours).</li>
+          <li>+1 to +10 free upgrade levels</li>
+          <li>Bonus coins (+10%/25%/50%)</li>
+          <li>+1 to +3 free House levels</li>
+          <li>Temporary multipliers (up to 500% for 24h)</li>
         </ul>
-        <p><span className="text-yellow-600 font-semibold">Tip:</span> Check in daily to grab these bonuses – they significantly speed up your progress!</p>
+        <p className="text-yellow-200">Tip: Daily bonuses speed up progress a lot.</p>
       </>
     ),
     last_updated: "30/07/2025"
@@ -228,16 +230,22 @@ const helpSections = [
     icon: "fas fa-user-friends",
     content: (
       <>
-        <p className="mb-3">Tap Tap Two includes social features so you can connect with other players:</p>
+        <p className="mb-3">Social features to connect:</p>
         <ul className="list-disc pl-5 mb-3 space-y-2">
-          <li><b>Friends List:</b> Search for players by username to send friend requests. Once they accept, you'll see them in your friends list (and you can remove friends anytime).</li>
-          <li><b>Guilds:</b> Guilds are player groups. You can create your own guild (choose a name and icon) or join a friend's guild by accepting an invite. Guild leaders can invite their friends to join.</li>
-          <li><b>Guild Chat:</b> Each guild has a dedicated chat for members to talk to each other in-game.</li>
-          <li><b>Guild Score:</b> Guilds accumulate a score based on members' contributions. It's a fun way to see your guild's combined progress (and maybe compete with other guilds in the future).</li>
+          <li><b>Friends:</b> Search by username, send/accept/remove requests.</li>
+          <li><b>Guilds:</b> Create or join. Guild leaders can invite/remove, disband.</li>
+          <li><b>Guild Chat:</b> All members can chat. All guild members see each others’ <b>profile_name</b>.</li>
+          <li><b>Guild Score:</b> Total of all members’ house level.</li>
         </ul>
-        <p className="mb-2">If you create a guild, you become the Guild Leader. Leaders can invite friends and also have the ability to disband the guild. (Disbanding will remove all members and delete the guild.)</p>
-        <p className="mb-2">If you're a guild member (not the leader), you can leave the guild at any time. The guild will continue on without you.</p>
-        <p className="mb-2"><i>Note:</i> Guild membership doesn't directly boost earnings, but it's great for socializing. Future events or competitions might involve guilds, so stay tuned!</p>
+        <div className="bg-yellow-900/70 border border-yellow-500/60 rounded-lg p-3 my-3 text-yellow-200 font-semibold shadow-inner">
+          <i className="fas fa-exclamation-triangle mr-2" />
+          <span>
+            <b>Privacy Warning:</b> Your <u>profile_name</u> is visible to guild members in chat and guild lists.
+            Do <b>not</b> use your real name or any private info here.
+          </span>
+        </div>
+        <p>Guild leaders can disband any time (removes all members). Leaving a guild does NOT erase progress.</p>
+        <p className="text-gray-300 text-xs">Guild features may expand in the future. Your profile icon and name are visible in chats.</p>
       </>
     ),
     last_updated: "30/07/2025"
@@ -248,18 +256,18 @@ const helpSections = [
     icon: "fas fa-trophy",
     content: (
       <>
-        <p className="mb-3">Compete globally on the <b>Leaderboards</b>! There are rankings for who has the most Renown Tokens and who has earned the most coins. Strive for the top to show off your tapping prowess.</p>
+        <p className="mb-3">Climb the global <b>Leaderboards</b>:</p>
         <ul className="list-disc pl-5 mb-3 space-y-2">
-          <li>The <b>Renown Leaderboard</b> lists players with the highest total Renown (all tokens earned).</li>
-          <li>The <b>Coins Leaderboard</b> lists players who have accumulated the most coins in total.</li>
+          <li>Renown: highest tokens</li>
+          <li>Coins: highest earned</li>
         </ul>
-        <p className="mb-3">In your <b>Profile</b>, you can manage personal settings:</p>
+        <p className="mb-3">In <b>Profile</b>:</p>
         <ul className="list-disc pl-5 mb-3 space-y-2">
-          <li><b>Display Name:</b> The name shown to others (on leaderboards, to friends, etc.). You can change it any time.</li>
-          <li><b>PIN:</b> A 4-digit code to secure your account. You'll need your PIN to log in, so keep it safe! You can change your PIN here if needed.</li>
-          <li><b>Hard Reset:</b> This will erase <u>all</u> your progress and start your account over from scratch. (Unlike a normal reset, a hard reset removes your Renown and everything else. Use with caution!)</li>
+          <li>Change display name (public)</li>
+          <li>Change PIN (for login)</li>
+          <li><b>Hard Reset:</b> wipes ALL progress (including Renown!). Be careful.</li>
         </ul>
-        <p><i>Reminder:</i> Keep your PIN in a safe place. If you log out, you’ll need that PIN to log back in to your account.</p>
+        <p className="text-yellow-300">Keep your PIN safe. You’ll need it to log in.</p>
       </>
     ),
     last_updated: "30/07/2025"
@@ -270,16 +278,13 @@ const helpSections = [
     icon: "fas fa-crosshairs",
     content: (
       <>
-        <p className="mb-3"><b>Battle Mode</b> is a competitive mode where you face off against another player (or an AI) to see who can collect more coins in a short time!</p>
+        <p className="mb-3"><b>Battle Mode</b>: Compete vs. friends or AI for the most coins in 3 min.</p>
         <ul className="list-disc pl-5 mb-3 space-y-2">
-          <li>Each battle lasts <b>3 minutes</b>. Tap as fast as possible and buy upgrades wisely during the match.</li>
-          <li>The player with the most coins when time is up wins. (Coins you spend on upgrades during the battle <i>don’t</i> count toward your final score, so balance saving vs. upgrading!)</li>
-          <li><b>Rewards:</b> Win a battle to earn <b>+10 Renown Tokens</b>. If it’s a tie, both players get 5 tokens. Even if you lose, you earn 3 tokens – you always get something.</li>
-          <li>You can play with a <b>friend</b> by creating a room (you’ll get a code to share) or joining your friend’s room with their code. Or battle against an <b>AI opponent</b> (choose easy/medium/hard difficulty).</li>
-          <li>Renown Tokens earned in Battle Mode are added to your total and can be used in the main game. (Your Renown and progress carry over between Battle mode and normal play.)</li>
+          <li>Win: +10 Renown, Tie: +5, Lose: +3</li>
+          <li>Upgrade mid-battle, but spent coins don’t count for final score</li>
+          <li>Play via room code (friends) or choose AI difficulty</li>
         </ul>
-        <p className="mb-2">To start a battle, tap the <b>Battle Mode (crosshairs)</b> button from the main menu. Choose to create or join a match, or select an AI to fight.</p>
-        <p className="mb-2"><i>Note:</i> Battle Mode is a new feature – expect updates and improvements. It’s a fun way to earn extra Renown and test your tapping skills against others. Good luck!</p>
+        <p className="text-gray-300 text-xs">Your Renown carries over between all modes. All progress is synced.</p>
       </>
     ),
     last_updated: "30/07/2025"
@@ -291,16 +296,15 @@ const helpSections = [
     content: (
       <>
         <ul className="list-disc pl-5 mb-3 space-y-2">
-          <li><b>Boosts stack multiplicatively:</b> Temporary boosts (from quests, daily bonuses, house, etc.) multiply together, leading to huge bonuses when combined.</li>
-          <li><b>Tap streaks on mobile:</b> On phones/tablets, you need fewer rapid taps to trigger the tap-speed streak bonus (easier on a touchscreen than a mouse).</li>
-          <li><b>Mind the weather:</b> Weather affects your performance – for example, if it's raining (earnings down), it might be smart to wait on big spending until skies clear.</li>
-          <li><b>Plan resets:</b> Try to reset (prestige) only when you can gain multiple Renown Tokens in one go for a bigger long-term boost.</li>
-          <li><b>Autosave:</b> The game saves progress frequently. You can also manually save via the Profile if you want extra assurance before closing the game.</li>
-          <li><b>Support & feedback:</b> Use the in-game feedback option to get help or suggest ideas – the developer actively listens to the community!</li>
-          <li><b>Offline cap:</b> Offline earnings stop accumulating after 3 hours, so check back in periodically to maximize gains.</li>
-          <li><b>Cosmetics:</b> Keep an eye on the Shop for new limited-time themes, house skins, and profile icons. They don't boost gameplay, but they let you personalize your experience.</li>
+          <li>Boosts stack (combine daily, quest, house, weather for big multipliers)</li>
+          <li>Mobile tap streaks: faster/easier on phone/tablet</li>
+          <li>Weather can impact your strategy—plan big upgrades around “good” weather</li>
+          <li>Reset for multiple Renown at once (not just one at a time)</li>
+          <li>Autosave runs often; manual save in Profile if needed</li>
+          <li>Offline progress caps at 3h—check in to maximize</li>
+          <li>Cosmetics in the shop change frequently</li>
         </ul>
-        <p className="mb-2">Enjoy Tap Tap Two and happy tapping! 🎉 If you're ever unsure about something, this Help Guide has the answers.</p>
+        <p className="mb-2">Need more help? Use the in-game feedback or ask on the Discord server.</p>
       </>
     ),
     last_updated: "30/07/2025"
@@ -310,50 +314,75 @@ const helpSections = [
 function HelpGuide() {
   const [activeId, setActiveId] = useState(helpSections[0].id);
 
-  // Scroll to top whenever a new section is selected (improves experience on mobile)
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [activeId]);
-
+  useEffect(() => { window.scrollTo(0, 0); }, [activeId]);
   const activeSection = helpSections.find(sec => sec.id === activeId);
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${seasonBackgrounds[currentSeason]} p-4`}>
-      <div className="max-w-4xl mx-auto bg-white/30 backdrop-blur-lg rounded-2xl shadow-lg flex flex-col md:flex-row overflow-hidden">
-        {/* Sidebar Navigation */}
-        <nav className="md:w-1/3 p-4 md:p-6 bg-white/10 md:border-r md:border-white/50">
-          <ul className="space-y-2">
-            {helpSections.map(sec => (
-              <li key={sec.id}>
-                <button
-                  onClick={() => setActiveId(sec.id)}
-                  className={`w-full text-left px-3 py-2 rounded-lg flex items-center transition-colors duration-200 ${
-                    activeId === sec.id 
-                      ? "bg-white/80 text-gray-800 font-semibold" 
-                      : "text-gray-800/70 hover:bg-white/20"
-                  }`}
-                >
-                  <i className={`${sec.icon} mr-2`}></i> {sec.title}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        {/* Active Section Content */}
-        <div className="md:w-2/3 p-4 md:p-6 text-gray-800">
-          <h2 className="text-2xl font-bold text-purple-800 mb-4">{activeSection.title}</h2>
-          <div className="text-[1.05rem] leading-relaxed">
-            {activeSection.content}
-          </div>
-          <div className="text-right text-sm text-gray-600 mt-4">
-            Last Updated: {activeSection.last_updated}
+    <div className={`min-h-screen w-full bg-gradient-to-br ${seasonBackgrounds[currentSeason]} animate-gradient-x relative`}>
+      {/* Blurred background lights */}
+      <div className="pointer-events-none fixed inset-0 z-0">
+        <div className="absolute left-1/4 top-12 w-64 h-64 bg-pink-300 rounded-full opacity-20 blur-3xl" />
+        <div className="absolute right-8 bottom-12 w-72 h-72 bg-purple-400 rounded-full opacity-15 blur-2xl" />
+        <div className="absolute left-4 bottom-24 w-36 h-36 bg-blue-200 rounded-full opacity-20 blur-2xl" />
+      </div>
+      {/* Main container */}
+      <div className="relative z-10 max-w-4xl mx-auto px-2 pb-8 pt-8 flex flex-col items-center">
+        {/* Title */}
+        <h1 className="text-[2.3rem] md:text-4xl font-bold mb-2 text-white drop-shadow-lg tracking-tight" style={{fontFamily: "Crimson Text, serif"}}>Help Board</h1>
+        {/* Return Button */}
+        <button
+          className="mb-4 px-6 py-2 rounded-xl bg-white/40 text-purple-900 font-semibold shadow-md border border-white/30 hover:bg-white/70 transition"
+          onClick={() => window.location.href = "/"}
+        >
+          ← Return to Tap Tap: Two
+        </button>
+        {/* Card */}
+        <div className="flex flex-col md:flex-row w-full gap-4 md:gap-8 bg-white/20 rounded-3xl shadow-2xl backdrop-blur-xl border border-white/40 px-1 pt-2 pb-4 md:p-6">
+          {/* Sidebar */}
+          <nav className="md:w-1/3 mb-2 md:mb-0 flex flex-row md:flex-col overflow-x-auto gap-2 md:gap-2 p-2 md:p-0">
+            <ul className="w-full">
+              {helpSections.map(sec => (
+                <li key={sec.id} className="mb-1">
+                  <button
+                    onClick={() => setActiveId(sec.id)}
+                    className={`w-full flex items-center px-3 py-2 rounded-xl font-semibold transition-colors duration-200 ${
+                      activeId === sec.id
+                        ? "bg-white/80 text-purple-900 shadow"
+                        : "text-white/80 hover:bg-white/30"
+                    }`}
+                  >
+                    <i className={`${sec.icon} mr-2 opacity-90`} /> {sec.title}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          {/* Content */}
+          <div className="flex-1 min-w-0 px-2 py-1">
+            <h2 className="text-xl md:text-2xl font-bold text-white mb-3 tracking-tight drop-shadow">{activeSection.title}</h2>
+            <div className="text-base md:text-lg text-white/90" style={{lineHeight: "1.7"}}>
+              {activeSection.content}
+            </div>
+            <div className="text-right text-xs text-white/50 mt-2">
+              Last Updated: {activeSection.last_updated}
+            </div>
           </div>
         </div>
+        {/* AdBanner at bottom */}
+        <div className="mt-8 w-full max-w-3xl">
+          <AdBanner />
+        </div>
       </div>
-      {/* Ad banner at bottom */}
-      <div className="mt-6 text-center">
-        <AdBanner />
-      </div>
+      <style>{`
+        .animate-gradient-x {
+          background-size: 300% 300%;
+          animation: gradient-x 25s ease-in-out infinite;
+        }
+        @keyframes gradient-x {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+      `}</style>
     </div>
   );
 }
