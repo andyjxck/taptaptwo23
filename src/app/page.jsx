@@ -6174,7 +6174,7 @@ const renderLeaderboard = () => (
   >
     <i className="fas fa-bars text-2xl text-[#2d3748]"></i>
   </button>
-
+</div> 
 {sidebarOpen && (
   <>
     {/* Overlay backdrop */}
