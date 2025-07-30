@@ -2,15 +2,42 @@ import { supabase } from "@/utilities/supabaseClient";
 import { NextResponse } from "next/server";
 
 // ---------- HELPERS ----------
-function safe(val) { return (typeof val === "number" && !isNaN(val) ? val : 0); }
-function getBossHP(level, base = 250, scale = 1.2) { return Math.floor(base * Math.pow(scale, (level - 1))); }
-function getCoopBossHP(totalTapPower, base = 250) { return base * (totalTapPower || 1); }
-function getCoinsPerBoss(level) { return Math.floor(500 * Math.pow(1.15, level - 1)); }
-function getCoopCoinsPerBoss(level) { return Math.floor(10 * Math.pow(1.15, level - 1)); }
+function safe(val) {
+  return typeof val === "number" && !isNaN(val) ? val : 0;
+}
+
+function getBossHP(level, base = 250, scale = 1.2) {
+  return Math.floor(base * Math.pow(scale, level - 1));
+}
+
+function getCoopBossHP(totalTapPower, base = 250) {
+  return base * (totalTapPower || 1);
+}
+
+function getCoinsPerBoss(level) {
+  return Math.floor(500 * Math.pow(1.15, level - 1));
+}
+
+function getCoopCoinsPerBoss(level) {
+  return Math.floor(10 * Math.pow(1.15, level - 1));
+}
+
 function getBossEmoji(level) {
-  const emojis = ["👾", "🐲", "🦖", "🐙", "👻", "🤖", "🦈", "🕷️", "🐍", "🦅"];
+  const emojis = [
+    "👾",
+    "🐲",
+    "🦖",
+    "🐙",
+    "👻",
+    "🤖",
+    "🦈",
+    "🕷️",
+    "🐍",
+    "🦅",
+  ];
   return emojis[(level - 1) % emojis.length];
 }
+
 function getNextWeeklyReset() {
   const now = new Date();
   const daysUntilSunday = 7 - now.getDay();
@@ -19,19 +46,31 @@ function getNextWeeklyReset() {
   next.setHours(0, 0, 0, 0);
   return next.toISOString();
 }
+
 function generateRoomCode() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let out = "";
-  for (let i = 0; i < 6; i++) out += chars.charAt(Math.floor(Math.random() * chars.length));
+  for (let i = 0; i < 6; i++) {
+    out += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
   return out;
 }
+
 async function getPlayerTapPower(userId) {
-  const { data } = await supabase.from("game_saves").select("tap_power").eq("user_id", userId).single();
+  const { data } = await supabase
+    .from("game_saves")
+    .select("tap_power")
+    .eq("user_id", userId)
+    .single();
   return safe(data?.tap_power) || 1;
 }
+
 async function getPlayersTotalTapPower(userIds) {
   if (!Array.isArray(userIds) || userIds.length === 0) return 1;
-  const { data } = await supabase.from("game_saves").select("tap_power").in("user_id", userIds);
+  const { data } = await supabase
+    .from("game_saves")
+    .select("tap_power")
+    .in("user_id", userIds);
   if (!data) return 1;
   return data.reduce((sum, row) => sum + safe(row.tap_power), 0);
 }
@@ -45,32 +84,83 @@ export async function GET(request) {
 
   try {
     if (action === "profile") {
-      if (!userId) return NextResponse.json({ error: "userId required" }, { status: 400 });
-      let { data: gameSave } = await supabase.from("game_saves").select("*").eq("user_id", userId).single();
+      if (!userId)
+        return NextResponse.json({ error: "userId required" }, { status: 400 });
+
+      let { data: gameSave } = await supabase
+        .from("game_saves")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
+
       if (!gameSave) {
-        const { data } = await supabase.from("game_saves").insert([{
-          user_id: userId, profile_name: "Fire Warrior", profile_icon: "🔥",
-          tap_power_upgrades: 1, auto_tapper_upgrades: 0, crit_chance_upgrades: 0, tap_speed_bonus_upgrades: 0,
-          tap_power: 1, auto_tapper: 0, crit_chance: 0, tap_speed_bonus: 0, coins: 0,
-        }]).select().single();
+        const { data } = await supabase
+          .from("game_saves")
+          .insert([
+            {
+              user_id: userId,
+              profile_name: "Fire Warrior",
+              profile_icon: "🔥",
+              tap_power_upgrades: 1,
+              auto_tapper_upgrades: 0,
+              crit_chance_upgrades: 0,
+              tap_speed_bonus_upgrades: 0,
+              tap_power: 1,
+              auto_tapper: 0,
+              crit_chance: 0,
+              tap_speed_bonus: 0,
+              coins: 0,
+            },
+          ])
+          .select()
+          .single();
         gameSave = data;
       }
-      let { data: bossProgress } = await supabase.from("boss_progress").select("*").eq("user_id", userId).single();
+
+      let { data: bossProgress } = await supabase
+        .from("boss_progress")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
+
       if (!bossProgress) {
         const tapPower = safe(gameSave.tap_power) || 1;
         const bossHp = 250 * tapPower;
-        const { data } = await supabase.from("boss_progress").insert([{
-          user_id: userId, current_level: 1, boss_hp: bossHp, boss_max_hp: bossHp, boss_emoji: "🔥",
-          next_reset: getNextWeeklyReset(), total_coins: 0, weekly_best_level: 1, total_level: 1,
-        }]).select().single();
+        const { data } = await supabase
+          .from("boss_progress")
+          .insert([
+            {
+              user_id: userId,
+              current_level: 1,
+              boss_hp: bossHp,
+              boss_max_hp: bossHp,
+              boss_emoji: "🔥",
+              next_reset: getNextWeeklyReset(),
+              total_coins: 0,
+              weekly_best_level: 1,
+              total_level: 1,
+            },
+          ])
+          .select()
+          .single();
         bossProgress = data;
       }
-      const upgradeLevel = safe(gameSave.tap_power_upgrades) + safe(gameSave.auto_tapper_upgrades) +
-        safe(gameSave.crit_chance_upgrades) + safe(gameSave.tap_speed_bonus_upgrades);
+
+      const upgradeLevel =
+        safe(gameSave.tap_power_upgrades) +
+        safe(gameSave.auto_tapper_upgrades) +
+        safe(gameSave.crit_chance_upgrades) +
+        safe(gameSave.tap_speed_bonus_upgrades);
+
       const totalLevel = safe(bossProgress.current_level) + upgradeLevel;
+
       if (bossProgress.total_level !== totalLevel) {
-        await supabase.from("boss_progress").update({ total_level: totalLevel }).eq("user_id", userId);
+        await supabase
+          .from("boss_progress")
+          .update({ total_level: totalLevel })
+          .eq("user_id", userId);
       }
+
       return NextResponse.json({
         profile: {
           user_id: gameSave.user_id,
@@ -89,15 +179,37 @@ export async function GET(request) {
     }
 
     if (action === "upgrades") {
-      if (!userId) return NextResponse.json({ error: 'User ID required' }, { status: 400 });
-      let { data: gameSave } = await supabase.from("game_saves").select("*").eq("user_id", userId).single();
+      if (!userId)
+        return NextResponse.json({ error: "User ID required" }, { status: 400 });
+
+      let { data: gameSave } = await supabase
+        .from("game_saves")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
+
       if (!gameSave) {
-        const { data } = await supabase.from("game_saves").insert([{
-          user_id: userId, tap_power_upgrades: 1, auto_tapper_upgrades: 0, crit_chance_upgrades: 0, tap_speed_bonus_upgrades: 0,
-          tap_power: 1, auto_tapper: 0, crit_chance: 0, tap_speed_bonus: 0, coins: 0,
-        }]).select().single();
+        const { data } = await supabase
+          .from("game_saves")
+          .insert([
+            {
+              user_id: userId,
+              tap_power_upgrades: 1,
+              auto_tapper_upgrades: 0,
+              crit_chance_upgrades: 0,
+              tap_speed_bonus_upgrades: 0,
+              tap_power: 1,
+              auto_tapper: 0,
+              crit_chance: 0,
+              tap_speed_bonus: 0,
+              coins: 0,
+            },
+          ])
+          .select()
+          .single();
         gameSave = data;
       }
+
       return NextResponse.json({
         upgrades: {
           tap_power_upgrades: safe(gameSave.tap_power_upgrades),
@@ -115,23 +227,47 @@ export async function GET(request) {
     }
 
     if (action === "progress") {
-      if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
-      let { data: progress } = await supabase.from("boss_progress").select("*").eq("user_id", userId).single();
+      if (!userId)
+        return NextResponse.json({ error: "User ID required" }, { status: 400 });
+
+      let { data: progress } = await supabase
+        .from("boss_progress")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
+
       if (!progress) {
         const tapPower = await getPlayerTapPower(userId);
         const bossHp = 250 * (tapPower || 1);
-        const { data } = await supabase.from("boss_progress").insert([{
-          user_id: userId, current_level: 1, boss_hp: bossHp, boss_max_hp: bossHp,
-          total_coins: 0, weekly_best_level: 1, last_reset_date: new Date().toISOString(),
-        }]).select().single();
+        const { data } = await supabase
+          .from("boss_progress")
+          .insert([
+            {
+              user_id: userId,
+              current_level: 1,
+              boss_hp: bossHp,
+              boss_max_hp: bossHp,
+              total_coins: 0,
+              weekly_best_level: 1,
+              last_reset_date: new Date().toISOString(),
+            },
+          ])
+          .select()
+          .single();
         progress = data;
       }
+
       if (progress.boss_hp === null) {
         const tapPower = await getPlayerTapPower(userId);
         const bossHp = 250 * (tapPower || 1);
-        await supabase.from("boss_progress").update({ boss_hp: bossHp, boss_max_hp: bossHp }).eq("user_id", userId);
-        progress.boss_hp = bossHp; progress.boss_max_hp = bossHp;
+        await supabase
+          .from("boss_progress")
+          .update({ boss_hp: bossHp, boss_max_hp: bossHp })
+          .eq("user_id", userId);
+        progress.boss_hp = bossHp;
+        progress.boss_max_hp = bossHp;
       }
+
       return NextResponse.json({
         success: true,
         current_level: progress.current_level,
@@ -147,272 +283,372 @@ export async function GET(request) {
     }
 
     if (action === "coop_session") {
-      if (!roomCode) return NextResponse.json({ error: 'Room code is required' }, { status: 400 });
-      if (!userId) return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
-      const { data: sessions } = await supabase.from("boss_coop_sessions").select("*")
-        .eq("room_code", roomCode.toUpperCase()).eq("is_active", true);
-      if (!sessions || sessions.length === 0) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      if (!roomCode)
+        return NextResponse.json({ error: "Room code is required" }, { status: 400 });
+      if (!userId)
+        return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+
+      const { data: sessions } = await supabase
+        .from("boss_coop_sessions")
+        .select("*")
+        .eq("room_code", roomCode.toUpperCase())
+        .eq("is_active", true);
+
+      if (!sessions || sessions.length === 0)
+        return NextResponse.json({ error: "Session not found" }, { status: 404 });
+
       const sessionData = sessions[0];
       const players = Array.isArray(sessionData.players) ? sessionData.players : [];
-      if (!players.includes(userId)) return NextResponse.json({ error: 'User not in this session' }, { status: 403 });
+
+      if (!players.includes(userId))
+        return NextResponse.json({ error: "User not in this session" }, { status: 403 });
+
       return NextResponse.json({
         success: true,
         session: {
           ...sessionData,
           boss_emoji: getBossEmoji(sessionData.boss_level),
-          coins_per_boss: getCoopCoinsPerBoss(sessionData.boss_level)
-        }
+          coins_per_boss: getCoopCoinsPerBoss(sessionData.boss_level),
+        },
       });
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
-    return NextResponse.json({ error: error.message || "Unknown error" }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "Unknown error" },
+      { status: 500 }
+    );
   }
 }
 
 // ---------- POST HANDLER ----------
 export async function POST(request) {
   let body;
-  try { body = await request.json(); } catch { body = {}; }
+  try {
+    body = await request.json();
+  } catch {
+    body = {};
+  }
+
   const action = body.action;
 
- if (action === "solo_tap") {
-  const { userId, damage } = body;
-  if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
-  if (typeof damage !== "number" || damage <= 0) return NextResponse.json({ error: "Valid damage required" }, { status: 400 });
+  try {
+    if (action === "solo_tap") {
+      const { userId, damage } = body;
+      if (!userId)
+        return NextResponse.json({ error: "User ID required" }, { status: 400 });
+      if (typeof damage !== "number" || damage <= 0)
+        return NextResponse.json({ error: "Valid damage required" }, { status: 400 });
 
-  // Fetch current boss progress
-  let { data: progress } = await supabase.from("boss_progress").select("*").eq("user_id", userId).single();
-  if (!progress) return NextResponse.json({ error: "User progress not found" }, { status: 404 });
+      let { data: progress } = await supabase
+        .from("boss_progress")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
 
-  if (safe(progress.boss_hp) <= 0) {
-    return NextResponse.json({
-      success: false,
-      error: "Boss already defeated. Please reload.",
-      current_boss_hp: progress.boss_hp,
-      needs_reload: true,
-    }, { status: 409 });
-  }
+      if (!progress)
+        return NextResponse.json(
+          { error: "User progress not found" },
+          { status: 404 }
+        );
 
-  const currentLevel = progress.current_level;
-  const bossMaxHp = safe(progress.boss_max_hp) || getBossHP(currentLevel);
-  let currentBossHp = safe(progress.boss_hp) ?? bossMaxHp;
+      if (safe(progress.boss_hp) <= 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Boss already defeated. Please reload.",
+            current_boss_hp: progress.boss_hp,
+            needs_reload: true,
+          },
+          { status: 409 }
+        );
+      }
 
-  // Subtract damage
-  let newBossHp = Math.max(0, currentBossHp - damage);
-  const isBossDefeated = newBossHp === 0;
+      const currentLevel = progress.current_level;
+      const bossMaxHp = safe(progress.boss_max_hp) || getBossHP(currentLevel);
+      let currentBossHp = safe(progress.boss_hp) ?? bossMaxHp;
 
-  if (!isBossDefeated) {
-    await supabase.from("boss_progress").update({ boss_hp: newBossHp }).eq("user_id", userId);
-    return NextResponse.json({
-      success: true,
-      damage_dealt: damage,
-      boss_defeated: false,
-      current_boss_hp: newBossHp,
-      boss_max_hp: bossMaxHp,
-    });
-  }
+      let newBossHp = Math.max(0, currentBossHp - damage);
+      const isBossDefeated = newBossHp === 0;
 
-  // Boss defeated: increase coins by 50% of current coins
-  const { data: gameSave } = await supabase.from("game_saves").select("coins").eq("user_id", userId).single();
-  const currentCoins = safe(gameSave?.coins);
-  const coinsEarned = Math.floor(currentCoins * 0.5);
-  const newCoins = currentCoins + coinsEarned;
+      if (!isBossDefeated) {
+        await supabase
+          .from("boss_progress")
+          .update({ boss_hp: newBossHp })
+          .eq("user_id", userId);
+        return NextResponse.json({
+          success: true,
+          damage_dealt: damage,
+          boss_defeated: false,
+          current_boss_hp: newBossHp,
+          boss_max_hp: bossMaxHp,
+        });
+      }
 
-  const newLevel = currentLevel + 1;
-  const newWeeklyBest = Math.max(safe(progress.weekly_best_level), newLevel);
-  const tapPower = await getPlayerTapPower(userId);
-  const nextBossHp = 250 * (tapPower || 1);
-  const nextEmoji = getBossEmoji(newLevel);
+      const { data: gameSave } = await supabase
+        .from("game_saves")
+        .select("coins")
+        .eq("user_id", userId)
+        .single();
 
-  // Update boss progress
-  await supabase.from("boss_progress").update({
-    current_level: newLevel,
-    boss_hp: nextBossHp,
-    boss_max_hp: nextBossHp,
-    boss_emoji: nextEmoji,
-    weekly_best_level: newWeeklyBest,
-  }).eq("user_id", userId);
+      const currentCoins = safe(gameSave?.coins);
+      const coinsEarned = Math.floor(currentCoins * 0.5);
+      const newCoins = currentCoins + coinsEarned;
 
-  // Update player's coins
-  await supabase.from("game_saves").update({
-    coins: newCoins,
-  }).eq("user_id", userId);
+      const newLevel = currentLevel + 1;
+      const newWeeklyBest = Math.max(safe(progress.weekly_best_level), newLevel);
+      const tapPower = await getPlayerTapPower(userId);
+      const nextBossHp = 250 * (tapPower || 1);
+      const nextEmoji = getBossEmoji(newLevel);
 
-  return NextResponse.json({
-    success: true,
-    boss_defeated: true,
-    coins_earned: coinsEarned,
-    total_coins: newCoins,
-    current_boss_hp: nextBossHp,
-    boss_max_hp: nextBossHp,
-    boss_emoji: nextEmoji,
-    weekly_best: newWeeklyBest,
-    damage_dealt: damage,
-  });
-}
+      await supabase
+        .from("boss_progress")
+        .update({
+          current_level: newLevel,
+          boss_hp: nextBossHp,
+          boss_max_hp: nextBossHp,
+          boss_emoji: nextEmoji,
+          weekly_best_level: newWeeklyBest,
+        })
+        .eq("user_id", userId);
 
+      await supabase
+        .from("game_saves")
+        .update({ coins: newCoins })
+        .eq("user_id", userId);
+
+      return NextResponse.json({
+        success: true,
+        boss_defeated: true,
+        coins_earned: coinsEarned,
+        total_coins: newCoins,
+        current_boss_hp: nextBossHp,
+        boss_max_hp: nextBossHp,
+        boss_emoji: nextEmoji,
+        weekly_best: newWeeklyBest,
+        damage_dealt: damage,
+      });
+    }
 
     if (action === "coop_create") {
       const { userId } = body;
-      if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
+      if (!userId)
+        return NextResponse.json({ error: "User ID required" }, { status: 400 });
+
       let roomCode;
       while (true) {
         roomCode = generateRoomCode();
-        const { data: exists } = await supabase.from("boss_coop_sessions").select("room_code").eq("room_code", roomCode).eq("is_active", true);
+        const { data: exists } = await supabase
+          .from("boss_coop_sessions")
+          .select("room_code")
+          .eq("room_code", roomCode)
+          .eq("is_active", true);
         if (!exists || exists.length === 0) break;
       }
+
       const level = 1;
       const playersArr = [userId];
       const totalTapPower = await getPlayersTotalTapPower(playersArr);
       const bossHp = getCoopBossHP(totalTapPower);
-      const { data: session, error: insertErr } = await supabase.from("boss_coop_sessions").insert([{
-        room_code: roomCode,
-        boss_hp: bossHp, boss_max_hp: bossHp, boss_level: level,
-        players: playersArr, is_active: true, total_coins: 0,
-      }]).select().single();
+
+      const { data: session, error: insertErr } = await supabase
+        .from("boss_coop_sessions")
+        .insert([
+          {
+            room_code: roomCode,
+            boss_hp: bossHp,
+            boss_max_hp: bossHp,
+            boss_level: level,
+            players: playersArr,
+            is_active: true,
+            total_coins: 0,
+          },
+        ])
+        .select()
+        .single();
+
       if (insertErr) throw insertErr;
+
       return NextResponse.json({
         success: true,
         session: {
           ...session,
           boss_emoji: getBossEmoji(level),
           coins_per_boss: getCoopCoinsPerBoss(level),
-        }
+        },
       });
     }
 
     if (action === "coop_join") {
       const { roomCode, userId } = body;
-      if (!roomCode) return NextResponse.json({ error: 'Room code is required' }, { status: 400 });
-      if (!userId) return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
-      const { data: sessions } = await supabase.from("boss_coop_sessions").select("*")
-        .eq("room_code", roomCode.toUpperCase()).eq("is_active", true);
-      if (!sessions || sessions.length === 0) return NextResponse.json({ error: 'Room not found or inactive' }, { status: 404 });
+      if (!roomCode)
+        return NextResponse.json({ error: "Room code is required" }, { status: 400 });
+      if (!userId)
+        return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+
+      const { data: sessions } = await supabase
+        .from("boss_coop_sessions")
+        .select("*")
+        .eq("room_code", roomCode.toUpperCase())
+        .eq("is_active", true);
+
+      if (!sessions || sessions.length === 0)
+        return NextResponse.json({ error: "Room not found or inactive" }, { status: 404 });
+
       const session = sessions[0];
       const currentPlayers = Array.isArray(session.players) ? session.players : [];
+
       if (currentPlayers.length >= 5 && !currentPlayers.includes(userId))
-        return NextResponse.json({ error: 'Room is full' }, { status: 400 });
+        return NextResponse.json({ error: "Room is full" }, { status: 400 });
+
       if (currentPlayers.includes(userId)) {
         return NextResponse.json({
           success: true,
           session: {
             ...session,
             boss_emoji: getBossEmoji(session.boss_level),
-            coins_per_boss: getCoopCoinsPerBoss(session.boss_level)
-          }
+            coins_per_boss: getCoopCoinsPerBoss(session.boss_level),
+          },
         });
       }
+
       const newPlayers = [...currentPlayers, userId];
-      const { data: updatedSessionArr } = await supabase.from("boss_coop_sessions").update({ players: newPlayers }).eq("room_code", session.room_code).select();
+      const { data: updatedSessionArr } = await supabase
+        .from("boss_coop_sessions")
+        .update({ players: newPlayers })
+        .eq("room_code", session.room_code)
+        .select();
+
       const updatedSession = updatedSessionArr[0];
+
       return NextResponse.json({
         success: true,
         session: {
           ...updatedSession,
           boss_emoji: getBossEmoji(updatedSession.boss_level),
-          coins_per_boss: getCoopCoinsPerBoss(updatedSession.boss_level)
-        }
+          coins_per_boss: getCoopCoinsPerBoss(updatedSession.boss_level),
+        },
       });
     }
 
-  if (action === "coop_tap") {
-  const { roomCode, userId, damage } = body;
-  if (!roomCode) return NextResponse.json({ error: 'Room code is required' }, { status: 400 });
-  if (!userId) return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
-  if (typeof damage !== "number" || damage <= 0) return NextResponse.json({ error: "Valid damage required" }, { status: 400 });
+    if (action === "coop_tap") {
+      const { roomCode, userId, damage } = body;
+      if (!roomCode)
+        return NextResponse.json({ error: "Room code is required" }, { status: 400 });
+      if (!userId)
+        return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+      if (typeof damage !== "number" || damage <= 0)
+        return NextResponse.json({ error: "Valid damage required" }, { status: 400 });
 
-  const { data: sessions } = await supabase.from("boss_coop_sessions").select("*")
-    .eq("room_code", roomCode.toUpperCase()).eq("is_active", true);
+      const { data: sessions } = await supabase
+        .from("boss_coop_sessions")
+        .select("*")
+        .eq("room_code", roomCode.toUpperCase())
+        .eq("is_active", true);
 
-  if (!sessions || sessions.length === 0) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      if (!sessions || sessions.length === 0)
+        return NextResponse.json({ error: "Session not found" }, { status: 404 });
 
-  const sessionData = sessions[0];
-  const players = Array.isArray(sessionData.players) ? sessionData.players : [];
-  if (!players.includes(userId)) return NextResponse.json({ error: 'User not in this session' }, { status: 403 });
+      const sessionData = sessions[0];
+      const players = Array.isArray(sessionData.players) ? sessionData.players : [];
 
-  if (safe(sessionData.boss_hp) <= 0) {
-    return NextResponse.json({
-      success: false,
-      error: "Boss already defeated. Wait for server to spawn new boss.",
-      current_boss_hp: sessionData.boss_hp,
-      needs_reload: true,
-    }, { status: 409 });
-  }
+      if (!players.includes(userId))
+        return NextResponse.json({ error: "User not in this session" }, { status: 403 });
 
-  const newHp = Math.max(0, safe(sessionData.boss_hp) - damage);
-  const bossDefeated = newHp === 0;
-  let updatedSession;
-
-  if (!bossDefeated) {
-    // Just update boss HP normally
-    const { data: updateArr } = await supabase.from("boss_coop_sessions").update({ boss_hp: newHp })
-      .eq("room_code", sessionData.room_code).select();
-    updatedSession = updateArr[0];
-  } else {
-    // Boss defeated logic
-    const newLevel = safe(sessionData.boss_level) + 1;
-    const totalTapPower = await getPlayersTotalTapPower(players);
-    const newBossHp = getCoopBossHP(totalTapPower);
-
-    // Fetch coins for all players
-    const { data: playersCoinsData } = await supabase.from("game_saves").select("user_id, coins").in("user_id", players);
-    const totalCoinsAllPlayers = playersCoinsData?.reduce((sum, p) => sum + safe(p.coins), 0) || 0;
-
-    // Calculate total reward = 50% of total coins across all players
-    const totalRewardPool = Math.floor(totalCoinsAllPlayers * 0.5);
-
-    // Each player gets 20% of totalRewardPool (max 5 players assumed)
-    const perPlayerReward = Math.floor(totalRewardPool * 0.2);
-
-    // Update each player's coins concurrently
-    await Promise.all(playersCoinsData.map(p =>
-      supabase.from("game_saves").update({
-        coins: safe(p.coins) + perPlayerReward
-      }).eq("user_id", p.user_id)
-    ));
-
-    // Update session boss info and total_coins
-    const newTotalCoins = safe(sessionData.total_coins) + totalRewardPool;
-    const { data: updateArr } = await supabase.from("boss_coop_sessions").update({
-      boss_level: newLevel,
-      boss_hp: newBossHp,
-      boss_max_hp: newBossHp,
-      total_coins: newTotalCoins,
-    }).eq("room_code", sessionData.room_code).select();
-    updatedSession = updateArr[0];
-
-    return NextResponse.json({
-      success: true,
-      boss_defeated: true,
-      coins_earned: totalRewardPool,
-      reward_per_player: perPlayerReward,
-      session: {
-        ...updatedSession,
-        boss_emoji: getBossEmoji(updatedSession.boss_level),
-        coins_per_boss: getCoopCoinsPerBoss(updatedSession.boss_level)
+      if (safe(sessionData.boss_hp) <= 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Boss already defeated. Wait for server to spawn new boss.",
+            current_boss_hp: sessionData.boss_hp,
+            needs_reload: true,
+          },
+          { status: 409 }
+        );
       }
-    });
-  }
 
-  // Normal response if boss not defeated
-  return NextResponse.json({
-    success: true,
-    boss_defeated: false,
-    coins_earned: 0,
-    session: {
-      ...updatedSession,
-      boss_emoji: getBossEmoji(updatedSession.boss_level),
-      coins_per_boss: getCoopCoinsPerBoss(updatedSession.boss_level)
+      const newHp = Math.max(0, safe(sessionData.boss_hp) - damage);
+      const bossDefeated = newHp === 0;
+      let updatedSession;
+
+      if (!bossDefeated) {
+        const { data: updateArr } = await supabase
+          .from("boss_coop_sessions")
+          .update({ boss_hp: newHp })
+          .eq("room_code", sessionData.room_code)
+          .select();
+        updatedSession = updateArr[0];
+      } else {
+        const newLevel = safe(sessionData.boss_level) + 1;
+        const totalTapPower = await getPlayersTotalTapPower(players);
+        const newBossHp = getCoopBossHP(totalTapPower);
+
+        const { data: playersCoinsData } = await supabase
+          .from("game_saves")
+          .select("user_id, coins")
+          .in("user_id", players);
+
+        const totalCoinsAllPlayers =
+          playersCoinsData?.reduce((sum, p) => sum + safe(p.coins), 0) || 0;
+
+        const totalRewardPool = Math.floor(totalCoinsAllPlayers * 0.5);
+        const perPlayerReward = Math.floor(totalRewardPool * 0.2);
+
+        await Promise.all(
+          playersCoinsData.map((p) =>
+            supabase
+              .from("game_saves")
+              .update({ coins: safe(p.coins) + perPlayerReward })
+              .eq("user_id", p.user_id)
+          )
+        );
+
+        const newTotalCoins = safe(sessionData.total_coins) + totalRewardPool;
+
+        const { data: updateArr } = await supabase
+          .from("boss_coop_sessions")
+          .update({
+            boss_level: newLevel,
+            boss_hp: newBossHp,
+            boss_max_hp: newBossHp,
+            total_coins: newTotalCoins,
+          })
+          .eq("room_code", sessionData.room_code)
+          .select();
+
+        updatedSession = updateArr[0];
+
+        return NextResponse.json({
+          success: true,
+          boss_defeated: true,
+          coins_earned: totalRewardPool,
+          reward_per_player: perPlayerReward,
+          session: {
+            ...updatedSession,
+            boss_emoji: getBossEmoji(updatedSession.boss_level),
+            coins_per_boss: getCoopCoinsPerBoss(updatedSession.boss_level),
+          },
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        boss_defeated: false,
+        coins_earned: 0,
+        session: {
+          ...updatedSession,
+          boss_emoji: getBossEmoji(updatedSession.boss_level),
+          coins_per_boss: getCoopCoinsPerBoss(updatedSession.boss_level),
+        },
+      });
     }
-  });
-}
-
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
-    return NextResponse.json({ error: error.message || "Unknown error" }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "Unknown error" },
+      { status: 500 }
+    );
   }
 }
-
