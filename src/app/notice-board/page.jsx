@@ -13,21 +13,10 @@ const devLogs = [
   {
     id: "v2_1_guilds",
     date: "30/07/2025",
-    title: "🎉 Guilds, Bugfixes & Noticeboard Redesign!",
+    title: "🎉 The Guild Update",
     emoji: "✨",
     highlights: [
-      {
-        icon: "🐛",
-        label: "Bug Fixes",
-        text: [
-          "Fixed Offline Earnings so they show up again. Removed the 'offline earnings' pop-up for a smoother experience.",
-          "Fixed the AI in Battle Mode (still a work in progress, but it's smarter now!).",
-          "Fixed how the Renown Multiplier is calculated and displayed across the game.",
-          "Fixed some bugs with friends and guild features.",
-          "General bug fixes and UI polish."
-        ]
-      },
-      {
+       {
         icon: "🌟",
         label: "New Features & Improvements",
         text: [
@@ -38,6 +27,17 @@ const devLogs = [
           "Reminder: Battle Mode is LIVE! Try it out to earn extra Renown Tokens and test your tapping speed.",
           "We’re teasing something BIG: /boss mode is in the works! (No spoilers yet. Get your upgrades ready.)"
         ]
+      },
+      {
+        icon: "🐛",
+        label: "General Bug Fixes",
+        text: [
+          "Fixed Offline Earnings so they show up again. Removed the 'offline earnings' pop-up for a smoother experience.",
+          "Fixed the AI in Battle Mode (still a work in progress, but it's smarter now!).",
+          "Fixed how the Renown Multiplier is calculated and displayed across the game.",
+          "Fixed some bugs with friends and guild features.",
+          "General bug fixes and UI polish."
+        ]
       }
     ],
     notes: [
@@ -45,7 +45,6 @@ const devLogs = [
       "Thank you for playing Tap Tap: Two. Expect more soon! 🚀"
     ]
   },
-  // Example of a past dev log – add as many as you want!
   {
     id: "v2_0_battlemode",
     date: "16/07/2025",
@@ -87,8 +86,11 @@ function NoticeBoard() {
   useEffect(() => { window.scrollTo(0, 0); }, [activeId]);
   const activeLog = devLogs.find(log => log.id === activeId);
 
+  // Only show the personal message on the latest log
+  const showPersonalMsg = activeLog.id === devLogs[0].id;
+
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-[#d8b4fe] via-[#c084fc] to-[#a78bfa] animate-gradient-x relative">
+    <div className="min-h-screen w-full relative fade-gradient-bg">
       {/* Blurred background lights */}
       <div className="pointer-events-none fixed inset-0 z-0">
         <div className="absolute left-1/4 top-12 w-56 h-56 bg-pink-300 rounded-full opacity-20 blur-3xl" />
@@ -98,7 +100,7 @@ function NoticeBoard() {
       {/* Main container */}
       <div className="relative z-10 max-w-4xl mx-auto px-2 pb-8 pt-8 flex flex-col items-center">
         {/* Title */}
-        <h1 className="text-[2.3rem] md:text-4xl font-bold mb-2 text-white drop-shadow-lg tracking-tight" style={{fontFamily: "Crimson Text, serif"}}>Notice Board</h1>
+        <h1 className="text-[2.3rem] md:text-4xl font-bold mb-2 text-gray-900 drop-shadow-lg tracking-tight" style={{fontFamily: "Crimson Text, serif"}}>Notice Board</h1>
         <button
           className="mb-4 px-6 py-2 rounded-xl bg-white/40 text-purple-900 font-semibold shadow-md border border-white/30 hover:bg-white/70 transition"
           onClick={() => window.location.href = "/"}
@@ -117,7 +119,7 @@ function NoticeBoard() {
                     className={`w-full flex items-center px-3 py-2 rounded-xl font-semibold transition-colors duration-200 ${
                       activeId === log.id
                         ? "bg-white/80 text-purple-900 shadow"
-                        : "text-white/80 hover:bg-white/30"
+                        : "text-gray-700 hover:bg-white/30"
                     }`}
                   >
                     <span className="text-xl mr-2">{log.emoji}</span>
@@ -130,38 +132,45 @@ function NoticeBoard() {
           {/* Content */}
           <div className="flex-1 min-w-0 px-2 py-1">
             <GlassCard>
+              {/* Personal message at the top of the newest update */}
+              {showPersonalMsg && (
+                <div className="mb-4 text-gray-500 italic text-base">
+                  Hey guys. I'm working hard to make this whole site look a bit better. I've started with some of the back pages, and I'm so happy with how it's coming along.<br />
+                  <span className="font-semibold">Happy Tapping! Andy</span>
+                </div>
+              )}
               <div className="mb-3">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-2xl">{activeLog.emoji}</span>
                   <span className="text-lg md:text-xl font-bold text-purple-900 drop-shadow">{activeLog.title}</span>
                 </div>
-                <div className="text-sm text-white/60 mb-2">{activeLog.date}</div>
+                <div className="text-sm text-gray-500 mb-2">{activeLog.date}</div>
               </div>
               {activeLog.highlights.map(({ icon, label, text }) => (
                 <div key={label} className="mb-3">
-                  <div className="flex items-center gap-1 font-semibold text-white/80 mb-1">
+                  <div className="flex items-center gap-1 font-semibold text-gray-800 mb-1">
                     <span className="text-lg">{icon}</span>
                     <span>{label}</span>
                   </div>
                   <ul className="list-disc pl-7 space-y-1">
                     {text.map((t, i) => (
-                      <li key={i} className="text-white/95">{t}</li>
+                      <li key={i} className="text-gray-700">{t}</li>
                     ))}
                   </ul>
                 </div>
               ))}
               {activeLog.notes && (
-                <div className="mt-4 pt-2 border-t border-white/10 text-purple-100">
+                <div className="mt-4 pt-2 border-t border-white/10 text-purple-900">
                   {activeLog.notes.map((note, i) => (
                     <div key={i} className="mb-2 flex items-center">
                       <span className="mr-2">💡</span>
-                      <span>{note}</span>
+                      <span className="text-gray-700">{note}</span>
                     </div>
                   ))}
                 </div>
               )}
             </GlassCard>
-            <div className="text-right text-xs text-white/60 mt-2">Last Updated: {activeLog.date}</div>
+            <div className="text-right text-xs text-gray-500 mt-2">Last Updated: {activeLog.date}</div>
           </div>
         </div>
         {/* AdBanner at bottom */}
@@ -170,6 +179,39 @@ function NoticeBoard() {
         </div>
       </div>
       <style>{`
+        /* Pastel color cycling background, smooth fade */
+        .fade-gradient-bg {
+          position: relative;
+          min-height: 100vh;
+          width: 100%;
+          /* Default fallback */
+          background: linear-gradient(135deg, #d8b4fe, #c084fc, #a78bfa);
+          animation: pastel-cycle 40s ease-in-out infinite;
+          background-size: 400% 400%;
+        }
+        @keyframes pastel-cycle {
+          0% {
+            background: linear-gradient(135deg, #d8b4fe, #c084fc, #a78bfa);
+          }
+          16% {
+            background: linear-gradient(120deg, #b9fffc, #f7d1ba, #a1c4fd);
+          }
+          33% {
+            background: linear-gradient(120deg, #ffe0ac, #a8edea, #fcb69f);
+          }
+          50% {
+            background: linear-gradient(135deg, #fbc2eb, #a6c1ee, #fcb69f);
+          }
+          66% {
+            background: linear-gradient(120deg, #e0c3fc, #f7d1ba, #b6e0fe);
+          }
+          83% {
+            background: linear-gradient(120deg, #fbc2eb, #fdc7b7, #b6e0fe);
+          }
+          100% {
+            background: linear-gradient(135deg, #d8b4fe, #c084fc, #a78bfa);
+          }
+        }
         .animate-gradient-x {
           background-size: 300% 300%;
           animation: gradient-x 25s ease-in-out infinite;
