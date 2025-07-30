@@ -777,6 +777,7 @@ function handleCoopTap() {
     </div>
   )}
 </div>
+              </motion.div>
 
 
         {/* Upgrades Panel (view-only in boss mode) */}
