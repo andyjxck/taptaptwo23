@@ -1645,134 +1645,126 @@ const handleCreateGuild = async (e) => {
   
 const renderFriendsTab = () => {
   return (
-    <div className={`${glassStyle} bg-white/20 rounded-2xl p-5 ${buttonGlow} max-w-xl mx-auto`}>
+    <div className={`${glassStyle} bg-gradient-to-br from-white/40 via-purple-100/40 to-white/20 rounded-3xl p-6 ${buttonGlow} max-w-xl mx-auto shadow-2xl border border-white/20 backdrop-blur-xl`}>
       {/* Tabs Header */}
-      <div className="flex justify-center space-x-8 mb-6 border-b border-gray-300">
+      <div className="flex justify-center gap-7 mb-8">
         <button
           onClick={() => setActiveTab("friends")}
-          className={`pb-2 font-semibold text-lg ${
-            activeTab === "friends" ? "border-b-4 border-purple-700 text-purple-700" : "text-gray-500 hover:text-purple-700"
-          }`}
+          className={`
+            px-7 pb-2 font-bold text-lg rounded-t-2xl transition
+            ${activeTab === "friends"
+              ? "border-b-4 border-purple-500 text-purple-800 bg-white/70 shadow"
+              : "text-gray-500 hover:text-purple-700 hover:bg-white/40"}
+          `}
           aria-label="Friends Tab"
         >
           Friends
         </button>
-
         <button
           onClick={() => setActiveTab("guilds")}
-          className={`pb-2 font-semibold text-lg ${
-            activeTab === "guilds" ? "border-b-4 border-indigo-700 text-indigo-700" : "text-gray-500 hover:text-indigo-700"
-          }`}
+          className={`
+            px-7 pb-2 font-bold text-lg rounded-t-2xl transition
+            ${activeTab === "guilds"
+              ? "border-b-4 border-indigo-500 text-indigo-800 bg-white/70 shadow"
+              : "text-gray-500 hover:text-indigo-700 hover:bg-white/40"}
+          `}
           aria-label="Guilds Tab"
         >
           Guilds
         </button>
       </div>
 
-      {/* Content */}
+      {/* FRIENDS TAB */}
       {activeTab === "friends" && (
         <>
-          {/* Friends Tab Content */}
-
-          {/* Add Friend + Requests Header */}
-          <div className="flex justify-between items-center mb-4">
+          {/* Add/Search + Requests Header */}
+          <div className="flex items-center justify-between mb-5">
             <button
               onClick={() => setShowSearch((prev) => !prev)}
-              className="text-purple-700 hover:text-purple-900 text-xl"
+              className="text-purple-700 bg-white/60 hover:bg-purple-200 hover:text-purple-900 shadow px-3 py-1 rounded-xl transition"
               title="Add Friend"
             >
               <i className="fas fa-user-plus"></i>
             </button>
-
-            <h2 className="text-2xl font-crimson-text text-center text-[#2d3748]">
-              Friends
-            </h2>
-
+            <h2 className="text-2xl font-crimson-text text-[#3b2376] tracking-tight">Friends</h2>
             <button
               onClick={() => setShowRequests((prev) => !prev)}
-              className="text-yellow-600 hover:text-yellow-800 text-xl"
+              className="text-yellow-600 bg-white/60 hover:bg-yellow-200 hover:text-yellow-800 shadow px-3 py-1 rounded-xl transition"
               title="Friend Requests"
             >
               <i className="fas fa-exclamation-circle"></i>
             </button>
           </div>
 
-          {/* Disabled Chat Button */}
-          <div className="text-center mb-4">
+          {/* Chat Button (disabled/soon) */}
+          <div className="flex justify-center mb-4">
             <button
               disabled
-              className="cursor-not-allowed text-gray-400 bg-gray-200 px-4 py-2 rounded-full text-sm"
+              className="cursor-not-allowed text-gray-400 bg-gray-100/80 px-4 py-2 rounded-full text-sm shadow"
               title="Chat coming soon"
             >
               <i className="fas fa-comments-slash mr-2"></i> Chat (Coming Soon)
             </button>
           </div>
 
-          {/* Search Section */}
+          {/* Search Friend Section */}
           {showSearch && (
-            <div className="space-y-2 mb-6">
+            <div className="space-y-2 mb-7 bg-white/60 rounded-2xl border border-white/30 p-4 shadow-inner">
               <input
                 type="text"
                 placeholder="Search user ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 rounded-xl bg-white/40 border border-white/30 text-[#2d3748]"
+                className="w-full px-4 py-2 rounded-xl bg-white/80 border border-purple-200 text-[#2d3748] focus:ring-2 focus:ring-purple-400 transition"
               />
               <button
                 onClick={handleSearch}
-                className="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl"
+                className="w-full py-2 bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white rounded-xl font-bold shadow transition"
               >
                 Search
               </button>
-
               {searchQuery && (
                 searchResults.length > 0 ? (
                   <div className="space-y-4 mt-2">
-                    <h4 className="font-semibold text-[#2d3748]">Search Results:</h4>
+                    <h4 className="font-bold text-[#4b277c]">Search Results:</h4>
                     {searchResults.map((user) => {
                       const iconObj = PROFILE_ICONS.find(ic => ic.id === user.profile_icon);
-
                       return (
                         <div
                           key={user.user_id}
-                          className="flex items-center justify-between bg-white/20 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow duration-200"
+                          className="flex items-center justify-between bg-white/80 rounded-xl p-4 shadow-md hover:shadow-lg transition"
                         >
-                          <div className="flex items-center space-x-4">
+                          {/* Avatar + Info */}
+                          <div className="flex items-center gap-4">
                             {iconObj ? (
                               iconObj.image ? (
-                                <img
-                                  src={iconObj.image}
-                                  alt={iconObj.name}
-                                  className="w-12 h-12 rounded-full border-2 border-purple-600 object-cover"
-                                  title={iconObj.name}
-                                />
+                                <img src={iconObj.image} alt={iconObj.name} className="w-12 h-12 rounded-full border-2 border-purple-500 object-cover" />
                               ) : (
-                                <span className="text-2xl" title={iconObj.name}>{iconObj.emoji}</span>
+                                <span className="text-2xl">{iconObj.emoji}</span>
                               )
                             ) : (
-                              <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center border-2 border-purple-600">
-                                <i className="fas fa-user text-purple-600"></i>
+                              <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center border-2 border-purple-400">
+                                <i className="fas fa-user text-purple-400"></i>
                               </div>
                             )}
-
                             <div>
-                              <p className="font-semibold text-[#2d3748]">
+                              <p className="font-bold text-[#3b2376]">
                                 {user.profile_name || 'Unknown'}{' '}
                                 <span className="text-sm text-gray-500">({user.user_id})</span>
                               </p>
-                              <p className="text-sm text-purple-700 font-medium">{user.house_name || 'No House'}</p>
+                              <p className="text-xs text-purple-700 font-semibold">{user.house_name || 'No House'}</p>
                             </div>
                           </div>
-
-                          <div className="text-right text-[#2d3748] text-xs space-y-1 mr-4">
+                          {/* Stats */}
+                          <div className="text-right text-[#2d3748] text-xs space-y-1 mr-2">
                             <p><span className="font-semibold">Taps:</span> {user.total_taps ?? 0}</p>
                             <p><span className="font-semibold">Upgrades:</span> {user.combined_upgrade_level ?? 0}</p>
                             <p><span className="font-semibold">Coins:</span> {formatNumberShort(user.total_coins_earned ?? 0)}</p>
                           </div>
-
+                          {/* Add Friend */}
                           <button
                             onClick={() => sendFriendRequest(user.user_id)}
-                            className="ml-2 px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
+                            className="ml-2 px-4 py-1 bg-blue-500 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow transition"
                             disabled={user.user_id === userId}
                             title={user.user_id === userId ? "You can't add yourself" : "Add Friend"}
                           >
@@ -1783,9 +1775,7 @@ const renderFriendsTab = () => {
                     })}
                   </div>
                 ) : (
-                  <p className="mt-4 text-center text-[#2d3748]">
-                    No user found with ID "{searchQuery}"
-                  </p>
+                  <p className="mt-4 text-center text-[#4b277c]">No user found with ID "{searchQuery}"</p>
                 )
               )}
             </div>
@@ -1793,53 +1783,44 @@ const renderFriendsTab = () => {
 
           {/* Pending Requests */}
           {showRequests && (
-            <div className="space-y-2 mb-6">
-              <h4 className="font-semibold text-[#2d3748]">Pending Requests:</h4>
+            <div className="space-y-2 mb-7 bg-yellow-100/70 rounded-2xl border border-yellow-200/40 p-4 shadow-inner">
+              <h4 className="font-bold text-yellow-900">Pending Requests:</h4>
               {pendingRequests.length > 0 ? (
                 pendingRequests.map((req) => {
                   const iconObj = PROFILE_ICONS.find(ic => ic.id === req.profile_icon);
-
                   return (
                     <div
                       key={req.user_id}
-                      className="flex items-center justify-between bg-yellow-100/20 rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow duration-200"
+                      className="flex items-center justify-between bg-yellow-50/80 rounded-xl p-3 shadow hover:shadow-lg transition"
                     >
-                      <div className="flex items-center space-x-4">
+                      <div className="flex items-center gap-3">
                         {iconObj ? (
                           iconObj.image ? (
-                            <img
-                              src={iconObj.image}
-                              alt={iconObj.name}
-                              className="w-10 h-10 rounded-full border-2 border-purple-600 object-cover"
-                              title={iconObj.name}
-                            />
+                            <img src={iconObj.image} alt={iconObj.name} className="w-10 h-10 rounded-full border-2 border-purple-400 object-cover" />
                           ) : (
-                            <span className="text-xl" title={iconObj.name}>{iconObj.emoji}</span>
+                            <span className="text-xl">{iconObj.emoji}</span>
                           )
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center border-2 border-purple-600">
-                            <i className="fas fa-user text-purple-600"></i>
+                          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border-2 border-purple-400">
+                            <i className="fas fa-user text-purple-400"></i>
                           </div>
                         )}
-
                         <div>
-                          <p className="font-semibold text-[#2d3748]">
+                          <p className="font-bold text-[#3b2376]">
                             {req.profile_name || 'Unknown'}{' '}
                             <span className="text-sm text-gray-500">({req.user_id})</span>
                           </p>
-                          <p className="text-sm text-purple-700 font-medium">{req.house_name || 'No House'}</p>
+                          <p className="text-xs text-purple-700 font-semibold">{req.house_name || 'No House'}</p>
                         </div>
                       </div>
-
-                      <div className="text-right text-[#2d3748] text-xs space-y-1 mr-4">
+                      <div className="text-right text-[#2d3748] text-xs space-y-1 mr-2">
                         <p><span className="font-semibold">Taps:</span> {req.total_taps ?? 0}</p>
                         <p><span className="font-semibold">Upgrades:</span> {req.combined_upgrade_level ?? 0}</p>
                         <p><span className="font-semibold">Coins:</span> {formatNumberShort(req.total_coins_earned ?? 0)}</p>
                       </div>
-
                       <button
                         onClick={() => acceptFriendRequest(req.user_id)}
-                        className="ml-2 px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition"
+                        className="ml-2 px-4 py-1 bg-blue-500 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow transition"
                       >
                         Accept
                       </button>
@@ -1847,7 +1828,7 @@ const renderFriendsTab = () => {
                   );
                 })
               ) : (
-                <p className="text-center text-[#2d3748]">No requests</p>
+                <p className="text-center text-[#3b2376]">No requests</p>
               )}
             </div>
           )}
@@ -1856,39 +1837,32 @@ const renderFriendsTab = () => {
           {friendsLoading && <p>Loading friends...</p>}
           {friendError && <p className="text-red-500">{friendError}</p>}
           {!friendsLoading && !friendError && friends.length === 0 && (
-            <p className="text-center text-[#2d3748]">No friends found.</p>
+            <p className="text-center text-[#3b2376]">No friends found.</p>
           )}
           {!friendsLoading && !friendError && friends.length > 0 && (
             <div className="space-y-2">
-              <h4 className="font-semibold text-[#2d3748]">Your Friends:</h4>
+              <h4 className="font-bold text-[#4b277c]">Your Friends:</h4>
               {friends.map((friend) => {
                 const iconObj = PROFILE_ICONS.find(ic => ic.id === friend.profile_icon);
-
                 return (
                   <div
                     key={friend.friend_id}
-                    className="flex justify-between items-center bg-white/10 rounded-lg p-3"
+                    className="flex justify-between items-center bg-white/60 rounded-xl p-3 shadow hover:shadow-md transition"
                   >
-                    <div className="flex items-center space-x-4 text-[#2d3748]">
+                    <div className="flex items-center gap-4 text-[#2d3748]">
                       {iconObj ? (
                         iconObj.image ? (
-                          <img
-                            src={iconObj.image}
-                            alt={iconObj.name}
-                            className="w-10 h-10 rounded-full border-2 border-purple-600 object-cover"
-                            title={iconObj.name}
-                          />
+                          <img src={iconObj.image} alt={iconObj.name} className="w-10 h-10 rounded-full border-2 border-purple-400 object-cover" />
                         ) : (
-                          <span className="text-2xl" title={iconObj.name}>{iconObj.emoji}</span>
+                          <span className="text-2xl">{iconObj.emoji}</span>
                         )
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center border-2 border-purple-600">
-                          <i className="fas fa-user text-purple-600"></i>
+                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border-2 border-purple-400">
+                          <i className="fas fa-user text-purple-400"></i>
                         </div>
                       )}
-
                       <div>
-                        <p className="font-medium">
+                        <p className="font-semibold text-[#3b2376]">
                           {friend.profile_name || 'Unknown'}{' '}
                           <span className="text-xs text-gray-500">({friend.friend_id})</span>
                         </p>
@@ -1897,27 +1871,24 @@ const renderFriendsTab = () => {
                         <p className="text-xs">Coins: {formatNumberShort(friend.total_coins_earned ?? 0)}</p>
                       </div>
                     </div>
-
                     <div className="flex flex-col items-end gap-2">
                       <button
                         onClick={() => removeFriend(friend.friend_id)}
-                        className="text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                        className="text-sm bg-red-500 text-white px-3 py-1 rounded-full hover:bg-red-600 font-bold shadow"
                       >
                         Remove
                       </button>
-
                       {guild?.is_leader &&
-  guild.members?.length < 5 &&
-  friend.guild_id == null && (
-    <button
-      onClick={() => inviteToGuild(friend.friend_id)}
-      className="text-sm bg-indigo-500 text-white px-3 py-1 rounded hover:bg-indigo-600"
-      title="Invite to your guild"
-    >
-      Invite to Guild
-    </button>
-)}
-
+                        guild.members?.length < 5 &&
+                        friend.guild_id == null && (
+                          <button
+                            onClick={() => inviteToGuild(friend.friend_id)}
+                            className="text-sm bg-indigo-500 text-white px-3 py-1 rounded-full hover:bg-indigo-600 font-bold shadow"
+                            title="Invite to your guild"
+                          >
+                            Invite to Guild
+                          </button>
+                        )}
                     </div>
                   </div>
                 );
@@ -1927,330 +1898,313 @@ const renderFriendsTab = () => {
         </>
       )}
 
-{activeTab === "guilds" && (
-  <div className="w-full max-w-lg mx-auto bg-gradient-to-br from-indigo-200/60 to-white/70 rounded-3xl p-6 shadow-2xl border border-white/20 backdrop-blur-lg glass">
-    <h2 className="text-3xl font-bold text-indigo-900 text-center mb-1 tracking-wide drop-shadow-lg flex items-center justify-center gap-2">
-      <span>
-        {guild?.icon
-          ? (GUILD_ICONS.find(ic => ic.id === guild.icon)?.emoji || "👥")
-          : "👥"}
-      </span>
-      {guild ? guild.name : "Your Guild"}
-    </h2>
-    {/* Guild Score and Leave Option */}
-    {guild && (
-      <div className="flex flex-col sm:flex-row sm:justify-between items-center mt-2 mb-4 gap-2">
-        <span className="bg-indigo-50/60 text-indigo-900 font-bold text-lg rounded-xl px-4 py-1 border border-indigo-200 shadow">
-          Guild Score: <span className="text-indigo-800">{guild.score || 0}</span>
-        </span>
-<button
-  type="button"
-  onClick={async () => {
-    if (!userId || !guild) return;
-
-    const isLeader = Number(userId) === Number(guild.leader_id);
-
-
-    if (isLeader) {
-      // 1. Kick all users out of the guild
-      const { error: clearUsersError } = await supabase
-        .from("users")
-        .update({ guild_id: null })
-        .eq("guild_id", guild.id);
-
-      // 2. Delete all related guild_invites
-      await supabase
-        .from("guild_invites")
-        .delete()
-        .eq("guild_id", guild.id);
-
-      // 3. Delete all related guild_chat messages
-      await supabase
-        .from("guild_chat")
-        .delete()
-        .eq("guild_id", guild.id);
-
-      // 4. Delete the actual guild
-      const { error: deleteGuildError } = await supabase
-        .from("guilds")
-        .delete()
-        .eq("id", guild.id);
-
-      if (clearUsersError || deleteGuildError) {
-        setNotification("Failed to disband the guild.");
-      } else {
-        setGuild(null);
-        setNotification("Guild disbanded.");
-        fetchGuildData(userId);
-      }
-
-    } else {
-      // Member leaving only
-      const { error } = await supabase
-        .from("users")
-        .update({ guild_id: null })
-        .eq("user_id", userId);
-
-      if (error) {
-        setNotification("Failed to leave guild.");
-      } else {
-        setGuild(null);
-        setNotification("You left the guild.");
-        fetchGuildData(userId);
-      }
-    }
-  }}
-  className="bg-red-600 hover:bg-red-800 text-white px-4 py-2 rounded-full text-sm shadow active:scale-95 transition"
->
-  Leave Guild
-</button>
-
-      </div>
-    )}
-
-    {/* Guild Invites */}
-    {!guild && guildInvites?.length > 0 && (
-      <div className="space-y-4 mb-6">
-        <h3 className="text-lg font-bold text-indigo-700 text-center">Guild Invites</h3>
-        {guildInvites.map((invite) => (
-          <div key={invite.id} className="bg-white/80 rounded-2xl px-4 py-3 flex items-center justify-between shadow border border-indigo-200">
+      {/* GUILDS TAB */}
+      {activeTab === "guilds" && (
+        <div className="w-full max-w-lg mx-auto bg-gradient-to-br from-indigo-200/60 to-white/70 rounded-3xl p-7 shadow-2xl border border-white/20 backdrop-blur-lg">
+          <h2 className="text-3xl font-bold text-indigo-900 text-center mb-3 tracking-wide drop-shadow-lg flex items-center justify-center gap-2">
             <span>
-              <span className="text-2xl mr-2">
-                {GUILD_ICONS.find(ic => ic.id === invite.guilds?.icon)?.emoji || "👥"}
-              </span>
-              <span className="font-semibold text-indigo-900">{invite.guilds?.name || "Unnamed Guild"}</span>
+              {guild?.icon
+                ? (GUILD_ICONS.find(ic => ic.id === guild.icon)?.emoji || "👥")
+                : "👥"}
             </span>
-            <button
-              className="ml-4 px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-full shadow"
-              onClick={() => acceptGuildInvite(invite.id, invite.guild_id)}
-            >
-              Accept
-            </button>
-          </div>
-        ))}
-      </div>
-    )}
-
-    {/* Create Guild Section */}
-    {!guild && (
-      <div className="space-y-8 py-8">
-        <p className="text-center text-gray-700 text-lg mb-2">You are not in a guild yet.</p>
-        {!creatingGuild ? (
-          <div className="text-center">
-            <button
-              onClick={() => setCreatingGuild(true)}
-              className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-full shadow-lg transition active:scale-95"
-            >
-              <i className="fas fa-users mr-2" /> Create a Guild
-            </button>
-          </div>
-        ) : (
-          <form
-            onSubmit={handleCreateGuild}
-            className="flex flex-col space-y-6 items-center w-full"
-          >
-            <input
-              type="text"
-              placeholder="Guild Name (max 20 chars)"
-              maxLength={20}
-              value={newGuildName}
-              onChange={e => setNewGuildName(e.target.value)}
-              className="w-64 px-3 py-2 rounded-xl bg-white/80 border border-indigo-300 focus:ring-2 focus:ring-indigo-400 text-gray-900 font-medium shadow"
-              required
-            />
-            {/* Emoji keyboard style grid */}
-            <div className="w-full max-w-xs mx-auto">
-              <label className="block text-center font-semibold text-indigo-800 mb-2">Choose an Icon</label>
-              <div
-                className="grid grid-cols-6 gap-2 sm:grid-cols-10 p-2 bg-white/60 rounded-xl shadow-inner border border-indigo-100"
-                style={{ maxHeight: '180px', overflowY: 'auto', touchAction: 'pan-y' }}
+            {guild ? guild.name : "Your Guild"}
+          </h2>
+          {/* Guild Score and Leave Option */}
+          {guild && (
+            <div className="flex flex-col sm:flex-row sm:justify-between items-center mt-2 mb-5 gap-2">
+              <span className="bg-indigo-50/80 text-indigo-900 font-bold text-lg rounded-xl px-4 py-1 border border-indigo-200 shadow">
+                Guild Score: <span className="text-indigo-800">{guild.score || 0}</span>
+              </span>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!userId || !guild) return;
+                  const isLeader = Number(userId) === Number(guild.leader_id);
+                  if (isLeader) {
+                    // 1. Kick all users out of the guild
+                    const { error: clearUsersError } = await supabase
+                      .from("users")
+                      .update({ guild_id: null })
+                      .eq("guild_id", guild.id);
+                    // 2. Delete all related guild_invites
+                    await supabase
+                      .from("guild_invites")
+                      .delete()
+                      .eq("guild_id", guild.id);
+                    // 3. Delete all related guild_chat messages
+                    await supabase
+                      .from("guild_chat")
+                      .delete()
+                      .eq("guild_id", guild.id);
+                    // 4. Delete the actual guild
+                    const { error: deleteGuildError } = await supabase
+                      .from("guilds")
+                      .delete()
+                      .eq("id", guild.id);
+                    if (clearUsersError || deleteGuildError) {
+                      setNotification("Failed to disband the guild.");
+                    } else {
+                      setGuild(null);
+                      setNotification("Guild disbanded.");
+                      fetchGuildData(userId);
+                    }
+                  } else {
+                    // Member leaving only
+                    const { error } = await supabase
+                      .from("users")
+                      .update({ guild_id: null })
+                      .eq("user_id", userId);
+                    if (error) {
+                      setNotification("Failed to leave guild.");
+                    } else {
+                      setGuild(null);
+                      setNotification("You left the guild.");
+                      fetchGuildData(userId);
+                    }
+                  }
+                }}
+                className="bg-red-600 hover:bg-red-800 text-white px-4 py-2 rounded-full text-sm shadow active:scale-95 transition"
               >
-                {GUILD_ICONS.map((icon) => (
-                  <button
-                    key={icon.id}
-                    type="button"
-                    onClick={() => setNewGuildIcon(icon.id)}
-                    className={`rounded-lg p-2 text-2xl transition border-2
-                      ${newGuildIcon === icon.id
-                        ? 'border-indigo-700 bg-indigo-100 scale-110'
-                        : 'border-transparent hover:bg-indigo-50 active:scale-95'}`}
-                    aria-label={icon.name}
-                  >
-                    {icon.emoji}
-                  </button>
-                ))}
-              </div>
+                Leave Guild
+              </button>
             </div>
-            <button
-              type="submit"
-              className="w-64 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full font-semibold shadow transition active:scale-95"
-            >
-              Create Guild
-            </button>
-            <button
-              type="button"
-              onClick={() => setCreatingGuild(false)}
-              className="w-64 py-1 mt-1 bg-gray-200 text-gray-800 rounded-full font-medium hover:bg-gray-300"
-            >
-              Cancel
-            </button>
-          </form>
-        )}
-      </div>
-    )}
-
-    {/* Guild Members */}
-    {guild && (
-      <div className="mt-4 space-y-4">
-        <div className="flex items-center justify-between px-2">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">{GUILD_ICONS.find(ic => ic.id === guild.icon)?.emoji || "👥"}</span>
-            <span className="font-bold text-xl text-indigo-800">{guild.name}</span>
-          </div>
-          <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
-            Members {guild.members?.length ?? 0}/5
-          </span>
-        </div>
-        <ul className="divide-y divide-indigo-100 bg-white/70 rounded-2xl overflow-hidden shadow-inner border border-indigo-100">
-          {guild.members && guild.members.length > 0 ? (
-            // Sort members highest to lowest house_level
-            guild.members
-              .slice() // clone array
-              .sort((a, b) => (b.house_level || 0) - (a.house_level || 0))
-              .map(member => {
-                const iconObj = PROFILE_ICONS.find(ic => ic.id === member.profile_icon);
-                return (
-                  <li key={member.user_id} className="flex items-center px-4 py-2 gap-4">
-                    {iconObj ? (
-                      iconObj.image ? (
-                        <img
-                          src={iconObj.image}
-                          alt={iconObj.name}
-                          className="w-9 h-9 rounded-full border-2 border-indigo-300 object-cover"
-                        />
-                      ) : (
-                        <span className="text-2xl">{iconObj.emoji}</span>
-                      )
-                    ) : (
-                      <span className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-400 font-bold text-lg">?</span>
-                    )}
-                    <span className="font-semibold text-indigo-900">{member.profile_name || "Unknown"}</span>
-                    <span className="ml-auto text-indigo-700 font-bold text-lg">{member.house_level || 0}</span>
-                    {member.user_id === guild.leader_id && (
-                      <span className="ml-2 text-xs bg-indigo-200 text-indigo-800 px-2 py-1 rounded-full font-bold">Leader</span>
-                    )}
-                  </li>
-                );
-              })
-          ) : (
-            <li className="text-gray-600 px-4 py-2">No members found.</li>
           )}
-        </ul>
-        {guild.is_leader && guild.members?.length < 5 && (
-          <div className="text-xs text-indigo-700 text-center mt-4">
-            Invite more friends from the <span className="font-semibold">Friends</span> tab below.
-          </div>
-        )}
-      </div>
-    )}
-    {guild && (
-  <>
-    {/* Chat Toggle Button */}
-    <div className="mt-6 flex justify-center">
-      <button
-        onClick={() => setShowGuildChat(prev => !prev)}
-        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-full font-semibold shadow-md transition active:scale-95"
-      >
-        <i className="fas fa-comments mr-2" /> {showGuildChat ? "Hide Chat" : "Show Chat"}
-      </button>
-    </div>
 
+          {/* Guild Invites */}
+          {!guild && guildInvites?.length > 0 && (
+            <div className="space-y-4 mb-6">
+              <h3 className="text-lg font-bold text-indigo-700 text-center">Guild Invites</h3>
+              {guildInvites.map((invite) => (
+                <div key={invite.id} className="bg-white/90 rounded-2xl px-4 py-3 flex items-center justify-between shadow border border-indigo-200">
+                  <span>
+                    <span className="text-2xl mr-2">
+                      {GUILD_ICONS.find(ic => ic.id === invite.guilds?.icon)?.emoji || "👥"}
+                    </span>
+                    <span className="font-semibold text-indigo-900">{invite.guilds?.name || "Unnamed Guild"}</span>
+                  </span>
+                  <button
+                    className="ml-4 px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-full shadow"
+                    onClick={() => acceptGuildInvite(invite.id, invite.guild_id)}
+                  >
+                    Accept
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
-  {showGuildChat && (
-  <div className="mt-4 bg-white/40 backdrop-blur-xl rounded-2xl p-4 border border-indigo-200 shadow-lg max-h-[400px] flex flex-col space-y-3 overflow-hidden">
-    <div className="font-bold text-indigo-900 text-center text-lg mb-2 flex items-center justify-center gap-2">
-      <i className="fas fa-comments" /> Guild Chat
-    </div>
-
-    {/* Messages List */}
-    <div className="flex-1 overflow-y-auto px-2 py-1 space-y-2">
-      {guildMessages.length === 0 ? (
-        <p className="text-center text-gray-600 text-sm italic">No messages yet.</p>
-      ) : (
-        guildMessages.map((msg, i) => {
-      const iconId = msg.profile_icon;
-const icon = PROFILE_ICONS.find(ic => ic.id === iconId);
-const name = msg.profile_name || "Unknown";
-
-
-          return (
-            <div
-              key={i}
-              className="flex items-start gap-2 bg-white/60 px-3 py-2 rounded-xl shadow text-sm text-indigo-800"
-            >
-              {/* Profile Icon */}
-              {icon ? (
-                icon.image ? (
-                  <img
-                    src={icon.image}
-                    alt={icon.name}
-                    className="w-8 h-8 rounded-full object-cover border border-indigo-400"
-                    title={icon.name}
-                  />
-                ) : (
-                  <span className="text-lg">{icon.emoji}</span>
-                )
+          {/* Create Guild Section */}
+          {!guild && (
+            <div className="space-y-8 py-8">
+              <p className="text-center text-gray-700 text-lg mb-2">You are not in a guild yet.</p>
+              {!creatingGuild ? (
+                <div className="text-center">
+                  <button
+                    onClick={() => setCreatingGuild(true)}
+                    className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-full shadow-lg transition active:scale-95"
+                  >
+                    <i className="fas fa-users mr-2" /> Create a Guild
+                  </button>
+                </div>
               ) : (
-                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-500 border border-indigo-300">
-                  <i className="fas fa-user" />
+                <form
+                  onSubmit={handleCreateGuild}
+                  className="flex flex-col space-y-6 items-center w-full"
+                >
+                  <input
+                    type="text"
+                    placeholder="Guild Name (max 20 chars)"
+                    maxLength={20}
+                    value={newGuildName}
+                    onChange={e => setNewGuildName(e.target.value)}
+                    className="w-64 px-3 py-2 rounded-xl bg-white/90 border border-indigo-300 focus:ring-2 focus:ring-indigo-400 text-gray-900 font-bold shadow"
+                    required
+                  />
+                  {/* Emoji keyboard style grid */}
+                  <div className="w-full max-w-xs mx-auto">
+                    <label className="block text-center font-bold text-indigo-800 mb-2">Choose an Icon</label>
+                    <div
+                      className="grid grid-cols-6 gap-2 sm:grid-cols-10 p-2 bg-white/70 rounded-xl shadow-inner border border-indigo-100"
+                      style={{ maxHeight: '180px', overflowY: 'auto', touchAction: 'pan-y' }}
+                    >
+                      {GUILD_ICONS.map((icon) => (
+                        <button
+                          key={icon.id}
+                          type="button"
+                          onClick={() => setNewGuildIcon(icon.id)}
+                          className={`rounded-lg p-2 text-2xl transition border-2
+                            ${newGuildIcon === icon.id
+                              ? 'border-indigo-700 bg-indigo-100 scale-110'
+                              : 'border-transparent hover:bg-indigo-50 active:scale-95'}`}
+                          aria-label={icon.name}
+                        >
+                          {icon.emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-64 py-2 bg-green-600 hover:bg-green-700 text-white rounded-full font-bold shadow transition active:scale-95"
+                  >
+                    Create Guild
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCreatingGuild(false)}
+                    className="w-64 py-1 mt-1 bg-gray-200 text-gray-800 rounded-full font-semibold hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
+
+          {/* Guild Members */}
+          {guild && (
+            <div className="mt-4 space-y-4">
+              <div className="flex items-center justify-between px-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{GUILD_ICONS.find(ic => ic.id === guild.icon)?.emoji || "👥"}</span>
+                  <span className="font-bold text-xl text-indigo-800">{guild.name}</span>
+                </div>
+                <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
+                  Members {guild.members?.length ?? 0}/5
+                </span>
+              </div>
+              <ul className="divide-y divide-indigo-100 bg-white/80 rounded-2xl overflow-hidden shadow-inner border border-indigo-100">
+                {guild.members && guild.members.length > 0 ? (
+                  // Sort members highest to lowest house_level
+                  guild.members
+                    .slice() // clone array
+                    .sort((a, b) => (b.house_level || 0) - (a.house_level || 0))
+                    .map(member => {
+                      const iconObj = PROFILE_ICONS.find(ic => ic.id === member.profile_icon);
+                      return (
+                        <li key={member.user_id} className="flex items-center px-4 py-2 gap-4">
+                          {iconObj ? (
+                            iconObj.image ? (
+                              <img
+                                src={iconObj.image}
+                                alt={iconObj.name}
+                                className="w-9 h-9 rounded-full border-2 border-indigo-300 object-cover"
+                              />
+                            ) : (
+                              <span className="text-2xl">{iconObj.emoji}</span>
+                            )
+                          ) : (
+                            <span className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-400 font-bold text-lg">?</span>
+                          )}
+                          <span className="font-bold text-indigo-900">{member.profile_name || "Unknown"}</span>
+                          <span className="ml-auto text-indigo-700 font-bold text-lg">{member.house_level || 0}</span>
+                          {member.user_id === guild.leader_id && (
+                            <span className="ml-2 text-xs bg-indigo-200 text-indigo-800 px-2 py-1 rounded-full font-bold">Leader</span>
+                          )}
+                        </li>
+                      );
+                    })
+                ) : (
+                  <li className="text-gray-600 px-4 py-2">No members found.</li>
+                )}
+              </ul>
+              {guild.is_leader && guild.members?.length < 5 && (
+                <div className="text-xs text-indigo-700 text-center mt-4">
+                  Invite more friends from the <span className="font-bold">Friends</span> tab below.
                 </div>
               )}
-
-              {/* Message Content */}
-              <div className="flex-1">
-                <div className="flex justify-between">
-                  <span className="font-bold">{name}</span>
-                  <span className="text-xs text-gray-500">
-                    {new Date(msg.inserted_at).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>
-                </div>
-                <p>{msg.message}</p>
-              </div>
             </div>
-          );
-        })
+          )}
+          {/* Guild Chat */}
+          {guild && (
+            <>
+              <div className="mt-6 flex justify-center">
+                <button
+                  onClick={() => setShowGuildChat(prev => !prev)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-full font-bold shadow-md transition active:scale-95"
+                >
+                  <i className="fas fa-comments mr-2" /> {showGuildChat ? "Hide Chat" : "Show Chat"}
+                </button>
+              </div>
+              {showGuildChat && (
+                <div className="mt-4 bg-white/70 backdrop-blur-xl rounded-2xl p-4 border border-indigo-200 shadow-lg max-h-[400px] flex flex-col space-y-3 overflow-hidden">
+                  <div className="font-bold text-indigo-900 text-center text-lg mb-2 flex items-center justify-center gap-2">
+                    <i className="fas fa-comments" /> Guild Chat
+                  </div>
+                  {/* Messages List */}
+                  <div className="flex-1 overflow-y-auto px-2 py-1 space-y-2">
+                    {guildMessages.length === 0 ? (
+                      <p className="text-center text-gray-600 text-sm italic">No messages yet.</p>
+                    ) : (
+                      guildMessages.map((msg, i) => {
+                        const iconId = msg.profile_icon;
+                        const icon = PROFILE_ICONS.find(ic => ic.id === iconId);
+                        const name = msg.profile_name || "Unknown";
+                        return (
+                          <div
+                            key={i}
+                            className="flex items-start gap-2 bg-white/90 px-3 py-2 rounded-xl shadow text-sm text-indigo-800"
+                          >
+                            {/* Profile Icon */}
+                            {icon ? (
+                              icon.image ? (
+                                <img
+                                  src={icon.image}
+                                  alt={icon.name}
+                                  className="w-8 h-8 rounded-full object-cover border border-indigo-400"
+                                  title={icon.name}
+                                />
+                              ) : (
+                                <span className="text-lg">{icon.emoji}</span>
+                              )
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-500 border border-indigo-300">
+                                <i className="fas fa-user" />
+                              </div>
+                            )}
+                            {/* Message Content */}
+                            <div className="flex-1">
+                              <div className="flex justify-between">
+                                <span className="font-bold">{name}</span>
+                                <span className="text-xs text-gray-500">
+                                  {new Date(msg.inserted_at).toLocaleTimeString([], {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </span>
+                              </div>
+                              <p>{msg.message}</p>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                  {/* Input Field */}
+                  <div className="mt-2 space-y-2 sm:flex sm:items-center sm:space-y-0 sm:space-x-2">
+                    <input
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      className="w-full px-4 py-2 rounded-md bg-white/90 text-black placeholder-gray-500 focus:outline-none"
+                      placeholder="Type a message..."
+                    />
+                    <button
+                      onClick={handleSendMessage}
+                      className="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-md shadow hover:bg-indigo-700 font-bold transition"
+                    >
+                      Send
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       )}
     </div>
-
-    {/* Input Field */}
-    <div className="mt-2 space-y-2 sm:flex sm:items-center sm:space-y-0 sm:space-x-2">
-  <input
-    value={newMessage}
-    onChange={(e) => setNewMessage(e.target.value)}
-    className="w-full px-4 py-2 rounded-md bg-white/90 text-black placeholder-gray-500 focus:outline-none"
-    placeholder="Type a message..."
-  />
-
-  <button
-    onClick={handleSendMessage}
-    className="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-md shadow hover:bg-indigo-700 transition"
-  >
-    Send
-  </button>
-</div>
-  </div>
-)}
-
-  </>
-)}
-  </div>
-)}
-</div>
-);
+  );
 };
+
 
 const buyRegularItem = async ({ itemId, itemType, price, userId, pin }) => {
   if (!userId || !pin) {
