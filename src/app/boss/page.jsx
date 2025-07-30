@@ -955,12 +955,16 @@ useEffect(() => {
 
 // --- GLOSSY DARK "INFERNO" THEME STYLES ---
 const bossCSS = `
-  .boss-bg {
-    background: linear-gradient(120deg, #18151e 0%, #2b1a1f 50%, #1a090d 100%);
-    min-height: 100vh;
-    position: relative;
-    overflow: hidden;
-  }
+.boss-bg {
+  background-image: url("https://ucarecdn.com/002a12b7-d67c-4cb0-b872-dbde6ad4b0f0/-/format/auto/");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
   .boss-glass-panel {
     background: linear-gradient(110deg, rgba(35,27,33,0.72) 80%, rgba(70,21,18,0.22) 100%);
     box-shadow: 0 8px 40px #0d070b77, 0 1px 4px #ff6d0057 inset;
