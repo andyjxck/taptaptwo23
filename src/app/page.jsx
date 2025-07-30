@@ -916,7 +916,7 @@ const [profileIcon, setProfileIcon] = useState("");
 const [sidebarOpen, setSidebarOpen] = useState(false);
 
 
-  const [activeTab, setActiveTab] = useState("game");
+  const [activeTab, setActiveTab] = useState("tap");
 
 
 
@@ -6316,11 +6316,11 @@ const renderLeaderboard = () => (
       <div className="w-full flex flex-col items-center gap-3 mt-2">
         {/* Game */}
         <button
-          onClick={() => { setActiveTab("game"); setSidebarOpen(false); }}
+          onClick={() => { setActiveTab("tap"); setSidebarOpen(false); }}
           className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-white transition font-medium"
         >
           <i className="fas fa-gamepad"></i>
-          <span>Game</span>
+          <span>Tap</span>
         </button>
         {/* Battle */}
         <a
@@ -6413,7 +6413,7 @@ const renderLeaderboard = () => (
 
 
 
-  {["game", "house", "leaderboard"].includes(activeTab) && (
+  {["tap", "house", "leaderboard"].includes(activeTab) && (
     <div className="text-center">
       <h2 className="text-2xl mb-4 font-crimson-text text-[#939599]">
         {gameState.equippedTheme && gameState.equippedTheme !== "seasons"
@@ -6455,7 +6455,7 @@ const renderLeaderboard = () => (
   )}
 
   <div className="max-w-md mx-auto">
-    {activeTab === "game" ? (
+    {activeTab === "tap" ? (
       <div className="flex flex-col items-center justify-center space-y-6">
         <div className="relative">
    <button
