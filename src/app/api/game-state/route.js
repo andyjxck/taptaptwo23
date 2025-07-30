@@ -345,7 +345,12 @@ if (codeName === "boss") {
 
   // Distribute +30 upgrade levels randomly across the four upgrades
   let remain = 30;
-  const upgKeys = ["tap_power_upgrades", "auto_tapper_upgrades", "crit_chance_upgrades", "tap_speed_bonus_upgrades"];
+  const upgKeys = [
+    "tap_power_upgrades",
+    "auto_tapper_upgrades",
+    "crit_chance_upgrades",
+    "tap_speed_bonus_upgrades"
+  ];
   const upgradeValues = [0, 0, 0, 0];
   for (let i = 0; i < upgKeys.length; i++) {
     if (i === upgKeys.length - 1) {
@@ -361,7 +366,7 @@ if (codeName === "boss") {
   crit_chance_upgrades += upgradeValues[2];
   tap_speed_bonus_upgrades += upgradeValues[3];
 
-  // Handle owned_profile_icons
+  // === PROFILE ICONS ===
   let ownedProfileIcons = [];
   try {
     ownedProfileIcons = save.owned_profile_icons
@@ -369,19 +374,23 @@ if (codeName === "boss") {
       : [];
   } catch {}
   if (!Array.isArray(ownedProfileIcons)) ownedProfileIcons = [];
-  // Get 5 random new profile icons (excluding any already owned)
-  const availableRandomIcons = allIcons.filter(
-    (x) => !ownedProfileIcons.includes(x)
-  );
-  const shuffledIcons = [...availableRandomIcons].sort(() => 0.5 - Math.random());
+
+  // Add 5 random new icons (could be limited OR regular, just not owned)
+  const availableIcons = allIcons.filter((icon) => !ownedProfileIcons.includes(icon));
+  const shuffledIcons = [...availableIcons].sort(() => 0.5 - Math.random());
   const iconsToAdd = shuffledIcons.slice(0, 5);
   ownedProfileIcons.push(...iconsToAdd);
-  // Remove duplicates just in case
+
+  // Make sure ONE limited icon is awarded if there is any available (and not already owned)
+  const availableLimitedIcons = limitedIcons.filter(icon => !ownedProfileIcons.includes(icon));
+  if (availableLimitedIcons.length > 0) {
+    const limitedIcon = availableLimitedIcons[Math.floor(Math.random() * availableLimitedIcons.length)];
+    ownedProfileIcons.push(limitedIcon);
+  }
+  // Remove any duplicates just in case
   ownedProfileIcons = Array.from(new Set(ownedProfileIcons));
 
-  // Profile icon stays unchanged unless you want to set it to something special
-
-  // Handle owned themes
+  // === THEMES ===
   let ownedThemes = [];
   try {
     ownedThemes = save.owned_themes
@@ -391,6 +400,7 @@ if (codeName === "boss") {
       : [];
   } catch {}
   if (!Array.isArray(ownedThemes)) ownedThemes = [];
+
   // Always add pogoda_day theme
   if (!ownedThemes.includes("pogoda_day")) ownedThemes.push("pogoda_day");
   // Add 1 random new theme (not pogoda_day, not already owned)
@@ -400,25 +410,6 @@ if (codeName === "boss") {
   if (availableThemes.length > 0) {
     const randTheme = availableThemes[Math.floor(Math.random() * availableThemes.length)];
     ownedThemes.push(randTheme);
-  }
-
-  // Handle limited items
-  let ownedLimitedItems = [];
-  try {
-    ownedLimitedItems = save.owned_limited_items
-      ? typeof save.owned_limited_items === "string"
-        ? JSON.parse(save.owned_limited_items)
-        : save.owned_limited_items
-      : [];
-  } catch {}
-  if (!Array.isArray(ownedLimitedItems)) ownedLimitedItems = [];
-  // Get list of available limited items to award
-  const limitedItemsAvailable = (limitedIcons || []).filter(
-    (id) => !ownedLimitedItems.includes(id)
-  );
-  if (limitedItemsAvailable.length > 0) {
-    const randLimited = limitedItemsAvailable[Math.floor(Math.random() * limitedItemsAvailable.length)];
-    ownedLimitedItems.push(randLimited);
   }
 
   // Grant resources
@@ -439,7 +430,6 @@ if (codeName === "boss") {
         tap_speed_bonus_upgrades = ${tap_speed_bonus_upgrades},
         owned_profile_icons = ${JSON.stringify(ownedProfileIcons)},
         owned_themes = ${JSON.stringify(ownedThemes)},
-        owned_limited_items = ${JSON.stringify(ownedLimitedItems)},
         renown_tokens = ${renownTokens},
         coins = ${coins}
       WHERE user_id = ${userIdInt}
