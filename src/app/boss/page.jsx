@@ -72,6 +72,10 @@ export default function BossModePage() {
   const [coopJoining, setCoopJoining] = useState(false);
   const [coopCreating, setCoopCreating] = useState(false);
 
+const hpMax = battleData.boss_max_hp || battleData.boss_hp;
+const visibleBossHp = Math.max(0, (battleData.boss_hp || 0) - accumulatedAutoTapDamage);
+const hpPercentage = Math.max(0, Math.min(100, (visibleBossHp / hpMax) * 100));
+
   // --- BUTTON LOCK & LOADING ---
   const [pageLoading, setPageLoading] = useState(true);
 
@@ -627,10 +631,6 @@ useEffect(() => {
       </div>
     );
   }
-
-const hpMax = battleData.boss_max_hp || battleData.boss_hp;
-const visibleBossHp = Math.max(0, (battleData.boss_hp || 0) - accumulatedAutoTapDamage);
-const hpPercentage = Math.max(0, Math.min(100, (visibleBossHp / hpMax) * 100));
 
   function getTimeUntilReset() {
     if (!soloProgress?.next_reset) return "";
