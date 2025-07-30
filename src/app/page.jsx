@@ -6262,6 +6262,18 @@ const renderLeaderboard = () => (
 
     {/* MAIN SIDEBAR AREA */}
     <div className="flex-1 flex flex-col items-center py-8 px-6 bg-gradient-to-br from-purple-800/95 via-purple-600/95 to-purple-900/90 backdrop-blur-xl overflow-y-auto relative">
+           {/* LOGO - centered */}
+      <div className="flex flex-col items-center mt-2 mb-4">
+        <img
+          src="https://ucarecdn.com/7bdd361d-c411-41ce-b066-c1d20f88e3a7/-/format/auto/"
+          alt="Tap Tap Two Logo"
+          className="h-24 object-contain"
+        />
+        <span className="text-xs text-white font-medium tracking-wide mt-1" style={{ letterSpacing: "0.03em" }}>
+an andysocial game
+        </span>
+      </div>
+      
       {/* Weather Widget - TOP of sidebar main area */}
       <div className="flex items-center gap-3 bg-white/10 border border-white/30 rounded-xl px-4 py-2 mb-4 w-full max-w-xs">
         {/* Icon */}
@@ -6275,6 +6287,7 @@ const renderLeaderboard = () => (
           <div className="text-xs text-white opacity-80 mt-0.5">{weatherDescription}</div>
         </div>
       </div>
+      
       {/* Close X */}
       <button
         onClick={() => setSidebarOpen(false)}
@@ -6284,17 +6297,6 @@ const renderLeaderboard = () => (
       >
         <i className="fas fa-times text-2xl"></i>
       </button>
-      {/* LOGO - centered */}
-      <div className="flex flex-col items-center mt-2 mb-4">
-        <img
-          src="https://ucarecdn.com/7bdd361d-c411-41ce-b066-c1d20f88e3a7/-/format/auto/"
-          alt="Tap Tap Two Logo"
-          className="h-14 object-contain"
-        />
-        <span className="text-xs text-white font-medium tracking-wide mt-1" style={{ letterSpacing: "0.03em" }}>
-          made by andysocial
-        </span>
-      </div>
       {/* Maddox Button */}
       <button
         onClick={() => { setShowMaddoxModal(true); setSidebarOpen(false); }}
