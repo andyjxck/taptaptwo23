@@ -81,7 +81,7 @@ export async function GET(request) {
         },
         stats: {
           bossLevel: bossProgress.current_level,
-          totalCoins: bossProgress.total_coins,
+          totalCoins: safe(gameSave.coins),
           availableCoins: safe(gameSave.coins),
           upgradeLevel,
           weeklyBest: bossProgress.weekly_best_level,
@@ -143,7 +143,7 @@ export async function GET(request) {
         boss_hp: progress.boss_hp,
         boss_max_hp: progress.boss_max_hp,
         boss_emoji: getBossEmoji(progress.current_level),
-        total_coins: progress.total_coins,
+        total_coins: progress.total_coins, // internal only
         weekly_best_level: progress.weekly_best_level,
         coins_per_boss: getCoinsPerBoss(progress.current_level),
         next_reset: getNextWeeklyReset(),
@@ -239,9 +239,9 @@ export async function POST(request) {
 
       // -------- BOSS DEFEATED! --------
       const coinsPerBoss = getCoinsPerBoss(currentLevel);
-      const newTotalCoins = safe(progress.total_coins) + coinsPerBoss;
       const { data: oldCoins } = await supabase.from("game_saves").select("coins").eq("user_id", userId).single();
       const newAvailableCoins = safe(oldCoins?.coins) + coinsPerBoss;
+      const newTotalCoins = newAvailableCoins; // <- always from game_saves
       const newLevel = currentLevel + 1;
       const newWeeklyBest = Math.max(safe(progress.weekly_best_level), newLevel);
       const tapPower = await getPlayerTapPower(userId);
@@ -254,7 +254,7 @@ export async function POST(request) {
         boss_hp: nextBossHp,
         boss_max_hp: nextBossHp,
         boss_emoji: nextEmoji,
-        total_coins: newTotalCoins,
+        // total_coins: safe(progress.total_coins) + coinsPerBoss, // still tracked internally if wanted
         weekly_best_level: newWeeklyBest,
       }).eq("user_id", userId);
 
@@ -266,7 +266,7 @@ export async function POST(request) {
         success: true,
         boss_defeated: true,
         coins_earned: coinsPerBoss,
-        total_coins: newTotalCoins,
+        total_coins: newAvailableCoins, // <- always game_saves
         available_coins: newAvailableCoins,
         new_level: newLevel,
         current_boss_hp: nextBossHp,
