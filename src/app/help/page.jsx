@@ -317,7 +317,7 @@ function HelpGuide() {
   useEffect(() => { window.scrollTo(0, 0); }, [activeId]);
   const activeSection = helpSections.find(sec => sec.id === activeId);
 
-  return (
+ return (
     <div className={`min-h-screen w-full bg-gradient-to-br ${seasonBackgrounds[currentSeason]} animate-gradient-x relative`}>
       {/* Blurred background lights */}
       <div className="pointer-events-none fixed inset-0 z-0">
@@ -328,10 +328,10 @@ function HelpGuide() {
       {/* Main container */}
       <div className="relative z-10 max-w-4xl mx-auto px-2 pb-8 pt-8 flex flex-col items-center">
         {/* Title */}
-        <h1 className="text-[2.3rem] md:text-4xl font-bold mb-2 text-white drop-shadow-lg tracking-tight" style={{fontFamily: "Crimson Text, serif"}}>Help Board</h1>
+        <h1 className="text-[2.3rem] md:text-4xl font-bold mb-2 text-gray-900 drop-shadow-lg tracking-tight" style={{fontFamily: "Crimson Text, serif"}}>Help Board</h1>
         {/* Return Button */}
         <button
-          className="mb-4 px-6 py-2 rounded-xl bg-white/40 text-purple-900 font-semibold shadow-md border border-white/30 hover:bg-white/70 transition"
+          className="mb-4 px-6 py-2 rounded-xl bg-white/40 text-gray-800 font-semibold shadow-md border border-white/30 hover:bg-white/70 transition"
           onClick={() => window.location.href = "/"}
         >
           ← Return to Tap Tap: Two
@@ -347,8 +347,8 @@ function HelpGuide() {
                     onClick={() => setActiveId(sec.id)}
                     className={`w-full flex items-center px-3 py-2 rounded-xl font-semibold transition-colors duration-200 ${
                       activeId === sec.id
-                        ? "bg-white/80 text-purple-900 shadow"
-                        : "text-white/80 hover:bg-white/30"
+                        ? "bg-white/80 text-gray-900 shadow"
+                        : "text-gray-700 hover:bg-white/30"
                     }`}
                   >
                     <i className={`${sec.icon} mr-2 opacity-90`} /> {sec.title}
@@ -359,11 +359,11 @@ function HelpGuide() {
           </nav>
           {/* Content */}
           <div className="flex-1 min-w-0 px-2 py-1">
-            <h2 className="text-xl md:text-2xl font-bold text-white mb-3 tracking-tight drop-shadow">{activeSection.title}</h2>
-            <div className="text-base md:text-lg text-white/90" style={{lineHeight: "1.7"}}>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 tracking-tight drop-shadow">{activeSection.title}</h2>
+            <div className="text-base md:text-lg text-gray-700" style={{lineHeight: "1.7"}}>
               {activeSection.content}
             </div>
-            <div className="text-right text-xs text-white/50 mt-2">
+            <div className="text-right text-xs text-gray-500 mt-2">
               Last Updated: {activeSection.last_updated}
             </div>
           </div>
