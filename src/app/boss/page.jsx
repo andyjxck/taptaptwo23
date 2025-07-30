@@ -149,45 +149,57 @@ export default function BossModePage() {
   }, [lastTapTimes, upgradesData?.stats?.tapSpeedBonus]);
 
   // --- SOLO TAP HANDLER ---
-  function handleSoloTap(isAutoTap = false) {
-    // If loading, boss dead, or button locked, do nothing
-    if (!canTap || soloLoading || !soloProgress || soloProgress.boss_hp <= 0) return;
-    setCanTap(false);
-    fetch("/api/boss", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "solo_tap", userId, isAutoTap }),
-    }).then(r => r.json()).then(data => {
-      // If boss_defeated, only process ONCE and reload boss state after
+function handleSoloTap(isAutoTap = false) {
+  // Only block if loading or boss dead
+  if (soloLoading || !soloProgress || soloProgress.boss_hp <= 0) return;
+
+  fetch("/api/boss", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "solo_tap", userId, isAutoTap }),
+  })
+    .then(r => r.json())
+    .then(data => {
+      // If boss defeated, show celebration and refresh boss state
       if (data.boss_defeated) {
         setShowCelebration(true);
         setTimeout(() => setShowCelebration(false), 1600);
+
+        // Refresh boss state
         fetch(`/api/boss?action=progress&userId=${userId}`)
           .then(r => r.json())
-          .then(newBoss => setSoloProgress(newBoss))
-          .finally(() => setCanTap(true));
-        // Also refresh profile/coins
-        fetch(`/api/boss?action=profile&userId=${userId}`).then(r => r.json()).then(setProfileData);
+          .then(newBoss => setSoloProgress(newBoss));
+        // Refresh profile/coins
+        fetch(`/api/boss?action=profile&userId=${userId}`)
+          .then(r => r.json())
+          .then(setProfileData);
         setTapCount(0);
         return;
       }
-      // Normal tap, boss still alive
-      setSoloProgress(prev => ({ ...prev, boss_hp: data.current_boss_hp }));
+
+      // Normal tap, update boss HP and floating numbers
+      setSoloProgress(prev => ({
+        ...prev,
+        boss_hp: data.current_boss_hp,
+      }));
       setTapCount(prev => prev + (isAutoTap ? 0 : 1));
+
       if (data.damage_dealt && !isAutoTap) {
         const dmgId = Date.now();
-        setShowDamageNumbers(prev => [...prev, {
-          id: dmgId,
-          damage: data.damage_dealt,
-          isCrit: data.was_crit,
-          x: Math.random() * 120 - 60,
-          y: Math.random() * 60 - 30,
-        }]);
+        setShowDamageNumbers(prev => [
+          ...prev,
+          {
+            id: dmgId,
+            damage: data.damage_dealt,
+            isCrit: data.was_crit,
+            x: Math.random() * 120 - 60,
+            y: Math.random() * 60 - 30,
+          },
+        ]);
         setTimeout(() => setShowDamageNumbers(prev => prev.filter(d => d.id !== dmgId)), 1200);
       }
-      setCanTap(true);
-    }).catch(() => setCanTap(true));
-  }
+    });
+}
 
   // --- COOP TAP HANDLER ---
   function handleCoopTap() {
