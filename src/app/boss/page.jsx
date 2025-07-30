@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, Flame, ChevronDown, Coins, Crown, Timer, Zap, Settings } from "lucide-react";
-
+import useSound from "use-sound";
 function isImageUrl(icon) {
   return (
     typeof icon === "string" &&
@@ -48,6 +48,7 @@ export default function BossModePage() {
   const [pin, setPin] = useState("");
   const [userReady, setUserReady] = useState(false);
 
+  const [playClick] = useSound("/sounds/click.wav", { volume: muted ? 0 : 0.4 });
   // --- MENU/UI STATE ---
   const [mode, setMode] = useState(""); // "", "solo", "coop-create", "coop-join", "coop"
   const [roomCode, setRoomCode] = useState("");
@@ -317,6 +318,8 @@ useEffect(() => {
 
   // --- TAP BUTTON HANDLER (calls handleTap) ---
   function onTapButtonClick() {
+    
+ playClick();
     handleTap();
   }
 
