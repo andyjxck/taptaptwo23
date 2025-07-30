@@ -6,7 +6,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Users, Flame, ChevronDown, Coins, Crown, Timer, Zap, Settings } from "lucide-react";
 
 function isImageUrl(icon) {
-  return typeof icon === "string" && (icon.startsWith("http") || icon.startsWith("/") || icon.match(/\.(png|jpg|jpeg|gif|svg)$/i));
+  return (
+    typeof icon === "string" &&
+    (icon.startsWith("http") ||
+      icon.startsWith("/") ||
+      icon.match(/\.(png|jpg|jpeg|gif|svg)$/i))
+  );
 }
 
 function formatNumberShort(num) {
@@ -26,7 +31,9 @@ function formatNumberShort(num) {
   ];
   for (let i = 0; i < units.length; i++) {
     if (num >= units[i].value) {
-      const formatted = (num / units[i].value).toFixed(1).replace(/\.0$/, "");
+      const formatted = (num / units[i].value)
+        .toFixed(1)
+        .replace(/\.0$/, "");
       return formatted + units[i].symbol;
     }
   }
@@ -35,13 +42,11 @@ function formatNumberShort(num) {
 
 export default function BossModePage() {
   const router = useRouter();
-  const soloTapRequestCounter = useRef(0);
 
   // --- AUTH ---
   const [userId, setUserId] = useState("");
   const [pin, setPin] = useState("");
   const [userReady, setUserReady] = useState(false);
-  const coopTapRequestCounter = useRef(0);
 
   // --- MENU/UI STATE ---
   const [mode, setMode] = useState(""); // "", "solo", "coop-create", "coop-join", "coop"
@@ -51,25 +56,27 @@ export default function BossModePage() {
   const [tapCount, setTapCount] = useState(0);
   const [showDamageNumbers, setShowDamageNumbers] = useState([]);
 
-  // --- PROFILE & UPGRADE STATE ---
+  // --- PROFILE & UPGRADES STATE ---
   const [profileData, setProfileData] = useState(null);
   const [upgradesData, setUpgradesData] = useState(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [upgradesLoading, setUpgradesLoading] = useState(false);
 
   // --- SOLO BOSS STATE ---
-  const [soloProgress, setSoloProgress] = useState(null); // { boss_hp, boss_max_hp, current_level, ... }
+  const [soloProgress, setSoloProgress] = useState(null); // boss_hp, boss_max_hp, current_level, ...
   const [soloLoading, setSoloLoading] = useState(false);
 
   // --- COOP BOSS STATE ---
-  const [currentSession, setCurrentSession] = useState(null); // { room_code, boss_hp, boss_max_hp, ... }
+  const [currentSession, setCurrentSession] = useState(null);
   const [coopError, setCoopError] = useState("");
   const [coopJoining, setCoopJoining] = useState(false);
   const [coopCreating, setCoopCreating] = useState(false);
 
-  // --- BUTTON LOCK -
-  // --- Loading wheel state ---
+  // --- BUTTON LOCK & LOADING ---
   const [pageLoading, setPageLoading] = useState(true);
+
+  // --- DAMAGE STATE ---
+  const [accumulatedAutoTapDamage, setAccumulatedAutoTapDamage] = useState(0);
 
   // --- EFFECTS: AUTH INIT ---
   useEffect(() => {
@@ -90,16 +97,18 @@ export default function BossModePage() {
     setProfileLoading(true);
     setUpgradesLoading(true);
     Promise.all([
-      fetch(`/api/boss?action=profile&userId=${userId}`).then(r => r.json()),
-      fetch(`/api/boss?action=upgrades&userId=${userId}`).then(r => r.json()),
-    ]).then(([profile, upgrades]) => {
-      setProfileData(profile);
-      setUpgradesData(upgrades);
-    }).finally(() => {
-      setProfileLoading(false);
-      setUpgradesLoading(false);
-      setPageLoading(false);
-    });
+      fetch(`/api/boss?action=profile&userId=${userId}`).then((r) => r.json()),
+      fetch(`/api/boss?action=upgrades&userId=${userId}`).then((r) => r.json()),
+    ])
+      .then(([profile, upgrades]) => {
+        setProfileData(profile);
+        setUpgradesData(upgrades);
+      })
+      .finally(() => {
+        setProfileLoading(false);
+        setUpgradesLoading(false);
+        setPageLoading(false);
+      });
   }, [userReady, userId]);
 
   // --- EFFECTS: LOAD SOLO PROGRESS ON ENTERING SOLO ---
@@ -107,30 +116,36 @@ export default function BossModePage() {
     if (!userReady || mode !== "solo") return;
     setSoloLoading(true);
     fetch(`/api/boss?action=progress&userId=${userId}`)
-      .then(r => r.json())
-      .then(data => {
+      .then((r) => r.json())
+      .then((data) => {
         setSoloProgress(data);
         setTapCount(0);
+        setAccumulatedAutoTapDamage(0);
       })
       .finally(() => setSoloLoading(false));
   }, [userReady, userId, mode]);
 
-  // --- EFFECTS: COOP SESSION POLLING (while in coop mode) ---
+  // --- EFFECTS: COOP SESSION POLLING ---
   useEffect(() => {
     if (!userReady || mode !== "coop" || !currentSession) return;
     let cancelled = false;
     const interval = setInterval(() => {
-      fetch(`/api/boss?action=coop_session&roomCode=${currentSession.room_code}&userId=${userId}`)
-        .then(r => r.json())
-        .then(data => {
+      fetch(
+        `/api/boss?action=coop_session&roomCode=${currentSession.room_code}&userId=${userId}`
+      )
+        .then((r) => r.json())
+        .then((data) => {
           if (cancelled) return;
           if (data.session) setCurrentSession(data.session);
         });
     }, 1200);
-    return () => { cancelled = true; clearInterval(interval); };
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, [mode, currentSession, userReady, userId]);
 
-  // --- AUTO-TAPPER FOR SOLO ---
+  // --- EFFECTS: ACCUMULATE AUTO-TAPPER DAMAGE LOCALLY ---
   useEffect(() => {
     if (
       mode !== "solo" ||
@@ -138,133 +153,127 @@ export default function BossModePage() {
       !upgradesData?.stats?.autoTapperDps ||
       upgradesData.stats.autoTapperDps <= 0 ||
       soloProgress.boss_hp <= 0
-    ) return;
+    )
+      return;
 
+    // Every second add auto tapper DPS damage to accumulated damage
     const interval = setInterval(() => {
-      handleSoloTap(true);
+      setAccumulatedAutoTapDamage(
+        (prev) => prev + (upgradesData.stats.autoTapperDps || 0)
+      );
     }, 1000);
 
     return () => clearInterval(interval);
   }, [mode, soloProgress?.boss_hp, upgradesData?.stats?.autoTapperDps]);
 
-  // --- SOLO TAP HANDLER ---
-  function handleSoloTap(isAutoTap = false) {
-    if (soloLoading || !soloProgress || soloProgress.boss_hp <= 0) return;
+  // --- FUNCTION: HANDLE MANUAL TAP ---
+  async function handleTap() {
+    if (
+      soloLoading ||
+      (mode === "solo" && (!soloProgress || soloProgress.boss_hp <= 0)) ||
+      (mode === "coop" && (!currentSession || currentSession.boss_hp <= 0))
+    )
+      return;
 
-    // 1. Calculate local damage (flat 5% crit)
-    let localDamage = 1;
-    let isCrit = false;
-    if (isAutoTap) {
-      localDamage = upgradesData?.stats?.autoTapperDps || 0;
-    } else {
-      localDamage = upgradesData?.stats?.tapPower || 1;
-      isCrit = Math.random() < 0.05; // Flat 5% chance
-      if (isCrit) localDamage *= 3;
-    }
+    const tapPower = upgradesData?.stats?.tapPower || 1;
 
-    // 2. Show local floating number immediately
+    // 5% crit chance = 3x damage
+    const isCrit = Math.random() < 0.05;
+    const critMultiplier = isCrit ? 3 : 1;
+
+    // Total damage this tap = tap power * crit + accumulated auto tapper damage
+    const totalDamage = tapPower * critMultiplier + accumulatedAutoTapDamage;
+
+    // Show floating damage number (including crit and auto tap damage)
     const dmgId = Date.now() + Math.random();
-    setShowDamageNumbers(prev => [
+    setShowDamageNumbers((prev) => [
       ...prev,
       {
         id: dmgId,
-        damage: localDamage,
+        damage: Math.floor(totalDamage),
         isCrit,
         x: Math.random() * 120 - 60,
         y: Math.random() * 60 - 30,
       },
     ]);
-    setTimeout(() => setShowDamageNumbers(prev => prev.filter(d => d.id !== dmgId)), 1200);
+    setTimeout(() => {
+      setShowDamageNumbers((prev) => prev.filter((d) => d.id !== dmgId));
+    }, 1200);
 
-    // 3. Server call, HP only updated here
-    fetch("/api/boss", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "solo_tap", userId, isAutoTap }),
-    })
-      .then(r => r.json())
-      .then(data => {
-        if (data.boss_defeated) {
-          setShowCelebration(true);
-          setTimeout(() => setShowCelebration(false), 1600);
+    // Send total damage to backend (for solo or coop)
+    const action = mode === "solo" ? "solo_tap" : "coop_tap";
 
-          fetch(`/api/boss?action=progress&userId=${userId}`)
-            .then(r => r.json())
-            .then(newBoss => setSoloProgress(newBoss));
-          fetch(`/api/boss?action=profile&userId=${userId}`)
-            .then(r => r.json())
-            .then(setProfileData);
-          setTapCount(0);
-          return;
+    // Prepare request body
+    const body = {
+      action,
+      userId,
+      damage: Math.floor(totalDamage),
+    };
+
+    if (mode === "coop") {
+      body.roomCode = currentSession.room_code;
+    }
+
+    try {
+      const res = await fetch("/api/boss", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+
+      // Reset accumulated auto tap damage after sending
+      setAccumulatedAutoTapDamage(0);
+
+      if (data.boss_defeated) {
+        setShowCelebration(true);
+        setTimeout(() => setShowCelebration(false), 1600);
+
+        // Reload progress and profile after boss defeated
+        if (mode === "solo") {
+          const newProgress = await fetch(
+            `/api/boss?action=progress&userId=${userId}`
+          ).then((r) => r.json());
+          setSoloProgress(newProgress);
+        } else {
+          const newSession = await fetch(
+            `/api/boss?action=coop_session&roomCode=${currentSession.room_code}&userId=${userId}`
+          )
+            .then((r) => r.json())
+            .then((res) => res.session);
+          if (newSession) setCurrentSession(newSession);
         }
-        setSoloProgress(prev => ({
+
+        const newProfile = await fetch(
+          `/api/boss?action=profile&userId=${userId}`
+        ).then((r) => r.json());
+        setProfileData(newProfile);
+
+        setTapCount(0);
+        return;
+      }
+
+      // Update local HP and tap count on normal tap
+      if (mode === "solo") {
+        setSoloProgress((prev) => ({
           ...prev,
           boss_hp: data.current_boss_hp,
         }));
-        setTapCount(prev => prev + (isAutoTap ? 0 : 1));
-      });
+      } else {
+        setCurrentSession((prev) => ({
+          ...prev,
+          boss_hp: data.current_boss_hp,
+        }));
+      }
+      setTapCount((prev) => prev + 1);
+    } catch (error) {
+      console.error("Error sending tap damage:", error);
+    }
   }
 
-  // --- COOP TAP HANDLER ---
-  function handleCoopTap() {
-    if (!currentSession || currentSession.boss_hp <= 0) return;
-
-    // 1. Calculate local damage (flat 5% crit)
-    let localDamage = upgradesData?.stats?.tapPower || 1;
-    let isCrit = false;
-    isCrit = Math.random() < 0.05; // Flat 5% chance
-    if (isCrit) localDamage *= 3;
-
-    // 2. Show local floating number immediately
-    const dmgId = Date.now() + Math.random();
-    setShowDamageNumbers(prev => [
-      ...prev,
-      {
-        id: dmgId,
-        damage: localDamage,
-        isCrit,
-        x: Math.random() * 120 - 60,
-        y: Math.random() * 60 - 30,
-      },
-    ]);
-    setTimeout(() => setShowDamageNumbers(prev => prev.filter(d => d.id !== dmgId)), 1200);
-
-    // 3. Server call, HP only updated here
-    fetch("/api/boss", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "coop_tap",
-        roomCode: currentSession.room_code,
-        userId: userId,
-        damage: localDamage
-      })
-    })
-      .then(r => r.json())
-      .then(data => {
-        if (data.boss_defeated) {
-          setShowCelebration(true);
-          setTimeout(() => setShowCelebration(false), 1600);
-
-          fetch(`/api/boss?action=coop_session&roomCode=${currentSession.room_code}&userId=${userId}`)
-            .then(r => r.json())
-            .then(res => res.session && setCurrentSession(res.session));
-          fetch(`/api/boss?action=profile&userId=${userId}`)
-            .then(r => r.json())
-            .then(setProfileData);
-
-          setTapCount(0);
-          return;
-        }
-        setCurrentSession(prev => ({ ...prev, boss_hp: data.current_boss_hp }));
-        setTapCount(prev => prev + 1);
-      });
-  }
-
-  // --- TAP BUTTON HANDLER (solo/coop) ---
-  function handleTap() {
-    if (mode === "solo" && soloProgress) handleSoloTap(false);
-    if (mode === "coop" && currentSession) handleCoopTap();
+  // --- TAP BUTTON HANDLER (calls handleTap) ---
+  function onTapButtonClick() {
+    handleTap();
   }
 
   // --- COOP CREATE ---
@@ -274,10 +283,10 @@ export default function BossModePage() {
     fetch("/api/boss", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "coop_create", userId })
+      body: JSON.stringify({ action: "coop_create", userId }),
     })
-      .then(r => r.json())
-      .then(data => {
+      .then((r) => r.json())
+      .then((data) => {
         if (!data.session) throw new Error("No session returned");
         setCurrentSession(data.session);
         setMode("coop");
@@ -293,10 +302,10 @@ export default function BossModePage() {
     fetch("/api/boss", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "coop_join", roomCode: roomCode.trim(), userId })
+      body: JSON.stringify({ action: "coop_join", roomCode: roomCode.trim(), userId }),
     })
-      .then(r => r.json())
-      .then(data => {
+      .then((r) => r.json())
+      .then((data) => {
         if (data.session) {
           setCurrentSession(data.session);
           setMode("coop");
@@ -319,7 +328,11 @@ export default function BossModePage() {
   if (!mode) {
     return (
       <div className="boss-bg min-h-screen flex items-center justify-center px-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md"
+        >
           {/* Profile Header */}
           {profileData && (
             <div className="relative mb-6">
@@ -332,11 +345,17 @@ export default function BossModePage() {
                 <div className="flex items-center space-x-2">
                   {profileData.profile.profile_icon ? (
                     isImageUrl(profileData.profile.profile_icon) ? (
-                      <img src={profileData.profile.profile_icon} alt="icon" className="w-8 h-8 rounded-full object-cover" />
+                      <img
+                        src={profileData.profile.profile_icon}
+                        alt="icon"
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
                     ) : (
                       <div className="text-2xl">{profileData.profile.profile_icon}</div>
                     )
-                  ) : <div className="text-2xl">🙂</div>}
+                  ) : (
+                    <div className="text-2xl">🙂</div>
+                  )}
                   <div className="text-left">
                     <div className="text-orange-50 font-bold text-sm">
                       {profileData.profile.profile_name}
@@ -363,11 +382,15 @@ export default function BossModePage() {
                       </div>
                       <div className="flex justify-between">
                         <span>Total Coins:</span>
-                        <span className="font-bold text-yellow-400">{formatNumberShort(profileData.stats.totalCoins)}</span>
+                        <span className="font-bold text-yellow-400">
+                          {formatNumberShort(profileData.stats.totalCoins)}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span>Available:</span>
-                        <span className="font-bold text-green-400">{formatNumberShort(profileData.stats.availableCoins)}</span>
+                        <span className="font-bold text-green-400">
+                          {formatNumberShort(profileData.stats.availableCoins)}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span>Upgrade Level:</span>
@@ -379,10 +402,14 @@ export default function BossModePage() {
               </AnimatePresence>
             </div>
           )}
+
           {/* Main Menu Panel */}
           <div className="boss-glass-panel p-8 shadow-3xl border border-orange-500/30">
             <div className="text-center mb-8">
-              <h1 className="text-5xl font-black text-orange-100 mb-2 flicker" style={{ textShadow: "0 0 20px #d97706, 0 0 40px #7c2d12" }}>
+              <h1
+                className="text-5xl font-black text-orange-100 mb-2 flicker"
+                style={{ textShadow: "0 0 20px #d97706, 0 0 40px #7c2d12" }}
+              >
                 INFERNO BOSS
               </h1>
               <p className="text-orange-300 text-lg">Dare to face the darkness?</p>
@@ -391,7 +418,10 @@ export default function BossModePage() {
               <motion.button
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => { setMode("solo"); setShowProfileDropdown(false); }}
+                onClick={() => {
+                  setMode("solo");
+                  setShowProfileDropdown(false);
+                }}
                 className="boss-button-solo"
               >
                 <div className="flex items-center justify-center space-x-3">
@@ -405,7 +435,10 @@ export default function BossModePage() {
               <motion.button
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => { setMode("coop-create"); setShowProfileDropdown(false); }}
+                onClick={() => {
+                  setMode("coop-create");
+                  setShowProfileDropdown(false);
+                }}
                 className="boss-button-coop"
               >
                 <div className="flex items-center justify-center space-x-3">
@@ -419,7 +452,10 @@ export default function BossModePage() {
               <motion.button
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => { setMode("coop-join"); setShowProfileDropdown(false); }}
+                onClick={() => {
+                  setMode("coop-join");
+                  setShowProfileDropdown(false);
+                }}
                 className="boss-button-join"
               >
                 <div className="flex items-center justify-center space-x-3">
@@ -442,7 +478,11 @@ export default function BossModePage() {
   if (mode === "coop-create" && !currentSession) {
     return (
       <div className="boss-bg min-h-screen flex items-center justify-center px-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md"
+        >
           <div className="boss-glass-panel p-8 shadow-3xl border border-orange-500/30">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-orange-100 mb-2">Forge Alliance</h2>
@@ -482,7 +522,11 @@ export default function BossModePage() {
   if (mode === "coop-join" && !currentSession) {
     return (
       <div className="boss-bg min-h-screen flex items-center justify-center px-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md"
+        >
           <div className="boss-glass-panel p-8 shadow-3xl border border-orange-500/30">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-orange-100 mb-2">Join Alliance</h2>
@@ -492,7 +536,7 @@ export default function BossModePage() {
               <input
                 type="text"
                 value={roomCode}
-                onChange={e => setRoomCode(e.target.value.toUpperCase())}
+                onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
                 placeholder="Enter battle code"
                 className="boss-input"
                 maxLength={6}
@@ -532,7 +576,8 @@ export default function BossModePage() {
 
   // --- BATTLE UI (SOLO/COOP) ---
   let battleData = mode === "solo" ? soloProgress : currentSession;
-  const isBattleLoading = (mode === "solo" && soloLoading) || (mode === "coop" && !currentSession);
+  const isBattleLoading =
+    (mode === "solo" && soloLoading) || (mode === "coop" && !currentSession);
   if (!upgradesData || !battleData || isBattleLoading) {
     return (
       <div className="boss-bg min-h-screen flex flex-col items-center justify-center px-4">
@@ -544,7 +589,10 @@ export default function BossModePage() {
   }
 
   const hpMax = battleData.boss_max_hp || battleData.boss_hp;
-  const hpPercentage = Math.max(0, Math.min(100, (battleData.boss_hp / hpMax) * 100));
+  const hpPercentage = Math.max(
+    0,
+    Math.min(100, (battleData.boss_hp / hpMax) * 100)
+  );
 
   function getTimeUntilReset() {
     if (!soloProgress?.next_reset) return "";
@@ -553,7 +601,9 @@ export default function BossModePage() {
     const diffMs = resetDate - now;
     if (diffMs <= 0) return "0d 0h 0m";
     const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const hours = Math.floor(
+      (diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+    );
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     return `${days}d ${hours}h ${minutes}m`;
   }
@@ -573,11 +623,17 @@ export default function BossModePage() {
               <div className="flex items-center space-x-2">
                 {profileData.profile.profile_icon ? (
                   isImageUrl(profileData.profile.profile_icon) ? (
-                    <img src={profileData.profile.profile_icon} alt="icon" className="w-8 h-8 rounded-full object-cover" />
+                    <img
+                      src={profileData.profile.profile_icon}
+                      alt="icon"
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
                   ) : (
                     <div className="text-2xl">{profileData.profile.profile_icon}</div>
                   )
-                ) : <div className="text-2xl">🙂</div>}
+                ) : (
+                  <div className="text-2xl">🙂</div>
+                )}
                 <div className="text-left">
                   <div className="text-orange-50 font-bold text-sm">
                     {profileData.profile.profile_name}
@@ -604,11 +660,15 @@ export default function BossModePage() {
                     </div>
                     <div className="flex justify-between">
                       <span>Total Coins:</span>
-                      <span className="font-bold text-yellow-400">{formatNumberShort(profileData.stats.totalCoins)}</span>
+                      <span className="font-bold text-yellow-400">
+                        {formatNumberShort(profileData.stats.totalCoins)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Available:</span>
-                      <span className="font-bold text-green-400">{formatNumberShort(profileData.stats.availableCoins)}</span>
+                      <span className="font-bold text-green-400">
+                        {formatNumberShort(profileData.stats.availableCoins)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Upgrade Level:</span>
@@ -674,7 +734,7 @@ export default function BossModePage() {
 
           {/* Floating Damage Numbers */}
           <AnimatePresence>
-            {showDamageNumbers.map(dmg => (
+            {showDamageNumbers.map((dmg) => (
               <motion.div
                 key={dmg.id}
                 initial={{ opacity: 1, y: 0, scale: 1 }}
@@ -682,16 +742,14 @@ export default function BossModePage() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 1.2, ease: "easeOut" }}
                 className={`absolute text-3xl font-black pointer-events-none z-20 ${
-                  dmg.isCrit
-                    ? "text-yellow-300 drop-shadow-lg"
-                    : "text-orange-200"
+                  dmg.isCrit ? "text-yellow-300 drop-shadow-lg" : "text-orange-200"
                 }`}
                 style={{
                   left: `calc(50% + ${dmg.x}px)`,
                   top: `calc(40% + ${dmg.y}px)`,
                   textShadow: dmg.isCrit
                     ? "0 0 20px #fbbf24"
-                    : "0 0 10px #fb923c"
+                    : "0 0 10px #fb923c",
                 }}
               >
                 {dmg.isCrit && "💥"}
@@ -703,9 +761,11 @@ export default function BossModePage() {
 
           {/* Boss Emoji / Image */}
           <motion.div
-            animate={showCelebration
-              ? { scale: [1, 1.3, 1], rotate: [0, 10, -10, 0] }
-              : { scale: 1, rotate: 0 }}
+            animate={
+              showCelebration
+                ? { scale: [1, 1.3, 1], rotate: [0, 10, -10, 0] }
+                : { scale: 1, rotate: 0 }
+            }
             transition={{ duration: 0.6 }}
             className="text-7xl mb-4 drop-shadow-2xl"
             style={{ textShadow: "0 0 32px #ef4444, 0 0 64px #7c2d12" }}
@@ -738,20 +798,29 @@ export default function BossModePage() {
             <motion.button
               whileHover={{ scale: 1.07 }}
               whileTap={{ scale: 0.94, rotate: [0, -5, 5, 0] }}
-              onClick={handleTap}
+              onClick={onTapButtonClick}
               disabled={battleData.boss_hp <= 0 || soloLoading}
               className="boss-strike-button"
             >
               <div className="absolute inset-0 boss-strike-gloss"></div>
               <div className="relative z-10 flex flex-col items-center justify-center h-full">
                 <motion.div
-                  animate={{ scale: [1, 1.2, 1], textShadow: ["0 0 10px #fbbf24", "0 0 24px #fbbf24", "0 0 10px #fbbf24"] }}
+                  animate={{
+                    scale: [1, 1.2, 1],
+                    textShadow: [
+                      "0 0 10px #fbbf24",
+                      "0 0 24px #fbbf24",
+                      "0 0 10px #fbbf24",
+                    ],
+                  }}
                   transition={{ duration: 1.5, repeat: Infinity }}
                   className="text-5xl mb-2"
                 >
                   🔥
                 </motion.div>
-                <div className="text-lg font-black tracking-wider drop-shadow-lg">STRIKE!</div>
+                <div className="text-lg font-black tracking-wider drop-shadow-lg">
+                  STRIKE!
+                </div>
                 <div className="text-xs opacity-90 mt-1">
                   {upgradesData?.stats?.tapPower || 1} DMG
                 </div>
@@ -760,7 +829,8 @@ export default function BossModePage() {
           </div>
           <div className="text-orange-200 space-y-1 text-sm">
             <div>
-              Strikes: {tapCount} | +{formatNumberShort(battleData.coins_per_boss)} coins per boss
+              Strikes: {tapCount} | +{formatNumberShort(battleData.coins_per_boss)} coins
+              per boss
             </div>
             {upgradesData?.stats?.autoTapperDps > 0 && (
               <div className="text-green-400">
@@ -779,23 +849,33 @@ export default function BossModePage() {
           <h3 className="text-xl font-bold text-orange-100 mb-1 text-center">
             ⚔️ UPGRADES ⚔️
           </h3>
-          <p className="text-xs text-orange-200 text-center mb-3">(Manage upgrades in main game)</p>
+          <p className="text-xs text-orange-200 text-center mb-3">
+            (Manage upgrades in main game)
+          </p>
           <div className="grid grid-cols-2 gap-2 text-orange-100 text-center text-xs font-bold">
             <div className="boss-upgrade-btn boss-upgrade-red cursor-not-allowed opacity-80 p-2">
               <div className="mb-1 flex items-center justify-between">
                 <Zap size={16} className="text-yellow-400" />
               </div>
               <div>Tap Power</div>
-              <div className="opacity-90">Lv.{formatNumberShort(upgradesData?.upgrades?.tap_power_upgrades || 1)}</div>
-              <div className="opacity-70">{formatNumberShort(upgradesData?.stats?.tapPower || 1)} DMG</div>
+              <div className="opacity-90">
+                Lv.{formatNumberShort(upgradesData?.upgrades?.tap_power_upgrades || 1)}
+              </div>
+              <div className="opacity-70">
+                {formatNumberShort(upgradesData?.stats?.tapPower || 1)} DMG
+              </div>
             </div>
             <div className="boss-upgrade-btn boss-upgrade-green cursor-not-allowed opacity-80 p-2">
               <div className="mb-1 flex items-center justify-between">
                 <Settings size={16} className="text-green-400" />
               </div>
               <div>Auto Tapper</div>
-              <div className="opacity-90">Lv.{formatNumberShort(upgradesData?.upgrades?.auto_tapper_upgrades || 0)}</div>
-              <div className="opacity-70">{formatNumberShort(upgradesData?.stats?.autoTapperDps || 0)} DPS</div>
+              <div className="opacity-90">
+                Lv.{formatNumberShort(upgradesData?.upgrades?.auto_tapper_upgrades || 0)}
+              </div>
+              <div className="opacity-70">
+                {formatNumberShort(upgradesData?.stats?.autoTapperDps || 0)} DPS
+              </div>
             </div>
           </div>
         </motion.div>
@@ -835,6 +915,7 @@ export default function BossModePage() {
     </div>
   );
 }
+
 // --- GLOSSY DARK "INFERNO" THEME STYLES ---
 const bossCSS = `
   .boss-bg {
