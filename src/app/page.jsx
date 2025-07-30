@@ -6369,7 +6369,7 @@ const renderLeaderboard = () => (
     {activeTab === "game" ? (
       <div className="flex flex-col items-center justify-center space-y-6">
         <div className="relative">
-    <button
+   <button
   onClick={() => {
     if (navigator.vibrate) navigator.vibrate(50);
 
@@ -6384,45 +6384,41 @@ const renderLeaderboard = () => (
     handleTap();
   }}
   className={`
-    group relative w-[220px] h-[220px] rounded-full flex items-center justify-center
-    border-[6px] border-white/30 shadow-[0_10px_32px_6px_rgba(40,40,120,0.24),0_2px_8px_0_rgba(0,0,0,0.12)]
+    tappable-main-btn group relative w-[220px] h-[220px] rounded-full flex items-center justify-center
+    border-[6px] border-white/30
     bg-gradient-to-br from-white/80 via-white/60 to-gray-300/90
+    shadow-xl
     overflow-hidden
     transition-transform active:scale-95
     hover:shadow-[0_20px_50px_10px_rgba(80,80,180,0.28)]
     outline-none focus-visible:ring-4 focus-visible:ring-purple-400
     select-none
   `}
-  style={{
-    WebkitTapHighlightColor: "transparent",
-  }}
+  style={{ WebkitTapHighlightColor: "transparent" }}
 >
-  {/* Animated energy swirl ring (matches theme) */}
+  {/* Spinning Energy Ring */}
   <span className={`
-    absolute z-0 inset-0 rounded-full pointer-events-none
-    animate-spin-slow
+    tappable-spin absolute z-0 inset-0 rounded-full pointer-events-none
     ${
       gameState.equippedTheme && gameState.equippedTheme !== "seasons"
         ? CUSTOM_THEMES[gameState.equippedTheme]?.buttonGlow
         : SEASONAL_THEMES[gameState.currentSeason].buttonGlow
     }
-    opacity-40
-    border-4 border-transparent
-    ring-8 ring-[rgba(140,120,255,0.10)]
-  `}
-    style={{ animationDuration: "9s" }}
-  />
-  {/* Inner glass rim */}
+    opacity-30 border-4 border-transparent ring-8 ring-[rgba(140,120,255,0.10)]
+  `} />
+  
+  {/* Inner Glass Rim */}
   <span className="absolute z-10 inset-4 rounded-full bg-white/40 border-2 border-white/50 blur-[2px] opacity-70 pointer-events-none"/>
-  {/* Shiny gloss highlight */}
+  
+  {/* Gloss Highlight */}
   <span className="absolute z-20 top-8 left-10 w-32 h-16 rounded-full bg-white/70 blur-xl opacity-25 pointer-events-none group-hover:opacity-50 transition-opacity"/>
-  {/* Animated shine sweep */}
+  
+  {/* Shine Sweep */}
   <span className="absolute z-30 inset-0 rounded-full pointer-events-none">
-    <span className="absolute left-0 top-0 w-full h-full rounded-full opacity-0 group-hover:opacity-60 group-active:opacity-100 transition-all">
-      <span className="block w-full h-full bg-gradient-to-br from-white/80 via-white/10 to-transparent rounded-full animate-shine"/>
-    </span>
+    <span className="tappable-shine" />
   </span>
-  {/* Center icon */}
+  
+  {/* Center Icon */}
   <span className="relative z-40 flex items-center justify-center select-none">
     {gameState.equippedTheme && gameState.equippedTheme !== "seasons" ? (
       <span className="text-7xl drop-shadow-lg group-active:scale-110 transition-transform duration-150">
@@ -6442,21 +6438,12 @@ const renderLeaderboard = () => (
       />
     )}
   </span>
+  
   {/* Button rim shadow */}
   <span className="absolute z-0 inset-0 rounded-full shadow-[0_0_32px_14px_rgba(80,80,140,0.14)] pointer-events-none"/>
+  
   {/* 3D bottom edge */}
   <span className="absolute bottom-0 left-0 right-0 h-10 rounded-b-full bg-gradient-to-t from-gray-300/70 to-transparent z-10 pointer-events-none"/>
-  <style jsx>{`
-    .animate-spin-slow { animation: spin 9s linear infinite; }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-    .animate-shine { animation: shine-move 1.8s cubic-bezier(0.4,0,0.2,1) 1; }
-    @keyframes shine-move {
-      0% { opacity:0; transform: translateX(-80%) scale(1.1);}
-      20% { opacity:0.7; }
-      60% { opacity:0.8; transform: translateX(60%) scale(1.08);}
-      100% { opacity:0; transform: translateX(150%) scale(1.05);}
-    }
-  `}</style>
 </button>
 
 
@@ -7460,6 +7447,31 @@ const renderLeaderboard = () => (
   background: transparent;
   pointer-events: none;
 }
+
+  /* Spinning energy ring */
+  .tappable-spin {
+    animation: spin 7s linear infinite;
+  }
+  @keyframes spin {
+    100% { transform: rotate(360deg); }
+  }
+
+  /* Shine Sweep Animation */
+  .tappable-shine {
+    position: absolute;
+    left: 0; top: 0; width: 100%; height: 100%;
+    border-radius: 9999px;
+    pointer-events: none;
+    background: linear-gradient(80deg, rgba(255,255,255,0.85) 15%, rgba(255,255,255,0.1) 70%, transparent 100%);
+    opacity: 0;
+    animation: shine-move 2.1s cubic-bezier(0.4,0,0.2,1) infinite;
+  }
+  @keyframes shine-move {
+    0%   { opacity: 0; transform: translateX(-60%) scale(1.1);}
+    10%  { opacity: 0.65; }
+    40%  { opacity: 0.8; transform: translateX(60%) scale(1.08);}
+    100% { opacity: 0; transform: translateX(110%) scale(1.04);}
+  }
 
 
       `}</style>
