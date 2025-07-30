@@ -239,7 +239,42 @@ const CUSTOM_THEMES = {
     image:
       "https://ucarecdn.com/2696ec93-7f3e-4194-88af-18a4bc68b0ed/-/format/auto/",
   },
+
+  // --- New themes below ---
+  pogoda_day: {
+    id: "pogoda_day",
+    name: "Pogoda (Day)",
+    icon: "🌤️",
+    background: "linear-gradient(to bottom, #f0e68c, #aee1f9)",
+    image:
+      "https://ucarecdn.com/48f12801-c888-42a8-b9a6-fd5502f1a35f/-/format/auto/",
+  },
+  pogoda_night: {
+    id: "pogoda_night",
+    name: "Pogoda (Night)",
+    icon: "🌙",
+    background: "linear-gradient(to bottom, #151e3d, #4b6cb7)",
+    image:
+      "https://ucarecdn.com/3fd70a5c-750a-48bf-9c3b-75e928745e5d/-/format/auto/",
+  },
+  zen_garden: {
+    id: "zen_garden",
+    name: "Zen Garden",
+    icon: "🪷",
+    background: "linear-gradient(to bottom, #b6e2d3, #f5e6c6)",
+    image:
+      "https://ucarecdn.com/54da3ab4-095e-4c95-af24-213ce48187d8/-/format/auto/",
+  },
+  aurora_borealis: {
+    id: "aurora_borealis",
+    name: "Aurora Borealis",
+    icon: "🌌",
+    background: "linear-gradient(to bottom, #232526, #24c6dc, #5433ff)",
+    image:
+      "https://ucarecdn.com/3d2bb9a6-3bc4-4725-b9cb-3b81f7471aff/-/format/auto/",
+  },
 };
+
 
 const PROFILE_ICONS = [
   {
@@ -4755,92 +4790,128 @@ const renderLeaderboard = () => (
 
   const limitedStock = gameState.limitedStock || {};
 
-  // --- Main Shop Data ---
-  const SHOP_THEMES = [
-    {
-      id: "seasons",
-      name: "Seasons Cycle",
-      emoji: "🔄",
-      price: 0,
-      currency: "renownTokens",
-      isLimited: false,
-    },
-    {
-      id: "heaven",
-      name: "Heaven",
-      emoji: CUSTOM_THEMES.heaven.icon,
-      price: 20,
-      currency: "renownTokens",
-      isLimited: false,
-    },
-    {
-      id: "maddoxtheme",
-      name: "Maddox",
-      emoji: CUSTOM_THEMES.maddoxtheme.icon,
-      price: 250,
-      currency: "renownTokens",
-      isLimited: true,
-      stock: limitedStock["maddoxtheme"] ?? 10,
-    },
-    {
-      id: "hell",
-      name: "Hell",
-      emoji: CUSTOM_THEMES.hell.icon,
-      price: 1000,
-      currency: "renownTokens",
-      isLimited: true,
-      stock: limitedStock["hell"] ?? 5,
-    },
-    {
-      id: "space",
-      name: "Space",
-      emoji: CUSTOM_THEMES.space.icon,
-      price: 30,
-      currency: "renownTokens",
-      isLimited: false,
-    },
-    {
-      id: "city_night",
-      name: "City Night",
-      emoji: CUSTOM_THEMES.city_night.icon,
-      price: 250,
-      currency: "renownTokens",
-      isLimited: true,
-      stock: limitedStock["city_night"] ?? 10,
-    },
-    {
-      id: "midnight",
-      name: "Midnight",
-      emoji: CUSTOM_THEMES.midnight.icon,
-      price: 28,
-      currency: "renownTokens",
-      isLimited: false,
-    },
-    {
-      id: "island",
-      name: "Island",
-      emoji: CUSTOM_THEMES.island.icon,
-      price: 24,
-      currency: "renownTokens",
-      isLimited: false,
-    },
-    {
-      id: "barn",
-      name: "Barn",
-      emoji: CUSTOM_THEMES.barn.icon,
-      price: 18,
-      currency: "renownTokens",
-      isLimited: false,
-    },
-    {
-      id: "city",
-      name: "City",
-      emoji: CUSTOM_THEMES.city.icon,
-      price: 20,
-      currency: "renownTokens",
-      isLimited: false,
-    },
-  ];
+const SHOP_THEMES = [
+  {
+    id: "seasons",
+    name: "Seasons Cycle",
+    emoji: "🔄",
+    price: 0,
+    currency: "renownTokens",
+    isLimited: false,
+  },
+  {
+    id: "heaven",
+    name: "Heaven",
+    emoji: CUSTOM_THEMES.heaven.icon,
+    price: 20,
+    currency: "renownTokens",
+    isLimited: false,
+  },
+  {
+    id: "maddoxtheme",
+    name: "Maddox",
+    emoji: CUSTOM_THEMES.maddoxtheme.icon,
+    price: 250,
+    currency: "renownTokens",
+    isLimited: true,
+    stock: limitedStock["maddoxtheme"] ?? 10,
+  },
+  {
+    id: "hell",
+    name: "Hell",
+    emoji: CUSTOM_THEMES.hell.icon,
+    price: 1000,
+    currency: "renownTokens",
+    isLimited: true,
+    stock: limitedStock["hell"] ?? 5,
+  },
+  {
+    id: "space",
+    name: "Space",
+    emoji: CUSTOM_THEMES.space.icon,
+    price: 30,
+    currency: "renownTokens",
+    isLimited: false,
+  },
+  {
+    id: "city_night",
+    name: "City Night",
+    emoji: CUSTOM_THEMES.city_night.icon,
+    price: 250,
+    currency: "renownTokens",
+    isLimited: true,
+    stock: limitedStock["city_night"] ?? 10,
+  },
+  {
+    id: "midnight",
+    name: "Midnight",
+    emoji: CUSTOM_THEMES.midnight.icon,
+    price: 28,
+    currency: "renownTokens",
+    isLimited: false,
+  },
+  {
+    id: "island",
+    name: "Island",
+    emoji: CUSTOM_THEMES.island.icon,
+    price: 24,
+    currency: "renownTokens",
+    isLimited: false,
+  },
+  {
+    id: "barn",
+    name: "Barn",
+    emoji: CUSTOM_THEMES.barn.icon,
+    price: 18,
+    currency: "renownTokens",
+    isLimited: false,
+  },
+  {
+    id: "city",
+    name: "City",
+    emoji: CUSTOM_THEMES.city.icon,
+    price: 20,
+    currency: "renownTokens",
+    isLimited: false,
+  },
+
+  // --- NEW THEMES ---
+  {
+    id: "pogoda_day",
+    name: "Pogoda (Day)",
+    emoji: CUSTOM_THEMES.pogoda_day.icon,
+    price: 55,
+    currency: "renownTokens",
+    isLimited: false,
+  },
+  {
+    id: "pogoda_night",
+    name: "Pogoda (Night)",
+    emoji: CUSTOM_THEMES.pogoda_night.icon,
+    price: 95,
+    currency: "renownTokens",
+    isLimited: true,
+    stock: limitedStock["pogoda_night"] ?? 5,
+  },
+  {
+    id: "zen_garden",
+    name: "Zen Garden",
+    emoji: CUSTOM_THEMES.zen_garden.icon,
+    price: 30,
+    currency: "renownTokens",
+    isLimited: false,
+  },
+  {
+    id: "aurora_borealis",
+    name: "Aurora Borealis",
+    emoji: CUSTOM_THEMES.aurora_borealis.icon,
+    price: 120,
+    currency: "renownTokens",
+    isLimited: true,
+    stock: limitedStock["aurora_borealis"] ?? 3,
+  },
+];
+
   const ownedIcons = gameState.ownedProfileIcons || [];
   const equippedIcon = gameState.profileIcon || null;
   const ownedThemes = gameState.ownedThemes || ["seasons"];
