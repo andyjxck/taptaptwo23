@@ -6343,6 +6343,8 @@ const renderLeaderboard = () => (
 
   </>
 )}
+  </div>
+  
 
 
   {["game", "house", "leaderboard"].includes(activeTab) && (
