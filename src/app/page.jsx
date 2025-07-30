@@ -6217,19 +6217,6 @@ const renderLeaderboard = () => (
   >
     {/* LEFT VERTICAL ICON BAR */}
     <div className="flex flex-col items-center gap-2 py-8 px-2 bg-gradient-to-b from-purple-900/60 via-purple-800/40 to-purple-900/50 border-r border-white/20 min-w-[56px] relative">
-      {/* Weather widget */}
-      <div className="flex flex-col items-center mb-6 w-full">
-        <div className="flex items-center gap-2 bg-white/10 border border-white/30 rounded-xl px-2 py-1">
-          <span className="text-2xl">{getWeatherIcon(gameState.currentWeather)}</span>
-          <div className="flex flex-col leading-tight">
-            <span className="text-xs font-semibold text-[#3c3551]">
-              {CUSTOM_THEME_WEATHER_RENAMES[gameState.equippedTheme]?.[gameState.currentWeather] ||
-                gameState.currentWeather || "Clear"}
-            </span>
-            <span className="text-[10px] text-[#939599]">{weatherDescription}</span>
-          </div>
-        </div>
-      </div>
       {/* Icons */}
       <button
         onClick={() => {
@@ -6275,6 +6262,19 @@ const renderLeaderboard = () => (
 
     {/* MAIN SIDEBAR AREA */}
     <div className="flex-1 flex flex-col items-center py-8 px-6 bg-gradient-to-br from-purple-800/95 via-purple-600/95 to-purple-900/90 backdrop-blur-xl overflow-y-auto relative">
+      {/* Weather Widget - TOP of sidebar main area */}
+      <div className="flex items-center gap-3 bg-white/10 border border-white/30 rounded-xl px-4 py-2 mb-4 w-full max-w-xs">
+        {/* Icon */}
+        <span className="text-3xl">{getWeatherIcon(gameState.currentWeather)}</span>
+        {/* Weather name/desc */}
+        <div>
+          <div className="font-semibold text-white text-base">
+            {CUSTOM_THEME_WEATHER_RENAMES[gameState.equippedTheme]?.[gameState.currentWeather] ||
+              gameState.currentWeather || "Clear"}
+          </div>
+          <div className="text-xs text-white opacity-80 mt-0.5">{weatherDescription}</div>
+        </div>
+      </div>
       {/* Close X */}
       <button
         onClick={() => setSidebarOpen(false)}
@@ -6291,7 +6291,7 @@ const renderLeaderboard = () => (
           alt="Tap Tap Two Logo"
           className="h-14 object-contain"
         />
-        <span className="text-xs text-gray-300 font-medium tracking-wide mt-1" style={{ letterSpacing: "0.03em" }}>
+        <span className="text-xs text-white font-medium tracking-wide mt-1" style={{ letterSpacing: "0.03em" }}>
           made by andysocial
         </span>
       </div>
@@ -6317,7 +6317,7 @@ const renderLeaderboard = () => (
         {/* Game */}
         <button
           onClick={() => { setActiveTab("game"); setSidebarOpen(false); }}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-[#f4f4f4] transition font-medium"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-white transition font-medium"
         >
           <i className="fas fa-gamepad"></i>
           <span>Game</span>
@@ -6326,7 +6326,7 @@ const renderLeaderboard = () => (
         <a
           href="/battle"
           onClick={() => setSidebarOpen(false)}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-[#f4f4f4] transition font-medium"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-white transition font-medium"
         >
           <i className="fas fa-crosshairs"></i>
           <span>Battle</span>
@@ -6334,7 +6334,7 @@ const renderLeaderboard = () => (
         {/* Reset */}
         <button
           onClick={() => { setShowResetModal(true); setSidebarOpen(false); }}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-[#f4f4f4] transition font-medium relative"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-white transition font-medium relative"
         >
           <i className="fas fa-sync-alt"></i>
           <span>Reset</span>
@@ -6359,7 +6359,7 @@ const renderLeaderboard = () => (
         {/* House */}
         <button
           onClick={() => { setActiveTab("house"); setSidebarOpen(false); }}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-[#f4f4f4] transition font-medium"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-white transition font-medium"
         >
           <i className="fas fa-home"></i>
           <span>House</span>
@@ -6367,7 +6367,7 @@ const renderLeaderboard = () => (
         {/* Friends */}
         <button
           onClick={() => { setActiveTab("friends"); setSidebarOpen(false); }}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-[#f4f4f4] transition font-medium"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-white transition font-medium"
         >
           <i className="fas fa-users"></i>
           <span>Friends</span>
@@ -6375,7 +6375,7 @@ const renderLeaderboard = () => (
         {/* Profile */}
         <button
           onClick={() => { setActiveTab("profile"); setSidebarOpen(false); }}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-[#f4f4f4] transition font-medium"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-white transition font-medium"
         >
           <i className="fas fa-user"></i>
           <span>Profile</span>
@@ -6384,7 +6384,7 @@ const renderLeaderboard = () => (
         {/* Leaderboard */}
         <button
           onClick={() => { setActiveTab("leaderboard"); setSidebarOpen(false); }}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-[#f4f4f4] transition font-medium"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-white transition font-medium"
         >
           <i className="fas fa-trophy"></i>
           <span>Leaderboard</span>
@@ -6393,7 +6393,7 @@ const renderLeaderboard = () => (
         <a
           href="/notice-board"
           onClick={() => setSidebarOpen(false)}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-[#f4f4f4] transition font-medium"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-white transition font-medium"
         >
           <i className="fas fa-bullhorn"></i>
           <span>Notice Board</span>
@@ -6401,7 +6401,7 @@ const renderLeaderboard = () => (
         {/* Shop */}
         <button
           onClick={() => { setActiveTab("shop"); setSidebarOpen(false); }}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-[#f4f4f4] transition font-medium"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-white transition font-medium"
         >
           <i className="fas fa-store"></i>
           <span>Shop</span>
