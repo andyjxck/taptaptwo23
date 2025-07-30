@@ -6216,6 +6216,16 @@ an andysocial game
           <i className="fas fa-crosshairs"></i>
           <span>Battle</span>
         </a>
+        {/* Boss */}
+<a
+  href="/boss"
+  onClick={() => setSidebarOpen(false)}
+  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-red-500/50 bg-red-700/30 hover:bg-red-700/40 text-white transition font-medium mt-2"
+>
+  <i className="fas fa-dragon"></i>
+  <span>Boss</span>
+  <span className="ml-2 px-2 py-0.5 text-xs rounded bg-red-600 text-white font-bold">NEW</span>
+</a>
         {/* Reset */}
         <button
           onClick={() => { setShowResetModal(true); setSidebarOpen(false); }}
