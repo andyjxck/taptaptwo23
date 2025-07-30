@@ -413,7 +413,7 @@ if (codeName === "boss") {
   } catch {}
   if (!Array.isArray(ownedLimitedItems)) ownedLimitedItems = [];
   // Get list of available limited items to award
-  const limitedItemsAvailable = (allLimitedItems || []).filter(
+  const limitedItemsAvailable = (limitedIcons || []).filter(
     (id) => !ownedLimitedItems.includes(id)
   );
   if (limitedItemsAvailable.length > 0) {
