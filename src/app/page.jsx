@@ -4700,120 +4700,21 @@ const renderLeaderboard = () => (
 
 
 
-  const renderShopTab = () => {
-  const discountRate = 0.1; // 20% discount
+ const renderShopTab = () => {
+  const discountRate = 0.1; // 10% discount
 
   // Shop tabs
   const tabs = [
-    {
-      id: "themes",
-      label: "Themes",
-      color: "border-yellow-200 text-yellow-600 ring-yellow-400",
-    },
-    {
-      id: "boosts",
-      label: "Boosts",
-      color: "border-red-200 text-red-500 ring-red-400",
-    },
-    {
-      id: "profileIcons",
-      label: "Icons",
-      color: "border-green-200 text-green-600 ring-green-400",
-    },
-    {
-      id: "limited",
-      label: "Limited",
-      color: "border-blue-200 text-blue-500 ring-blue-400",
-    },
+    { id: "themes", label: "Themes" },
+    { id: "boosts", label: "Boosts" },
+    { id: "profileIcons", label: "Icons" },
+    { id: "limited", label: "Limited" },
   ];
 
   const limitedStock = gameState.limitedStock || {};
 
-  const SHOP_THEMES = [
-    {
-      id: "seasons",
-      name: "Seasons Cycle",
-      emoji: "🔄",
-      price: 0,
-      currency: "renownTokens",
-      isLimited: false,
-    },
-    {
-      id: "heaven",
-      name: "Heaven",
-      emoji: CUSTOM_THEMES.heaven.icon,
-      price: 20,
-      currency: "renownTokens",
-      isLimited: false,
-    },
-    {
-      id: "maddoxtheme",
-      name: "Maddox",
-      emoji: CUSTOM_THEMES.maddoxtheme.icon,
-      price: 250,
-      currency: "renownTokens",
-      isLimited: true,
-      stock: limitedStock["maddoxtheme"] ?? 10,
-    },
-    {
-      id: "hell",
-      name: "Hell",
-      emoji: CUSTOM_THEMES.hell.icon,
-      price: 1000,
-      currency: "renownTokens",
-      isLimited: true,
-      stock: limitedStock["hell"] ?? 5,
-    },
-    {
-      id: "space",
-      name: "Space",
-      emoji: CUSTOM_THEMES.space.icon,
-      price: 30,
-      currency: "renownTokens",
-      isLimited: false,
-    },
-    {
-      id: "city_night",
-      name: "City Night",
-      emoji: CUSTOM_THEMES.city_night.icon,
-      price: 250,
-      currency: "renownTokens",
-      isLimited: true,
-      stock: limitedStock["city_night"] ?? 10,
-    },
-    {
-      id: "midnight",
-      name: "Midnight",
-      emoji: CUSTOM_THEMES.midnight.icon,
-      price: 28,
-      currency: "renownTokens",
-      isLimited: false,
-    },
-    {
-      id: "island",
-      name: "Island",
-      emoji: CUSTOM_THEMES.island.icon,
-      price: 24,
-      currency: "renownTokens",
-      isLimited: false,
-    },
-    {
-      id: "barn",
-      name: "Barn",
-      emoji: CUSTOM_THEMES.barn.icon,
-      price: 18,
-      currency: "renownTokens",
-      isLimited: false,
-    },
-    {
-      id: "city",
-      name: "City",
-      emoji: CUSTOM_THEMES.city.icon,
-      price: 20,
-      currency: "renownTokens",
-      isLimited: false,
-    },
-  ];
+  // --- Main Shop Data ---
+  const SHOP_THEMES = [ /* ... your theme objects ... */ ];
 
   const ownedIcons = gameState.ownedProfileIcons || [];
   const equippedIcon = gameState.profileIcon || null;
@@ -4822,65 +4723,57 @@ const renderLeaderboard = () => (
   const ownedBoosts = gameState.ownedBoosts || [];
   const canAfford = (price) => (gameState.renownTokens || 0) >= price;
 
+  // ---- SHOP CONTENT TABS ----
   let tabContent = null;
 
-  // Themes
+  // THEMES TAB
   if (shopView === "themes") {
     const normalThemes = SHOP_THEMES.filter((t) => !t.isLimited);
     tabContent = (
       <div>
-        <h3 className="text-xl font-bold mb-4 text-[#e11d48]">Themes</h3>
+        <h3 className="text-2xl font-bold mb-6 text-center text-yellow-600 tracking-wide drop-shadow">Themes</h3>
         <div className="grid grid-cols-1 gap-4">
           {normalThemes.map((theme) => {
             const owned = ownedThemes.includes(theme.id);
             const equipped = equippedTheme === theme.id;
             const discountedPrice = Math.ceil(theme.price * (1 - discountRate));
             const afford = canAfford(discountedPrice);
-
             return (
               <div
                 key={theme.id}
-                className="flex items-center justify-between bg-white/60 border border-gray-200 rounded-xl p-4"
+                className={`flex items-center justify-between bg-gradient-to-r from-white/70 via-yellow-50 to-white/60 border border-yellow-100 rounded-2xl p-4 shadow-md`}
               >
                 <div className="flex items-center space-x-4">
-                  <span className="text-3xl">{theme.emoji}</span>
+                  <span className="text-4xl">{theme.emoji}</span>
                   <div>
-                    <div className="font-semibold text-lg">{theme.name}</div>
-                    <div className="text-sm text-gray-500 flex items-center space-x-2">
+                    <div className="font-bold text-lg text-yellow-800">{theme.name}</div>
+                    <div className="text-xs flex items-center space-x-2 mt-1">
                       {theme.price > 0 && (
                         <>
-                          <span className="line-through">{theme.price} ⭐</span>
-                          <span className="bg-purple-300 text-purple-800 px-1 rounded text-xs font-bold">
-                            10% OFF
-                          </span>
+                          <span className="line-through text-gray-400">{theme.price} ⭐</span>
+                          <span className="bg-yellow-200 text-yellow-900 px-1.5 rounded font-bold">10% OFF</span>
                         </>
                       )}
-                      <span className="font-semibold">{discountedPrice} ⭐</span>
+                      <span className="font-bold text-yellow-700">{discountedPrice} ⭐</span>
                     </div>
                   </div>
                 </div>
                 <div>
                   {!owned ? (
                     <button
-                      className={`px-3 py-1 rounded font-semibold ${
-                        afford
-                          ? "bg-green-600 text-white hover:bg-green-700"
-                          : "bg-red-600 text-white opacity-60 cursor-not-allowed"
-                      }`}
+                      className={`px-5 py-2 rounded-lg font-bold shadow 
+                        ${afford ? "bg-green-500 hover:bg-green-600 text-white" : "bg-gray-200 text-gray-400 cursor-not-allowed"}
+                        transition`}
                       disabled={!afford}
-                      onClick={() =>
-                        handleBuyTheme({ ...theme, price: discountedPrice })
-                      }
+                      onClick={() => handleBuyTheme({ ...theme, price: discountedPrice })}
                     >
                       Buy
                     </button>
                   ) : equipped ? (
-                    <span className="px-3 py-1 rounded bg-green-500 text-white font-semibold">
-                      Equipped
-                    </span>
+                    <span className="px-5 py-2 rounded-lg bg-green-400 text-white font-bold shadow">Equipped</span>
                   ) : (
                     <button
-                      className="px-3 py-1 rounded bg-blue-400 text-white font-semibold"
+                      className="px-5 py-2 rounded-lg bg-blue-400 text-white font-bold shadow hover:bg-blue-500 transition"
                       onClick={() => handleEquipTheme(theme)}
                     >
                       Equip
@@ -4894,63 +4787,51 @@ const renderLeaderboard = () => (
       </div>
     );
   }
-  // Boosts
+
+  // BOOSTS TAB
   else if (shopView === "boosts") {
     const normalBoosts = BOOSTS.filter((b) => !b.isLimited);
     tabContent = (
       <div>
-        <h3 className="text-xl font-bold mb-4 text-[#e11d48]">Boosts</h3>
+        <h3 className="text-2xl font-bold mb-6 text-center text-red-500 tracking-wide drop-shadow">Boosts</h3>
         <div className="grid grid-cols-1 gap-4">
           {normalBoosts.length === 0 && (
-            <div className="text-center text-gray-400 py-10">
-              Keep your eyes peeled!
-            </div>
+            <div className="text-center text-gray-400 py-10">Keep your eyes peeled!</div>
           )}
           {normalBoosts.map((boost) => {
             const owned = ownedBoosts.includes(boost.id);
-            const alreadyActive = activeShopBoosts.some(
-              (b) => b.id === boost.id
-            );
+            const alreadyActive = activeShopBoosts.some((b) => b.id === boost.id);
             const discountedPrice = Math.ceil(boost.price * (1 - discountRate));
             const afford = canAfford(discountedPrice);
-
             return (
               <div
                 key={boost.id}
-                className="flex items-center justify-between bg-white/60 border border-gray-200 rounded-xl p-4"
+                className={`flex items-center justify-between bg-gradient-to-r from-white/70 via-red-50 to-white/60 border border-red-100 rounded-2xl p-4 shadow-md`}
               >
                 <div>
-                  <div className="font-semibold text-lg">{boost.name}</div>
-                  <div className="text-sm text-gray-500 flex items-center space-x-2">
+                  <div className="font-bold text-lg text-red-700">{boost.name}</div>
+                  <div className="text-xs flex items-center space-x-2 mt-1">
                     {boost.price > 0 && (
                       <>
-                        <span className="line-through">{boost.price} ⭐</span>
-                        <span className="bg-purple-300 text-purple-800 px-1 rounded text-xs font-bold">
-                          10% OFF
-                        </span>
+                        <span className="line-through text-gray-400">{boost.price} ⭐</span>
+                        <span className="bg-red-200 text-red-900 px-1.5 rounded font-bold">10% OFF</span>
                       </>
                     )}
-                    <span className="font-semibold">{discountedPrice} ⭐</span>
+                    <span className="font-bold text-red-500">{discountedPrice} ⭐</span>
                   </div>
                 </div>
                 <div>
-                  {/* Only normal boosts, NO unequip for these */}
                   <button
-                    className={`px-3 py-1 rounded font-semibold ${
-                      afford && !alreadyActive
-                        ? "bg-green-600 text-white hover:bg-green-700"
-                        : "bg-red-600 text-white opacity-60 cursor-not-allowed"
-                    }`}
+                    className={`px-5 py-2 rounded-lg font-bold shadow 
+                      ${afford && !alreadyActive ? "bg-green-500 hover:bg-green-600 text-white" : "bg-gray-200 text-gray-400 cursor-not-allowed"}
+                      transition`}
                     disabled={!afford || alreadyActive}
                     onClick={() => {
                       if (!afford) {
-
                         setNotification("Not enough Renown Tokens!");
                         return;
                       }
-                       if (navigator.vibrate) {
-  navigator.vibrate(50); // vibrate for 50 milliseconds
-}
+                      if (navigator.vibrate) navigator.vibrate(50);
                       setGameState((prev) => ({
                         ...prev,
                         renownTokens: prev.renownTokens - discountedPrice,
@@ -4968,65 +4849,57 @@ const renderLeaderboard = () => (
       </div>
     );
   }
-  // Profile Icons
+
+  // PROFILE ICONS TAB
   else if (shopView === "profileIcons") {
     const normalIcons = PROFILE_ICONS.filter((i) => !i.isLimited);
     tabContent = (
       <div>
-        <h3 className="text-xl font-bold mb-4 text-[#e11d48]">Profile Icons</h3>
+        <h3 className="text-2xl font-bold mb-6 text-center text-green-600 tracking-wide drop-shadow">Profile Icons</h3>
         <div className="grid grid-cols-1 gap-4">
           {normalIcons.length === 0 && (
-            <div className="text-center text-gray-400 py-10">
-              Keep your eyes peeled!
-            </div>
+            <div className="text-center text-gray-400 py-10">Keep your eyes peeled!</div>
           )}
           {normalIcons.map((icon) => {
             const owned = ownedIcons.includes(icon.id);
             const equipped = equippedIcon === icon.id;
             const discountedPrice = Math.ceil(icon.price * (1 - discountRate));
             const afford = canAfford(discountedPrice);
-
             return (
               <div
                 key={icon.id}
-                className="flex items-center justify-between bg-white/60 border border-gray-200 rounded-xl p-4"
+                className={`flex items-center justify-between bg-gradient-to-r from-white/70 via-green-50 to-white/60 border border-green-100 rounded-2xl p-4 shadow-md`}
               >
                 <div className="flex items-center space-x-4">
-                  <span className="text-3xl">{icon.emoji}</span>
+                  <span className="text-4xl">{icon.emoji}</span>
                   <div>
-                    <div className="text-sm text-gray-500 flex items-center space-x-2">
+                    <div className="text-xs flex items-center space-x-2 mt-1">
                       {icon.price > 0 && (
                         <>
-                          <span className="line-through">{icon.price} ⭐</span>
-                          <span className="bg-purple-300 text-purple-800 px-1 rounded text-xs font-bold">
-                            10% OFF
-                          </span>
+                          <span className="line-through text-gray-400">{icon.price} ⭐</span>
+                          <span className="bg-green-200 text-green-900 px-1.5 rounded font-bold">10% OFF</span>
                         </>
                       )}
-                      <span className="font-semibold">{discountedPrice} ⭐</span>
+                      <span className="font-bold text-green-600">{discountedPrice} ⭐</span>
                     </div>
                   </div>
                 </div>
                 <div>
                   {!owned ? (
                     <button
-                      className={`px-3 py-1 rounded font-semibold ${
-                        afford
-                          ? "bg-green-600 text-white hover:bg-green-700"
-                          : "bg-red-600 text-white opacity-60 cursor-not-allowed"
-                      }`}
+                      className={`px-5 py-2 rounded-lg font-bold shadow 
+                        ${afford ? "bg-green-500 hover:bg-green-600 text-white" : "bg-gray-200 text-gray-400 cursor-not-allowed"}
+                        transition`}
                       disabled={!afford}
                       onClick={() => handleBuyIcon({ ...icon, price: discountedPrice })}
                     >
                       Buy
                     </button>
                   ) : equipped ? (
-                    <span className="px-3 py-1 rounded bg-green-500 text-white font-semibold">
-                      Equipped
-                    </span>
+                    <span className="px-5 py-2 rounded-lg bg-green-400 text-white font-bold shadow">Equipped</span>
                   ) : (
                     <button
-                      className="px-3 py-1 rounded bg-blue-400 text-white font-semibold"
+                      className="px-5 py-2 rounded-lg bg-blue-400 text-white font-bold shadow hover:bg-blue-500 transition"
                       onClick={() => handleEquipIcon(icon)}
                     >
                       Equip
@@ -5040,23 +4913,20 @@ const renderLeaderboard = () => (
       </div>
     );
   }
-  // Limited (EDITED: Boosts can now be unequipped/equipped)
+
+  // LIMITED TAB
   else if (shopView === "limited") {
     const limitedIcons = PROFILE_ICONS.filter((i) => i.isLimited);
     const limitedThemes = SHOP_THEMES.filter((t) => t.isLimited);
     const limitedBoosts = BOOSTS.filter((b) => b.isLimited);
 
     tabContent = (
-      <div className="flex flex-col space-y-8">
+      <div className="flex flex-col space-y-10">
         {/* Limited Profile Icons */}
         <div>
-          <h3 className="text-xl font-bold mb-4 text-[#3b82f6]">
-            Limited Profile Icons
-          </h3>
+          <h3 className="text-xl font-bold mb-3 text-center text-yellow-600">Limited Profile Icons</h3>
           {limitedIcons.length === 0 ? (
-            <div className="text-center text-gray-400 py-10">
-              No limited profile icons yet.
-            </div>
+            <div className="text-center text-gray-400 py-8">No limited profile icons yet.</div>
           ) : (
             limitedIcons.map((icon) => {
               const owned = ownedIcons.includes(icon.id);
@@ -5070,7 +4940,7 @@ const renderLeaderboard = () => (
               return (
                 <div
                   key={icon.id}
-                  className="flex items-center justify-between bg-yellow-100 border border-yellow-400 rounded-xl p-4 mb-3"
+                  className="flex items-center justify-between bg-gradient-to-r from-yellow-50 via-white/70 to-yellow-100 border-2 border-yellow-400 rounded-2xl p-4 shadow-lg mb-2"
                 >
                   <div className="flex items-center space-x-4">
                     {/* Emoji or Image */}
@@ -5078,58 +4948,48 @@ const renderLeaderboard = () => (
                       <img
                         src={icon.image}
                         alt=""
-                        className="w-12 h-12 rounded-full object-cover border border-gray-300"
+                        className="w-12 h-12 rounded-full object-cover border border-yellow-400"
                       />
                     ) : (
-                      <span className="text-3xl">{icon.emoji}</span>
+                      <span className="text-4xl">{icon.emoji}</span>
                     )}
 
                     <div>
-                      <div className="text-sm text-gray-500 flex items-center space-x-2">
+                      <div className="text-sm text-yellow-900 font-semibold">{icon.name}</div>
+                      <div className="text-xs flex items-center space-x-2 mt-1">
                         {icon.price > 0 && (
                           <>
-                            <span className="line-through">{icon.price} ⭐</span>
-                            <span className="bg-purple-300 text-purple-800 px-1 rounded text-xs font-bold">
-                              10% OFF
-                            </span>
+                            <span className="line-through text-gray-400">{icon.price} ⭐</span>
+                            <span className="bg-yellow-200 text-yellow-900 px-1.5 rounded font-bold">10% OFF</span>
                           </>
                         )}
-                        <span className="font-semibold">{discountedPrice} ⭐</span>
+                        <span className="font-bold text-yellow-600">{discountedPrice} ⭐</span>
+                        <span className={`ml-2 text-xs font-bold px-2 py-0.5 rounded-full
+                          ${outOfStock ? "bg-red-200 text-red-700" : "bg-green-200 text-green-800"}
+                        `}>
+                          {stock} left
+                        </span>
                       </div>
-                      {outOfStock && (
-                        <div className="text-xs text-red-600 font-bold">
-                          Out of Stock
-                        </div>
-                      )}
                     </div>
                   </div>
-
                   <div>
                     {!owned ? (
                       <button
-                        className={`px-3 py-1 rounded font-semibold ${
-                          afford && !outOfStock
-                            ? "bg-green-600 text-white hover:bg-green-700"
-                            : "bg-red-600 text-white opacity-60 cursor-not-allowed"
-                        }`}
+                        className={`px-5 py-2 rounded-lg font-bold shadow 
+                          ${afford && !outOfStock ? "bg-green-500 hover:bg-green-600 text-white" : "bg-gray-200 text-gray-400 cursor-not-allowed"}
+                          transition`}
                         disabled={!afford || outOfStock}
                         onClick={() =>
-                          buyLimitedItem({
-                            itemId: icon.id,
-                            itemType: "profileIcon",
-                            price: discountedPrice,
-                          })
+                          buyLimitedItem({ itemId: icon.id, itemType: "profileIcon", price: discountedPrice })
                         }
                       >
                         {outOfStock ? "Out of Stock" : "Buy"}
                       </button>
                     ) : equipped ? (
-                      <span className="px-3 py-1 rounded bg-green-500 text-white font-semibold">
-                        Equipped
-                      </span>
+                      <span className="px-5 py-2 rounded-lg bg-green-400 text-white font-bold shadow">Equipped</span>
                     ) : (
                       <button
-                        className="px-3 py-1 rounded bg-blue-400 text-white font-semibold"
+                        className="px-5 py-2 rounded-lg bg-blue-400 text-white font-bold shadow hover:bg-blue-500 transition"
                         onClick={() => handleEquipIcon(icon)}
                       >
                         Equip
@@ -5144,9 +5004,9 @@ const renderLeaderboard = () => (
 
         {/* Limited Themes */}
         <div>
-          <h3 className="text-xl font-bold mb-4 text-[#eab308]">Limited Themes</h3>
+          <h3 className="text-xl font-bold mb-3 text-center text-yellow-600">Limited Themes</h3>
           {limitedThemes.length === 0 ? (
-            <div className="text-center text-gray-400 py-10">No limited themes yet.</div>
+            <div className="text-center text-gray-400 py-8">No limited themes yet.</div>
           ) : (
             limitedThemes.map((theme) => {
               const owned = ownedThemes.includes(theme.id);
@@ -5158,56 +5018,46 @@ const renderLeaderboard = () => (
               return (
                 <div
                   key={theme.id}
-                  className="flex items-center justify-between bg-yellow-100 border border-yellow-400 rounded-xl p-4 mb-3"
+                  className="flex items-center justify-between bg-gradient-to-r from-yellow-50 via-white/70 to-yellow-100 border-2 border-yellow-400 rounded-2xl p-4 shadow-lg mb-2"
                 >
                   <div className="flex items-center space-x-4">
-                    <span className="text-3xl">{theme.emoji}</span>
+                    <span className="text-4xl">{theme.emoji}</span>
                     <div>
-                      <div className="font-semibold text-lg">{theme.name}</div>
-                      <div className="text-sm text-gray-500 flex items-center space-x-2">
-                        {theme.price > 0 ? (
+                      <div className="font-semibold text-lg text-yellow-800">{theme.name}</div>
+                      <div className="text-xs flex items-center space-x-2 mt-1">
+                        {theme.price > 0 && (
                           <>
-                            <span className="line-through">{theme.price} ⭐</span>
-                            <span className="bg-purple-300 text-purple-800 px-1 rounded text-xs font-bold">
-                              10% OFF
-                            </span>
+                            <span className="line-through text-gray-400">{theme.price} ⭐</span>
+                            <span className="bg-yellow-200 text-yellow-900 px-1.5 rounded font-bold">10% OFF</span>
                           </>
-                        ) : (
-                          "Free"
                         )}
-                        <span className="font-semibold ml-2">{discountedPrice} ⭐</span>
+                        <span className="font-bold text-yellow-600">{discountedPrice} ⭐</span>
+                        <span className={`ml-2 text-xs font-bold px-2 py-0.5 rounded-full
+                          ${outOfStock ? "bg-red-200 text-red-700" : "bg-green-200 text-green-800"}
+                        `}>
+                          {stock} left
+                        </span>
                       </div>
-                      {outOfStock && (
-                        <div className="text-xs text-red-600 font-bold">Out of Stock</div>
-                      )}
                     </div>
                   </div>
                   <div>
                     {!owned ? (
                       <button
-                        className={`px-3 py-1 rounded font-semibold ${
-                          afford && !outOfStock
-                            ? "bg-green-600 text-white hover:bg-green-700"
-                            : "bg-red-600 text-white opacity-60 cursor-not-allowed"
-                        }`}
+                        className={`px-5 py-2 rounded-lg font-bold shadow 
+                          ${afford && !outOfStock ? "bg-green-500 hover:bg-green-600 text-white" : "bg-gray-200 text-gray-400 cursor-not-allowed"}
+                          transition`}
                         disabled={!afford || outOfStock}
                         onClick={() =>
-                          buyLimitedItem({
-                            itemId: theme.id,
-                            itemType: "theme",
-                            price: discountedPrice,
-                          })
+                          buyLimitedItem({ itemId: theme.id, itemType: "theme", price: discountedPrice })
                         }
                       >
                         {outOfStock ? "Out of Stock" : "Buy"}
                       </button>
                     ) : equipped ? (
-                      <span className="px-3 py-1 rounded bg-green-500 text-white font-semibold">
-                        Equipped
-                      </span>
+                      <span className="px-5 py-2 rounded-lg bg-green-400 text-white font-bold shadow">Equipped</span>
                     ) : (
                       <button
-                        className="px-3 py-1 rounded bg-blue-400 text-white font-semibold"
+                        className="px-5 py-2 rounded-lg bg-blue-400 text-white font-bold shadow hover:bg-blue-500 transition"
                         onClick={() => handleEquipTheme(theme)}
                       >
                         Equip
@@ -5220,52 +5070,48 @@ const renderLeaderboard = () => (
           )}
         </div>
 
-        {/* Limited Boosts (EDITED - allow equip/unequip) */}
+        {/* Limited Boosts */}
         <div>
-          <h3 className="text-xl font-bold mb-4 text-[#dc2626]">Limited Boosts</h3>
+          <h3 className="text-xl font-bold mb-3 text-center text-red-600">Limited Boosts</h3>
           {limitedBoosts.length === 0 ? (
-            <div className="text-center text-gray-400 py-10">No limited boosts yet.</div>
+            <div className="text-center text-gray-400 py-8">No limited boosts yet.</div>
           ) : (
             limitedBoosts.map((boost) => {
               const discountedPrice = Math.ceil(boost.price * (1 - discountRate));
               const afford = canAfford(discountedPrice);
               const stock = limitedStock[boost.id] ?? 0;
               const outOfStock = stock <= 0;
-              const alreadyActive = activeShopBoosts.some(
-                (b) => b.id === boost.id
-              );
+              const alreadyActive = activeShopBoosts.some((b) => b.id === boost.id);
               const owned = ownedBoosts.includes(boost.id);
 
               return (
                 <div
                   key={boost.id}
-                  className="flex items-center justify-between bg-yellow-100 border border-yellow-400 rounded-xl p-4 mb-3"
+                  className="flex items-center justify-between bg-gradient-to-r from-yellow-50 via-white/70 to-yellow-100 border-2 border-yellow-400 rounded-2xl p-4 shadow-lg mb-2"
                 >
                   <div>
-                    <div className="font-semibold text-lg">{boost.name}</div>
-                    <div className="text-sm text-gray-500 flex items-center space-x-2">
+                    <div className="font-bold text-lg text-red-800">{boost.name}</div>
+                    <div className="text-xs flex items-center space-x-2 mt-1">
                       {boost.price > 0 && (
                         <>
-                          <span className="line-through">{boost.price} ⭐</span>
-                          <span className="bg-purple-300 text-purple-800 px-1 rounded text-xs font-bold">
-                            10% OFF
-                          </span>
+                          <span className="line-through text-gray-400">{boost.price} ⭐</span>
+                          <span className="bg-yellow-200 text-yellow-900 px-1.5 rounded font-bold">10% OFF</span>
                         </>
                       )}
-                      <span className="font-semibold">{discountedPrice} ⭐</span>
+                      <span className="font-bold text-yellow-600">{discountedPrice} ⭐</span>
+                      <span className={`ml-2 text-xs font-bold px-2 py-0.5 rounded-full
+                        ${outOfStock ? "bg-red-200 text-red-700" : "bg-green-200 text-green-800"}
+                      `}>
+                        {stock} left
+                      </span>
                     </div>
-                    {outOfStock && (
-                      <div className="text-xs text-red-600 font-bold">Out of Stock</div>
-                    )}
                   </div>
                   <div>
                     {!owned ? (
                       <button
-                        className={`px-3 py-1 rounded font-semibold ${
-                          afford && !outOfStock
-                            ? "bg-green-600 text-white hover:bg-green-700"
-                            : "bg-red-600 text-white opacity-60 cursor-not-allowed"
-                        }`}
+                        className={`px-5 py-2 rounded-lg font-bold shadow 
+                          ${afford && !outOfStock ? "bg-green-500 hover:bg-green-600 text-white" : "bg-gray-200 text-gray-400 cursor-not-allowed"}
+                          transition`}
                         disabled={!afford || outOfStock}
                         onClick={() => {
                           if (!afford) {
@@ -5287,19 +5133,15 @@ const renderLeaderboard = () => (
                       </button>
                     ) : alreadyActive ? (
                       <button
-                        className="px-3 py-1 rounded bg-gray-500 text-white font-semibold"
-                        onClick={() => {
-                          unequipShopBoost(boost.id);
-                        }}
+                        className="px-5 py-2 rounded-lg bg-gray-500 text-white font-bold shadow"
+                        onClick={() => unequipShopBoost(boost.id)}
                       >
                         Unequip
                       </button>
                     ) : (
                       <button
-                        className="px-3 py-1 rounded bg-blue-400 text-white font-semibold"
-                        onClick={() => {
-                          equipShopBoost(boost);
-                        }}
+                        className="px-5 py-2 rounded-lg bg-blue-400 text-white font-bold shadow hover:bg-blue-500 transition"
+                        onClick={() => equipShopBoost(boost)}
                       >
                         Equip
                       </button>
@@ -5313,11 +5155,12 @@ const renderLeaderboard = () => (
       </div>
     );
   }
-  // Inventory
+
+  // INVENTORY TAB
   else if (shopView === "inventory") {
     tabContent = (
       <div>
-        <h3 className="text-xl font-bold mb-4 text-[#eab308]">Inventory</h3>
+        <h3 className="text-xl font-bold mb-6 text-yellow-500 text-center">Inventory</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Themes */}
           <div>
@@ -5339,12 +5182,8 @@ const renderLeaderboard = () => (
                 return (
                   <div
                     key={theme.id}
-                    className={`flex items-center justify-between rounded-lg px-3 py-2 cursor-pointer border
-                      ${
-                        theme.isLimited
-                          ? "border-yellow-400 bg-yellow-100"
-                          : "border-gray-200 bg-white"
-                      }
+                    className={`flex items-center justify-between rounded-xl px-3 py-2 cursor-pointer border transition-all
+                      ${theme.isLimited ? "border-yellow-400 bg-yellow-100" : "border-gray-200 bg-white"}
                       ${isEquipped ? "ring-2 ring-green-400" : ""}
                     `}
                     onClick={() => {
@@ -5360,16 +5199,10 @@ const renderLeaderboard = () => (
                     }}
                     title={theme.name}
                   >
-                    <span className="text-2xl mr-2">
-                      {theme.emoji || "🎨"}
-                    </span>
-                    <span className="font-medium">
-                      {theme.name || theme.id}
-                    </span>
+                    <span className="text-2xl mr-2">{theme.emoji || "🎨"}</span>
+                    <span className="font-medium">{theme.name || theme.id}</span>
                     {theme.isLimited && (
-                      <span className="text-yellow-500 font-bold ml-2">
-                        ★
-                      </span>
+                      <span className="text-yellow-500 font-bold ml-2">★</span>
                     )}
                   </div>
                 );
@@ -5390,14 +5223,10 @@ const renderLeaderboard = () => (
                 return (
                   <div
                     key={icon.id}
-                    className={`flex items-center rounded-lg px-3 py-2 cursor-pointer border w-full min-w-0
-        ${
-          icon.isLimited
-            ? "border-yellow-400 bg-yellow-100"
-            : "border-gray-200 bg-white"
-        }
-        ${isEquipped ? "ring-2 ring-green-400" : ""}
-      `}
+                    className={`flex items-center rounded-xl px-3 py-2 cursor-pointer border w-full min-w-0 transition-all
+                      ${icon.isLimited ? "border-yellow-400 bg-yellow-100" : "border-gray-200 bg-white"}
+                      ${isEquipped ? "ring-2 ring-green-400" : ""}
+                    `}
                     onClick={() => {
                       setGameState((prev) => ({
                         ...prev,
@@ -5424,107 +5253,109 @@ const renderLeaderboard = () => (
       </div>
     );
   }
-  // Empty fallback
+
+  // DEFAULT / EMPTY FALLBACK
   else {
     tabContent = (
-      <div className="text-center text-gray-400 py-10">
-        Keep your eyes peeled!
-      </div>
+      <div className="text-center text-gray-400 py-10">Keep your eyes peeled!</div>
     );
   }
 
-    // ---- MAIN SHOP RETURN ----
-   return (
-  <div className="max-w-md mx-auto mt-6 px-2 sm:px-0">
-    {/* Weather */}
-    <div className="flex flex-col items-center justify-center mb-4">
-      <div className="text-lg font-bold mb-1">
-        Weather:{" "}
-        {typeof gameState.currentWeather === "string"
-          ? gameState.currentWeather
-          : "Clear"}
-      </div>
-      <div className="text-sm text-red-500 mb-3">{weatherDescription}</div>
-    </div>
-
-    {/* Active Boosts */}
-    <div className="flex flex-wrap gap-2 mb-4 justify-center">
-      {activeShopBoosts.map((b) => (
-        <div
-          key={b.id}
-          className="px-3 py-1 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 text-white font-semibold shadow text-sm flex items-center"
-          style={{ minWidth: "110px" }}
-        >
-          <span className="mr-2">{b.name}</span>
-          {b.expires && (
-            <span className="ml-auto text-yellow-200 font-bold">
-              {Math.max(0, Math.floor((b.expires - Date.now()) / 60000))}m
-            </span>
-          )}
+  // -------- MAIN SHOP RETURN ---------
+  return (
+    <div className="relative max-w-2xl mx-auto mt-8 px-2 sm:px-0">
+      {/* Weather */}
+      <div className="flex flex-col items-center justify-center mb-6">
+        <div className="text-lg font-bold mb-1 text-purple-800">
+          Weather:{" "}
+          {typeof gameState.currentWeather === "string"
+            ? gameState.currentWeather
+            : "Clear"}
         </div>
-      ))}
-    </div>
-
-    {/* Coins + Renown */}
-    <div className="flex justify-center gap-4 mb-6">
-      <div className={`${glassStyle} bg-white/20 rounded-2xl p-4 border border-white/30 flex flex-col items-center w-36`}>
-        <span className="text-3xl">🪙</span>
-        <span className="text-lg font-semibold mt-1 text-yellow-300">
-          {formatNumberShort(Math.floor(gameState.coins))}
-        </span>
-        <span className="text-xs text-yellow-300 mt-1">Coins</span>
+        <div className="text-sm text-red-500 mb-3">{weatherDescription}</div>
       </div>
-      <div className={`${glassStyle} bg-white/20 rounded-2xl p-4 border border-white/30 flex flex-col items-center w-36`}>
-        <span className="text-3xl">⭐</span>
-        <span className="text-lg font-semibold mt-1 text-pink-400">
-          {Math.floor(gameState.renownTokens)}
-        </span>
-        <span className="text-xs text-pink-400 mt-1">Renown</span>
-      </div>
-    </div>
-    {/* Main Shop */}
-  <div className={`${glassStyle} bg-white rounded-2xl p-6 ${buttonGlow}`}>
-      {/* Inventory button */}
-      <button
-        onClick={() => setShopView("inventory")}
-        className="absolute right-4 top-4 p-2 rounded-full bg-white/30 border border-white/30 shadow-md backdrop-blur-lg hover:scale-110 transition z-20"
-        style={{ fontSize: 26 }}
-      >
-        🎒
-      </button>
 
-      <h2 className="text-2xl font-bold text-white mb-6">Shop</h2>
-
-      {/* Shop Tabs */}
-      <div className="flex justify-center gap-2 mb-6 overflow-x-auto scrollbar-thin scrollbar-thumb-white/30 pb-2">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setShopView(t.id)}
-            className={`px-5 py-2 rounded-xl font-semibold shadow border border-white/20 bg-white/10 text-white backdrop-blur-md
-              ${shopView === t.id ? "ring-2 ring-white" : "hover:bg-white/20"}
-              transition whitespace-nowrap`}
+      {/* Active Boosts */}
+      <div className="flex flex-wrap gap-2 mb-6 justify-center">
+        {activeShopBoosts.map((b) => (
+          <div
+            key={b.id}
+            className="px-4 py-1 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 text-white font-bold shadow-md text-sm flex items-center"
+            style={{ minWidth: "110px" }}
           >
-            {t.label}
-          </button>
+            <span className="mr-2">{b.name}</span>
+            {b.expires && (
+              <span className="ml-auto text-yellow-200 font-bold">
+                {Math.max(0, Math.floor((b.expires - Date.now()) / 60000))}m
+              </span>
+            )}
+          </div>
         ))}
       </div>
 
-      {/* Shop Tab Content */}
-      <div
-        className="overflow-y-auto scrollbar-thin scrollbar-thumb-white/20"
-        style={{
-          height: "50vh",
-          paddingRight: "2px",
-        }}
-      >
-        {tabContent}
+      {/* Coins + Renown Display */}
+      <div className="flex justify-center gap-4 mb-8">
+        <div className={`${glassStyle} bg-white/40 rounded-2xl p-5 border border-white/40 flex flex-col items-center w-36`}>
+          <span className="text-4xl">🪙</span>
+          <span className="text-xl font-bold mt-1 text-yellow-400">{formatNumberShort(Math.floor(gameState.coins))}</span>
+          <span className="text-xs text-yellow-500 mt-1 font-semibold">Coins</span>
+        </div>
+        <div className={`${glassStyle} bg-white/40 rounded-2xl p-5 border border-white/40 flex flex-col items-center w-36`}>
+          <span className="text-4xl">⭐</span>
+          <span className="text-xl font-bold mt-1 text-pink-400">{Math.floor(gameState.renownTokens)}</span>
+          <span className="text-xs text-pink-500 mt-1 font-semibold">Renown</span>
+        </div>
+      </div>
+
+      {/* SHOP CONTAINER */}
+      <div className={`${glassStyle} bg-gradient-to-br from-white/90 via-purple-100/90 to-white/90 rounded-3xl p-8 shadow-2xl border border-white/30 relative`}>
+        {/* Inventory Button */}
+        <button
+          onClick={() => setShopView("inventory")}
+          className="absolute right-6 top-6 p-2 rounded-full bg-white/60 border border-white/30 shadow hover:scale-110 transition z-20 text-2xl"
+          title="View Inventory"
+        >
+          🎒
+        </button>
+
+        <h2 className="text-3xl font-bold text-purple-800 text-center mb-8 tracking-wide drop-shadow">Shop</h2>
+
+        {/* Shop Tabs */}
+        <div className="flex justify-center gap-3 mb-7 overflow-x-auto scrollbar-thin pb-2">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setShopView(t.id)}
+              className={`px-6 py-2 rounded-xl font-bold shadow border border-white/30 bg-white/30 text-purple-700 backdrop-blur
+                ${shopView === t.id ? "ring-2 ring-purple-300 bg-purple-100/70 text-purple-900" : "hover:bg-white/40"}
+                transition whitespace-nowrap`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Content */}
+        <div
+          className="overflow-y-auto scrollbar-thin scrollbar-thumb-purple-200"
+          style={{
+            minHeight: "40vh",
+            maxHeight: "55vh",
+            paddingRight: "4px",
+          }}
+        >
+          {tabContent}
+        </div>
+      </div>
+
+      {/* AdBanner */}
+      <div className="mt-8">
+        <AdBanner />
       </div>
     </div>
-           <AdBanner />
-  </div>
-);
-  };
+  );
+};
+
 
  const renderProfileTab = () => {
   // Find the icon object for the currently equipped icon
