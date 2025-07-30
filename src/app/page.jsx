@@ -6165,7 +6165,7 @@ const renderLeaderboard = () => (
     </div>
   )}
 <div className="container mx-auto px-2 sm:px-4 py-2 space-y-6">
-  {/* Hamburger Icon, fixed top right */}
+{/* Hamburger Icon, fixed top right */}
 <div className="fixed top-4 right-4 z-50">
   <button
     onClick={() => setSidebarOpen(true)}
@@ -6174,7 +6174,8 @@ const renderLeaderboard = () => (
   >
     <i className="fas fa-bars text-2xl text-[#2d3748]"></i>
   </button>
-</div> 
+</div>
+
 {sidebarOpen && (
   <>
     {/* Overlay backdrop */}
@@ -6185,34 +6186,40 @@ const renderLeaderboard = () => (
     />
     {/* Sidebar */}
     <aside
-      className="fixed top-0 right-0 h-full w-[80vw] max-w-xs z-50 bg-white/80 bg-opacity-80 rounded-l-3xl shadow-2xl border-l border-white/30 flex flex-col px-6 py-8 space-y-6 transition-transform duration-300 backdrop-blur-xl"
-      style={{ transform: sidebarOpen ? "translateX(0)" : "translateX(100%)" }}
+      className="fixed top-0 right-0 h-full w-[80vw] max-w-xs z-50 rounded-l-3xl shadow-2xl border-l border-white/30 flex flex-col px-6 py-8 space-y-6 transition-transform duration-300"
+      style={{
+        transform: sidebarOpen ? "translateX(0)" : "translateX(100%)",
+        background: "linear-gradient(120deg, rgba(120,90,255,0.88), rgba(180,140,255,0.58) 90%, rgba(255,255,255,0.13))",
+        backdropFilter: "blur(18px)",
+        WebkitBackdropFilter: "blur(18px)",
+      }}
     >
       {/* Close X */}
       <button
         onClick={() => setSidebarOpen(false)}
-        className="absolute top-5 right-5 w-10 h-10 flex items-center justify-center rounded-full bg-white/50 hover:bg-white/70 text-[#2d3748] shadow"
+        className="absolute top-5 right-5 w-10 h-10 flex items-center justify-center rounded-full bg-white/40 hover:bg-white/70 text-[#2d3748] shadow"
         aria-label="Close Menu"
+        style={{ zIndex: 100 }}
       >
         <i className="fas fa-times text-2xl"></i>
       </button>
-      {/* LOGO */}
-      <div className="flex flex-col items-start mt-3 mb-2">
+      {/* LOGO - centered */}
+      <div className="flex flex-col items-center mt-2 mb-3">
         <img
           src="https://ucarecdn.com/7bdd361d-c411-41ce-b066-c1d20f88e3a7/-/format/auto/"
           alt="Tap Tap Two Logo"
           className="h-14 object-contain"
         />
-        <span className="text-xs text-gray-400 font-medium tracking-wide mt-1 ml-1">
+        <span className="text-xs text-gray-300 font-medium tracking-wide mt-1" style={{ letterSpacing: "0.03em" }}>
           made by andysocial
         </span>
       </div>
       {/* Maddox */}
       <button
         onClick={() => { setShowMaddoxModal(true); setSidebarOpen(false); }}
-        className="relative flex items-center justify-center w-11 h-11 rounded-full bg-gradient-to-br from-[#1e293b] to-[#dc2626] shadow-xl hover:scale-110 transition-all border-2 border-[#dc2626]"
+        className="relative flex items-center justify-center w-11 h-11 rounded-full bg-gradient-to-br from-[#1e293b] to-[#dc2626] shadow-xl hover:scale-110 transition-all border-2 border-[#dc2626] mx-auto"
         aria-label="Maddox Promo"
-        style={{ marginRight: "8px" }}
+        style={{ marginBottom: 4 }}
       >
         <img
           src="https://ucarecdn.com/7eaeaf25-2192-4082-a415-dd52f360d379/-/format/auto/"
@@ -6228,10 +6235,11 @@ const renderLeaderboard = () => (
       {/* Reset */}
       <button
         onClick={() => { setShowResetModal(true); setSidebarOpen(false); }}
-        className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#939599] hover:text-[#2d3748] transition duration-200 relative w-full`}
+        className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#f4f4f4] hover:text-[#2d3748] transition duration-200 relative w-full flex items-center justify-center gap-2`}
         aria-label="Reset progress"
       >
         <i className="fas fa-sync-alt"></i>
+        <span className="ml-1">Reset</span>
         <span
           className="absolute top-0 right-0 flex items-center justify-center rounded-full text-white font-bold"
           style={{
@@ -6253,23 +6261,25 @@ const renderLeaderboard = () => (
       {/* Battle */}
       <a
         href="/battle"
-        className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#939599] hover:text-[#2d3748] transition duration-200 w-full`}
+        className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#f4f4f4] hover:text-[#2d3748] transition duration-200 w-full flex items-center justify-center gap-2`}
         aria-label="Battle Mode"
         onClick={() => setSidebarOpen(false)}
       >
-        <i className="fas fa-crosshairs"></i> Battle
+        <i className="fas fa-crosshairs"></i>
+        <span className="ml-1">Battle</span>
       </a>
       {/* Leaderboards */}
       <button
         onClick={() => { setActiveTab("leaderboard"); setSidebarOpen(false); }}
-        className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#939599] hover:text-[#2d3748] transition duration-200 w-full`}
+        className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#f4f4f4] hover:text-[#2d3748] transition duration-200 w-full flex items-center justify-center gap-2`}
       >
-        <i className="fas fa-trophy"></i> Leaderboards
+        <i className="fas fa-trophy"></i>
+        <span className="ml-1">Leaderboard</span>
       </button>
       {/* Help */}
       <a
         href="/help"
-        className="block px-4 py-2 rounded-xl text-[#939599] hover:bg-gray-100 w-full"
+        className="block px-4 py-2 rounded-xl text-[#f4f4f4] hover:bg-white/10 w-full flex items-center justify-center gap-2"
         onClick={() => setSidebarOpen(false)}
       >
         <i className="fas fa-question mr-2"></i> Help
@@ -6277,7 +6287,7 @@ const renderLeaderboard = () => (
       {/* Notice Board */}
       <a
         href="/notice-board"
-        className="block px-4 py-2 rounded-xl text-[#939599] hover:bg-gray-100 w-full"
+        className="block px-4 py-2 rounded-xl text-[#f4f4f4] hover:bg-white/10 w-full flex items-center justify-center gap-2"
         onClick={() => setSidebarOpen(false)}
       >
         <i className="fas fa-bullhorn mr-2"></i> Notice Board
@@ -6285,21 +6295,21 @@ const renderLeaderboard = () => (
       {/* Feedback */}
       <button
         onClick={() => { setShowFeedback(true); setSidebarOpen(false); }}
-        className="w-full text-left px-4 py-2 rounded-xl text-[#939599] hover:bg-gray-100"
+        className="w-full text-left px-4 py-2 rounded-xl text-[#f4f4f4] hover:bg-white/10 flex items-center gap-2"
       >
         <i className="fas fa-comment-alt mr-2"></i> Feedback
       </button>
       {/* Profile */}
       <button
         onClick={() => { setActiveTab("profile"); setSidebarOpen(false); }}
-        className="w-full text-left px-4 py-2 rounded-xl text-[#939599] hover:bg-gray-100"
+        className="w-full text-left px-4 py-2 rounded-xl text-[#f4f4f4] hover:bg-white/10 flex items-center gap-2"
       >
         <i className="fas fa-user mr-2"></i> Profile
       </button>
       {/* Mute/Unmute */}
       <button
         onClick={() => { setMuted((m) => !m); setSidebarOpen(false); }}
-        className="w-full text-left px-4 py-2 rounded-xl text-[#939599] hover:bg-gray-100"
+        className="w-full text-left px-4 py-2 rounded-xl text-[#f4f4f4] hover:bg-white/10 flex items-center gap-2"
         aria-label={muted ? "Unmute sounds" : "Mute sounds"}
       >
         <i className={`fas mr-2 ${muted ? "fa-volume-mute" : "fa-volume-up"}`}></i>
@@ -6313,13 +6323,14 @@ const renderLeaderboard = () => (
           setSidebarOpen(false);
           window.location.href = "/login";
         }}
-        className="w-full text-left px-4 py-2 rounded-xl text-[#939599] hover:bg-gray-100"
+        className="w-full text-left px-4 py-2 rounded-xl text-[#f4f4f4] hover:bg-white/10 flex items-center gap-2"
       >
         <i className="fas fa-sign-out-alt mr-2"></i> Logout
       </button>
     </aside>
   </>
 )}
+
 
   {["game", "house", "leaderboard"].includes(activeTab) && (
     <div className="text-center">
