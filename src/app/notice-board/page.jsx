@@ -13,6 +13,7 @@ const devLogs = [
   {
     id: "v2_1_guilds",
     date: "30/07/2025",
+    time: "01:34"
     title: "🎉 The Guild Update",
     emoji: "✨",
     highlights: [
@@ -48,7 +49,8 @@ const devLogs = [
   {
     id: "v2_0_battlemode",
     date: "16/07/2025",
-    title: "🔥 Battle Mode, Weather, & More!",
+      time: "00:35"
+    title: "🔥 The Battle Update",
     emoji: "🚀",
     highlights: [
       {
@@ -56,7 +58,7 @@ const devLogs = [
         label: "Battle Mode",
         text: [
           "You can now battle friends or AI to compete for the highest coin total in 3 minutes!",
-          "Play for fun or Renown rewards. Try different strategies to win."
+          "Play and you can win Renown Tokens no matter what the result. Try different strategies to win."
         ]
       },
       {
@@ -171,6 +173,8 @@ function NoticeBoard() {
               )}
             </GlassCard>
             <div className="text-right text-xs text-gray-500 mt-2">Last Updated: {activeLog.date}</div>
+  <div className="text-right text-xs text-gray-400 mt-1">Time: {activeLog.time}</div>
+
           </div>
         </div>
         {/* AdBanner at bottom */}
@@ -178,49 +182,48 @@ function NoticeBoard() {
           <AdBanner />
         </div>
       </div>
-      <style>{`
-        /* Pastel color cycling background, smooth fade */
-        .fade-gradient-bg {
-          position: relative;
-          min-height: 100vh;
-          width: 100%;
-          /* Default fallback */
-          background: linear-gradient(135deg, #d8b4fe, #c084fc, #a78bfa);
-          animation: pastel-cycle 40s ease-in-out infinite;
-          background-size: 400% 400%;
-        }
-        @keyframes pastel-cycle {
-          0% {
-            background: linear-gradient(135deg, #d8b4fe, #c084fc, #a78bfa);
-          }
-          16% {
-            background: linear-gradient(120deg, #b9fffc, #f7d1ba, #a1c4fd);
-          }
-          33% {
-            background: linear-gradient(120deg, #ffe0ac, #a8edea, #fcb69f);
-          }
-          50% {
-            background: linear-gradient(135deg, #fbc2eb, #a6c1ee, #fcb69f);
-          }
-          66% {
-            background: linear-gradient(120deg, #e0c3fc, #f7d1ba, #b6e0fe);
-          }
-          83% {
-            background: linear-gradient(120deg, #fbc2eb, #fdc7b7, #b6e0fe);
-          }
-          100% {
-            background: linear-gradient(135deg, #d8b4fe, #c084fc, #a78bfa);
-          }
-        }
-        .animate-gradient-x {
-          background-size: 300% 300%;
-          animation: gradient-x 25s ease-in-out infinite;
-        }
-        @keyframes gradient-x {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-        }
-      `}</style>
+   <style>{`
+  /* Deeper pastel color cycling background, smooth fade */
+  .fade-gradient-bg {
+    position: relative;
+    min-height: 100vh;
+    width: 100%;
+    background: linear-gradient(135deg, #7c3aed, #4c1d95, #a21caf);
+    animation: pastel-cycle 40s ease-in-out infinite;
+    background-size: 400% 400%;
+  }
+  @keyframes pastel-cycle {
+    0% {
+      background: linear-gradient(135deg, #7c3aed, #4c1d95, #a21caf);
+    }
+    16% {
+      background: linear-gradient(120deg, #2563eb, #a21caf, #ca8a04);
+    }
+    33% {
+      background: linear-gradient(120deg, #f59e42, #78350f, #2563eb);
+    }
+    50% {
+      background: linear-gradient(135deg, #c026d3, #52525b, #0ea5e9);
+    }
+    66% {
+      background: linear-gradient(120deg, #7c3aed, #0ea5e9, #be185d);
+    }
+    83% {
+      background: linear-gradient(120deg, #a21caf, #ca8a04, #2563eb);
+    }
+    100% {
+      background: linear-gradient(135deg, #7c3aed, #4c1d95, #a21caf);
+    }
+  }
+  .animate-gradient-x {
+    background-size: 300% 300%;
+    animation: gradient-x 25s ease-in-out infinite;
+  }
+  @keyframes gradient-x {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+`}</style>
     </div>
   );
 }
