@@ -6244,17 +6244,21 @@ const renderHouseTab = () => {
 
     {/* MAIN SIDEBAR AREA */}
     <div className="flex-1 flex flex-col items-center py-8 px-6 bg-gradient-to-br from-purple-800/95 via-purple-600/95 to-purple-900/90 backdrop-blur-xl overflow-y-auto relative">
-           {/* LOGO - centered */}
-      <div className="flex flex-col items-center mt-2 mb-4">
-        <img
-          src="https://ucarecdn.com/af9e3e7b-6303-4643-afbe-61d3a28941ff/-/format/auto/"
-          alt="Tap Tap Two Logo"
-          className="h-24 object-contain"
-        />
-        <span className="text-xs text-white font-medium tracking-wide mt-1" style={{ letterSpacing: "0.03em" }}>
-an andysocial game
-        </span>
-      </div>
+         {/* LOGO - centered */}
+<div className="flex flex-col items-center mt-2 mb-4">
+  <div className="h-24 w-24 rounded-full overflow-hidden border-2 border-white flex items-center justify-center bg-black">
+    <img
+      src="https://ucarecdn.com/af9e3e7b-6303-4643-afbe-61d3a28941ff/-/format/auto/"
+      alt="Tap Tap Two Logo"
+      className="h-full w-full object-cover"
+      style={{ display: "block" }}
+    />
+  </div>
+  <span className="text-xs text-white font-medium tracking-wide mt-1" style={{ letterSpacing: "0.03em" }}>
+    an andysocial game
+  </span>
+</div>
+
       
       {/* Weather Widget - TOP of sidebar main area */}
       <div className="flex items-center gap-3 bg-white/10 border border-white/30 rounded-xl px-4 py-2 mb-4 w-full max-w-xs">
