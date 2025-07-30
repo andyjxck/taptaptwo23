@@ -5688,7 +5688,7 @@ const renderLeaderboard = () => (
     );
   };
 
- const renderHouseTab = () => {
+const renderHouseTab = () => {
   // Calculate upgrade cost and progress
   const nextUpgradeCost = Math.floor(
     1000 * Math.pow(1.5, gameState.houseLevel - 1)
@@ -5697,28 +5697,27 @@ const renderLeaderboard = () => (
   const progress = Math.min((gameState.coins / nextUpgradeCost) * 100, 100);
 
   return (
-    
-    <div className={`${glassStyle} bg-white rounded-2xl p-5 ${buttonGlow}`}>
-      {/* Daily Bonus Section */}
-      <div className="my-6 flex flex-col items-center">
+    <div className={`${glassStyle} bg-gradient-to-br from-white/60 via-purple-100/50 to-white/30 rounded-3xl p-7 ${buttonGlow} shadow-2xl border border-white/20 backdrop-blur-xl max-w-lg mx-auto`}>
+      {/* DAILY BONUS */}
+      <div className="my-7 flex flex-col items-center">
         {bonusCooldown === 0 ? (
           <button
             onClick={claimDailyBonus}
-            className="px-6 py-3 rounded-lg bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold shadow hover:shadow-xl transition"
+            className="px-8 py-3 rounded-2xl bg-gradient-to-r from-green-400 via-green-500 to-green-700 text-white font-bold shadow-xl hover:shadow-2xl active:scale-95 transition"
           >
-            🎁 Claim Daily Bonus!
+            <span role="img" aria-label="gift">🎁</span> Claim Daily Bonus!
           </button>
         ) : (
-          <span className="text-sm text-gray-400">
-            Next bonus in {Math.ceil(bonusCooldown / 1000 / 60 / 60)} hours
+          <span className="text-sm text-gray-500 font-medium bg-white/80 px-4 py-2 rounded-full shadow">
+            Next bonus in {Math.ceil(bonusCooldown / 1000 / 60 / 60)} hour{Math.ceil(bonusCooldown / 1000 / 60 / 60) !== 1 && "s"}
           </span>
         )}
       </div>
 
-      <div className={`${glassStyle} bg-white rounded-2xl p-5 ${buttonGlow}`}>
-        {/* House Name and Rename Button */}
-        <div className="relative mb-4">
-          <h2 className="text-xl font-semibold text-center text-[#2d3748]">
+      <div className={`${glassStyle} bg-white/80 rounded-2xl p-6 ${buttonGlow} shadow-inner`}>
+        {/* House Name + Rename */}
+        <div className="relative mb-6 flex flex-col items-center">
+          <h2 className="text-2xl font-extrabold text-center text-[#512DA8] tracking-wide drop-shadow-sm">
             {gameState.houseName || "My Cozy Home"}
           </h2>
           <button
@@ -5727,47 +5726,46 @@ const renderLeaderboard = () => (
               setShowHouseRenameModal(true);
             }}
             aria-label="Rename house"
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 flex items-center justify-center w-8 h-8 bg-red-200 rounded-md hover:bg-red-300 transition-colors"
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 flex items-center justify-center w-10 h-10 bg-purple-100/80 rounded-xl hover:bg-purple-200 transition-colors border border-purple-200 shadow"
           >
-            <i className="fas fa-edit text-red-700"></i>
+            <i className="fas fa-edit text-purple-700"></i>
           </button>
         </div>
 
-        {/* House Level and Coin Multiplier */}
-        <div className="space-y-4 mb-4">
-          <div className="bg-white/20 rounded-xl p-4 text-center">
-            <h3 className="text-lg font-bold text-[#2d3748]">Level</h3>
-            <p className="text-xl text-[#2d3748]">{gameState.houseLevel}</p>
+        {/* Level + Multiplier */}
+        <div className="flex gap-5 mb-6">
+          <div className="flex-1 bg-white/60 rounded-xl p-4 text-center border border-purple-100 shadow">
+            <div className="text-md font-bold text-purple-900 tracking-wide">Level</div>
+            <div className="text-3xl font-extrabold text-purple-700">{gameState.houseLevel}</div>
           </div>
-          <div className="bg-white/20 rounded-xl p-4 text-center">
-            <h3 className="text-lg font-bold text-[#2d3748]">Coin Multiplier</h3>
-            <p className="text-xl text-[#2d3748]">
-              {(gameState.houseCoinsMultiplier * 100).toFixed(1)}%
-            </p>
+          <div className="flex-1 bg-white/60 rounded-xl p-4 text-center border border-purple-100 shadow">
+            <div className="text-md font-bold text-purple-900 tracking-wide">Coin Multiplier</div>
+            <div className="text-2xl font-extrabold text-purple-700">{(gameState.houseCoinsMultiplier * 100).toFixed(1)}%</div>
           </div>
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-4">
-          <div className="w-full bg-gray-300 rounded-full h-4 overflow-hidden">
+        <div className="mb-5">
+          <div className="w-full bg-gray-300/60 rounded-full h-4 shadow-inner overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-[#10B981] to-[#059669] transition-all duration-500"
+              className="h-full bg-gradient-to-r from-[#c7d2fe] via-[#a5b4fc] to-[#059669] shadow transition-all duration-600"
               style={{ width: `${progress}%` }}
             />
           </div>
-          <p className="text-center text-sm text-[#939599] mt-1">
-            {Math.floor(gameState.coins).toLocaleString()} /{" "}
-            {nextUpgradeCost.toLocaleString()} coins
-          </p>
+          <div className="flex justify-between text-xs mt-1 text-[#939599] font-semibold">
+            <span>{Math.floor(gameState.coins).toLocaleString()}</span>
+            <span>/</span>
+            <span>{nextUpgradeCost.toLocaleString()} coins</span>
+          </div>
         </div>
 
-        {/* Upgrade House Button */}
-        <div className="flex justify-center w-full mt-4">
+        {/* Upgrade Button */}
+        <div className="flex justify-center w-full mt-5">
           <button
             onClick={() => {
               if (!canAfford) return;
-  playUpgrade(); 
-  if (navigator.vibrate) navigator.vibrate(50);
+              playUpgrade();
+              if (navigator.vibrate) navigator.vibrate(50);
               setGameState((prev) => {
                 const newHouseLevel = prev.houseLevel + 1;
                 const updatedState = {
@@ -5783,48 +5781,18 @@ const renderLeaderboard = () => (
                 saveGame(updatedState);
                 return updatedState;
               });
-
               setNotification("House Upgraded!");
             }}
             disabled={!canAfford}
             className={`
-              w-full
-              max-w-xs
-              py-4
-              rounded-2xl
-              font-bold
-              text-lg
-              flex
-              items-center
-              justify-center
-              gap-2
-              transition-all
-              duration-300
-              ${
-                canAfford
-                  ? "bg-gradient-to-r from-[#10B981] to-[#059669] text-white shadow-lg hover:shadow-xl hover:scale-105"
-                  : "bg-gray-300 text-gray-400 cursor-not-allowed"
-              }
+              w-full max-w-xs py-4 rounded-2xl font-extrabold text-lg flex items-center justify-center gap-3 shadow-lg transition-all duration-300
+              ${canAfford
+                ? "bg-gradient-to-r from-[#7C3AED] via-[#10B981] to-[#059669] text-white hover:shadow-2xl hover:scale-105"
+                : "bg-gray-200 text-gray-400 cursor-not-allowed"}
             `}
-            style={{
-              boxSizing: "border-box",
-              minWidth: 0,
-              width: "100%",
-            }}
           >
-            <i
-              className="fas fa-coins"
-              style={{
-                fontSize: "1.2em",
-                marginRight: "0.6em",
-                position: "relative",
-                top: "0.06em",
-                display: "inline-block",
-                verticalAlign: "middle",
-              }}
-              aria-hidden="true"
-            />
-            <span style={{ verticalAlign: "middle", display: "inline-block" }}>
+            <i className="fas fa-home" style={{ fontSize: "1.3em" }} aria-hidden="true" />
+            <span>
               {canAfford
                 ? "Upgrade House (Ready!)"
                 : `Upgrade House (${formatNumberShort(nextUpgradeCost)} coins)`}
@@ -5832,9 +5800,9 @@ const renderLeaderboard = () => (
           </button>
         </div>
 
-        {/* Referral/Gift Code Box */}
-        <div className="mt-6 mb-4 p-4 bg-purple-50 rounded-xl shadow-md flex flex-col items-center w-full max-w-xs mx-auto overflow-hidden">
-          <div className="text-lg font-bold text-purple-700 mb-2">
+        {/* Referral/Gift Code */}
+        <div className="mt-8 mb-2 p-5 bg-gradient-to-br from-purple-100/60 via-purple-50/80 to-white/80 rounded-2xl shadow flex flex-col items-center w-full max-w-xs mx-auto border border-purple-200">
+          <div className="text-lg font-bold text-purple-700 mb-2 tracking-wide">
             Enter Gift/Referral Code
           </div>
           <div className="flex w-full gap-2">
@@ -5842,13 +5810,13 @@ const renderLeaderboard = () => (
               type="text"
               value={referralInput}
               onChange={(e) => setReferralInput(e.target.value)}
-              className="flex-1 w-0 px-3 py-2 rounded-xl border border-purple-300 text-[#2d3748] focus:ring-2 focus:ring-[#a78bfa]"
+              className="flex-1 w-0 px-3 py-2 rounded-xl border border-purple-300 text-[#2d3748] focus:ring-2 focus:ring-[#a78bfa] bg-white/90 font-semibold"
               placeholder="Enter code"
               maxLength={32}
               disabled={referralUsed}
             />
             <button
-              className="flex-shrink-0 px-4 py-2 rounded-xl bg-gradient-to-r from-[#a78bfa] to-[#7c3aed] text-white font-semibold disabled:opacity-50"
+              className="flex-shrink-0 px-4 py-2 rounded-xl bg-gradient-to-r from-[#a78bfa] to-[#7c3aed] text-white font-bold disabled:opacity-50 transition"
               onClick={handleReferralSubmit}
               disabled={!referralInput || referralUsed}
             >
@@ -5857,7 +5825,7 @@ const renderLeaderboard = () => (
           </div>
           {referralMessage && (
             <div
-              className={`mt-2 text-center ${
+              className={`mt-2 text-center font-bold ${
                 referralMessageType === "success"
                   ? "text-green-600"
                   : "text-red-500"
@@ -5867,11 +5835,15 @@ const renderLeaderboard = () => (
             </div>
           )}
         </div>
-                 <AdBanner />
+        {/* Ad Banner (below box) */}
+        <div className="mt-6">
+          <AdBanner />
+        </div>
       </div>
     </div>
   );
 };
+
 
   const renderHouseRenameModal = () => (
     <div
