@@ -79,7 +79,7 @@ export default function BossModePage() {
   // --- DAMAGE STATE ---
   const [accumulatedAutoTapDamage, setAccumulatedAutoTapDamage] = useState(0);
 
-  
+   const [muted, setMuted] = useState(false);
   // --- EFFECTS: AUTH INIT ---
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
@@ -931,6 +931,13 @@ useEffect(() => {
               <i className="fas fa-arrow-left" />
               <span>Return to Tap Tap Two</span>
             </a>
+               <button
+              onClick={() => setMuted((m) => !m)}
+              className="flex items-center justify-center px-4 py-1 text-[#4a5568] hover:bg-gray-100 rounded-full border border-white/20"
+              aria-label={muted ? "Unmute sounds" : "Mute sounds"}
+            >
+              <i className={`fas ${muted ? "fa-volume-mute" : "fa-volume-up"}`}></i>
+            </button>
           </div>
 
         {/* Victory Celebration Overlay */}
