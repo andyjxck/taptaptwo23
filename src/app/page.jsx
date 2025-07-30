@@ -6098,50 +6098,78 @@ const renderHouseTab = () => {
     `}
     style={{ boxShadow: "0 10px 60px 16px rgba(41,13,72,0.38)" }}
   >
-    {/* LEFT VERTICAL ICON BAR */}
-    <div className="flex flex-col items-center gap-2 py-8 px-2 bg-gradient-to-b from-purple-900/60 via-purple-800/40 to-purple-900/50 border-r border-white/20 min-w-[56px] relative">
-      {/* Icons */}
-      <button
-        onClick={() => {
-          localStorage.removeItem("userId");
-          localStorage.removeItem("pin");
-          setSidebarOpen(false);
-          window.location.href = "/login";
-        }}
-        className="w-10 h-10 flex items-center justify-center rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-[#f4f4f4] transition"
-        title="Logout"
-        aria-label="Logout"
-      >
-        <i className="fas fa-sign-out-alt text-lg"></i>
-      </button>
-      <button
-        onClick={() => { setShowFeedback(true); setSidebarOpen(false); }}
-        className="w-10 h-10 flex items-center justify-center rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-[#f4f4f4] transition"
-        title="Feedback"
-        aria-label="Feedback"
-      >
-        <i className="fas fa-comment-alt text-lg"></i>
-      </button>
-      <button
-        onClick={() => { setMuted((m) => !m); setSidebarOpen(false); }}
-        className="w-10 h-10 flex items-center justify-center rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-[#f4f4f4] transition"
-        aria-label={muted ? "Unmute sounds" : "Mute sounds"}
-        title={muted ? "Unmute" : "Mute"}
-      >
-        <i className={`fas ${muted ? "fa-volume-mute" : "fa-volume-up"} text-lg`}></i>
-      </button>
-      <button
-        onClick={() => {
-          setSidebarOpen(false);
-          window.location.href = "/help";
-        }}
-        className="w-10 h-10 flex items-center justify-center rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-[#f4f4f4] transition"
-        title="Help"
-        aria-label="Help"
-      >
-        <i className="fas fa-question text-lg"></i>
-      </button>
-    </div>
+   {/* LEFT VERTICAL ICON BAR */}
+<div className="flex flex-col items-center gap-2 py-8 px-2 bg-gradient-to-b from-purple-900/60 via-purple-800/40 to-purple-900/50 border-r border-white/20 min-w-[56px] relative">
+  {/* Icons */}
+  <button
+    onClick={() => {
+      localStorage.removeItem("userId");
+      localStorage.removeItem("pin");
+      setSidebarOpen(false);
+      window.location.href = "/login";
+    }}
+    className="w-10 h-10 flex items-center justify-center rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-[#f4f4f4] transition"
+    title="Logout"
+    aria-label="Logout"
+  >
+    <i className="fas fa-sign-out-alt text-lg"></i>
+  </button>
+  <button
+    onClick={() => { setShowFeedback(true); setSidebarOpen(false); }}
+    className="w-10 h-10 flex items-center justify-center rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-[#f4f4f4] transition"
+    title="Feedback"
+    aria-label="Feedback"
+  >
+    <i className="fas fa-comment-alt text-lg"></i>
+  </button>
+  <button
+    onClick={() => { setMuted((m) => !m); setSidebarOpen(false); }}
+    className="w-10 h-10 flex items-center justify-center rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-[#f4f4f4] transition"
+    aria-label={muted ? "Unmute sounds" : "Mute sounds"}
+    title={muted ? "Unmute" : "Mute"}
+  >
+    <i className={`fas ${muted ? "fa-volume-mute" : "fa-volume-up"} text-lg`}></i>
+  </button>
+  <button
+    onClick={() => {
+      setSidebarOpen(false);
+      window.location.href = "/help";
+    }}
+    className="w-10 h-10 flex items-center justify-center rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-[#f4f4f4] transition"
+    title="Help"
+    aria-label="Help"
+  >
+    <i className="fas fa-question text-lg"></i>
+  </button>
+
+  {/* Divider */}
+  <div className="h-6" />
+
+  {/* Instagram */}
+  <a
+    href="https://instagram.com/taptapstudiosuk"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="w-10 h-10 flex items-center justify-center rounded-xl border border-white/30 bg-gradient-to-br from-pink-500 via-yellow-400 to-purple-600 hover:bg-white/20 text-white transition"
+    title="Instagram"
+    aria-label="Instagram"
+  >
+    <i className="fab fa-instagram text-lg"></i>
+  </a>
+
+  {/* Discord */}
+  <a
+    href="https://discord.gg/e5jVsxCt"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="w-10 h-10 flex items-center justify-center rounded-xl border border-white/30 bg-gradient-to-br from-indigo-500 to-indigo-700 hover:bg-white/20 text-white transition"
+    title="Discord"
+    aria-label="Discord"
+  >
+    <i className="fab fa-discord text-lg"></i>
+  </a>
+</div>
+
 
     {/* MAIN SIDEBAR AREA */}
     <div className="flex-1 flex flex-col items-center py-8 px-6 bg-gradient-to-br from-purple-800/95 via-purple-600/95 to-purple-900/90 backdrop-blur-xl overflow-y-auto relative">
