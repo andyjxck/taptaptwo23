@@ -47,7 +47,7 @@ export default function BossModePage() {
   const [userId, setUserId] = useState("");
   const [pin, setPin] = useState("");
   const [userReady, setUserReady] = useState(false);
-
+   const [muted, setMuted] = useState(false);
   const [playClick] = useSound("/sounds/click.wav", { volume: muted ? 0 : 0.4 });
   // --- MENU/UI STATE ---
   const [mode, setMode] = useState(""); // "", "solo", "coop-create", "coop-join", "coop"
@@ -79,7 +79,7 @@ export default function BossModePage() {
   // --- DAMAGE STATE ---
   const [accumulatedAutoTapDamage, setAccumulatedAutoTapDamage] = useState(0);
 
-   const [muted, setMuted] = useState(false);
+
   // --- EFFECTS: AUTH INIT ---
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
