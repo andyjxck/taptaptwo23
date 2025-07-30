@@ -48,7 +48,7 @@ const helpSections = [
           <li>The more you tap, the more coins you get – every tap matters.</li>
           <li>Spend coins to buy <b>upgrades</b> that boost your coin earnings, tapping speed, and more.</li>
           <li>Your progress continues even when offline – the <b>Auto Tapper</b> upgrade keeps earning for you.</li>
-          <li>Keep upgrading, complete <b>quests</b>, and <b>reset</b> your progress to earn <span className="text-purple-300 font-semibold">Renown Tokens</span> for permanent rewards.</li>
+          <li>Keep upgrading, complete <b>quests</b>, and <b>reset</b> your progress to earn <span className="text-red-600 font-semibold">Renown Tokens</span> for permanent rewards.</li>
         </ul>
       </>
     ),
@@ -111,7 +111,7 @@ const helpSections = [
     icon: "fas fa-cloud-sun",
     content: (
       <>
-        <p className="mb-3">The game cycles through <b>4 seasons</b>, each with unique weather patterns and effects:</p>
+        <p className="mb-3">The game cycles through <b>4 seasons</b> by default (Though this can be changed to a theme via the shop), each with unique weather patterns and effects:</p>
         <ul className="list-disc pl-5 mb-4 space-y-2">
           <li><span className="font-semibold text-green-400">Spring:</span> Balanced weather, light rain, clear skies.</li>
           <li><span className="font-semibold text-yellow-300">Summer:</span> Sunny and windy – boosts coins/tap speed.</li>
@@ -150,7 +150,7 @@ const helpSections = [
         <p className="mb-2">Quest types include:</p>
         <ul className="list-disc pl-5 mb-3 space-y-2">
           <li>Combined Upgrade Level</li>
-          <li>Tap Power / Auto Tapper / Crit Chance / Tap Speed / House Upgrades</li>
+          <li>Tap Power / Auto Tapper / Crit Chance / Tap Speed /</li>
           <li>Earn a target amount of coins</li>
         </ul>
         <p>Progress only counts once the quest appears. You can refresh quests (but lose current progress). Remember to claim your reward when done!</p>
@@ -164,7 +164,7 @@ const helpSections = [
     icon: "fas fa-sync-alt",
     content: (
       <>
-        <p className="mb-3">Reset (prestige) wipes coins/upgrades but earns <b>Renown Tokens</b> for permanent boosts and cosmetics.</p>
+        <p className="mb-3">Reset (prestige) wipes coins/upgrades (but not house level!) but earns <b>Renown Tokens</b> for permanent boosts and cosmetics.</p>
         <ul className="list-disc pl-5 mb-3 space-y-2">
           <li>1st token: <b>50,000,000 coins</b>. Each next token doubles the requirement.</li>
           <li>Each token: <span className="text-indigo-300 font-semibold">+1.5% all coin gains</span> (stacks forever).</li>
@@ -241,7 +241,7 @@ const helpSections = [
         <div className="bg-yellow-900/70 border border-yellow-500/60 rounded-lg p-3 my-3 text-yellow-200 font-semibold shadow-inner">
           <i className="fas fa-exclamation-triangle mr-2" />
           <span>
-            <b>Privacy Warning:</b> Your <u>profile_name</u> is visible to guild members in chat and guild lists.
+            <b>Privacy Warning:</b> Your <u>profile name</u> is visible to guild members in chat and guild lists.
             Do <b>not</b> use your real name or any private info here.
           </span>
         </div>
@@ -301,9 +301,9 @@ const helpSections = [
           <li>Mobile tap streaks: faster/easier on phone/tablet</li>
           <li>Weather can impact your strategy—plan big upgrades around “good” weather</li>
           <li>Reset for multiple Renown at once (not just one at a time)</li>
-          <li>Autosave runs often; manual save in Profile if needed</li>
+          <li>Autosave runs often;</li>
           <li>Offline progress caps at 3h—check in to maximize</li>
-          <li>Cosmetics in the shop change frequently</li>
+          <li>Cosmetics in the shop can and will change</li>
         </ul>
         <p className="mb-2">Need more help? Use the in-game feedback or ask on the Discord server.</p>
       </>
