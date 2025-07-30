@@ -856,6 +856,22 @@ const seasonalWeatherTables = {
   ],
 };
 
+const WEATHER_ICONS = {
+  Sun: "☀️",
+  Rain: "🌧️",
+  Thunder: "⛈️",
+  Lightning: "⚡",
+  Snow: "❄️",
+  Sleet: "🌨️",
+  Hail: "🌨️",
+  Windy: "💨",
+  Cloudy: "☁️",
+  Foggy: "🌫️",
+  Clear: "☀️"
+};
+
+
+
 function MainComponent() {
   const [userId, setUserId] = useState(null);
   const [pin, setPin] = useState(null);
@@ -2889,6 +2905,9 @@ useEffect(() => {
   return () => supabase.removeChannel(channel);
 }, [guild?.id]);
 
+function getWeatherIcon(currentWeather) {
+  return WEATHER_ICONS[currentWeather] || "☀️";
+}
 
  function equipShopBoost(boost) {
     setActiveShopBoosts((prev) => {
@@ -6196,9 +6215,22 @@ const renderLeaderboard = () => (
     `}
     style={{ boxShadow: "0 10px 60px 16px rgba(41,13,72,0.38)" }}
   >
-    {/* Left Vertical Icon Bar */}
-    <div className="flex flex-col items-center gap-2 py-8 px-2 bg-gradient-to-b from-purple-900/60 via-purple-800/40 to-purple-900/50 border-r border-white/20 min-w-[56px]">
-      {/* Logout */}
+    {/* LEFT VERTICAL ICON BAR */}
+    <div className="flex flex-col items-center gap-2 py-8 px-2 bg-gradient-to-b from-purple-900/60 via-purple-800/40 to-purple-900/50 border-r border-white/20 min-w-[56px] relative">
+      {/* Weather widget */}
+      <div className="flex flex-col items-center mb-6 w-full">
+        <div className="flex items-center gap-2 bg-white/10 border border-white/30 rounded-xl px-2 py-1">
+          <span className="text-2xl">{getWeatherIcon(gameState.currentWeather)}</span>
+          <div className="flex flex-col leading-tight">
+            <span className="text-xs font-semibold text-[#3c3551]">
+              {CUSTOM_THEME_WEATHER_RENAMES[gameState.equippedTheme]?.[gameState.currentWeather] ||
+                gameState.currentWeather || "Clear"}
+            </span>
+            <span className="text-[10px] text-[#939599]">{weatherDescription}</span>
+          </div>
+        </div>
+      </div>
+      {/* Icons */}
       <button
         onClick={() => {
           localStorage.removeItem("userId");
@@ -6212,7 +6244,6 @@ const renderLeaderboard = () => (
       >
         <i className="fas fa-sign-out-alt text-lg"></i>
       </button>
-      {/* Feedback */}
       <button
         onClick={() => { setShowFeedback(true); setSidebarOpen(false); }}
         className="w-10 h-10 flex items-center justify-center rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-[#f4f4f4] transition"
@@ -6221,7 +6252,6 @@ const renderLeaderboard = () => (
       >
         <i className="fas fa-comment-alt text-lg"></i>
       </button>
-      {/* Mute/Unmute */}
       <button
         onClick={() => { setMuted((m) => !m); setSidebarOpen(false); }}
         className="w-10 h-10 flex items-center justify-center rounded-xl border border-white/30 bg-white/10 hover:bg-white/20 text-[#f4f4f4] transition"
@@ -6230,7 +6260,6 @@ const renderLeaderboard = () => (
       >
         <i className={`fas ${muted ? "fa-volume-mute" : "fa-volume-up"} text-lg`}></i>
       </button>
-      {/* Help */}
       <button
         onClick={() => {
           setSidebarOpen(false);
@@ -6244,8 +6273,8 @@ const renderLeaderboard = () => (
       </button>
     </div>
 
-    {/* Main Sidebar Area */}
-    <div className="flex-1 flex flex-col items-center py-8 px-6 bg-gradient-to-br from-purple-800/95 via-purple-600/95 to-purple-900/90 backdrop-blur-xl overflow-y-auto">
+    {/* MAIN SIDEBAR AREA */}
+    <div className="flex-1 flex flex-col items-center py-8 px-6 bg-gradient-to-br from-purple-800/95 via-purple-600/95 to-purple-900/90 backdrop-blur-xl overflow-y-auto relative">
       {/* Close X */}
       <button
         onClick={() => setSidebarOpen(false)}
@@ -6383,6 +6412,7 @@ const renderLeaderboard = () => (
 </div>
 
 
+
   {["game", "house", "leaderboard"].includes(activeTab) && (
     <div className="text-center">
       <h2 className="text-2xl mb-4 font-crimson-text text-[#939599]">
@@ -6398,25 +6428,6 @@ const renderLeaderboard = () => (
                 : 0
             ]}
       </h2>
-
-      <div className="flex flex-col md:flex-row md:items-center md:justify-center gap-2 text-[#939599] text-lg mb-6">
-        <div>
-          <span className="font-semibold">Year:</span>{" "}
-          {Number.isFinite(gameState.currentYear)
-            ? 2000 + gameState.currentYear
-            : "2000"}
-        </div>
-        <div>
-          <span className="font-semibold">Weather:</span>{" "}
-          {CUSTOM_THEME_WEATHER_RENAMES[gameState.equippedTheme]?.[
-            gameState.currentWeather
-          ] ||
-            gameState.currentWeather ||
-            "Clear"}
-        </div>
-      </div>
-
-      <div className="text-[#939599] text-sm mt-2">{weatherDescription}</div>
 
       <div
         className="grid grid-cols-3 max-w-xs mx-auto mt-6 mb-12"
@@ -6745,6 +6756,72 @@ const renderLeaderboard = () => (
 ) : (activeTab === "friends" || activeTab === "guilds") ? (
   renderFriendsTab({ friends, guild, inviteToGuild })
 ) : null}
+  </div>
+</div>
+{/* Fixed Bottom Toggle Button */}
+<div className="fixed bottom-0 inset-x-0 z-50 flex justify-center">
+  <button
+    onClick={() => setMenuOpen(!menuOpen)}
+    className={`${glassStyle} bg-white/60 text-gray-700 px-4 py-1 rounded-t-xl text-xs shadow-md backdrop-blur-md border border-white/30 transition`}
+  >
+    {menuOpen ? "▼ Hide" : "▲ Menu"}
+  </button>
+</div>
+
+{/* Bottom Menu (ALWAYS fixed to bottom) */}
+<div
+  className={`${glassStyle} bg-white/30 backdrop-blur-md rounded-t-2xl ${buttonGlow} p-2 pb-4 fixed bottom-6 inset-x-0 z-40 max-w-md w-full mx-auto transition-all duration-300 ${
+    menuOpen ? "translate-y-0" : "translate-y-full"
+  }`}
+>
+  <div className="flex flex-wrap justify-center gap-2 sm:space-x-4">
+    <button
+      onClick={() => setActiveTab("game")}
+      className={`w-20 py-3 rounded-xl transition-all duration-200 ${
+        activeTab === "game"
+          ? "bg-white/40 text-[#2d3748] shadow-md"
+          : "text-[#939599] hover:bg-white/20"
+      } flex flex-col items-center justify-center`}
+    >
+      <i className="fas fa-gamepad"></i>
+      <span className="text-xs mt-1">Game</span>
+    </button>
+
+    <button
+      onClick={() => setActiveTab("house")}
+      className={`w-20 py-3 rounded-xl transition-all duration-200 ${
+        activeTab === "house"
+          ? "bg-white/40 text-[#2d3748] shadow-md"
+          : "text-[#939599] hover:bg-white/20"
+      } flex flex-col items-center justify-center`}
+    >
+      <i className="fas fa-home"></i>
+      <span className="text-xs mt-1">House</span>
+    </button>
+
+    <button
+      onClick={() => setActiveTab("shop")}
+      className={`w-20 py-3 rounded-xl transition-all duration-200 ${
+        activeTab === "shop"
+          ? "bg-white/40 text-[#e11d48] shadow-md"
+          : "text-[#e11d48] hover:bg-white/20"
+      } flex flex-col items-center justify-center`}
+    >
+      <i className="fas fa-store"></i>
+      <span className="text-xs mt-1">Shop</span>
+    </button>
+
+    <button
+      onClick={() => setActiveTab("friends")}
+      className={`w-20 py-3 rounded-xl transition-all duration-200 ${
+        activeTab === "friends"
+          ? "bg-white/40 text-[#2d3748] shadow-md"
+          : "text-[#939599] hover:bg-white/20"
+      } flex flex-col items-center justify-center`}
+    >
+      <i className="fas fa-users"></i>
+      <span className="text-xs mt-1">Friends</span>
+    </button>
   </div>
 </div>
   
