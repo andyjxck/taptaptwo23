@@ -920,25 +920,7 @@ useEffect(() => {
           </div>
         </motion.div>
 
-          {/* Footer Return Button */}
-          <div className="z-10 mt-6">
-            <a
-              href="https://taptaptwo.co.uk"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center space-x-2 px-4 py-3 bg-white/10 text-white rounded-xl font-bold text-sm hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg border border-white/20 backdrop-blur-xl"
-            >
-              <i className="fas fa-arrow-left" />
-              <span>Return to Tap Tap Two</span>
-            </a>
-               <button
-              onClick={() => setMuted((m) => !m)}
-              className="flex items-center justify-center px-4 py-1 text-[#4a5568] hover:bg-gray-100 rounded-full border border-white/20"
-              aria-label={muted ? "Unmute sounds" : "Mute sounds"}
-            >
-              <i className={`fas ${muted ? "fa-volume-mute" : "fa-volume-up"}`}></i>
-            </button>
-          </div>
+        
 
         {/* Victory Celebration Overlay */}
         <AnimatePresence>
@@ -969,6 +951,13 @@ useEffect(() => {
           >
             ← Return to Tap Tap Two
           </button>
+                  <button
+              onClick={() => setMuted((m) => !m)}
+              className="flex items-center justify-center px-4 py-1 text-[#4a5568] hover:bg-gray-100 rounded-full border border-white/20"
+              aria-label={muted ? "Unmute sounds" : "Mute sounds"}
+            >
+              <i className={`fas ${muted ? "fa-volume-mute" : "fa-volume-up"}`}></i>
+            </button>
         </div>
       </div>
       <style jsx global>{bossCSS}</style>
