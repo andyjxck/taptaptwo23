@@ -126,6 +126,40 @@ export default function BossModePage() {
       .finally(() => setSoloLoading(false));
   }, [userReady, userId, mode]);
 
+  
+  // Poll for boss progress refresh when boss is defeated (visibleBossHp === 0)
+useEffect(() => {
+  if (!userReady) return;
+  if (visibleBossHp > 0) return; // Only poll if boss is dead (0 HP)
+
+  const interval = setInterval(async () => {
+    try {
+      if (mode === "solo") {
+        const res = await fetch(`/api/boss?action=progress&userId=${userId}`);
+        const data = await res.json();
+        if (data && data.boss_hp !== undefined) {
+          setSoloProgress(data);
+          setAccumulatedAutoTapDamage(0);
+          setTapCount(0);
+        }
+      } else if (mode === "coop" && currentSession) {
+        const res = await fetch(`/api/boss?action=coop_session&roomCode=${currentSession.room_code}&userId=${userId}`);
+        const data = await res.json();
+        if (data && data.session) {
+          setCurrentSession(data.session);
+          setAccumulatedAutoTapDamage(0);
+          setTapCount(0);
+        }
+      }
+    } catch (e) {
+      console.error("Error refreshing boss progress:", e);
+    }
+  }, 1500); // Poll every 1.5 seconds
+
+  return () => clearInterval(interval);
+}, [visibleBossHp, userReady, userId, mode, currentSession]);
+
+
   // --- EFFECTS: COOP SESSION POLLING ---
   useEffect(() => {
     if (!userReady || mode !== "coop" || !currentSession) return;
@@ -276,38 +310,6 @@ export default function BossModePage() {
       console.error("Error sending tap damage:", error);
     }
   }
-
-  // Poll for boss progress refresh when boss is defeated (visibleBossHp === 0)
-useEffect(() => {
-  if (!userReady) return;
-  if (visibleBossHp > 0) return; // Only poll if boss is dead (0 HP)
-
-  const interval = setInterval(async () => {
-    try {
-      if (mode === "solo") {
-        const res = await fetch(`/api/boss?action=progress&userId=${userId}`);
-        const data = await res.json();
-        if (data && data.boss_hp !== undefined) {
-          setSoloProgress(data);
-          setAccumulatedAutoTapDamage(0);
-          setTapCount(0);
-        }
-      } else if (mode === "coop" && currentSession) {
-        const res = await fetch(`/api/boss?action=coop_session&roomCode=${currentSession.room_code}&userId=${userId}`);
-        const data = await res.json();
-        if (data && data.session) {
-          setCurrentSession(data.session);
-          setAccumulatedAutoTapDamage(0);
-          setTapCount(0);
-        }
-      }
-    } catch (e) {
-      console.error("Error refreshing boss progress:", e);
-    }
-  }, 1500); // Poll every 1.5 seconds
-
-  return () => clearInterval(interval);
-}, [visibleBossHp, userReady, userId, mode, currentSession]);
 
   // --- TAP BUTTON HANDLER (calls handleTap) ---
   function onTapButtonClick() {
