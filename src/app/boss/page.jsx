@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Flame, ChevronDown, Coins, Crown, Timer, Zap, Target, Clock, Settings } from "lucide-react";
+import { Users, Flame, ChevronDown, Coins, Crown, Timer, Zap, Settings } from "lucide-react";
 
 function isImageUrl(icon) {
   return typeof icon === "string" && (icon.startsWith("http") || icon.startsWith("/") || icon.match(/\.(png|jpg|jpeg|gif|svg)$/i));
@@ -35,13 +35,13 @@ function formatNumberShort(num) {
 
 export default function BossModePage() {
   const router = useRouter();
-const soloTapRequestCounter = useRef(0);
+  const soloTapRequestCounter = useRef(0);
 
   // --- AUTH ---
   const [userId, setUserId] = useState("");
   const [pin, setPin] = useState("");
   const [userReady, setUserReady] = useState(false);
-const coopTapRequestCounter = useRef(0);
+  const coopTapRequestCounter = useRef(0);
 
   // --- MENU/UI STATE ---
   const [mode, setMode] = useState(""); // "", "solo", "coop-create", "coop-join", "coop"
@@ -130,175 +130,142 @@ const coopTapRequestCounter = useRef(0);
     return () => { cancelled = true; clearInterval(interval); };
   }, [mode, currentSession, userReady, userId]);
 
-// --- AUTO-TAPPER FOR SOLO ---
-useEffect(() => {
-  // Only run if SOLO mode, auto tapper is active, and boss is alive
-  if (
-    mode !== "solo" ||
-    !soloProgress ||
-    !upgradesData?.stats?.autoTapperDps ||
-    upgradesData.stats.autoTapperDps <= 0 ||
-    soloProgress.boss_hp <= 0
-  ) return;
+  // --- AUTO-TAPPER FOR SOLO ---
+  useEffect(() => {
+    if (
+      mode !== "solo" ||
+      !soloProgress ||
+      !upgradesData?.stats?.autoTapperDps ||
+      upgradesData.stats.autoTapperDps <= 0 ||
+      soloProgress.boss_hp <= 0
+    ) return;
 
-  const interval = setInterval(() => {
-    handleSoloTap(true);
-  }, 1000);
+    const interval = setInterval(() => {
+      handleSoloTap(true);
+    }, 1000);
 
-  return () => clearInterval(interval);
-}, [mode, soloProgress?.boss_hp, upgradesData?.stats?.autoTapperDps]);
+    return () => clearInterval(interval);
+  }, [mode, soloProgress?.boss_hp, upgradesData?.stats?.autoTapperDps]);
 
+  // --- SOLO TAP HANDLER ---
+  function handleSoloTap(isAutoTap = false) {
+    if (soloLoading || !soloProgress || soloProgress.boss_hp <= 0) return;
 
-// --- TAP SPEED BONUS ---
-const [lastTapTimes, setLastTapTimes] = useState([]);
-const getTapSpeedMultiplier = useCallback(() => {
-  if (!upgradesData?.stats?.tapSpeedBonus) return 1;
-  const now = Date.now();
-  const recentTaps = lastTapTimes.filter(t => now - t < 1000).length;
-  if (recentTaps >= 5) return 1 + (upgradesData.stats.tapSpeedBonus / 100);
-  return 1;
-}, [lastTapTimes, upgradesData?.stats?.tapSpeedBonus]);
+    // 1. Calculate local damage (flat 5% crit)
+    let localDamage = 1;
+    let isCrit = false;
+    if (isAutoTap) {
+      localDamage = upgradesData?.stats?.autoTapperDps || 0;
+    } else {
+      localDamage = upgradesData?.stats?.tapPower || 1;
+      isCrit = Math.random() < 0.05; // Flat 5% chance
+      if (isCrit) localDamage *= 3;
+    }
 
-// --- SOLO TAP HANDLER ---
-function handleSoloTap(isAutoTap = false, tapSpeedMultiplier = 1) {
-  if (soloLoading || !soloProgress || soloProgress.boss_hp <= 0) return;
+    // 2. Show local floating number immediately
+    const dmgId = Date.now() + Math.random();
+    setShowDamageNumbers(prev => [
+      ...prev,
+      {
+        id: dmgId,
+        damage: localDamage,
+        isCrit,
+        x: Math.random() * 120 - 60,
+        y: Math.random() * 60 - 30,
+      },
+    ]);
+    setTimeout(() => setShowDamageNumbers(prev => prev.filter(d => d.id !== dmgId)), 1200);
 
-  // 1. Calculate local damage (with crit, tap speed, auto)
-  let localDamage = 1;
-  let isCrit = false;
-  let speedBonusApplied = tapSpeedMultiplier > 1 && !isAutoTap;
-  if (isAutoTap) {
-    localDamage = upgradesData?.stats?.autoTapperDps || 0;
-  } else {
-    localDamage = upgradesData?.stats?.tapPower || 1;
-    // Apply speed bonus if present
-    localDamage = Math.round(localDamage * tapSpeedMultiplier);
-    // Crit chance
-    const critChance = Math.min((upgradesData?.upgrades?.crit_chance_upgrades || 0) * 5, 100);
-    isCrit = Math.random() * 100 < critChance;
-    if (isCrit) localDamage *= 3;
+    // 3. Server call, HP only updated here
+    fetch("/api/boss", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "solo_tap", userId, isAutoTap }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.boss_defeated) {
+          setShowCelebration(true);
+          setTimeout(() => setShowCelebration(false), 1600);
+
+          fetch(`/api/boss?action=progress&userId=${userId}`)
+            .then(r => r.json())
+            .then(newBoss => setSoloProgress(newBoss));
+          fetch(`/api/boss?action=profile&userId=${userId}`)
+            .then(r => r.json())
+            .then(setProfileData);
+          setTapCount(0);
+          return;
+        }
+        setSoloProgress(prev => ({
+          ...prev,
+          boss_hp: data.current_boss_hp,
+        }));
+        setTapCount(prev => prev + (isAutoTap ? 0 : 1));
+      });
   }
 
-  // 2. Show local floating number immediately
-  const dmgId = Date.now() + Math.random();
-  setShowDamageNumbers(prev => [
-    ...prev,
-    {
-      id: dmgId,
-      damage: localDamage,
-      isCrit,
-      isSpeedBonus: speedBonusApplied,
-      x: Math.random() * 120 - 60,
-      y: Math.random() * 60 - 30,
-    },
-  ]);
-  setTimeout(() => setShowDamageNumbers(prev => prev.filter(d => d.id !== dmgId)), 1200);
+  // --- COOP TAP HANDLER ---
+  function handleCoopTap() {
+    if (!currentSession || currentSession.boss_hp <= 0) return;
 
-  // 3. Server call, HP only updated here
-  fetch("/api/boss", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "solo_tap", userId, isAutoTap }),
-  })
-    .then(r => r.json())
-    .then(data => {
-      if (data.boss_defeated) {
-        setShowCelebration(true);
-        setTimeout(() => setShowCelebration(false), 1600);
+    // 1. Calculate local damage (flat 5% crit)
+    let localDamage = upgradesData?.stats?.tapPower || 1;
+    let isCrit = false;
+    isCrit = Math.random() < 0.05; // Flat 5% chance
+    if (isCrit) localDamage *= 3;
 
-        // Refresh boss state and profile/coins
-        fetch(`/api/boss?action=progress&userId=${userId}`)
-          .then(r => r.json())
-          .then(newBoss => setSoloProgress(newBoss));
-        fetch(`/api/boss?action=profile&userId=${userId}`)
-          .then(r => r.json())
-          .then(setProfileData);
-        setTapCount(0);
-        return;
-      }
-      setSoloProgress(prev => ({
-        ...prev,
-        boss_hp: data.current_boss_hp,
-      }));
-      setTapCount(prev => prev + (isAutoTap ? 0 : 1));
-    });
-}
+    // 2. Show local floating number immediately
+    const dmgId = Date.now() + Math.random();
+    setShowDamageNumbers(prev => [
+      ...prev,
+      {
+        id: dmgId,
+        damage: localDamage,
+        isCrit,
+        x: Math.random() * 120 - 60,
+        y: Math.random() * 60 - 30,
+      },
+    ]);
+    setTimeout(() => setShowDamageNumbers(prev => prev.filter(d => d.id !== dmgId)), 1200);
 
-// --- COOP TAP HANDLER ---
-function handleCoopTap(tapSpeedMultiplier = 1) {
-  if (!currentSession || currentSession.boss_hp <= 0) return;
-
-  // 1. Calculate local damage (with crit, tap speed)
-  let localDamage = upgradesData?.stats?.tapPower || 1;
-  let isCrit = false;
-  let speedBonusApplied = tapSpeedMultiplier > 1;
-  // Apply speed bonus
-  localDamage = Math.round(localDamage * tapSpeedMultiplier);
-  // Crit chance
-  const critChance = Math.min((upgradesData?.upgrades?.crit_chance_upgrades || 0) * 5, 100);
-  isCrit = Math.random() * 100 < critChance;
-  if (isCrit) localDamage *= 3;
-
-  // 2. Show local floating number immediately
-  const dmgId = Date.now() + Math.random();
-  setShowDamageNumbers(prev => [
-    ...prev,
-    {
-      id: dmgId,
-      damage: localDamage,
-      isCrit,
-      isSpeedBonus: speedBonusApplied,
-      x: Math.random() * 120 - 60,
-      y: Math.random() * 60 - 30,
-    },
-  ]);
-  setTimeout(() => setShowDamageNumbers(prev => prev.filter(d => d.id !== dmgId)), 1200);
-
-  // 3. Server call, HP only updated here
-  fetch("/api/boss", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action: "coop_tap",
-      roomCode: currentSession.room_code,
-      userId: userId,
-      damage: localDamage // Send *actual* damage for server validation (optional)
+    // 3. Server call, HP only updated here
+    fetch("/api/boss", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "coop_tap",
+        roomCode: currentSession.room_code,
+        userId: userId,
+        damage: localDamage
+      })
     })
-  })
-    .then(r => r.json())
-    .then(data => {
-      if (data.boss_defeated) {
-        setShowCelebration(true);
-        setTimeout(() => setShowCelebration(false), 1600);
+      .then(r => r.json())
+      .then(data => {
+        if (data.boss_defeated) {
+          setShowCelebration(true);
+          setTimeout(() => setShowCelebration(false), 1600);
 
-        // Reload coop session state after boss defeat
-        fetch(`/api/boss?action=coop_session&roomCode=${currentSession.room_code}&userId=${userId}`)
-          .then(r => r.json())
-          .then(res => res.session && setCurrentSession(res.session));
+          fetch(`/api/boss?action=coop_session&roomCode=${currentSession.room_code}&userId=${userId}`)
+            .then(r => r.json())
+            .then(res => res.session && setCurrentSession(res.session));
+          fetch(`/api/boss?action=profile&userId=${userId}`)
+            .then(r => r.json())
+            .then(setProfileData);
 
-        // Also refresh profile/coins
-        fetch(`/api/boss?action=profile&userId=${userId}`)
-          .then(r => r.json())
-          .then(setProfileData);
+          setTapCount(0);
+          return;
+        }
+        setCurrentSession(prev => ({ ...prev, boss_hp: data.current_boss_hp }));
+        setTapCount(prev => prev + 1);
+      });
+  }
 
-        setTapCount(0);
-        return;
-      }
-
-      setCurrentSession(prev => ({ ...prev, boss_hp: data.current_boss_hp }));
-      setTapCount(prev => prev + 1);
-    });
-}
-
-// --- TAP BUTTON HANDLER (solo/coop) ---
-function handleTap() {
-  const now = Date.now();
-  setLastTapTimes(prev => [...prev.slice(-10), now]);
-  const tapSpeedMultiplier = getTapSpeedMultiplier();
-  if (mode === "solo" && soloProgress) handleSoloTap(false, tapSpeedMultiplier);
-  if (mode === "coop" && currentSession) handleCoopTap(tapSpeedMultiplier);
-}
-
+  // --- TAP BUTTON HANDLER (solo/coop) ---
+  function handleTap() {
+    if (mode === "solo" && soloProgress) handleSoloTap(false);
+    if (mode === "coop" && currentSession) handleCoopTap();
+  }
 
   // --- COOP CREATE ---
   function handleCoopCreate() {
@@ -578,7 +545,6 @@ function handleTap() {
 
   const hpMax = battleData.boss_max_hp || battleData.boss_hp;
   const hpPercentage = Math.max(0, Math.min(100, (battleData.boss_hp / hpMax) * 100));
-  const tapSpeedMultiplier = getTapSpeedMultiplier();
 
   function getTimeUntilReset() {
     if (!soloProgress?.next_reset) return "";
@@ -708,36 +674,31 @@ function handleTap() {
 
           {/* Floating Damage Numbers */}
           <AnimatePresence>
-           {showDamageNumbers.map(dmg => (
-  <motion.div
-    key={dmg.id}
-    initial={{ opacity: 1, y: 0, scale: 1 }}
-    animate={{ opacity: 0, y: -80, scale: 1.5 }}
-    exit={{ opacity: 0 }}
-    transition={{ duration: 1.2, ease: "easeOut" }}
-    className={`absolute text-3xl font-black pointer-events-none z-20 ${
-      dmg.isCrit
-        ? "text-yellow-300 drop-shadow-lg"
-        : dmg.isSpeedBonus
-        ? "text-green-300 drop-shadow"
-        : "text-orange-200"
-    }`}
-    style={{
-      left: `calc(50% + ${dmg.x}px)`,
-      top: `calc(40% + ${dmg.y}px)`,
-      textShadow: dmg.isCrit
-        ? "0 0 20px #fbbf24"
-        : dmg.isSpeedBonus
-        ? "0 0 10px #bbf7d0"
-        : "0 0 10px #fb923c"
-    }}
-  >
-    {dmg.isCrit && "💥"}
-    {dmg.damage}
-    {dmg.isSpeedBonus && !dmg.isCrit && " ⚡"}
-    {dmg.isCrit && " 💥"}
-  </motion.div>
-))}
+            {showDamageNumbers.map(dmg => (
+              <motion.div
+                key={dmg.id}
+                initial={{ opacity: 1, y: 0, scale: 1 }}
+                animate={{ opacity: 0, y: -80, scale: 1.5 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1.2, ease: "easeOut" }}
+                className={`absolute text-3xl font-black pointer-events-none z-20 ${
+                  dmg.isCrit
+                    ? "text-yellow-300 drop-shadow-lg"
+                    : "text-orange-200"
+                }`}
+                style={{
+                  left: `calc(50% + ${dmg.x}px)`,
+                  top: `calc(40% + ${dmg.y}px)`,
+                  textShadow: dmg.isCrit
+                    ? "0 0 20px #fbbf24"
+                    : "0 0 10px #fb923c"
+                }}
+              >
+                {dmg.isCrit && "💥"}
+                {dmg.damage}
+                {dmg.isCrit && " 💥"}
+              </motion.div>
+            ))}
           </AnimatePresence>
 
           {/* Boss Emoji / Image */}
@@ -772,52 +733,42 @@ function handleTap() {
             </div>
           </div>
 
-        {/* Strike Action Button */}
-<div className="relative mb-6">
-  <motion.button
-    whileHover={{ scale: 1.07 }}
-    whileTap={{ scale: 0.94, rotate: [0, -5, 5, 0] }}
-    onClick={handleTap}
-    disabled={battleData.boss_hp <= 0 || soloLoading} // Only block if boss dead or loading
-    className="boss-strike-button"
-  >
-    <div className="absolute inset-0 boss-strike-gloss"></div>
-    <div className="relative z-10 flex flex-col items-center justify-center h-full">
-      <motion.div
-        animate={{ scale: [1, 1.2, 1], textShadow: ["0 0 10px #fbbf24", "0 0 24px #fbbf24", "0 0 10px #fbbf24"] }}
-        transition={{ duration: 1.5, repeat: Infinity }}
-        className="text-5xl mb-2"
-      >
-        🔥
-      </motion.div>
-      <div className="text-lg font-black tracking-wider drop-shadow-lg">STRIKE!</div>
-      <div className="text-xs opacity-90 mt-1">
-        {upgradesData?.stats?.tapPower || 1} DMG
-      </div>
-    </div>
-  </motion.button>
-</div>
-<div className="text-orange-200 space-y-1 text-sm">
-  <div>
-    Strikes: {tapCount} | +{formatNumberShort(battleData.coins_per_boss)} coins per boss
-  </div>
-  {tapSpeedMultiplier > 1 && (
-    <motion.div
-      animate={{ scale: [1, 1.05, 1] }}
-      transition={{ duration: 0.5, repeat: Infinity }}
-      className="text-yellow-400 font-bold"
-    >
-      🔥 SPEED BONUS: {Math.round((tapSpeedMultiplier - 1) * 100)}% 🔥
-    </motion.div>
-  )}
-  {upgradesData?.stats?.autoTapperDps > 0 && (
-    <div className="text-green-400">
-      ⚡ Auto-Strike: {formatNumberShort(upgradesData.stats.autoTapperDps)} DPS
-    </div>
-  )}
-</div>
-              </motion.div>
-
+          {/* Strike Action Button */}
+          <div className="relative mb-6">
+            <motion.button
+              whileHover={{ scale: 1.07 }}
+              whileTap={{ scale: 0.94, rotate: [0, -5, 5, 0] }}
+              onClick={handleTap}
+              disabled={battleData.boss_hp <= 0 || soloLoading}
+              className="boss-strike-button"
+            >
+              <div className="absolute inset-0 boss-strike-gloss"></div>
+              <div className="relative z-10 flex flex-col items-center justify-center h-full">
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1], textShadow: ["0 0 10px #fbbf24", "0 0 24px #fbbf24", "0 0 10px #fbbf24"] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="text-5xl mb-2"
+                >
+                  🔥
+                </motion.div>
+                <div className="text-lg font-black tracking-wider drop-shadow-lg">STRIKE!</div>
+                <div className="text-xs opacity-90 mt-1">
+                  {upgradesData?.stats?.tapPower || 1} DMG
+                </div>
+              </div>
+            </motion.button>
+          </div>
+          <div className="text-orange-200 space-y-1 text-sm">
+            <div>
+              Strikes: {tapCount} | +{formatNumberShort(battleData.coins_per_boss)} coins per boss
+            </div>
+            {upgradesData?.stats?.autoTapperDps > 0 && (
+              <div className="text-green-400">
+                ⚡ Auto-Strike: {formatNumberShort(upgradesData.stats.autoTapperDps)} DPS
+              </div>
+            )}
+          </div>
+        </motion.div>
 
         {/* Upgrades Panel (view-only in boss mode) */}
         <motion.div
@@ -845,22 +796,6 @@ function handleTap() {
               <div>Auto Tapper</div>
               <div className="opacity-90">Lv.{formatNumberShort(upgradesData?.upgrades?.auto_tapper_upgrades || 0)}</div>
               <div className="opacity-70">{formatNumberShort(upgradesData?.stats?.autoTapperDps || 0)} DPS</div>
-            </div>
-            <div className="boss-upgrade-btn boss-upgrade-purple cursor-not-allowed opacity-80 p-2">
-              <div className="mb-1 flex items-center justify-between">
-                <Target size={16} className="text-purple-400" />
-              </div>
-              <div>Crit Chance</div>
-              <div className="opacity-90">Lv.{formatNumberShort(upgradesData?.upgrades?.crit_chance_upgrades || 0)}</div>
-              <div className="opacity-70">{formatNumberShort(upgradesData?.stats?.critChance || 0)}%</div>
-            </div>
-            <div className="boss-upgrade-btn boss-upgrade-yellow cursor-not-allowed opacity-80 p-2">
-              <div className="mb-1 flex items-center justify-between">
-                <Clock size={16} className="text-yellow-400" />
-              </div>
-              <div>Speed Bonus</div>
-              <div className="opacity-90">Lv.{formatNumberShort(upgradesData?.upgrades?.tap_speed_bonus_upgrades || 0)}</div>
-              <div className="opacity-70">+{formatNumberShort(upgradesData?.stats?.tapSpeedBonus || 0)}%</div>
             </div>
           </div>
         </motion.div>
@@ -900,7 +835,6 @@ function handleTap() {
     </div>
   );
 }
-
 // --- GLOSSY DARK "INFERNO" THEME STYLES ---
 const bossCSS = `
   .boss-bg {
