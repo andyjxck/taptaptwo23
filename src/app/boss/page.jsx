@@ -868,7 +868,6 @@ useEffect(() => {
           <div className="text-orange-200 space-y-1 text-sm">
             <div>
               Strikes: {tapCount} | +{formatNumberShort(Math.floor(profileData.stats.availableCoins * 0.5))} coins per boss
-              per boss
             </div>
             {upgradesData?.stats?.autoTapperDps > 0 && (
               <div className="text-green-400">
