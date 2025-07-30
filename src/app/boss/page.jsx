@@ -72,10 +72,6 @@ export default function BossModePage() {
   const [coopJoining, setCoopJoining] = useState(false);
   const [coopCreating, setCoopCreating] = useState(false);
 
-const hpMax = battleData.boss_max_hp || battleData.boss_hp;
-const visibleBossHp = Math.max(0, (battleData.boss_hp || 0) - accumulatedAutoTapDamage);
-const hpPercentage = Math.max(0, Math.min(100, (visibleBossHp / hpMax) * 100));
-
   // --- BUTTON LOCK & LOADING ---
   const [pageLoading, setPageLoading] = useState(true);
 
@@ -129,8 +125,12 @@ const hpPercentage = Math.max(0, Math.min(100, (visibleBossHp / hpMax) * 100));
       })
       .finally(() => setSoloLoading(false));
   }, [userReady, userId, mode]);
+let battleData = mode === "solo" ? soloProgress : currentSession;
 
-  
+const hpMax = (battleData?.boss_max_hp || battleData?.boss_hp) || 1;  // fallback 1 to avoid NaN
+const visibleBossHp = Math.max(0, (battleData?.boss_hp || 0) - accumulatedAutoTapDamage);
+const hpPercentage = Math.max(0, Math.min(100, (visibleBossHp / hpMax) * 100));
+
   // Poll for boss progress refresh when boss is defeated (visibleBossHp === 0)
 useEffect(() => {
   if (!userReady) return;
@@ -619,7 +619,7 @@ useEffect(() => {
   }
 
   // --- BATTLE UI (SOLO/COOP) ---
-  let battleData = mode === "solo" ? soloProgress : currentSession;
+
   const isBattleLoading =
     (mode === "solo" && soloLoading) || (mode === "coop" && !currentSession);
   if (!upgradesData || !battleData || isBattleLoading) {
