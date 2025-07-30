@@ -2632,9 +2632,9 @@ const handleBuyIcon = async (icon) => {
   const SEASONS = ["Spring", "Summer", "Autumn", "Winter"];
 
   const UPGRADE_COSTS = {
-    tapPower: (level) => Math.floor(20 * Math.pow(1.07, level)),
+    tapPower: (level) => Math.floor(20 * Math.pow(1.06, level)),
 
-    autoTapper: (level) => Math.floor(500 * Math.pow(1.06, level)),
+    autoTapper: (level) => Math.floor(500 * Math.pow(1.055, level)),
 
     critChance: (level) =>
       level < 84
@@ -4414,14 +4414,14 @@ const handleUpgrade = useCallback(
       switch (type) {
         case "tapPower": {
           const level = state.tapPowerUpgrades + 1;
-          const gain = 0.8 + level * 0.115;
+          const gain = 0.8 + level * 0.121;
           state.tapPower = Math.round((state.tapPower + gain) * 10) / 10;
           state.tapPowerUpgrades += 1;
           break;
         }
         case "autoTapper": {
           const level = state.autoTapperUpgrades + 1;
-          const gain = 1.7 + level * 1.45;
+          const gain = 1.7 + level * 1.55;
           state.autoTapper = Math.round(state.autoTapper + gain);
           state.autoTapperUpgrades += 1;
           break;
@@ -4444,7 +4444,7 @@ const handleUpgrade = useCallback(
         case "tapSpeedBonus": {
           const level = state.tapSpeedBonusUpgrades + 1;
           const startValue = level === 1 ? 2 : 0;
-          const gain = startValue + level * 1.33;
+          const gain = startValue + level * 1.4;
           state.tapSpeedBonus =
             Math.round((state.tapSpeedBonus + gain) * 10) / 10;
           state.tapSpeedBonusUpgrades += 1;
