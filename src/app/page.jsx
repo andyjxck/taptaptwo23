@@ -6369,7 +6369,7 @@ const renderLeaderboard = () => (
     {activeTab === "game" ? (
       <div className="flex flex-col items-center justify-center space-y-6">
         <div className="relative">
-     <button
+    <button
   onClick={() => {
     if (navigator.vibrate) navigator.vibrate(50);
 
@@ -6384,44 +6384,48 @@ const renderLeaderboard = () => (
     handleTap();
   }}
   className={`
-    w-[220px] h-[220px] rounded-full
-    flex items-center justify-center
-    shadow-2xl border-4 border-white/20
-    bg-gradient-to-br from-white/80 via-white/60 to-gray-200/90
-    hover:from-white/90 hover:to-gray-300
-    transition-all duration-200
-    relative overflow-hidden
-    active:scale-95 group
-    before:content-[''] before:absolute before:inset-2 before:rounded-full
-    before:bg-gradient-to-br before:from-white/60 before:to-white/20 before:opacity-60
-    after:content-[''] after:absolute after:inset-0 after:rounded-full after:shadow-[0_8px_32px_8px_rgba(80,80,160,0.18)]
+    group relative w-[220px] h-[220px] rounded-full flex items-center justify-center
+    border-[6px] border-white/30 shadow-[0_10px_32px_6px_rgba(40,40,120,0.24),0_2px_8px_0_rgba(0,0,0,0.12)]
+    bg-gradient-to-br from-white/80 via-white/60 to-gray-300/90
+    overflow-hidden
+    transition-transform active:scale-95
+    hover:shadow-[0_20px_50px_10px_rgba(80,80,180,0.28)]
+    outline-none focus-visible:ring-4 focus-visible:ring-purple-400
+    select-none
   `}
   style={{
-    boxShadow: "0 8px 32px 0 rgba(60,60,160,0.18), 0 2px 8px 0 rgba(0,0,0,0.07)",
+    WebkitTapHighlightColor: "transparent",
   }}
 >
-  {/* Glow ring underneath (from your logic) */}
-  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-    <div
-      className={`
-        w-[160px] h-[160px] rounded-full blur-2xl opacity-60
-        ${
-          gameState.equippedTheme && gameState.equippedTheme !== "seasons"
-            ? CUSTOM_THEMES[gameState.equippedTheme]?.buttonGlow
-            : SEASONAL_THEMES[gameState.currentSeason].buttonGlow
-        }
-      `}
-    ></div>
-  </div>
-  {/* Glass shine/gradient */}
-  <div className="absolute inset-0 rounded-full pointer-events-none z-10">
-    <div className="absolute inset-0 rounded-full bg-gradient-to-t from-white/20 to-transparent opacity-70"></div>
-    <div className="absolute top-3 left-6 w-32 h-10 bg-white/70 rounded-full blur-lg opacity-30 rotate-[-18deg]"></div>
-  </div>
+  {/* Animated energy swirl ring (matches theme) */}
+  <span className={`
+    absolute z-0 inset-0 rounded-full pointer-events-none
+    animate-spin-slow
+    ${
+      gameState.equippedTheme && gameState.equippedTheme !== "seasons"
+        ? CUSTOM_THEMES[gameState.equippedTheme]?.buttonGlow
+        : SEASONAL_THEMES[gameState.currentSeason].buttonGlow
+    }
+    opacity-40
+    border-4 border-transparent
+    ring-8 ring-[rgba(140,120,255,0.10)]
+  `}
+    style={{ animationDuration: "9s" }}
+  />
+  {/* Inner glass rim */}
+  <span className="absolute z-10 inset-4 rounded-full bg-white/40 border-2 border-white/50 blur-[2px] opacity-70 pointer-events-none"/>
+  {/* Shiny gloss highlight */}
+  <span className="absolute z-20 top-8 left-10 w-32 h-16 rounded-full bg-white/70 blur-xl opacity-25 pointer-events-none group-hover:opacity-50 transition-opacity"/>
+  {/* Animated shine sweep */}
+  <span className="absolute z-30 inset-0 rounded-full pointer-events-none">
+    <span className="absolute left-0 top-0 w-full h-full rounded-full opacity-0 group-hover:opacity-60 group-active:opacity-100 transition-all">
+      <span className="block w-full h-full bg-gradient-to-br from-white/80 via-white/10 to-transparent rounded-full animate-shine"/>
+    </span>
+  </span>
   {/* Center icon */}
-  <div className="relative z-20 flex items-center justify-center">
+  <span className="relative z-40 flex items-center justify-center select-none">
     {gameState.equippedTheme && gameState.equippedTheme !== "seasons" ? (
-      <span className="text-7xl select-none drop-shadow-lg">
+      <span className="text-7xl drop-shadow-lg group-active:scale-110 transition-transform duration-150">
         {CUSTOM_THEMES[gameState.equippedTheme]?.icon || "❓"}
       </span>
     ) : (
@@ -6434,12 +6438,25 @@ const renderLeaderboard = () => (
             : gameState.currentSeason === 2
             ? "text-orange-400"
             : "text-blue-400"
-        } drop-shadow-lg group-hover:scale-110 transition-transform duration-200`}
+        } drop-shadow-lg group-active:scale-110 transition-transform duration-150`}
       />
     )}
-  </div>
-  {/* Rim highlight */}
-  <div className="absolute inset-0 rounded-full ring-4 ring-white/30 pointer-events-none z-20"></div>
+  </span>
+  {/* Button rim shadow */}
+  <span className="absolute z-0 inset-0 rounded-full shadow-[0_0_32px_14px_rgba(80,80,140,0.14)] pointer-events-none"/>
+  {/* 3D bottom edge */}
+  <span className="absolute bottom-0 left-0 right-0 h-10 rounded-b-full bg-gradient-to-t from-gray-300/70 to-transparent z-10 pointer-events-none"/>
+  <style jsx>{`
+    .animate-spin-slow { animation: spin 9s linear infinite; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .animate-shine { animation: shine-move 1.8s cubic-bezier(0.4,0,0.2,1) 1; }
+    @keyframes shine-move {
+      0% { opacity:0; transform: translateX(-80%) scale(1.1);}
+      20% { opacity:0.7; }
+      60% { opacity:0.8; transform: translateX(60%) scale(1.08);}
+      100% { opacity:0; transform: translateX(150%) scale(1.05);}
+    }
+  `}</style>
 </button>
 
 
