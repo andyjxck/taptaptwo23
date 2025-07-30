@@ -46,7 +46,8 @@ const devLogs = [
       text: [
         "Boss Mode and Battle Mode are still experimental. Some features may be unfinished or buggy – especially in Co-Op.",
         "Guild-based co-op is a brand new system. All five guild members must participate to start a raid (this will be improved soon).",
-        "If you encounter issues, missing coins, or just something that feels wrong, please send us feedback from the sidebar."
+        "If you encounter issues, missing coins, or just something that feels wrong, please send us feedback from the sidebar.",
+        "Use code boss in the house tab now!"
       ]
     }
   ],
