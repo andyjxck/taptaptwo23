@@ -920,6 +920,19 @@ useEffect(() => {
           </div>
         </motion.div>
 
+          {/* Footer Return Button */}
+          <div className="z-10 mt-6">
+            <a
+              href="https://taptaptwo.co.uk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-2 px-4 py-3 bg-white/10 text-white rounded-xl font-bold text-sm hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg border border-white/20 backdrop-blur-xl"
+            >
+              <i className="fas fa-arrow-left" />
+              <span>Return to Tap Tap Two</span>
+            </a>
+          </div>
+
         {/* Victory Celebration Overlay */}
         <AnimatePresence>
           {showCelebration && (
