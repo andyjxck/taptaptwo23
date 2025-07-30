@@ -11,6 +11,51 @@ const GlassCard = ({ children }) => (
 
 const devLogs = [
   {
+  id: "v2_2_boss_mode",
+  date: "30/07/2025",
+  time: "18:48",
+  title: "🐉 The Boss Arrives 🐉",
+  emoji: "🔥",
+  highlights: [
+    {
+      icon: "🔥",
+      label: "Boss Mode Is Live! (Beta)",
+      text: [
+        "Face the mighty Inferno Boss – solo or as a full guild! Defeat bosses for huge coin rewards and weekly glory.",
+        "⭐ **Solo Mode:** Climb the levels, push your limits, and earn coins every time you win. Perfect for late game players looking for more ways to earn.",
+        "🤝 **Co-Op Mode:** Join forces with your **entire guild** (5 players required) for the ultimate challenge! Guild raids will evolve in future updates.",
+        "🐲 **Epic Battles:** Smash the STRIKE button, trigger critical hits, and watch the boss’s HP melt. Teamwork is key in co-op!",
+        "🕑 **Weekly Reset:** Every week, boss levels reset – can you beat your previous high score? (Only your level resets, your weekly best remains until you break it!)",
+        "🪙 **Earn Real Coins:** All coins earned in Boss Mode are instantly synced to your main Tap Tap: Two account. Double-dip on progress!",
+        "⚙️ **Upgrades:** Right now, all upgrades must be bought in the main game. But soon, upgrades will be available directly from Boss Mode too.",
+        "🔨 **Beta Warning:** Boss Mode is still in early beta! Expect bugs, unfinished visuals, and possible weirdness with rewards and progression."
+      ]
+    },
+    {
+      icon: "🆕",
+      label: "New Sidebar & UI Revamp",
+      text: [
+        "Check out the **all-new sidebar!** Instantly jump to Battle, Boss, Friends, Guilds, Shop, and more from anywhere in the game.",
+        "Every tab – Home, House, Shop, Friends, and more – has been visually overhauled for a cleaner, snappier, and easier-to-navigate experience.",
+        "There’s a dedicated Feedback button in the sidebar now! Spot a bug? Got an idea? Tap Feedback – we see every message."
+      ]
+    },
+    {
+      icon: "🐞",
+      label: "Known Issues & Beta Notes",
+      text: [
+        "Boss Mode and Battle Mode are still experimental. Some features may be unfinished or buggy – especially in Co-Op.",
+        "Guild-based co-op is a brand new system. All five guild members must participate to start a raid (this will be improved soon).",
+        "If you encounter issues, missing coins, or just something that feels wrong, please send us feedback from the sidebar."
+      ]
+    }
+  ],
+  notes: [
+    "Your feedback is crucial! Please use the Feedback button in the sidebar for bugs, ideas, or anything weird you spot.",
+    "Thank you for helping us shape the future of Tap Tap: Two. Happy Tapping! 🚀"
+  ]
+},
+{
     id: "v2_1_guilds",
     date: "30/07/2025",
     time: "01:34",
