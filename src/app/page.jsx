@@ -897,6 +897,7 @@ const [lastDailyClaim, setLastDailyClaim] = useState(0);
 const [guild, setGuild] = useState(null);
   const [profileName, setProfileName] = useState("");
 const [profileIcon, setProfileIcon] = useState("");
+const [sidebarOpen, setSidebarOpen] = useState(false);
 
 
   const [activeTab, setActiveTab] = useState("game");
@@ -6164,146 +6165,161 @@ const renderLeaderboard = () => (
     </div>
   )}
 <div className="container mx-auto px-2 sm:px-4 py-2 space-y-6">
-  {/* Top row: logo left, buttons right */}
-  <div className="flex justify-between items-end h-20 pl-0 pr-2 sm:px-4">
-    <div className="flex flex-col justify-center items-start">
-      <img
-        src="https://ucarecdn.com/7bdd361d-c411-41ce-b066-c1d20f88e3a7/-/format/auto/"
-        alt="Tap Tap Two Logo"
-        className="h-14 object-contain"
-        style={{ marginLeft: 0 }}
-      />
-      <span className="text-xs text-gray-400 font-medium tracking-wide mt-1 ml-1">
-        made by andysocial
-      </span>
-    </div>
-
- <div className="flex items-center space-x-2 h-full">
+  {/* Hamburger Icon, fixed top right */}
+<div className="fixed top-4 right-4 z-50">
   <button
-    onClick={() => setShowMaddoxModal(true)}
-    className="relative flex items-center justify-center w-11 h-11 rounded-full bg-gradient-to-br from-[#1e293b] to-[#dc2626] shadow-xl hover:scale-110 transition-all border-2 border-[#dc2626]"
-    aria-label="Maddox Promo"
-    style={{ marginRight: "8px" }}
+    onClick={() => setSidebarOpen(true)}
+    className="w-12 h-12 rounded-full flex items-center justify-center bg-white/30 shadow-xl border border-white/40 backdrop-blur-lg hover:scale-110 transition-all"
+    aria-label="Open Menu"
   >
-    <img
-      src="https://ucarecdn.com/7eaeaf25-2192-4082-a415-dd52f360d379/-/format/auto/"
-      alt="Maddox Logo"
-      className="w-7 h-7 rounded-full object-contain"
+    <i className="fas fa-bars text-2xl text-[#2d3748]"></i>
+  </button>
+
+{sidebarOpen && (
+  <>
+    {/* Overlay backdrop */}
+    <div
+      className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px] transition-opacity duration-300"
+      onClick={() => setSidebarOpen(false)}
+      aria-label="Close Sidebar"
     />
-    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center border-2 border-white shadow">
-      <span className="text-xs font-bold text-white" style={{ lineHeight: "1" }}>
-        !
-      </span>
-    </span>
-  </button>
-
-  <button
-    onClick={() => setShowResetModal(true)}
-    className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#939599] hover:text-[#2d3748] transition duration-200 relative`}
-    aria-label="Reset progress"
-  >
-    <i className="fas fa-sync-alt"></i>
-    <span
-      className="absolute top-0 right-0 flex items-center justify-center rounded-full text-white font-bold"
-      style={{
-        fontSize: "0.75rem",
-        padding: "0 6px",
-        minWidth: "24px",
-        height: "20px",
-        lineHeight: "20px",
-        textAlign: "center",
-        userSelect: "none",
-        backgroundColor: "#4f46e5",
-        transform: "translate(50%, -50%)",
-        zIndex: 20,
-      }}
+    {/* Sidebar */}
+    <aside
+      className="fixed top-0 right-0 h-full w-[80vw] max-w-xs z-50 bg-white/80 bg-opacity-80 rounded-l-3xl shadow-2xl border-l border-white/30 flex flex-col px-6 py-8 space-y-6 transition-transform duration-300 backdrop-blur-xl"
+      style={{ transform: sidebarOpen ? "translateX(0)" : "translateX(100%)" }}
     >
-      {getTokensFromCoins(gameState.coinsEarnedThisRun || 0)}
-    </span>
-  </button>
-
-  {/* NEW Battle Button */}
-  <a
-    href="/battle"
-    className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#939599] hover:text-[#2d3748] transition duration-200`}
-    aria-label="Battle Mode"
-  >
-    <i className="fas fa-crosshairs"></i>
-  </a>
-
-  <button
-    onClick={() => setActiveTab("leaderboard")}
-    className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#939599] hover:text-[#2d3748] transition duration-200`}
-  >
-    <i className="fas fa-trophy"></i>
-  </button>
-
-  <div className="relative">
-    <button
-      onClick={() => setShowDropdown((prev) => !prev)}
-      className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#939599] hover:text-[#2d3748] transition duration-200`}
-      aria-label="Open menu"
-    >
-      <i className="fas fa-bars"></i>
-    </button>
-
-    {showDropdown && (
-      <div
-        className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 box-border"
-        onClick={() => setShowDropdown(false)}
+      {/* Close X */}
+      <button
+        onClick={() => setSidebarOpen(false)}
+        className="absolute top-5 right-5 w-10 h-10 flex items-center justify-center rounded-full bg-white/50 hover:bg-white/70 text-[#2d3748] shadow"
+        aria-label="Close Menu"
       >
-        <a
-          href="/help"
-          className="block px-4 py-2 text-[#939599] hover:bg-gray-100"
-        >
-          <i className="fas fa-question mr-2"></i> Help
-        </a>
-
-        <a
-          href="/notice-board"
-          className="block px-4 py-2 text-[#939599] hover:bg-gray-100"
-        >
-          <i className="fas fa-bullhorn mr-2"></i> Notice Board
-        </a>
-
-        <button
-          onClick={() => setShowFeedback(true)}
-          className="w-full text-left px-4 py-2 text-[#939599] hover:bg-gray-100"
-        >
-          <i className="fas fa-comment-alt mr-2"></i> Feedback
-        </button>
-
-        <button
-          onClick={() => setActiveTab("profile")}
-          className="w-full text-left px-4 py-2 text-[#939599] hover:bg-gray-100"
-        >
-          <i className="fas fa-user mr-2"></i> Profile
-        </button>
-
-        <button
-          onClick={() => setMuted((m) => !m)}
-          className="w-full text-left px-4 py-2 text-[#939599] hover:bg-gray-100"
-          aria-label={muted ? "Unmute sounds" : "Mute sounds"}
-        >
-          <i className={`fas mr-2 ${muted ? "fa-volume-mute" : "fa-volume-up"}`}></i>
-          {muted ? "Unmute" : "Mute"}
-        </button>
-
-        <button
-          onClick={() => {
-            localStorage.removeItem("userId");
-            localStorage.removeItem("pin");
-            window.location.href = "/login";
-          }}
-          className="w-full text-left px-4 py-2 text-[#939599] hover:bg-gray-100"
-        >
-          <i className="fas fa-sign-out-alt mr-2"></i> Logout
-        </button>
+        <i className="fas fa-times text-2xl"></i>
+      </button>
+      {/* LOGO */}
+      <div className="flex flex-col items-start mt-3 mb-2">
+        <img
+          src="https://ucarecdn.com/7bdd361d-c411-41ce-b066-c1d20f88e3a7/-/format/auto/"
+          alt="Tap Tap Two Logo"
+          className="h-14 object-contain"
+        />
+        <span className="text-xs text-gray-400 font-medium tracking-wide mt-1 ml-1">
+          made by andysocial
+        </span>
       </div>
-    )}
-  </div>
-</div>
-    </div>
+      {/* Maddox */}
+      <button
+        onClick={() => { setShowMaddoxModal(true); setSidebarOpen(false); }}
+        className="relative flex items-center justify-center w-11 h-11 rounded-full bg-gradient-to-br from-[#1e293b] to-[#dc2626] shadow-xl hover:scale-110 transition-all border-2 border-[#dc2626]"
+        aria-label="Maddox Promo"
+        style={{ marginRight: "8px" }}
+      >
+        <img
+          src="https://ucarecdn.com/7eaeaf25-2192-4082-a415-dd52f360d379/-/format/auto/"
+          alt="Maddox Logo"
+          className="w-7 h-7 rounded-full object-contain"
+        />
+        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center border-2 border-white shadow">
+          <span className="text-xs font-bold text-white" style={{ lineHeight: "1" }}>
+            !
+          </span>
+        </span>
+      </button>
+      {/* Reset */}
+      <button
+        onClick={() => { setShowResetModal(true); setSidebarOpen(false); }}
+        className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#939599] hover:text-[#2d3748] transition duration-200 relative w-full`}
+        aria-label="Reset progress"
+      >
+        <i className="fas fa-sync-alt"></i>
+        <span
+          className="absolute top-0 right-0 flex items-center justify-center rounded-full text-white font-bold"
+          style={{
+            fontSize: "0.75rem",
+            padding: "0 6px",
+            minWidth: "24px",
+            height: "20px",
+            lineHeight: "20px",
+            textAlign: "center",
+            userSelect: "none",
+            backgroundColor: "#4f46e5",
+            transform: "translate(50%, -50%)",
+            zIndex: 20,
+          }}
+        >
+          {getTokensFromCoins(gameState.coinsEarnedThisRun || 0)}
+        </span>
+      </button>
+      {/* Battle */}
+      <a
+        href="/battle"
+        className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#939599] hover:text-[#2d3748] transition duration-200 w-full`}
+        aria-label="Battle Mode"
+        onClick={() => setSidebarOpen(false)}
+      >
+        <i className="fas fa-crosshairs"></i> Battle
+      </a>
+      {/* Leaderboards */}
+      <button
+        onClick={() => { setActiveTab("leaderboard"); setSidebarOpen(false); }}
+        className={`${glassStyle} ${buttonGlow} px-4 py-2 rounded-xl text-[#939599] hover:text-[#2d3748] transition duration-200 w-full`}
+      >
+        <i className="fas fa-trophy"></i> Leaderboards
+      </button>
+      {/* Help */}
+      <a
+        href="/help"
+        className="block px-4 py-2 rounded-xl text-[#939599] hover:bg-gray-100 w-full"
+        onClick={() => setSidebarOpen(false)}
+      >
+        <i className="fas fa-question mr-2"></i> Help
+      </a>
+      {/* Notice Board */}
+      <a
+        href="/notice-board"
+        className="block px-4 py-2 rounded-xl text-[#939599] hover:bg-gray-100 w-full"
+        onClick={() => setSidebarOpen(false)}
+      >
+        <i className="fas fa-bullhorn mr-2"></i> Notice Board
+      </a>
+      {/* Feedback */}
+      <button
+        onClick={() => { setShowFeedback(true); setSidebarOpen(false); }}
+        className="w-full text-left px-4 py-2 rounded-xl text-[#939599] hover:bg-gray-100"
+      >
+        <i className="fas fa-comment-alt mr-2"></i> Feedback
+      </button>
+      {/* Profile */}
+      <button
+        onClick={() => { setActiveTab("profile"); setSidebarOpen(false); }}
+        className="w-full text-left px-4 py-2 rounded-xl text-[#939599] hover:bg-gray-100"
+      >
+        <i className="fas fa-user mr-2"></i> Profile
+      </button>
+      {/* Mute/Unmute */}
+      <button
+        onClick={() => { setMuted((m) => !m); setSidebarOpen(false); }}
+        className="w-full text-left px-4 py-2 rounded-xl text-[#939599] hover:bg-gray-100"
+        aria-label={muted ? "Unmute sounds" : "Mute sounds"}
+      >
+        <i className={`fas mr-2 ${muted ? "fa-volume-mute" : "fa-volume-up"}`}></i>
+        {muted ? "Unmute" : "Mute"}
+      </button>
+      {/* Logout */}
+      <button
+        onClick={() => {
+          localStorage.removeItem("userId");
+          localStorage.removeItem("pin");
+          setSidebarOpen(false);
+          window.location.href = "/login";
+        }}
+        className="w-full text-left px-4 py-2 rounded-xl text-[#939599] hover:bg-gray-100"
+      >
+        <i className="fas fa-sign-out-alt mr-2"></i> Logout
+      </button>
+    </aside>
+  </>
+)}
 
   {["game", "house", "leaderboard"].includes(activeTab) && (
     <div className="text-center">
