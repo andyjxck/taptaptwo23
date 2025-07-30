@@ -395,7 +395,7 @@ useEffect(() => {
                         className="w-8 h-8 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="text-2xl">{profileData.profile.profile_icon}</div>
+                      <i className={`${profileData.profile.profile_icon} text-white`}></i>
                     )
                   ) : (
                     <div className="text-2xl">🙂</div>
@@ -667,7 +667,7 @@ useEffect(() => {
                       className="w-8 h-8 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="text-2xl">{profileData.profile.profile_icon}</div>
+                    <i className={`${profileData.profile.profile_icon} text-white`}></i>
                   )
                 ) : (
                   <div className="text-2xl">🙂</div>
