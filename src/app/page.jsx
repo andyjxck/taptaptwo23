@@ -6369,7 +6369,7 @@ const renderLeaderboard = () => (
     {activeTab === "game" ? (
       <div className="flex flex-col items-center justify-center space-y-6">
         <div className="relative">
-      <button
+     <button
   onClick={() => {
     if (navigator.vibrate) navigator.vibrate(50);
 
@@ -6381,41 +6381,65 @@ const renderLeaderboard = () => (
       return;
     }
 
-    // No longer setting userId or pin here
-
     handleTap();
   }}
-  className={`w-[200px] h-[200px] rounded-full ${glassStyle} bg-white/30 ${buttonGlow} transform active:scale-95 transition-all duration-200 relative overflow-hidden hover:shadow-2xl border border-white/30 group`}
+  className={`
+    w-[220px] h-[220px] rounded-full
+    flex items-center justify-center
+    shadow-2xl border-4 border-white/20
+    bg-gradient-to-br from-white/80 via-white/60 to-gray-200/90
+    hover:from-white/90 hover:to-gray-300
+    transition-all duration-200
+    relative overflow-hidden
+    active:scale-95 group
+    before:content-[''] before:absolute before:inset-2 before:rounded-full
+    before:bg-gradient-to-br before:from-white/60 before:to-white/20 before:opacity-60
+    after:content-[''] after:absolute after:inset-0 after:rounded-full after:shadow-[0_8px_32px_8px_rgba(80,80,160,0.18)]
+  `}
+  style={{
+    boxShadow: "0 8px 32px 0 rgba(60,60,160,0.18), 0 2px 8px 0 rgba(0,0,0,0.07)",
+  }}
 >
-  <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/30 opacity-50 group-hover:opacity-75 transition-opacity duration-200"></div>
-  <div className="absolute inset-0 flex items-center justify-center">
+  {/* Glow ring underneath (from your logic) */}
+  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
     <div
-      className={`w-32 h-32 bg-gradient-to-r ${
-        gameState.equippedTheme && gameState.equippedTheme !== "seasons"
-          ? CUSTOM_THEMES[gameState.equippedTheme]?.buttonGlow
-          : SEASONAL_THEMES[gameState.currentSeason].buttonGlow
-      } rounded-full animate-pulse opacity-50`}
+      className={`
+        w-[160px] h-[160px] rounded-full blur-2xl opacity-60
+        ${
+          gameState.equippedTheme && gameState.equippedTheme !== "seasons"
+            ? CUSTOM_THEMES[gameState.equippedTheme]?.buttonGlow
+            : SEASONAL_THEMES[gameState.currentSeason].buttonGlow
+        }
+      `}
     ></div>
   </div>
-  {gameState.equippedTheme && gameState.equippedTheme !== "seasons" ? (
-    <span className="text-6xl relative z-10 select-none">
-      {CUSTOM_THEMES[gameState.equippedTheme]?.icon || "❓"}
-    </span>
-  ) : (
-    <i
-      className={`fas ${
-        SEASONAL_THEMES[gameState.currentSeason].icon
-      } text-6xl relative z-10 ${
-        gameState.currentSeason === 0
-          ? "text-green-400"
-          : gameState.currentSeason === 1
-          ? "text-yellow-400"
-          : gameState.currentSeason === 2
-          ? "text-orange-400"
-          : "text-blue-400"
-      } transition-colors duration-500 group-hover:scale-110 transform`}
-    />
-  )}
+  {/* Glass shine/gradient */}
+  <div className="absolute inset-0 rounded-full pointer-events-none z-10">
+    <div className="absolute inset-0 rounded-full bg-gradient-to-t from-white/20 to-transparent opacity-70"></div>
+    <div className="absolute top-3 left-6 w-32 h-10 bg-white/70 rounded-full blur-lg opacity-30 rotate-[-18deg]"></div>
+  </div>
+  {/* Center icon */}
+  <div className="relative z-20 flex items-center justify-center">
+    {gameState.equippedTheme && gameState.equippedTheme !== "seasons" ? (
+      <span className="text-7xl select-none drop-shadow-lg">
+        {CUSTOM_THEMES[gameState.equippedTheme]?.icon || "❓"}
+      </span>
+    ) : (
+      <i
+        className={`fas ${SEASONAL_THEMES[gameState.currentSeason].icon} text-7xl ${
+          gameState.currentSeason === 0
+            ? "text-green-400"
+            : gameState.currentSeason === 1
+            ? "text-yellow-400"
+            : gameState.currentSeason === 2
+            ? "text-orange-400"
+            : "text-blue-400"
+        } drop-shadow-lg group-hover:scale-110 transition-transform duration-200`}
+      />
+    )}
+  </div>
+  {/* Rim highlight */}
+  <div className="absolute inset-0 rounded-full ring-4 ring-white/30 pointer-events-none z-20"></div>
 </button>
 
 
