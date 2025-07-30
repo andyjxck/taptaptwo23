@@ -260,14 +260,14 @@ export default function BossModePage() {
         setSoloProgress((prev) => ({
           ...prev,
           boss_hp: data.current_boss_hp,
-            setAccumulatedAutoTapDamage(0);
         }));
+       setAccumulatedAutoTapDamage(0);
       } else {
         setCurrentSession((prev) => ({
           ...prev,
-          boss_hp: data.current_boss_hp,
-            setAccumulatedAutoTapDamage(0);
+          boss_hp: data.current_boss_hp,  
         }));
+         setAccumulatedAutoTapDamage(0);
       }
       setTapCount((prev) => prev + 1);
     } catch (error) {
