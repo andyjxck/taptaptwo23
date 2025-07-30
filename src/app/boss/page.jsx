@@ -235,6 +235,7 @@ export default function BossModePage() {
             `/api/boss?action=progress&userId=${userId}`
           ).then((r) => r.json());
           setSoloProgress(newProgress);
+          setAccumulatedAutoTapDamage(0);
         } else {
           const newSession = await fetch(
             `/api/boss?action=coop_session&roomCode=${currentSession.room_code}&userId=${userId}`
@@ -242,6 +243,7 @@ export default function BossModePage() {
             .then((r) => r.json())
             .then((res) => res.session);
           if (newSession) setCurrentSession(newSession);
+          setAccumulatedAutoTapDamage(0);
         }
 
         const newProfile = await fetch(
@@ -258,11 +260,13 @@ export default function BossModePage() {
         setSoloProgress((prev) => ({
           ...prev,
           boss_hp: data.current_boss_hp,
+            setAccumulatedAutoTapDamage(0);
         }));
       } else {
         setCurrentSession((prev) => ({
           ...prev,
           boss_hp: data.current_boss_hp,
+            setAccumulatedAutoTapDamage(0);
         }));
       }
       setTapCount((prev) => prev + 1);
@@ -588,11 +592,9 @@ export default function BossModePage() {
     );
   }
 
-  const hpMax = battleData.boss_max_hp || battleData.boss_hp;
-  const hpPercentage = Math.max(
-    0,
-    Math.min(100, (battleData.boss_hp / hpMax) * 100)
-  );
+const hpMax = battleData.boss_max_hp || battleData.boss_hp;
+const visibleBossHp = Math.max(0, (battleData.boss_hp || 0) - accumulatedAutoTapDamage);
+const hpPercentage = Math.max(0, Math.min(100, (visibleBossHp / hpMax) * 100));
 
   function getTimeUntilReset() {
     if (!soloProgress?.next_reset) return "";
@@ -778,7 +780,7 @@ export default function BossModePage() {
             <div className="flex justify-between text-orange-100 mb-2 text-sm">
               <span className="font-bold">Boss HP</span>
               <span>
-                {formatNumberShort(battleData.boss_hp)} / {formatNumberShort(hpMax)}
+                {formatNumberShort(visibleBossHp)} / {formatNumberShort(hpMax)}
               </span>
             </div>
             <div className="w-full boss-hp-bar">
@@ -799,7 +801,7 @@ export default function BossModePage() {
               whileHover={{ scale: 1.07 }}
               whileTap={{ scale: 0.94, rotate: [0, -5, 5, 0] }}
               onClick={onTapButtonClick}
-              disabled={battleData.boss_hp <= 0 || soloLoading}
+            disabled={visibleBossHp <= 0 || soloLoading}
               className="boss-strike-button"
             >
               <div className="absolute inset-0 boss-strike-gloss"></div>
