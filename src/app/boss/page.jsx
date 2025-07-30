@@ -35,11 +35,13 @@ function formatNumberShort(num) {
 
 export default function BossModePage() {
   const router = useRouter();
+const soloTapRequestCounter = useRef(0);
 
   // --- AUTH ---
   const [userId, setUserId] = useState("");
   const [pin, setPin] = useState("");
   const [userReady, setUserReady] = useState(false);
+const coopTapRequestCounter = useRef(0);
 
   // --- MENU/UI STATE ---
   const [mode, setMode] = useState(""); // "", "solo", "coop-create", "coop-join", "coop"
@@ -157,10 +159,12 @@ useEffect(() => {
     return 1;
   }, [lastTapTimes, upgradesData?.stats?.tapSpeedBonus]);
 
-  // --- SOLO TAP HANDLER ---
 function handleSoloTap(isAutoTap = false) {
-  // Only block if loading or boss dead
   if (soloLoading || !soloProgress || soloProgress.boss_hp <= 0) return;
+
+  // Mark this tap with a number
+  soloTapRequestCounter.current += 1;
+  const thisTap = soloTapRequestCounter.current;
 
   fetch("/api/boss", {
     method: "POST",
@@ -169,7 +173,10 @@ function handleSoloTap(isAutoTap = false) {
   })
     .then(r => r.json())
     .then(data => {
-      // If boss defeated, show celebration and refresh boss state
+      // --- Only use the most recent tap result! ---
+      if (thisTap !== soloTapRequestCounter.current) return; // ignore out-of-date
+
+      // (rest of your logic)
       if (data.boss_defeated) {
         setShowCelebration(true);
         setTimeout(() => setShowCelebration(false), 1600);
@@ -178,7 +185,6 @@ function handleSoloTap(isAutoTap = false) {
         fetch(`/api/boss?action=progress&userId=${userId}`)
           .then(r => r.json())
           .then(newBoss => setSoloProgress(newBoss));
-        // Refresh profile/coins
         fetch(`/api/boss?action=profile&userId=${userId}`)
           .then(r => r.json())
           .then(setProfileData);
@@ -186,7 +192,6 @@ function handleSoloTap(isAutoTap = false) {
         return;
       }
 
-      // Normal tap, update boss HP and floating numbers
       setSoloProgress(prev => ({
         ...prev,
         boss_hp: data.current_boss_hp,
@@ -209,10 +214,12 @@ function handleSoloTap(isAutoTap = false) {
       }
     });
 }
-
-// --- COOP TAP HANDLER ---
 function handleCoopTap() {
   if (!currentSession || currentSession.boss_hp <= 0) return;
+
+  // Mark this tap with a number
+  coopTapRequestCounter.current += 1;
+  const thisTap = coopTapRequestCounter.current;
 
   fetch("/api/boss", {
     method: "POST",
@@ -226,6 +233,9 @@ function handleCoopTap() {
   })
     .then(r => r.json())
     .then(data => {
+      // --- Only use the most recent tap result! ---
+      if (thisTap !== coopTapRequestCounter.current) return; // ignore out-of-date
+
       if (data.boss_defeated) {
         setShowCelebration(true);
         setTimeout(() => setShowCelebration(false), 1600);
@@ -263,6 +273,7 @@ function handleCoopTap() {
       }
     });
 }
+
 
   // --- TAP BUTTON HANDLER (solo/coop) ---
   function handleTap() {
