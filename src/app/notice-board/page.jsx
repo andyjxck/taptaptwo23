@@ -13,7 +13,7 @@ const devLogs = [
   {
     id: "v2_1_guilds",
     date: "30/07/2025",
-    time: "01:34"
+    time: "01:34",
     title: "🎉 The Guild Update",
     emoji: "✨",
     highlights: [
@@ -49,7 +49,7 @@ const devLogs = [
   {
     id: "v2_0_battlemode",
     date: "16/07/2025",
-      time: "00:35"
+      time: "00:35",
     title: "🔥 The Battle Update",
     emoji: "🚀",
     highlights: [
