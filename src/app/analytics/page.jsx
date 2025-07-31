@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/utilities/supabaseClient";
 import { Line, Bar, Pie } from "react-chartjs-2";
 import AdBanner from "@/components/AdBanner";
@@ -17,16 +17,17 @@ const TABS = [
 ];
 
 const GlassCard = ({ children, className = "" }) => (
-  <div className={`rounded-3xl shadow-2xl bg-white/10 backdrop-blur-2xl border border-purple-700/30 px-5 py-6 mb-4 transition-all duration-200 ${className}`}>
+  <div className={`rounded-3xl shadow-2xl bg-white/10 backdrop-blur-xl border border-purple-600/30 px-6 py-7 mb-7 transition-all duration-200 hover:scale-[1.02] ${className}`}>
     {children}
   </div>
 );
 
 function Tapalytics() {
   const [tab, setTab] = useState("overview");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const drawerRef = useRef();
 
   // Fetch metrics
   const fetchAnalytics = async () => {
@@ -52,7 +53,7 @@ function Tapalytics() {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "pageviews" },
-        (payload) => fetchAnalytics()
+        () => fetchAnalytics()
       )
       .subscribe();
 
@@ -60,6 +61,13 @@ function Tapalytics() {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  // Focus trap for drawer
+  useEffect(() => {
+    if (drawerOpen && drawerRef.current) {
+      drawerRef.current.focus();
+    }
+  }, [drawerOpen]);
 
   // Helpers
   const n = (val) => new Intl.NumberFormat().format(val ?? 0);
@@ -75,107 +83,160 @@ function Tapalytics() {
   const devices = metrics?.deviceBreakdown || [];
   const browsers = metrics?.browserBreakdown || [];
 
+  // Chart palette
+  const mainColors = [
+    "#b993ff", "#7e60e8", "#fee4fa", "#fa8eea", "#dbd4ff",
+    "#a855f7", "#f6d365", "#fd6585", "#00c9ff", "#60a5fa",
+    "#f472b6", "#fbbf24", "#818cf8"
+  ];
+
+  // Chart.js base options for readability
+  const chartBase = {
+    responsive: true,
+    plugins: {
+      legend: { display: true, labels: { color: "#eee", font: { size: 16, family: "inherit" } } },
+      title: { display: false },
+      tooltip: { enabled: true, backgroundColor: "#231937ee", titleFont: { size: 18 }, bodyFont: { size: 16 }, padding: 12, borderColor: "#fff", borderWidth: 1 }
+    },
+    scales: {
+      x: { grid: { color: "#fff3", lineWidth: 1 }, ticks: { color: "#d1aafc", font: { size: 15 } } },
+      y: { grid: { color: "#fff1", lineWidth: 1 }, ticks: { color: "#f3e8ff", font: { size: 15 } } }
+    }
+  };
+
   // Loading
   if (loading || !metrics) {
     return (
       <div className="min-h-screen flex items-center justify-center fade-gradient-bg">
-        <div className="text-white text-2xl">Loading Tapalytics…</div>
+        <div className="text-white text-3xl font-bold">Loading Tapalytics…</div>
       </div>
     );
   }
 
+  // Drawer/Sidebar content
+  const drawer = (
+    <aside
+      ref={drawerRef}
+      tabIndex={0}
+      className={`
+        fixed top-0 right-0 z-40 h-full bg-gradient-to-bl from-[#2c1a47e0] via-[#a385f680] to-[#1b1033f8]
+        border-l border-purple-500/40 shadow-2xl backdrop-blur-2xl
+        w-full sm:w-[70vw] md:w-[420px]
+        transition-transform duration-300
+        ${drawerOpen ? "translate-x-0" : "translate-x-full"}
+        flex flex-col
+      `}
+      style={{ outline: "none" }}
+      onKeyDown={e => e.key === "Escape" && setDrawerOpen(false)}
+      aria-modal="true"
+      role="dialog"
+    >
+      <div className="flex flex-col items-end p-6 gap-3">
+        <button
+          className="text-purple-200 hover:text-white bg-purple-900/30 rounded-xl px-4 py-2 mb-4 shadow-lg text-xl"
+          onClick={() => setDrawerOpen(false)}
+          tabIndex={0}
+        >✖</button>
+        <h2 className="text-4xl font-black text-purple-200 tracking-tight mb-7 drop-shadow-xl"
+            style={{ fontFamily: "Crimson Text, serif" }}>
+          <span className="text-white">Tap</span>alytics
+        </h2>
+        <ul className="w-full flex flex-col gap-3">
+          {TABS.map((t) => (
+            <li key={t.id}>
+              <button
+                onClick={() => { setTab(t.id); setDrawerOpen(false); }}
+                className={`
+                  w-full flex items-center px-4 py-4 rounded-2xl font-semibold text-xl transition-all
+                  ${tab === t.id
+                    ? "bg-gradient-to-r from-purple-500 via-purple-700 to-fuchsia-500 text-white shadow-xl scale-105"
+                    : "bg-white/5 text-purple-100 hover:bg-fuchsia-500/30 hover:text-white"}
+                `}
+              >
+                <span className="text-2xl mr-4">{t.emoji}</span>
+                <span>{t.label}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </aside>
+  );
+
+  // Overlay/backdrop for closing drawer
+  const overlay = (
+    <div
+      className={`
+        fixed inset-0 z-30 bg-black/40 backdrop-blur-sm transition-opacity
+        ${drawerOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
+      `}
+      onClick={() => setDrawerOpen(false)}
+    />
+  );
+
   // UI
   return (
-    <div className="min-h-screen fade-gradient-bg flex flex-col md:flex-row relative transition-all">
-      {/* Blurred pastel, purple & black glassy background */}
+    <div className="min-h-screen fade-gradient-bg flex flex-col relative transition-all">
+      {/* Blurred glassy purple/blue background */}
       <div className="pointer-events-none fixed inset-0 z-0">
-        <div className="absolute left-1/4 top-12 w-56 h-56 bg-purple-700 rounded-full opacity-30 blur-3xl" />
-        <div className="absolute right-8 bottom-12 w-60 h-60 bg-purple-900 rounded-full opacity-20 blur-2xl" />
-        <div className="absolute left-4 bottom-24 w-32 h-32 bg-purple-400 rounded-full opacity-20 blur-2xl" />
-        <div className="absolute right-24 top-2 w-24 h-24 bg-black rounded-full opacity-10 blur-xl" />
+        <div className="absolute left-1/4 top-16 w-80 h-80 bg-purple-600 rounded-full opacity-25 blur-3xl" />
+        <div className="absolute right-12 bottom-16 w-96 h-96 bg-fuchsia-500 rounded-full opacity-15 blur-2xl" />
+        <div className="absolute left-8 bottom-36 w-44 h-44 bg-blue-400 rounded-full opacity-20 blur-2xl" />
+        <div className="absolute right-32 top-6 w-32 h-32 bg-black rounded-full opacity-10 blur-xl" />
       </div>
 
-      {/* Collapsible Sidebar */}
-      <aside className={`
-        z-20 md:w-72 w-full md:relative fixed md:sticky top-0 left-0 h-full
-        ${sidebarOpen ? "block" : "hidden md:block"}
-        bg-gradient-to-br from-purple-900/60 to-black/50 backdrop-blur-2xl border-r border-purple-800/30 shadow-2xl
-        transition-all duration-300 ease-in-out
-      `}>
-        <div className="flex flex-row md:flex-col justify-between md:justify-start items-center md:items-start p-6 gap-3">
-          <button
-            className="block md:hidden text-purple-200 bg-purple-900/30 rounded-xl px-3 py-2 mb-4 shadow"
-            onClick={() => setSidebarOpen(false)}
-          >✖</button>
-          <h2 className="text-3xl font-bold text-purple-200 tracking-tight mb-5 drop-shadow-xl"
-              style={{ fontFamily: "Crimson Text, serif" }}>
-            <span className="text-white">Tap</span>alytics
-          </h2>
-          <ul className="flex flex-row md:flex-col gap-2 w-full">
-            {TABS.map((t) => (
-              <li key={t.id}>
-                <button
-                  onClick={() => { setTab(t.id); setSidebarOpen(false); }}
-                  className={`w-full flex items-center px-4 py-3 rounded-xl font-semibold text-lg transition-colors duration-200
-                    ${tab === t.id
-                      ? "bg-purple-700/80 text-white shadow"
-                      : "text-purple-200 hover:bg-purple-600/40 hover:text-white"}`}
-                >
-                  <span className="text-xl mr-3">{t.emoji}</span>
-                  <span>{t.label}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </aside>
-      {/* Open Sidebar FAB */}
+      {/* Drawer button (right) */}
       <button
-        className="fixed top-4 left-4 z-30 bg-purple-800/90 hover:bg-purple-700/90 text-white rounded-full shadow-xl p-3 md:hidden transition-all"
-        onClick={() => setSidebarOpen(true)}
-        aria-label="Open Sidebar"
+        className="fixed top-4 right-4 z-50 bg-gradient-to-tr from-purple-800 via-purple-600 to-fuchsia-600 text-white rounded-full shadow-2xl p-4 focus:ring-4 focus:ring-fuchsia-400 transition-all active:scale-95"
+        onClick={() => setDrawerOpen(true)}
+        aria-label="Open Navigation Drawer"
         style={{ backdropFilter: "blur(8px)" }}
       >☰</button>
 
+      {drawer}
+      {overlay}
+
       {/* Main Content */}
-      <main className="flex-1 max-w-6xl mx-auto px-2 md:px-10 py-10">
-        <h1 className="text-[2.3rem] md:text-5xl font-bold mb-8 text-white drop-shadow-xl"
-          style={{ fontFamily: "Crimson Text, serif" }}>
-          <span className="text-purple-400">Tapalytics</span> <span className="text-white/80 font-normal text-xl md:text-2xl">— Real-Time Analytics</span>
+      <main className="flex-1 max-w-6xl mx-auto px-2 sm:px-6 md:px-10 py-10 z-10">
+        <h1 className="text-[2.5rem] md:text-5xl font-black mb-10 text-white drop-shadow-xl tracking-tight"
+          style={{ fontFamily: "Crimson Text, serif", letterSpacing: "-0.03em" }}>
+          <span className="text-fuchsia-400">Tapalytics</span>
+          <span className="text-white/70 font-semibold text-lg md:text-2xl ml-4">Real-Time Analytics</span>
         </h1>
         <AdBanner />
+
         {/* Tabs */}
         {tab === "overview" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <GlassCard>
-              <h2 className="text-2xl font-bold mb-2 text-purple-300">Overview</h2>
-              <div className="text-purple-100 space-y-3 text-lg">
-                <div className="flex justify-between items-center"><span>Total Pageviews</span><span className="font-bold text-white">{n(metrics.totalPageviews)}</span></div>
-                <div className="flex justify-between items-center"><span>Unique Visitors</span><span className="font-bold text-white">{n(metrics.uniqueVisitors)}</span></div>
-                <div className="flex justify-between items-center"><span>All-Time High DAU</span><span className="font-bold text-white">{n(metrics.peakDAU)}</span></div>
-                <div className="flex justify-between items-center"><span>Most Visited Page</span><span className="font-bold text-white">{metrics.mostVisitedPage?.path ?? "-"} ({n(metrics.mostVisitedPage?.views)})</span></div>
-                <div className="flex justify-between items-center"><span>Most Active User (Today)</span><span className="font-bold text-white">{metrics.mostActiveUser?.user_id ?? "-"} ({n(metrics.mostActiveUser?.views)} views)</span></div>
-                <div className="flex justify-between items-center"><span>New Users Today</span><span className="font-bold text-white">{n(metrics.newUsersToday)}</span></div>
+              <h2 className="text-2xl font-extrabold mb-2 text-fuchsia-300">Overview</h2>
+              <div className="text-purple-100 space-y-4 text-lg">
+                <div className="flex justify-between items-center"><span>Total Pageviews</span><span className="font-black text-white">{n(metrics.totalPageviews)}</span></div>
+                <div className="flex justify-between items-center"><span>Unique Visitors</span><span className="font-black text-white">{n(metrics.uniqueVisitors)}</span></div>
+                <div className="flex justify-between items-center"><span>All-Time High DAU</span><span className="font-black text-white">{n(metrics.peakDAU)}</span></div>
+                <div className="flex justify-between items-center"><span>Most Visited Page</span><span className="font-black text-white">{metrics.mostVisitedPage?.path ?? "-"} ({n(metrics.mostVisitedPage?.views)})</span></div>
+                <div className="flex justify-between items-center"><span>Most Active User (Today)</span><span className="font-black text-white">{metrics.mostActiveUser?.user_id ?? "-"} ({n(metrics.mostActiveUser?.views)} views)</span></div>
+                <div className="flex justify-between items-center"><span>New Users Today</span><span className="font-black text-white">{n(metrics.newUsersToday)}</span></div>
               </div>
             </GlassCard>
             <GlassCard>
-              <h2 className="text-2xl font-bold mb-2 text-purple-300">Popular Pages</h2>
-              <ul className="text-purple-100 space-y-2 text-lg">
+              <h2 className="text-2xl font-extrabold mb-2 text-fuchsia-300">Popular Pages</h2>
+              <ul className="text-purple-100 space-y-3 text-lg">
                 {metrics.popularPages?.map((page, i) => (
                   <li key={i} className="flex justify-between">
                     <span>{page.path}</span>
-                    <span>{n(page.views)} views</span>
+                    <span className="font-semibold">{n(page.views)} views</span>
                   </li>
                 ))}
               </ul>
             </GlassCard>
             <div className="md:col-span-2">
               <GlassCard>
-                <h2 className="text-2xl font-bold mb-2 text-purple-300">Recent Activity</h2>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-purple-100">
+                <h2 className="text-2xl font-extrabold mb-2 text-fuchsia-300">Recent Activity</h2>
+                <div className="overflow-x-auto rounded-lg">
+                  <table className="w-full text-purple-100 bg-white/5 rounded-xl">
                     <thead>
-                      <tr className="text-purple-200 text-left bg-purple-700/30">
+                      <tr className="text-fuchsia-200 text-left bg-purple-700/30">
                         <th className="pb-3 px-2">Time</th>
                         <th className="pb-3 px-2">Page</th>
                         <th className="pb-3 px-2">User ID</th>
@@ -184,7 +245,7 @@ function Tapalytics() {
                     </thead>
                     <tbody>
                       {(metrics.recentVisits ?? []).map((visit, index) => (
-                        <tr key={index} className="border-t border-purple-800/20 hover:bg-purple-800/20">
+                        <tr key={index} className="border-t border-purple-800/20 hover:bg-fuchsia-700/15 transition-all">
                           <td className="py-2 px-2">{d(visit.timestamp)}</td>
                           <td className="py-2 px-2">{visit.page_path}</td>
                           <td className="py-2 px-2">{visit.user_id}</td>
@@ -202,37 +263,36 @@ function Tapalytics() {
         {tab === "trends" && (
           <div className="grid grid-cols-1 gap-8">
             <GlassCard>
-              <h2 className="text-2xl font-bold mb-2 text-purple-300">Daily Stats</h2>
+              <h2 className="text-2xl font-extrabold mb-2 text-fuchsia-300">Daily Stats</h2>
               <div className="grid md:grid-cols-2 gap-8">
-                <div>
+                <div className="bg-white/10 rounded-2xl p-2 pb-4 shadow">
                   <Line
                     data={{
                       labels: dailyLabels,
                       datasets: [
-                        { label: "Daily Active Users", data: dauData, borderWidth: 2, tension: 0.25 },
-                        { label: "Pageviews", data: pvData, borderWidth: 2, tension: 0.25 },
+                        { label: "Daily Active Users", data: dauData, borderWidth: 3, borderColor: mainColors[1], backgroundColor: "#a78bfa55", tension: 0.25, pointRadius: 6, pointBackgroundColor: mainColors[1], fill: true },
+                        { label: "Pageviews", data: pvData, borderWidth: 3, borderColor: mainColors[3], backgroundColor: "#f472b633", tension: 0.25, pointRadius: 6, pointBackgroundColor: mainColors[3], fill: true },
                       ]
                     }}
                     options={{
-                      responsive: true,
-                      plugins: { legend: { display: true, labels: { color: "#fff" } } },
-                      scales: { x: { ticks: { color: "#c4b5fd" } }, y: { ticks: { color: "#c4b5fd" } } }
+                      ...chartBase,
+                      plugins: { ...chartBase.plugins, legend: { ...chartBase.plugins.legend, labels: { color: "#fff", font: { weight: "bold", size: 17 } } } },
+                      scales: { ...chartBase.scales, x: { ...chartBase.scales.x, ticks: { ...chartBase.scales.x.ticks, maxRotation: 0, minRotation: 0 } } }
                     }}
                   />
                 </div>
-                <div>
+                <div className="bg-white/10 rounded-2xl p-2 pb-4 shadow">
                   <Bar
                     data={{
                       labels: dailyLabels,
                       datasets: [
-                        { label: "New Users", data: nuData, borderWidth: 2 },
-                        { label: "Retention", data: retentionData, borderWidth: 2 },
+                        { label: "New Users", data: nuData, borderWidth: 2, backgroundColor: mainColors[7] },
+                        { label: "Retention", data: retentionData, borderWidth: 2, backgroundColor: mainColors[2] },
                       ]
                     }}
                     options={{
-                      responsive: true,
-                      plugins: { legend: { display: true, labels: { color: "#fff" } } },
-                      scales: { x: { ticks: { color: "#c4b5fd" } }, y: { ticks: { color: "#c4b5fd" } } }
+                      ...chartBase,
+                      plugins: { ...chartBase.plugins, legend: { ...chartBase.plugins.legend, labels: { color: "#fff", font: { weight: "bold", size: 17 } } } }
                     }}
                   />
                 </div>
@@ -243,11 +303,11 @@ function Tapalytics() {
 
         {tab === "users" && (
           <GlassCard>
-            <h2 className="text-2xl font-bold mb-2 text-purple-300">Users</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-purple-100">
+            <h2 className="text-2xl font-extrabold mb-2 text-fuchsia-300">Users</h2>
+            <div className="overflow-x-auto rounded-lg">
+              <table className="w-full text-purple-100 bg-white/5 rounded-xl">
                 <thead>
-                  <tr className="text-purple-200 bg-purple-700/30">
+                  <tr className="text-fuchsia-200 bg-purple-700/30">
                     <th className="pb-3 px-2">User ID</th>
                     <th className="pb-3 px-2">Views</th>
                     <th className="pb-3 px-2">First Visit</th>
@@ -256,7 +316,7 @@ function Tapalytics() {
                 </thead>
                 <tbody>
                   {(metrics.userStats ?? []).map((u, i) => (
-                    <tr key={i} className="border-t border-purple-800/20 hover:bg-purple-800/20">
+                    <tr key={i} className="border-t border-purple-800/20 hover:bg-fuchsia-700/15 transition-all">
                       <td className="py-2 px-2">{u.user_id}</td>
                       <td className="py-2 px-2">{n(u.views)}</td>
                       <td className="py-2 px-2">{d(u.first_visit)}</td>
@@ -272,41 +332,49 @@ function Tapalytics() {
         {tab === "devices" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <GlassCard>
-              <h2 className="text-2xl font-bold mb-2 text-purple-300">Device Breakdown</h2>
-              <Pie
-                data={{
-                  labels: devices.map(d => d.device),
-                  datasets: [{ data: devices.map(d => d.count), borderWidth: 2 }]
-                }}
-                options={{
-                  responsive: true,
-                  plugins: { legend: { display: true, labels: { color: "#fff" } } }
-                }}
-              />
+              <h2 className="text-2xl font-extrabold mb-2 text-fuchsia-300">Device Breakdown</h2>
+              <div className="bg-white/10 rounded-2xl p-2 shadow flex items-center justify-center min-h-[300px]">
+                <Pie
+                  data={{
+                    labels: devices.map(d => d.device),
+                    datasets: [{ data: devices.map(d => d.count), backgroundColor: mainColors, borderWidth: 2 }]
+                  }}
+                  options={{
+                    plugins: {
+                      legend: { display: true, position: "right", labels: { color: "#fff", font: { size: 18 } } },
+                      tooltip: { ...chartBase.plugins.tooltip, titleFont: { size: 20 }, bodyFont: { size: 17 } }
+                    }
+                  }}
+                />
+              </div>
             </GlassCard>
             <GlassCard>
-              <h2 className="text-2xl font-bold mb-2 text-purple-300">Browser Breakdown</h2>
-              <Pie
-                data={{
-                  labels: browsers.map(b => b.browser),
-                  datasets: [{ data: browsers.map(b => b.count), borderWidth: 2 }]
-                }}
-                options={{
-                  responsive: true,
-                  plugins: { legend: { display: true, labels: { color: "#fff" } } }
-                }}
-              />
+              <h2 className="text-2xl font-extrabold mb-2 text-fuchsia-300">Browser Breakdown</h2>
+              <div className="bg-white/10 rounded-2xl p-2 shadow flex items-center justify-center min-h-[300px]">
+                <Pie
+                  data={{
+                    labels: browsers.map(b => b.browser),
+                    datasets: [{ data: browsers.map(b => b.count), backgroundColor: mainColors, borderWidth: 2 }]
+                  }}
+                  options={{
+                    plugins: {
+                      legend: { display: true, position: "right", labels: { color: "#fff", font: { size: 18 } } },
+                      tooltip: { ...chartBase.plugins.tooltip, titleFont: { size: 20 }, bodyFont: { size: 17 } }
+                    }
+                  }}
+                />
+              </div>
             </GlassCard>
           </div>
         )}
 
         {tab === "log" && (
           <GlassCard>
-            <h2 className="text-2xl font-bold mb-2 text-purple-300">Full Activity Log</h2>
-            <div className="overflow-x-auto max-h-[450px]">
-              <table className="w-full text-purple-100">
+            <h2 className="text-2xl font-extrabold mb-2 text-fuchsia-300">Full Activity Log</h2>
+            <div className="overflow-x-auto max-h-[500px] rounded-lg">
+              <table className="w-full text-purple-100 bg-white/5 rounded-xl">
                 <thead>
-                  <tr className="text-purple-200 bg-purple-700/30">
+                  <tr className="text-fuchsia-200 bg-purple-700/30">
                     <th className="pb-3 px-2">Time</th>
                     <th className="pb-3 px-2">Page</th>
                     <th className="pb-3 px-2">User ID</th>
@@ -317,7 +385,7 @@ function Tapalytics() {
                 </thead>
                 <tbody>
                   {(metrics.fullLog ?? []).map((visit, index) => (
-                    <tr key={index} className="border-t border-purple-800/20 hover:bg-purple-800/20">
+                    <tr key={index} className="border-t border-purple-800/20 hover:bg-fuchsia-700/15 transition-all">
                       <td className="py-2 px-2">{d(visit.timestamp)}</td>
                       <td className="py-2 px-2">{visit.page_path}</td>
                       <td className="py-2 px-2">{visit.user_id}</td>
@@ -333,7 +401,7 @@ function Tapalytics() {
         )}
       </main>
 
-      {/* Styles: deep glass, purple/black, smooth */}
+      {/* Styles: deep glass, purple/black, smooth, overlay */}
       <style>{`
         .fade-gradient-bg {
           position: relative;
@@ -355,6 +423,10 @@ function Tapalytics() {
         html, body {
           background: #181024 !important;
         }
+        /* Hide scrollbar but keep scrolling smooth */
+        ::-webkit-scrollbar { width: 10px; background: #232043;}
+        ::-webkit-scrollbar-thumb { background: #7c3aedbb; border-radius: 5px;}
+        ::selection { background: #a21caf88; }
       `}</style>
     </div>
   );
