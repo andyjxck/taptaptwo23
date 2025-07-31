@@ -315,21 +315,25 @@ const helpSections = [
 ];
 
 function HelpGuide() {
-
   const [activeId, setActiveId] = useState(helpSections[0].id);
-  
-useEffect(() => {
-  // Tries to grab userId from localStorage, but will work anonymously too
-  const userId = localStorage.getItem("userId");
-  logPageview({
-    userId: userId ? parseInt(userId, 10) : null, // or leave out for anonymous
-    // Optionally, set pagePath: "/help" or "/notice-board" for clarity
-  });
-}, []);
+
+  // Log pageview (safe for SSR)
+  useEffect(() => {
+    if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+      const userId = localStorage.getItem("userId");
+      logPageview({
+        userId: userId ? parseInt(userId, 10) : null,
+        pagePath: "/help", // Optional, for clarity
+      });
+    }
+  }, []);
+
+  // Scroll to top on section change (also safe)
   useEffect(() => { window.scrollTo(0, 0); }, [activeId]);
+
   const activeSection = helpSections.find(sec => sec.id === activeId);
 
- return (
+  return (
     <div className={`min-h-screen w-full bg-gradient-to-br ${seasonBackgrounds[currentSeason]} animate-gradient-x relative`}>
       {/* Blurred background lights */}
       <div className="pointer-events-none fixed inset-0 z-0">
@@ -398,14 +402,5 @@ useEffect(() => {
     </div>
   );
 }
-
-useEffect(() => {
-  // Tries to grab userId from localStorage, but will work anonymously too
-  const userId = localStorage.getItem("userId");
-  logPageview({
-    userId: userId ? parseInt(userId, 10) : null, // or leave out for anonymous
-    // Optionally, set pagePath: "/help" or "/notice-board" for clarity
-  });
-}, []);
 
 export default HelpGuide;
