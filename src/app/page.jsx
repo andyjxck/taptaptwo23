@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import useSound from "use-sound"; // 👈 add this line
 import { supabase } from "@/utilities/supabaseClient";
 import GuildChat from '@/components/GuildChat';
+import { logPageview } from "@/utilities/logPageview";
 
 // Generate 25 static stars (adjust count as you wish)
 const STATIC_STARS = Array.from({ length: 25 }, (_, i) => {
@@ -954,7 +955,14 @@ const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("tap");
 
 
-
+useEffect(() => {
+  // Tries to grab userId from localStorage, but will work anonymously too
+  const userId = localStorage.getItem("userId");
+  logPageview({
+    userId: userId ? parseInt(userId, 10) : null, // or leave out for anonymous
+    // Optionally, set pagePath: "/help" or "/notice-board" for clarity
+  });
+}, []);
 // Fetch friends list and pending requests only when userId is set
 useEffect(() => {
   if (!userId) return;
@@ -1469,20 +1477,6 @@ const [newMessage, setNewMessage] = useState("");
   };
 
 
- useEffect(() => {
-  if (!userId || !pin) return;
-
-  fetch("/api/record-pageview", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      page_path: "/",
-      user_id: userId,
-      user_agent: navigator.userAgent,
-      referrer: document.referrer || null,
-    }),
-  }).catch(console.error);
-}, [userId, pin]);
 const handleCreateGuild = async (e) => {
   e.preventDefault();
   if (!userId || !newGuildName) return;
