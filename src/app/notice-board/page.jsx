@@ -8,14 +8,7 @@ const GlassCard = ({ children }) => (
     {children}
   </div>
 );
-useEffect(() => {
-  // Tries to grab userId from localStorage, but will work anonymously too
-  const userId = localStorage.getItem("userId");
-  logPageview({
-    userId: userId ? parseInt(userId, 10) : null, // or leave out for anonymous
-    // Optionally, set pagePath: "/help" or "/notice-board" for clarity
-  });
-}, []);
+
 const devLogs = [
   {
   id: "v2_2_boss_mode",
@@ -136,6 +129,14 @@ const devLogs = [
 ];
 
 function NoticeBoard() {
+  useEffect(() => {
+  // Tries to grab userId from localStorage, but will work anonymously too
+  const userId = localStorage.getItem("userId");
+  logPageview({
+    userId: userId ? parseInt(userId, 10) : null, // or leave out for anonymous
+    // Optionally, set pagePath: "/help" or "/notice-board" for clarity
+  });
+}, []);
   const [activeId, setActiveId] = useState(devLogs[0].id);
 
   useEffect(() => { window.scrollTo(0, 0); }, [activeId]);
