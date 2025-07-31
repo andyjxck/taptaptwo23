@@ -413,10 +413,22 @@ export async function POST(request) {
         })
         .eq("user_id", userId);
 
-      await supabase
-        .from("game_saves")
-        .update({ coins: newCoins })
-        .eq("user_id", userId);
+  // Fetch total_coins_earned, defaulting to 0 if not present
+const { data: userRow } = await supabase
+  .from("game_saves")
+  .select("total_coins_earned")
+  .eq("user_id", userId)
+  .single();
+const currentTotalEarned = safe(userRow?.total_coins_earned);
+
+await supabase
+  .from("game_saves")
+  .update({
+    coins: newCoins,
+    total_coins_earned: currentTotalEarned + coinsEarned,
+  })
+  .eq("user_id", userId);
+
 
       return NextResponse.json({
         success: true,
@@ -595,16 +607,29 @@ console.log("playersCoinsData:", playersCoinsData);
 
   // For each player, calculate and update coins (+50% of their own coins)
   const rewards = [];
-  await Promise.all(
-    playersCoinsData.map(async (p) => {
-      const reward = Math.floor(safe(p.coins) * 0.5);
-      rewards.push({ user_id: p.user_id, reward });
-      await supabase
-        .from("game_saves")
-        .update({ coins: safe(p.coins) + reward })
-        .eq("user_id", p.user_id);
-    })
-  );
+ await Promise.all(
+  playersCoinsData.map(async (p) => {
+    const reward = Math.floor(safe(p.coins) * 0.5);
+    rewards.push({ user_id: p.user_id, reward });
+
+    // Fetch total_coins_earned, defaulting to 0 if not present
+    const { data: userRow } = await supabase
+      .from("game_saves")
+      .select("total_coins_earned")
+      .eq("user_id", p.user_id)
+      .single();
+    const currentTotalEarned = safe(userRow?.total_coins_earned);
+
+    await supabase
+      .from("game_saves")
+      .update({
+        coins: safe(p.coins) + reward,
+        total_coins_earned: currentTotalEarned + reward,
+      })
+      .eq("user_id", p.user_id);
+  })
+);
+
 
   // Move up a level and reset boss HP
   const { data: updateArr } = await supabase
