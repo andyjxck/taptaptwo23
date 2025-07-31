@@ -4,8 +4,12 @@ async function handler({ action }) {
   try {
     switch (action) {
       case "getFullMetrics": {
+        // Helper: Always return an array, even if .rows or direct array
+        const arr = (val) =>
+          Array.isArray(val) ? val : (val?.rows ? val.rows : []);
+
         // Daily users & pageviews (last 30 days)
-        const daily = await sql`
+        const dailyRaw = await sql`
           SELECT 
             to_char(date_trunc('day', timestamp), 'YYYY-MM-DD') AS day,
             COUNT(*) as pageviews,
@@ -16,9 +20,10 @@ async function handler({ action }) {
           ORDER BY day DESC
           LIMIT 30
         `;
+        const daily = arr(dailyRaw);
 
         // Retention: Users who came back the next day (simple)
-        const retention = await sql`
+        const retentionRaw = await sql`
           SELECT 
             day,
             COUNT(DISTINCT user_id) FILTER (
@@ -36,40 +41,41 @@ async function handler({ action }) {
           ORDER BY day DESC
           LIMIT 30
         `;
+        const retention = arr(retentionRaw);
 
         // All-Time High DAU
-        const peakDAUResult = await sql`
+        const peakDAUResult = arr(await sql`
           SELECT COUNT(DISTINCT user_id) as peak_dau, to_char(date_trunc('day', timestamp), 'YYYY-MM-DD') as day
           FROM pageviews
           GROUP BY day
           ORDER BY peak_dau DESC
           LIMIT 1
-        `;
+        `);
         const peakDAU = peakDAUResult[0]?.peak_dau ?? 0;
 
         // Most Visited Page
-        const mostVisitedPageResult = await sql`
+        const mostVisitedPageResult = arr(await sql`
           SELECT page_path as path, COUNT(*) as views
           FROM pageviews
           GROUP BY page_path
           ORDER BY views DESC
           LIMIT 1
-        `;
+        `);
         const mostVisitedPage = mostVisitedPageResult[0] || {};
 
         // Most Active User Today
-        const mostActiveUserResult = await sql`
+        const mostActiveUserResult = arr(await sql`
           SELECT user_id, COUNT(*) as views
           FROM pageviews
           WHERE date_trunc('day', timestamp) = date_trunc('day', now())
           GROUP BY user_id
           ORDER BY views DESC
           LIMIT 1
-        `;
+        `);
         const mostActiveUser = mostActiveUserResult[0] || {};
 
         // New Users Today
-        const newUsersTodayResult = await sql`
+        const newUsersTodayResult = arr(await sql`
           SELECT COUNT(DISTINCT user_id) as new_users_today
           FROM (
             SELECT user_id, MIN(timestamp) as first_visit
@@ -77,34 +83,34 @@ async function handler({ action }) {
             GROUP BY user_id
           ) as firsts
           WHERE date_trunc('day', first_visit) = date_trunc('day', now())
-        `;
+        `);
         const newUsersToday = newUsersTodayResult[0]?.new_users_today ?? 0;
 
         // Device breakdown
-        const deviceBreakdown = await sql`
+        const deviceBreakdown = arr(await sql`
           SELECT COALESCE(device, 'Unknown') as device, COUNT(*) as count
           FROM pageviews
           GROUP BY device
-        `;
+        `);
 
         // Browser breakdown
-        const browserBreakdown = await sql`
+        const browserBreakdown = arr(await sql`
           SELECT COALESCE(browser, 'Unknown') as browser, COUNT(*) as count
           FROM pageviews
           GROUP BY browser
-        `;
+        `);
 
         // Popular Pages
-        const popularPages = await sql`
+        const popularPages = arr(await sql`
           SELECT page_path as path, COUNT(*) as views 
           FROM pageviews 
           GROUP BY page_path 
           ORDER BY views DESC 
           LIMIT 10
-        `;
+        `);
 
         // Recent Visits (for log)
-        const recentVisits = await sql`
+        const recentVisits = arr(await sql`
           SELECT 
             timestamp, 
             page_path, 
@@ -116,10 +122,10 @@ async function handler({ action }) {
           FROM pageviews 
           ORDER BY timestamp DESC 
           LIMIT 30
-        `;
+        `);
 
         // User stats
-        const userStats = await sql`
+        const userStats = arr(await sql`
           SELECT user_id, COUNT(*) as views,
             MIN(timestamp) as first_visit,
             MAX(timestamp) as last_visit
@@ -127,28 +133,28 @@ async function handler({ action }) {
           GROUP BY user_id
           ORDER BY views DESC
           LIMIT 30
-        `;
+        `);
 
         // Full log for activity log (truncate if too long)
-        const fullLog = await sql`
+        const fullLog = arr(await sql`
           SELECT 
             timestamp, page_path, user_id, referrer, device, browser
           FROM pageviews
           ORDER BY timestamp DESC
           LIMIT 300
-        `;
+        `);
 
         // Overall
-        const totalResult = await sql`
+        const totalResult = arr(await sql`
           SELECT COUNT(*) as total FROM pageviews
-        `;
-        const totalPageviews = totalResult[0].total;
+        `);
+        const totalPageviews = totalResult[0]?.total ?? 0;
 
-        const uniqueResult = await sql`
+        const uniqueResult = arr(await sql`
           SELECT COUNT(DISTINCT user_id) as unique_visitors 
           FROM pageviews
-        `;
-        const uniqueVisitors = uniqueResult[0].unique_visitors;
+        `);
+        const uniqueVisitors = uniqueResult[0]?.unique_visitors ?? 0;
 
         return {
           daily,
