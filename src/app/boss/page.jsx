@@ -830,7 +830,6 @@ function handleCoopJoin() {
               whileHover={{ scale: 1.07 }}
               whileTap={{ scale: 0.94, rotate: [0, -5, 5, 0] }}
               onClick={onTapButtonClick}
-            disabled={visibleBossHp <= 0 || soloLoading}
               className="boss-strike-button"
             >
               <div className="absolute inset-0 boss-strike-gloss"></div>
