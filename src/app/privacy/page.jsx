@@ -1,23 +1,22 @@
 "use client";
 import AdBanner from '../../components/AdBanner';
 
+import { logPageview } from "@/utilities/logPageview";
+
 import { useEffect } from "react";
 
-export default function PrivacyPage({ userId }) {
-  useEffect(() => {
-    fetch("/api/record-pageview", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        page_path: "/notice-board",
-        user_id: userId || null,
-        user_agent: navigator.userAgent,
-        referrer: document.referrer || null,
-      }),
-    }).catch(console.error);
-  }, [userId]);
 
-     
+
+
+export default function PrivacyPage({ userId }) {
+useEffect(() => {
+  // Tries to grab userId from localStorage, but will work anonymously too
+  const userId = localStorage.getItem("userId");
+  logPageview({
+    userId: userId ? parseInt(userId, 10) : null, // or leave out for anonymous
+    // Optionally, set pagePath: "/help" or "/notice-board" for clarity
+  });
+}, []);
   return (
     <main className="max-w-3xl mx-auto p-8">
       <h1 className="text-3xl font-bold mb-6">Privacy Policy</h1>
