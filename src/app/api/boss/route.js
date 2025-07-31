@@ -450,7 +450,8 @@ export async function POST(request) {
       const level = 1;
       const playersArr = [userId];
       const totalTapPower = await getPlayersTotalTapPower(playersArr);
-      const bossHp = getCoopBossHP(totalTapPower);
+    const bossHp = Math.floor(getCoopBossHP(totalTapPower));
+
 
       const { data: session, error: insertErr } = await supabase
         .from("boss_coop_sessions")
