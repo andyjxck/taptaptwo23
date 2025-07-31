@@ -4,6 +4,8 @@ import { supabase } from "@/utilities/supabaseClient";
 export const revalidate = 0;
 export const dynamic = "force-client";
 import useSound from "use-sound"; // 👈 add this line
+import { logPageview } from "@/utilities/logPageview";
+
 
 
 function MainComponent() {
@@ -383,64 +385,59 @@ useEffect(() => {
 };
 
   
-  const loadProfile = async (id) => {
+ const loadProfile = async (id) => {
   try {
-  const response = await fetch("/api/battle", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action: "fetchProfile",
+    const response = await fetch("/api/battle", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "fetchProfile",
+        userId: parseInt(id, 10),
+        profileName: profileName,
+        player_score: 0, // ✅ use the actual value
+      }),
+    });
+
+    console.log("loadProfile called with userId:", id);
+    console.log("Fetch response received:", response);
+
+    const data = await response.json().catch(() => null);
+    console.log("Parsed JSON data:", data);
+
+    if (!response.ok) {
+      console.error(`Fetch failed with status ${response.status}`);
+      if (data && data.error) {
+        console.error("Backend error message:", data.error);
+      } else {
+        console.error("No backend error message available.");
+      }
+      throw new Error(`Fetch failed with status ${response.status}`);
+    }
+
+    if (!data.profile) {
+      console.error("Backend returned no profile.");
+      if (data && data.error) {
+        console.error("Backend error message:", data.error);
+      }
+      return;
+    }
+
+    setProfileName(data.profile.profile_name);
+    setLogoUrl(data.profile.profile_icon);
+    setAllTimeTotalTaps(data.profile.total_taps);
+    setRenownTokens(data.profile.renown_tokens);
+
+    // --- ADD THIS: Log the pageview after successful profile load ---
+    logPageview({
       userId: parseInt(id, 10),
-      profileName: profileName,
-      player_score: 0,// ✅ use the actual value
-    }),
-  });
-
-  console.log("loadProfile called with userId:", id);
-
-      console.log("Fetch response received:", response);
-
-      const data = await response.json().catch(() => null);
-      console.log("Parsed JSON data:", data);
-
-      if (!response.ok) {
-        console.error(`Fetch failed with status ${response.status}`);
-        if (data && data.error) {
-          console.error("Backend error message:", data.error);
-        } else {
-          console.error("No backend error message available.");
-        }
-        throw new Error(`Fetch failed with status ${response.status}`);
-      }
-
-      if (!data.profile) {
-        console.error("Backend returned no profile.");
-        if (data && data.error) {
-          console.error("Backend error message:", data.error);
-        }
-        return;
-      }
-
-      setProfileName(data.profile.profile_name);
-      setLogoUrl(data.profile.profile_icon);
-      setAllTimeTotalTaps(data.profile.total_taps);
-      setRenownTokens(data.profile.renown_tokens);
-    } catch (err) {
-      console.error("Profile load failed:", err);
-    }
-  };
-
-  React.useEffect(() => {
-    const storedUserId = localStorage.getItem("userId");
-    if (storedUserId) {
-      setUserId(parseInt(storedUserId, 10));
-      loadProfile(storedUserId);
-    } else {
-      // No userId in localStorage, redirect to login
-      window.location.href = "/login";
-    }
-  }, []);
-
+      // pagePath and referrer are auto-detected by the function,
+      // but you can set manually if you want, e.g. pagePath: "/battle"
+    });
+    // --- END ADD ---
+  } catch (err) {
+    console.error("Profile load failed:", err);
+  }
+};
   
 
   // Calculate upgrade costs (1.3x multiplier)
