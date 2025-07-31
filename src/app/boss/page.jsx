@@ -1,5 +1,5 @@
 "use client";
-
+import { supabase } from "@/utilities/supabaseClient";
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,6 +13,83 @@ function isImageUrl(icon) {
       icon.match(/\.(png|jpg|jpeg|gif|svg)$/i))
   );
 }
+
+// --- SOLO BOSS REALTIME HOOK ---
+function useRealtimeSoloBoss(userId) {
+  const [soloRealtime, setsoloRealtime] = useState(null);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    // Initial load
+    supabase
+      .from("boss_progress")
+      .select("*")
+      .eq("user_id", userId)
+      .single()
+      .then(({ data }) => setsoloRealtime(data));
+
+    // Realtime subscribe
+    const channel = supabase
+      .channel("solo-boss")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "boss_progress",
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => setsoloRealtime(payload.new)
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
+
+  return soloRealtime;
+}
+
+// --- COOP BOSS REALTIME HOOK ---
+function useRealtimeCoopBoss(roomCode) {
+  const [coopRealtime, setcoopRealtime] = useState(null);
+
+  useEffect(() => {
+    if (!roomCode) return;
+
+    // Initial load
+    supabase
+      .from("boss_coop_sessions")
+      .select("*")
+      .eq("room_code", roomCode)
+      .single()
+      .then(({ data }) => setcoopRealtime(data));
+
+    // Realtime subscribe
+    const channel = supabase
+      .channel("coop-boss")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "boss_coop_sessions",
+          filter: `room_code=eq.${roomCode}`,
+        },
+        (payload) => setcoopRealtime(payload.new)
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [roomCode]);
+
+  return coopRealtime;
+}
+
 
 function formatNumberShort(num) {
   if (num < 1000) return num?.toString() ?? "0";
@@ -64,11 +141,13 @@ export default function BossModePage() {
   const [upgradesLoading, setUpgradesLoading] = useState(false);
 
   // --- SOLO BOSS STATE ---
-  const [soloProgress, setSoloProgress] = useState(null); // boss_hp, boss_max_hp, current_level, ...
-  const [soloLoading, setSoloLoading] = useState(false);
+// LIVE DATA (after you know userId, mode)
+const soloRealtime = useRealtimeSoloBoss(userId);
+const coopRealtime = useRealtimeCoopBoss(mode === "coop" ? roomCode : null);
 
-  // --- COOP BOSS STATE ---
-  const [currentSession, setCurrentSession] = useState(null);
+// This is now your main boss/session data!
+const battleData = mode === "solo" ? soloRealtime : coopRealtime;
+
   const [coopError, setCoopError] = useState("");
   const [coopJoining, setCoopJoining] = useState(false);
   const [coopCreating, setCoopCreating] = useState(false);
@@ -113,254 +192,165 @@ export default function BossModePage() {
       });
   }, [userReady, userId]);
 
-  // --- EFFECTS: LOAD SOLO PROGRESS ON ENTERING SOLO ---
-  useEffect(() => {
-    if (!userReady || mode !== "solo") return;
-    setSoloLoading(true);
-    fetch(`/api/boss?action=progress&userId=${userId}`)
-      .then((r) => r.json())
-      .then((data) => {
-        setSoloProgress(data);
-        setTapCount(0);
-        setAccumulatedAutoTapDamage(0);
-      })
-      .finally(() => setSoloLoading(false));
-  }, [userReady, userId, mode]);
-let battleData = mode === "solo" ? soloProgress : currentSession;
+
 
 const hpMax = (battleData?.boss_max_hp || battleData?.boss_hp) || 1;  // fallback 1 to avoid NaN
 const visibleBossHp = Math.max(0, (battleData?.boss_hp || 0) - accumulatedAutoTapDamage);
 const hpPercentage = Math.max(0, Math.min(100, (visibleBossHp / hpMax) * 100));
 
-  // Poll for boss progress refresh when boss is defeated (visibleBossHp === 0)
-useEffect(() => {
-  if (!userReady) return;
-  if (visibleBossHp > 0) return; // Only poll if boss is dead (0 HP)
 
-  const interval = setInterval(async () => {
-    try {
-      if (mode === "solo") {
-        const res = await fetch(`/api/boss?action=progress&userId=${userId}`);
-        const data = await res.json();
-        if (data && data.boss_hp !== undefined) {
-          setSoloProgress(data);
-          setAccumulatedAutoTapDamage(0);
-          setTapCount(0);
-        }
-      } else if (mode === "coop" && currentSession) {
-        const res = await fetch(`/api/boss?action=coop_session&roomCode=${currentSession.room_code}&userId=${userId}`);
-        const data = await res.json();
-        if (data && data.session) {
-          setCurrentSession(data.session);
-          setAccumulatedAutoTapDamage(0);
-          setTapCount(0);
-        }
-      }
-    } catch (e) {
-      console.error("Error refreshing boss progress:", e);
-    }
-  }, 1500); // Poll every 1.5 seconds
-
-  return () => clearInterval(interval);
-}, [visibleBossHp, userReady, userId, mode, currentSession]);
-
-
-  // --- EFFECTS: COOP SESSION POLLING ---
-  useEffect(() => {
-    if (!userReady || mode !== "coop" || !currentSession) return;
-    let cancelled = false;
-    const interval = setInterval(() => {
-      fetch(
-        `/api/boss?action=coop_session&roomCode=${currentSession.room_code}&userId=${userId}`
-      )
-        .then((r) => r.json())
-        .then((data) => {
-          if (cancelled) return;
-          if (data.session) setCurrentSession(data.session);
-        });
-    }, 1200);
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [mode, currentSession, userReady, userId]);
-
-  
-  // --- EFFECTS: ACCUMULATE AUTO-TAPPER DAMAGE LOCALLY ---
-  useEffect(() => {
-    if (
-      mode !== "solo" ||
-      !soloProgress ||
-      !upgradesData?.stats?.autoTapperDps ||
-      upgradesData.stats.autoTapperDps <= 0 ||
-      soloProgress.boss_hp <= 0
-    )
-      return;
-
-    // Every second add auto tapper DPS damage to accumulated damage
-    const interval = setInterval(() => {
-      setAccumulatedAutoTapDamage(
-        (prev) => prev + (upgradesData.stats.autoTapperDps || 0)
-      );
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [mode, soloProgress?.boss_hp, upgradesData?.stats?.autoTapperDps]);
 
   // --- FUNCTION: HANDLE MANUAL TAP ---
-  async function handleTap() {
-    if (
-      soloLoading ||
-      (mode === "solo" && (!soloProgress || soloProgress.boss_hp <= 0)) ||
-      (mode === "coop" && (!currentSession || currentSession.boss_hp <= 0))
-    )
-      return;
+// --- TAP HANDLER ---
+// Note: DO NOT call setsoloRealtime or setcoopRealtime; let realtime handle all updates!
+async function handleTap() {
+  // Determine current battle state based on mode
+  const isSolo = mode === "solo";
+  const battle = isSolo ? soloRealtime : coopRealtime;
 
-    const tapPower = upgradesData?.stats?.tapPower || 1;
+  // Safety checks
+  if (
+    (isSolo && (!battle || battle.boss_hp <= 0)) ||
+    (!isSolo && (!battle || battle.boss_hp <= 0))
+  )
+    return;
 
-    // 5% crit chance = 3x damage
-    const isCrit = Math.random() < 0.05;
-    const critMultiplier = isCrit ? 3 : 1;
+  const tapPower = upgradesData?.stats?.tapPower || 1;
+  const autoTapperDps = upgradesData?.stats?.autoTapperDps || 0;
 
-    // Total damage this tap = tap power * crit + accumulated auto tapper damage
-    const totalDamage = tapPower * critMultiplier + accumulatedAutoTapDamage;
+  // 5% crit chance = 3x damage
+  const isCrit = Math.random() < 0.05;
+  const critMultiplier = isCrit ? 3 : 1;
 
-    // Show floating damage number (including crit and auto tap damage)
-    const dmgId = Date.now() + Math.random();
-    setShowDamageNumbers((prev) => [
-      ...prev,
-      {
-        id: dmgId,
-        damage: Math.floor(totalDamage),
-        isCrit,
-        x: Math.random() * 120 - 60,
-        y: Math.random() * 60 - 30,
-      },
-    ]);
-    setTimeout(() => {
-      setShowDamageNumbers((prev) => prev.filter((d) => d.id !== dmgId));
-    }, 1200);
+  // Calculate tap + auto tapper (always add autoTapperDps on tap, both solo and coop)
+  const totalDamage = tapPower * critMultiplier + autoTapperDps + accumulatedAutoTapDamage;
 
-    // Send total damage to backend (for solo or coop)
-    const action = mode === "solo" ? "solo_tap" : "coop_tap";
-
-    // Prepare request body
-    const body = {
-      action,
-      userId,
+  // Show floating damage number
+  const dmgId = Date.now() + Math.random();
+  setShowDamageNumbers((prev) => [
+    ...prev,
+    {
+      id: dmgId,
       damage: Math.floor(totalDamage),
-    };
+      isCrit,
+      x: Math.random() * 120 - 60,
+      y: Math.random() * 60 - 30,
+    },
+  ]);
+  setTimeout(() => {
+    setShowDamageNumbers((prev) => prev.filter((d) => d.id !== dmgId));
+  }, 1200);
 
-    if (mode === "coop") {
-      body.roomCode = currentSession.room_code;
-    }
-
-    try {
-      const res = await fetch("/api/boss", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-
-      // Reset accumulated auto tap damage after sending
-      setAccumulatedAutoTapDamage(0);
-
-      if (data.boss_defeated) {
-        setShowCelebration(true);
-        setTimeout(() => setShowCelebration(false), 1600);
-
-        // Reload progress and profile after boss defeated
-        if (mode === "solo") {
-          const newProgress = await fetch(
-            `/api/boss?action=progress&userId=${userId}`
-          ).then((r) => r.json());
-          setSoloProgress(newProgress);
-          setAccumulatedAutoTapDamage(0);
-        } else {
-          const newSession = await fetch(
-            `/api/boss?action=coop_session&roomCode=${currentSession.room_code}&userId=${userId}`
-          )
-            .then((r) => r.json())
-            .then((res) => res.session);
-          if (newSession) setCurrentSession(newSession);
-          setAccumulatedAutoTapDamage(0);
-        }
-
-        const newProfile = await fetch(
-          `/api/boss?action=profile&userId=${userId}`
-        ).then((r) => r.json());
-        setProfileData(newProfile);
-
-        setTapCount(0);
-        return;
-      }
-
-      // Update local HP and tap count on normal tap
-      if (mode === "solo") {
-        setSoloProgress((prev) => ({
-          ...prev,
-          boss_hp: data.current_boss_hp,
-        }));
-       setAccumulatedAutoTapDamage(0);
-      } else {
-        setCurrentSession((prev) => ({
-          ...prev,
-          boss_hp: data.current_boss_hp,  
-        }));
-         setAccumulatedAutoTapDamage(0);
-      }
-      setTapCount((prev) => prev + 1);
-    } catch (error) {
-      console.error("Error sending tap damage:", error);
-    }
+  // Prepare request
+  const action = isSolo ? "solo_tap" : "coop_tap";
+  const body = {
+    action,
+    userId,
+    damage: Math.floor(totalDamage),
+  };
+  if (!isSolo) {
+    body.roomCode = battle.room_code;
   }
 
-  // --- TAP BUTTON HANDLER (calls handleTap) ---
-  function onTapButtonClick() {
-    
- playClick();
-    handleTap();
-  }
-
-  // --- COOP CREATE ---
-  function handleCoopCreate() {
-    setCoopCreating(true);
-    setCoopError("");
-    fetch("/api/boss", {
+  try {
+    const res = await fetch("/api/boss", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "coop_create", userId }),
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        if (!data.session) throw new Error("No session returned");
-        setCurrentSession(data.session);
-        setMode("coop");
-      })
-      .catch(() => setCoopError("Failed to create session. Please try again."))
-      .finally(() => setCoopCreating(false));
-  }
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
 
-  // --- COOP JOIN ---
-  function handleCoopJoin() {
-    setCoopJoining(true);
-    setCoopError("");
-    fetch("/api/boss", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "coop_join", roomCode: roomCode.trim(), userId }),
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.session) {
-          setCurrentSession(data.session);
-          setMode("coop");
-        } else setCoopError("Failed to join alliance. Check code.");
-      })
-      .catch(() => setCoopError("Failed to join alliance."))
-      .finally(() => setCoopJoining(false));
+    // Reset auto tap damage accumulator (always)
+    setAccumulatedAutoTapDamage(0);
+
+    // Victory celebration (let realtime reload the battle state)
+    if (data.boss_defeated) {
+      setShowCelebration(true);
+      setTimeout(() => setShowCelebration(false), 1600);
+
+      // Optionally reload profile data for rewards/coins/level up
+      const newProfile = await fetch(
+        `/api/boss?action=profile&userId=${userId}`
+      ).then((r) => r.json());
+      setProfileData(newProfile);
+
+      setTapCount(0);
+      return;
+    }
+
+    // Just bump local tap count (realtime will update HP automatically)
+    setTapCount((prev) => prev + 1);
+  } catch (error) {
+    console.error("Error sending tap damage:", error);
   }
+}
+
+// --- TAP BUTTON HANDLER ---
+function onTapButtonClick() {
+  playClick();
+  handleTap();
+}
+
+// --- AUTO TAPPER DAMAGE (SOLO & COOP) ---
+// This should run in both solo and coop, tick every second.
+useEffect(() => {
+  const battle = mode === "solo" ? soloRealtime : coopRealtime;
+  const autoTapperDps = upgradesData?.stats?.autoTapperDps || 0;
+  if (
+    !battle ||
+    battle.boss_hp <= 0 ||
+    !autoTapperDps ||
+    autoTapperDps <= 0 ||
+    (mode !== "solo" && mode !== "coop")
+  )
+    return;
+
+  // Every second, add DPS to accumulator
+  const interval = setInterval(() => {
+    setAccumulatedAutoTapDamage((prev) => prev + autoTapperDps);
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, [mode, soloRealtime, coopRealtime, upgradesData?.stats?.autoTapperDps]);
+
+// --- COOP CREATE ---
+function handleCoopCreate() {
+  setCoopCreating(true);
+  setCoopError("");
+  fetch("/api/boss", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "coop_create", userId }),
+  })
+    .then((r) => r.json())
+    .then((data) => {
+      if (!data.session) throw new Error("No session returned");
+      setRoomCode(data.session.room_code);
+      setMode("coop"); // This triggers coopRealtime to start
+    })
+    .catch(() => setCoopError("Failed to create session. Please try again."))
+    .finally(() => setCoopCreating(false));
+}
+
+// --- COOP JOIN ---
+function handleCoopJoin() {
+  setCoopJoining(true);
+  setCoopError("");
+  fetch("/api/boss", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "coop_join", roomCode: roomCode.trim(), userId }),
+  })
+    .then((r) => r.json())
+    .then((data) => {
+      if (data.session) {
+        setRoomCode(data.session.room_code);
+        setMode("coop"); // This triggers coopRealtime to start
+      } else setCoopError("Failed to join alliance. Check code.");
+    })
+    .catch(() => setCoopError("Failed to join alliance."))
+    .finally(() => setCoopJoining(false));
+}
 
   // --- LOADING WHEEL (no intrusive overlay) ---
   if (pageLoading) {
@@ -522,7 +512,7 @@ useEffect(() => {
   }
 
   // --- COOP CREATE / JOIN SCREENS ---
-  if (mode === "coop-create" && !currentSession) {
+  if (mode === "coop-create" && !coopRealtime) {
     return (
       <div className="boss-bg min-h-screen flex items-center justify-center px-4">
         <motion.div
@@ -566,7 +556,7 @@ useEffect(() => {
       </div>
     );
   }
-  if (mode === "coop-join" && !currentSession) {
+  if (mode === "coop-join" && !coopRealtime) {
     return (
       <div className="boss-bg min-h-screen flex items-center justify-center px-4">
         <motion.div
@@ -622,9 +612,9 @@ useEffect(() => {
   }
 
   // --- BATTLE UI (SOLO/COOP) ---
+   const isBattleLoading =
+  (mode === "solo" && !soloRealtime) || (mode === "coop" && !coopRealtime);
 
-  const isBattleLoading =
-    (mode === "solo" && soloLoading) || (mode === "coop" && !currentSession);
   if (!upgradesData || !battleData || isBattleLoading) {
     return (
       <div className="boss-bg min-h-screen flex flex-col items-center justify-center px-4">
@@ -636,9 +626,9 @@ useEffect(() => {
   }
 
   function getTimeUntilReset() {
-    if (!soloProgress?.next_reset) return "";
+    if (!soloRealtime?.next_reset) return "";
     const now = new Date();
-    const resetDate = new Date(soloProgress.next_reset);
+    const resetDate = new Date(soloRealtime.next_reset);
     const diffMs = resetDate - now;
     if (diffMs <= 0) return "0d 0h 0m";
     const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -752,11 +742,11 @@ useEffect(() => {
                 <div className="text-xs opacity-80">{getTimeUntilReset()}</div>
               </div>
             )}
-            {mode === "coop" && currentSession && (
+            {mode === "coop" && coopRealtime && (
               <div className="text-orange-100 text-right">
-                <div className="font-bold text-sm mb-1">{currentSession.room_code}</div>
+                <div className="font-bold text-sm mb-1">{coopRealtime.room_code}</div>
                 <div className="text-xs opacity-80">
-                  {(currentSession.players?.length || 1)}/5 warriors
+                  {(coopRealtime.players?.length || 1)}/5 warriors
                 </div>
               </div>
             )}
