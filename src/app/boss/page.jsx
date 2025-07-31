@@ -52,7 +52,6 @@ function useRealtimeSoloBoss(userId) {
   return soloRealtime;
 }
 
-// --- COOP BOSS REALTIME HOOK ---
 function useRealtimeCoopBoss(roomCode) {
   const [coopRealtime, setcoopRealtime] = useState(null);
 
@@ -87,8 +86,10 @@ function useRealtimeCoopBoss(roomCode) {
     };
   }, [roomCode]);
 
-  return coopRealtime;
+  // NOTE: return as [state, setter]
+  return [coopRealtime, setcoopRealtime];
 }
+
 
 
 function formatNumberShort(num) {
@@ -143,7 +144,7 @@ export default function BossModePage() {
   // --- SOLO BOSS STATE ---
 // LIVE DATA (after you know userId, mode)
 const soloRealtime = useRealtimeSoloBoss(userId);
-const coopRealtime = useRealtimeCoopBoss(mode === "coop" ? roomCode : null);
+const [coopRealtime, setcoopRealtime] = useRealtimeCoopBoss(mode === "coop" ? roomCode : null);
 
 // This is now your main boss/session data!
 const battleData = mode === "solo" ? soloRealtime : coopRealtime;
