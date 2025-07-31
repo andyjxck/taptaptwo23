@@ -590,6 +590,8 @@ export async function POST(request) {
     .from("game_saves")
     .select("user_id, coins")
     .in("user_id", players);
+console.log("Players:", players);
+console.log("playersCoinsData:", playersCoinsData);
 
   // For each player, calculate and update coins (+50% of their own coins)
   const rewards = [];
