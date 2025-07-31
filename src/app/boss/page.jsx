@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, Flame, ChevronDown, Coins, Crown, Timer, Zap, Settings } from "lucide-react";
 import useSound from "use-sound";
+import { logPageview } from "@/utilities/logPageview";
+
+
 function isImageUrl(icon) {
   return (
     typeof icon === "string" &&
@@ -158,20 +161,27 @@ const battleData = mode === "solo" ? soloRealtime : coopRealtime;
 
   // --- DAMAGE STATE ---
   const [accumulatedAutoTapDamage, setAccumulatedAutoTapDamage] = useState(0);
+// --- EFFECTS: AUTH INIT ---
+useEffect(() => {
+  const storedUserId = localStorage.getItem("userId");
+  const storedPin = localStorage.getItem("pin");
+  if (!storedUserId || !storedPin) {
+    window.location.href = "/login";
+    return;
+  }
+  setUserId(storedUserId);
+  setPin(storedPin);
+  setUserReady(true);
 
+  // --- LOG PAGEVIEW after confirming auth ---
+  logPageview({
+    userId: parseInt(storedUserId, 10),
+    // You can add pagePath: "/your-page" if you want a custom path,
+    // otherwise it will use window.location.pathname
+    // referrer is auto-detected
+  });
+}, []);
 
-  // --- EFFECTS: AUTH INIT ---
-  useEffect(() => {
-    const storedUserId = localStorage.getItem("userId");
-    const storedPin = localStorage.getItem("pin");
-    if (!storedUserId || !storedPin) {
-      window.location.href = "/login";
-      return;
-    }
-    setUserId(storedUserId);
-    setPin(storedPin);
-    setUserReady(true);
-  }, []);
 
   // --- EFFECTS: LOAD PROFILE & UPGRADES ON LOGIN ---
   useEffect(() => {
