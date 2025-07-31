@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import AdBanner from "@/components/AdBanner";
+import { logPageview } from "@/utilities/logPageview";
+
 
 // Season backgrounds: more lively, with animated gradient and overlay
 const seasonBackgrounds = {
@@ -26,6 +28,14 @@ const weatherEffects = [
   { name: "Foggy", effect: "Lowers critical chance by 5%." }
 ];
 
+useEffect(() => {
+  // Tries to grab userId from localStorage, but will work anonymously too
+  const userId = localStorage.getItem("userId");
+  logPageview({
+    userId: userId ? parseInt(userId, 10) : null, // or leave out for anonymous
+    // Optionally, set pagePath: "/help" or "/notice-board" for clarity
+  });
+}, []);
 // Glass table wrapper for consistent style
 const GlassTable = ({ children }) => (
   <div className="rounded-xl shadow-lg overflow-x-auto bg-white/10 backdrop-blur-[8px] border border-white/30 my-2">
@@ -387,5 +397,14 @@ function HelpGuide() {
     </div>
   );
 }
+
+useEffect(() => {
+  // Tries to grab userId from localStorage, but will work anonymously too
+  const userId = localStorage.getItem("userId");
+  logPageview({
+    userId: userId ? parseInt(userId, 10) : null, // or leave out for anonymous
+    // Optionally, set pagePath: "/help" or "/notice-board" for clarity
+  });
+}, []);
 
 export default HelpGuide;
