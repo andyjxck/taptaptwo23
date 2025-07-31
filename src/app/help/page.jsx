@@ -315,6 +315,8 @@ const helpSections = [
 ];
 
 function HelpGuide() {
+
+  const [activeId, setActiveId] = useState(helpSections[0].id);
   
 useEffect(() => {
   // Tries to grab userId from localStorage, but will work anonymously too
@@ -324,8 +326,6 @@ useEffect(() => {
     // Optionally, set pagePath: "/help" or "/notice-board" for clarity
   });
 }, []);
-  const [activeId, setActiveId] = useState(helpSections[0].id);
-
   useEffect(() => { window.scrollTo(0, 0); }, [activeId]);
   const activeSection = helpSections.find(sec => sec.id === activeId);
 
