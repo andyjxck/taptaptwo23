@@ -203,6 +203,7 @@ const hpPercentage = Math.max(0, Math.min(100, (visibleBossHp / hpMax) * 100));
   // --- FUNCTION: HANDLE MANUAL TAP ---
 // --- TAP HANDLER ---
 // Note: DO NOT call setsoloRealtime or setcoopRealtime; let realtime handle all updates!
+// --- TAP HANDLER ---
 async function handleTap() {
   // Determine current battle state based on mode
   const isSolo = mode === "solo";
@@ -250,6 +251,15 @@ async function handleTap() {
   };
   if (!isSolo) {
     body.roomCode = battle.room_code;
+    // >>> FIX: Optimistic update so HP doesn't flash 0 <<<
+    setcoopRealtime((prev) =>
+      prev
+        ? {
+            ...prev,
+            boss_hp: Math.max(0, prev.boss_hp - Math.floor(totalDamage)),
+          }
+        : prev
+    );
   }
 
   try {
