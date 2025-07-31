@@ -1,14 +1,21 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import AdBanner from "@/components/AdBanner";
-
+import { logPageview } from "@/utilities/logPageview";
 // Glassy card wrapper for logs
 const GlassCard = ({ children }) => (
   <div className="rounded-3xl shadow-2xl bg-white/20 backdrop-blur-xl border border-white/40 px-4 py-5 mb-3">
     {children}
   </div>
 );
-
+useEffect(() => {
+  // Tries to grab userId from localStorage, but will work anonymously too
+  const userId = localStorage.getItem("userId");
+  logPageview({
+    userId: userId ? parseInt(userId, 10) : null, // or leave out for anonymous
+    // Optionally, set pagePath: "/help" or "/notice-board" for clarity
+  });
+}, []);
 const devLogs = [
   {
   id: "v2_2_boss_mode",
