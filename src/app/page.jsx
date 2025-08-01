@@ -2227,7 +2227,7 @@ const renderFriendsTab = () => {
 
                 </div>
               )}
-   <AdBanner />
+    
             </>
           )}
         </div>
@@ -4767,7 +4767,7 @@ const renderLeaderboard = () => (
         })}
       </div>
     </div>
-    <AdBanner />
+     
   </>
 );
 
@@ -5542,7 +5542,7 @@ const SHOP_THEMES = [
 
       {/* AdBanner */}
       <div className="mt-8">
-        <AdBanner />
+         
       </div>
     </div>
   );
@@ -5635,7 +5635,7 @@ const SHOP_THEMES = [
         </div>
       </div>
       <div className="mt-8">
-        <AdBanner />
+         
       </div>
     </div>
   );
@@ -5861,7 +5861,7 @@ const renderHouseTab = () => {
         </div>
         {/* Ad Banner (below box) */}
         <div className="mt-6">
-          <AdBanner />
+           
         </div>
       </div>
     </div>
@@ -6735,7 +6735,7 @@ const renderHouseTab = () => {
           
         {/* ✅ ONE Ad below all upgrades */}
         <div className="mt-6 flex justify-center">
-          <AdBanner />
+           
         </div>
           
         </div>
