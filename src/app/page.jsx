@@ -2224,12 +2224,13 @@ const renderFriendsTab = () => {
                       Send
                     </button>
                   </div>
-                  <AdBanner />
+
                 </div>
               )}
             </>
           )}
         </div>
+                       <AdBanner />
       )}
     </div>
   );
