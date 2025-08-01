@@ -386,7 +386,7 @@ function HelpGuide() {
         </div>
         {/* AdBanner at bottom */}
         <div className="mt-8 w-full max-w-3xl">
-          <AdBanner />
+          
         </div>
       </div>
       <style>{`
