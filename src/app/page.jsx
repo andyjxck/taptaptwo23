@@ -2224,6 +2224,7 @@ const renderFriendsTab = () => {
                       Send
                     </button>
                   </div>
+                  <AdBanner />
                 </div>
               )}
             </>
@@ -6720,6 +6721,12 @@ const renderHouseTab = () => {
               </div>
             );
           })}
+          
+        {/* ✅ ONE Ad below all upgrades */}
+        <div className="mt-6 flex justify-center">
+          <AdBanner />
+        </div>
+          
         </div>
       </div>
     </div>
