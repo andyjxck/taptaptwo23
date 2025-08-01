@@ -1,6 +1,7 @@
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Script from 'next/script'
+
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
@@ -12,12 +13,15 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        <meta name="google-adsense-account" content="ca-pub-9540548227467393" />
+        {/* Remove Google AdSense meta tag and script */}
         <link
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
         />
       </head>
+      <body className={inter.className}>
+        {children}
+      </body>
     </html>
   )
 }
