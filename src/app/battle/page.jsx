@@ -4,7 +4,7 @@ import { supabase } from "@/utilities/supabaseClient";
 export const revalidate = 0;
 export const dynamic = "force-client";
 import useSound from "use-sound"; // 👈 add this line
-
+import { logPageview } from "@/utilities/logPageview";
 
 function MainComponent() {
 
