@@ -6399,7 +6399,47 @@ const renderHouseTab = () => {
           <i className="fas fa-store"></i>
           <span>Shop</span>
         </button>
+        {/* A2HS Tip Message */}
+<div className="mt-8 px-4 py-3 text-[11px] leading-snug text-white/70 bg-white/10 border-t border-white/20 w-full max-w-xs rounded-xl shadow-inner text-center">
+  <p className="mb-1">
+    <span className="font-bold text-white">iPhone:</span> Tap <span className="italic">"Share"</span>, scroll down, then <span className="italic">“Add to Home Screen”</span>.
+  </p>
+  <p>
+    <span className="font-bold text-white">Android:</span> Tap <span className="italic">"⋮ Menu"</span>, then <span className="italic">"Add to Home screen"</span>.
+  </p>
+</div>
       </div>
+          <div
+      className="grid grid-cols-3 max-w-xs mx-auto mt-6 mb-10 gap-3
+        bg-gradient-to-br from-white/70 via-purple-100/60 to-purple-200/40
+        border border-white/50 shadow-xl rounded-2xl p-3
+        backdrop-blur"
+    >
+      {[
+        { icon: "🪙", value: Math.floor(gameState.coins) },
+        { icon: "👆", value: gameState.totalTaps },
+        { icon: "🔄", value: gameState.resets },
+        { icon: "🏠", value: gameState.houseLevel },
+        { icon: "⭐", value: Math.floor(gameState.renownTokens) },
+        { icon: "✴️", value: gameState.permanentMultiplier.toFixed(2) },
+      ].map(({ icon, value }, idx) => (
+        <div
+          key={idx}
+          className="flex flex-col items-center justify-center rounded-xl px-2 py-2
+            bg-white/50 border border-white/70 shadow
+            transition hover:scale-105 hover:bg-purple-200/80
+            backdrop-blur"
+        >
+          <span className="text-2xl select-none drop-shadow">{icon}</span>
+          <p className="text-md font-bold mt-0.5 text-[#403258]">{formatNumberShort(value)}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
+  </div>
+)}
     </div>
   </aside>
 </div>
@@ -6448,6 +6488,7 @@ const renderHouseTab = () => {
         </div>
       ))}
     </div>
+    
   </div>
 )}
 
