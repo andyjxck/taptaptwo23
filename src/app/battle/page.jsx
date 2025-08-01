@@ -4,8 +4,6 @@ import { supabase } from "@/utilities/supabaseClient";
 export const revalidate = 0;
 export const dynamic = "force-client";
 import useSound from "use-sound"; // 👈 add this line
-import { logPageview } from "@/utilities/logPageview";
-
 
 
 function MainComponent() {
@@ -385,73 +383,74 @@ useEffect(() => {
 };
 
   
- const loadProfile = async (id) => {
+  const loadProfile = async (id) => {
   try {
-    const response = await fetch("/api/battle", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "fetchProfile",
-        userId: parseInt(id, 10),
-        profileName: profileName,
-        player_score: 0, // ✅ use the actual value
-      }),
-    });
+  const response = await fetch("/api/battle", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "fetchProfile",
+      userId: parseInt(id, 10),
+      profileName: profileName,
+      player_score: 0,// ✅ use the actual value
+    }),
+  });
 
-    console.log("loadProfile called with userId:", id);
-    console.log("Fetch response received:", response);
+  console.log("loadProfile called with userId:", id);
 
-    const data = await response.json().catch(() => null);
-    console.log("Parsed JSON data:", data);
+      console.log("Fetch response received:", response);
 
-    if (!response.ok) {
-      console.error(`Fetch failed with status ${response.status}`);
-      if (data && data.error) {
-        console.error("Backend error message:", data.error);
-      } else {
-        console.error("No backend error message available.");
+      const data = await response.json().catch(() => null);
+      console.log("Parsed JSON data:", data);
+
+      if (!response.ok) {
+        console.error(`Fetch failed with status ${response.status}`);
+        if (data && data.error) {
+          console.error("Backend error message:", data.error);
+        } else {
+          console.error("No backend error message available.");
+        }
+        throw new Error(`Fetch failed with status ${response.status}`);
       }
-      throw new Error(`Fetch failed with status ${response.status}`);
-    }
 
-    if (!data.profile) {
-      console.error("Backend returned no profile.");
-      if (data && data.error) {
-        console.error("Backend error message:", data.error);
+      if (!data.profile) {
+        console.error("Backend returned no profile.");
+        if (data && data.error) {
+          console.error("Backend error message:", data.error);
+        }
+        return;
       }
-      return;
-    }
 
-    setProfileName(data.profile.profile_name);
-    setLogoUrl(data.profile.profile_icon);
-    setAllTimeTotalTaps(data.profile.total_taps);
-    setRenownTokens(data.profile.renown_tokens);
+      setProfileName(data.profile.profile_name);
+      setLogoUrl(data.profile.profile_icon);
+      setAllTimeTotalTaps(data.profile.total_taps);
+      setRenownTokens(data.profile.renown_tokens);
+    } catch (err) {
+      console.error("Profile load failed:", err);
+    }
+  };
 
   useEffect(() => {
-  const storedUserId = localStorage.getItem("userId");
-  const storedPin = localStorage.getItem("pin");
-  if (!storedUserId || !storedPin) {
-    window.location.href = "/login";
-    return;
+  // Only log when userId exists (prevents firing on initial mount with no user)
+  if (userId) {
+    logPageview({
+      userId: parseInt(userId, 10),
+      // You can add pagePath: "/battle" here if you want to force the path.
+    });
   }
-  setUserId(storedUserId);
-  setPin(storedPin);
-  setUserReady(true);
+}, [userId]);
 
-  // --- LOG PAGEVIEW after confirming auth ---
-  logPageview({
-    userId: parseInt(storedUserId, 10),
-    // You can add pagePath: "/your-page" if you want a custom path,
-    // otherwise it will use window.location.pathname
-    // referrer is auto-detected
-  });
-}, []);
- 
-    // --- END ADD ---
-  } catch (err) {
-    console.error("Profile load failed:", err);
-  }
-};
+  React.useEffect(() => {
+    const storedUserId = localStorage.getItem("userId");
+    if (storedUserId) {
+      setUserId(parseInt(storedUserId, 10));
+      loadProfile(storedUserId);
+    } else {
+      // No userId in localStorage, redirect to login
+      window.location.href = "/login";
+    }
+  }, []);
+
   
 
   // Calculate upgrade costs (1.3x multiplier)
