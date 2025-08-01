@@ -2227,10 +2227,10 @@ const renderFriendsTab = () => {
 
                 </div>
               )}
+   <AdBanner />
             </>
           )}
         </div>
-                       <AdBanner />
       )}
     </div>
   );
