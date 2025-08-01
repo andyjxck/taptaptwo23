@@ -427,12 +427,26 @@ useEffect(() => {
     setAllTimeTotalTaps(data.profile.total_taps);
     setRenownTokens(data.profile.renown_tokens);
 
-    // --- ADD THIS: Log the pageview after successful profile load ---
-    logPageview({
-      userId: parseInt(id, 10),
-      // pagePath and referrer are auto-detected by the function,
-      // but you can set manually if you want, e.g. pagePath: "/battle"
-    });
+  useEffect(() => {
+  const storedUserId = localStorage.getItem("userId");
+  const storedPin = localStorage.getItem("pin");
+  if (!storedUserId || !storedPin) {
+    window.location.href = "/login";
+    return;
+  }
+  setUserId(storedUserId);
+  setPin(storedPin);
+  setUserReady(true);
+
+  // --- LOG PAGEVIEW after confirming auth ---
+  logPageview({
+    userId: parseInt(storedUserId, 10),
+    // You can add pagePath: "/your-page" if you want a custom path,
+    // otherwise it will use window.location.pathname
+    // referrer is auto-detected
+  });
+}, []);
+ 
     // --- END ADD ---
   } catch (err) {
     console.error("Profile load failed:", err);
