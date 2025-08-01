@@ -284,6 +284,17 @@ async function handleTap() {
     // Reset auto tap damage accumulator (always)
     setAccumulatedAutoTapDamage(0);
 
+    // Increment total_taps in game_saves after a valid tap
+    try {
+      const { error } = await supabase
+        .from("game_saves")
+        .update({ total_taps: supabase.literal('total_taps + 1') })
+        .eq("user_id", userId);
+      if (error) throw error;
+    } catch (err) {
+      console.error("Failed to increment total_taps:", err);
+    }
+
     // Victory celebration (let realtime reload the battle state)
     if (data.boss_defeated) {
       setShowCelebration(true);
@@ -305,6 +316,7 @@ async function handleTap() {
     console.error("Error sending tap damage:", error);
   }
 }
+
 
 // --- TAP BUTTON HANDLER ---
 function onTapButtonClick() {
