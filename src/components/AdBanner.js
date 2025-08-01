@@ -5,7 +5,7 @@ export default function AdsterraAd() {
     const script1 = document.createElement("script");
     script1.innerHTML = `
       atOptions = {
-        'key' : 'd35f08df6c236dd37dcb2ec1061491a0',
+        'key' : 'd35f08df6c236dd37dcb2ec10614910',
         'format' : 'iframe',
         'height' : 250,
         'width' : 300,
