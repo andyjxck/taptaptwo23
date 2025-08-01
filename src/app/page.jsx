@@ -6399,6 +6399,16 @@ const renderHouseTab = () => {
           <i className="fas fa-store"></i>
           <span>Shop</span>
         </button>
+        
+        {/* A2HS Tip Message */}
+        <div className="mt-6 px-4 py-3 text-[11px] leading-snug text-white/70 bg-white/10 border-t border-white/20 w-full max-w-xs rounded-xl shadow-inner text-center">
+          <p className="mb-1">
+            <span className="font-bold text-white">iPhone:</span> Tap <span className="italic">"Share"</span>, scroll down, then <span className="italic">“Add to Home Screen”</span>.
+          </p>
+          <p>
+            <span className="font-bold text-white">Android:</span> Tap <span className="italic">"⋮ Menu"</span>, then <span className="italic">"Add to Home screen"</span>.
+          </p>
+        </div>
       </div>
     </div>
   </aside>
