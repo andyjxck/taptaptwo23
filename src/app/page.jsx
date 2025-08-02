@@ -6409,6 +6409,13 @@ const renderHouseTab = () => {
           <p>
             <span className="font-bold text-white">Android:</span> Tap <span className="italic">"⋮ Menu"</span>, then <span className="italic">"Add to Home screen"</span>.
           </p>
+        <a
+  href="/privacy"
+  className="font-bold text-gray cursor-pointer hover:underline"
+>
+  Privacy Policy
+</a>
+
         </div>
       </div>
     </div>
