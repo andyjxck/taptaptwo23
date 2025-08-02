@@ -39,6 +39,7 @@ useEffect(() => {
       <p className="mb-4">
         By using this website, you agree to these terms.
       </p>
+      <span id="ezoic-privacy-policy-embed"></span>
 
       <AdBanner />
       
@@ -47,3 +48,4 @@ useEffect(() => {
     
   );
 }
+
