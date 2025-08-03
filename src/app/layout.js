@@ -17,6 +17,7 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
         />
+
         {/* Ezoic script */}
         <Script
           async
@@ -29,6 +30,14 @@ export default function RootLayout({ children }) {
             ezstandalone.cmd = ezstandalone.cmd || [];
           `}
         </Script>
+
+        {/* Bidvertiser script */}
+        <Script
+          id="bidvertiser-2101244"
+          src="//bdv.bidvertiser.com/BidVertiser.dbm?pid=2101244&bid=XYZ"
+          strategy="afterInteractive"
+        />
+        {/* Replace XYZ with your correct bid value */}
       </head>
       <body className={inter.className}>
         {children}
