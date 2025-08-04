@@ -176,6 +176,46 @@ const CUSTOM_THEMES = {
     image:
       "https://ucarecdn.com/ea04768a-e0bc-4264-9996-40886d180622/-/format/auto/",
   },
+    mountainlake: {
+    id: "mountainlake",
+    name: "Mountain Lake",
+    icon: "⛰️",
+    background: "linear-gradient(to top, #191414, #b31313)",
+    image:
+      "https://ucarecdn.com/eee39f3b-5b06-4b3a-aba6-be2e3a061781/-/format/auto/",
+  },
+   mountainnight: {
+    id: "mountainnight",
+    name: "Mountain Lake (Night)",
+    icon: "⛰️",
+    background: "linear-gradient(to top, #191414, #b31313)",
+    image:
+      "https://ucarecdn.com/43ed48ac-f6b4-4338-b3b7-a6e988a3d6a5/-/format/auto/",
+  },
+    battle: {
+    id: "battle",
+    name: "Battle",
+    icon: "🎯",
+    background: "linear-gradient(to top, #191414, #b31313)",
+    image:
+      "https://ucarecdn.com/247b3d72-2ae9-44ba-871c-6bf88ed7d8db/-/format/auto/",
+  },
+  desert: {
+    id: "desert",
+    name: "Desert",
+    icon: "🌵",
+    background: "linear-gradient(to top, #191414, #b31313)",
+    image:
+      "https://ucarecdn.com/ff83df09-081b-4c07-9fc8-7a07870ec8d2/-/format/auto/",
+  },
+    boss: {
+    id: "boss",
+    name: "Boss",
+    icon: "💀",
+    background: "linear-gradient(to top, #191414, #b31313)",
+    image:
+      "https://ucarecdn.com/08e99aa3-63bf-4d67-9fda-987626d3a6af/-/format/auto/",
+  },
   hell: {
     id: "hell",
     name: "Hell",
@@ -4906,6 +4946,52 @@ const SHOP_THEMES = [
     isLimited: true,
     stock: limitedStock["aurora_borealis"] ?? 3,
   },
+    {
+    id: "mountainlake",
+    name: "Mountain Lake",
+    emoji: CUSTOM_THEMES.mountainlake.icon,
+    price: 40,
+    currency: "renownTokens",
+    isLimited: true,
+    stock: limitedStock["mountainlake"] ?? 10,
+  },
+  {
+    id: "mountainnight",
+    name: "Mountain Lake Night",
+    emoji: CUSTOM_THEMES.mountainnight.icon,
+    price: 40,
+    currency: "renownTokens",
+    isLimited: true,
+    stock: limitedStock["mountainnight"] ?? 10,
+  },
+  {
+    id: "desert",
+    name: "Desert",
+    emoji: CUSTOM_THEMES.desert.icon,
+    price: 40,
+    currency: "renownTokens",
+    isLimited: true,
+    stock: limitedStock["desert"] ?? 10,
+  },
+  {
+    id: "boss",
+    name: "Boss",
+    emoji: CUSTOM_THEMES.boss.icon,
+    price: 40,
+    currency: "renownTokens",
+    isLimited: true,
+    stock: limitedStock["boss"] ?? 10,
+  },
+  {
+    id: "battle",
+    name: "Battle",
+    emoji: CUSTOM_THEMES.battle.icon,
+    price: 40,
+    currency: "renownTokens",
+    isLimited: true,
+    stock: limitedStock["battle"] ?? 10,
+  },
+
 ];
 
   const ownedIcons = gameState.ownedProfileIcons || [];
