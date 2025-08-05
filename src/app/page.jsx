@@ -946,7 +946,10 @@ const WEATHER_ICONS = {
   Clear: "☀️"
 };
 
-
+const HOUSE_EMOJIS = ["🏡", "🏠", "🏘️", "🏚️", "🏰", "🏢", "🏕️"];
+const HOUSE_GALLERY_LIMIT = 5;
+const MIN_SELL_LEVEL = 25;
+const RENOWN_PER_LEVEL = 1;
 
 function MainComponent() {
   const [userId, setUserId] = useState(null);
@@ -993,7 +996,7 @@ const [sidebarOpen, setSidebarOpen] = useState(false);
 
 
   const [activeTab, setActiveTab] = useState("tap");
-
+const [showSellModal, setShowSellModal] = useState(false);
 
 useEffect(() => {
   // Tries to grab userId from localStorage, but will work anonymously too
@@ -1107,6 +1110,9 @@ useEffect(() => {
     houseLevel: 1,
       highest_house_level: 1,
     houseDecorations: [],
+      houseEmoji: "🏡",
+  houseGallery: [],
+  housesOwned: 1,
     houseTheme: "cottage",
     houseCoinsMultiplier: 0,
     hasFirstReset: false,
@@ -2953,39 +2959,45 @@ function getWeatherIcon(currentWeather) {
     });
   }
 
-  async function handleReferralSubmit() {
-    setReferralMessage("");
-    setReferralMessageType("success");
-    if (!referralInput) return;
-
-    try {
-      const response = await fetch("/api/game-state", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          pin,
-          action: "redeemReferral",
-          code: referralInput.trim(),
-        }),
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setReferralMessage("Referral code applied! Check your rewards.");
-        setReferralMessageType("success");
-        setReferralUsed(true);
-        // Optionally update game state or reload (see below)
-        loadGame();
-      } else {
-        setReferralMessage(data.error || "Invalid code.");
-        setReferralMessageType("error");
-      }
-    } catch {
-      setReferralMessage("Failed to apply code. Try again later.");
-      setReferralMessageType("error");
-    }
+  // Handler for referral (multi-use, just example logic)
+function handleReferralSubmit() {
+  if (referralInput.trim().length < 3) {
+    setReferralMessage("Code too short!");
+    setReferralMessageType("error");
+    return;
   }
+  setGameState(prev => ({
+    ...prev,
+    coins: prev.coins + 1000,
+  }));
+  setReferralMessageType("success");
+  setReferralMessage("Bonus claimed!");
+  setReferralInput("");
+  setReferralUsed(false); // Always false, can reuse!
+}
+
+// Handler for selling house
+function handleSellHouse() {
+  if (gameState.houseLevel < MIN_SELL_LEVEL) return;
+  const renownReward = gameState.houseLevel * RENOWN_PER_LEVEL;
+  // Add house to gallery (limit length)
+  const newGallery = [
+    { name: gameState.houseName, emoji: gameState.houseEmoji },
+    ...(gameState.houseGallery || []),
+  ].slice(0, HOUSE_GALLERY_LIMIT);
+
+  setGameState(prev => ({
+    ...prev,
+    houseLevel: 1,
+    houseName: "My Cozy Home",
+    houseGallery: newGallery,
+    housesOwned: (prev.housesOwned || 1) + 1,
+    renownTokens: (prev.renownTokens || 0) + renownReward,
+    houseEmoji: HOUSE_EMOJIS[Math.floor(Math.random() * HOUSE_EMOJIS.length)],
+  }));
+  setShowSellModal(false);
+  setNotification(`House sold! +${renownReward} Renown Tokens.`);
+}
 
   function getTapPower(base, activeShopBoosts) {
     let multiplier = 1;
@@ -6071,25 +6083,24 @@ const renderHouseTab = () => {
     </div>
   );
 
-  const handleHouseRename = () => {
-    if (!newHouseName.trim()) {
-      setHouseNameError("Please enter a name");
-      return;
-    }
-    if (newHouseName.length > 30) {
-      setHouseNameError("Name too long (max 30 characters)");
-      return;
-    }
-
-    setGameState((prev) => ({
-      ...prev,
-      houseName: newHouseName.trim(),
-    }));
-    setShowHouseRenameModal(false);
-    setNewHouseName("");
-    setHouseNameError("");
-    setNotification("House renamed successfully!");
-  };
+  function handleHouseRename() {
+  if (!newHouseName.trim()) {
+    setHouseNameError("Please enter a name");
+    return;
+  }
+  if (newHouseName.length > 30) {
+    setHouseNameError("Name too long (max 30 chars)");
+    return;
+  }
+  setGameState(prev => ({
+    ...prev,
+    houseName: newHouseName.trim(),
+  }));
+  setShowHouseRenameModal(false);
+  setNewHouseName("");
+  setHouseNameError("");
+  setNotification("House renamed successfully!");
+}
 
   function claimDailyBonus() {
     if (!canClaimDailyBonus(lastDailyClaim)) {
