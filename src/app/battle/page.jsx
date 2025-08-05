@@ -907,7 +907,15 @@ const TopProfileBar = ({ profileName, userId, profileIcon, renownTokens, allTime
 
       {dropdownOpen && (
         <div className="mt-2 px-4 py-2 bg-white/10 text-white rounded-xl text-sm space-y-1 border border-white/20 backdrop-blur-xl shadow-xl">
-          <div><i className="fas fa-coins text-yellow-400 mr-2"></i>{renownTokens} tokens</div>
+<div>
+  <img
+    src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/"
+    alt="Renown Token"
+    className="w-5 h-5 inline-block mr-2 align-middle"
+    draggable="false"
+  />
+  {renownTokens}
+</div>
           <div><i className="fas fa-hand-pointer text-blue-400 mr-2"></i>{allTimeTotalTaps?.toLocaleString() || 0} taps</div>
         </div>
       )}
@@ -1469,15 +1477,23 @@ return (
                   </span>
                 </div>
                 <div className="flex justify-between border-t border-white/20 pt-2 mt-2">
-                  <span className="text-yellow-300">Tokens Earned:</span>
-                  <span className="text-yellow-300 font-bold">
-                    +
-                    {playerScore > opponentScore
-                      ? 10
-                      : playerScore === opponentScore
-                      ? 5
-                      : 3}
-                  </span>
+  <span className="text-yellow-300 flex items-center">
+    <img
+      src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/"
+      alt="Renown Token"
+      className="w-5 h-5 inline-block mr-2 align-middle"
+      draggable="false"
+    />
+   Earned:
+  </span>
+  <span className="text-yellow-300 font-bold">
+    +
+    {playerScore > opponentScore
+      ? 10
+      : playerScore === opponentScore
+      ? 5
+      : 3}
+  </span>
                 </div>
               </div>
             </div>
