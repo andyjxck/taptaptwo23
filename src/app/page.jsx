@@ -6217,7 +6217,7 @@ const renderHouseTab = ({
         </div>
       </div>
     </div>
-  );
+  )};
 
   function handleHouseRename() {
   if (!newHouseName.trim()) {
