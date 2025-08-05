@@ -5873,13 +5873,33 @@ const SHOP_THEMES = [
     );
   };
 
-const renderHouseTab = () => {
-  // Calculate upgrade cost and progress
-  const nextUpgradeCost = Math.floor(
-    1000 * Math.pow(1.5, gameState.houseLevel - 1)
-  );
+const renderHouseTab = ({
+  gameState,
+  setShowHouseRenameModal,
+  setShowSellModal,
+  showHouseRenameModal,
+  showSellModal,
+  newHouseName,
+  setNewHouseName,
+  houseNameError,
+  setHouseNameError,
+  handleHouseRename,
+  referralInput,
+  setReferralInput,
+  referralMessage,
+  referralMessageType,
+  handleReferralSubmit,
+  claimDailyBonus,
+  handleSellHouse,
+  bonusCooldown,
+  formatNumberShort,
+}) => {
+  const nextUpgradeCost = Math.floor(1000 * Math.pow(1.5, gameState.houseLevel - 1));
   const canAfford = gameState.coins >= nextUpgradeCost;
   const progress = Math.min((gameState.coins / nextUpgradeCost) * 100, 100);
+
+  const canSell = gameState.houseLevel >= MIN_SELL_LEVEL;
+  const renownReward = canSell ? gameState.houseLevel * RENOWN_PER_LEVEL : 0;
 
   return (
     <div className={`${glassStyle} bg-gradient-to-br from-white/60 via-purple-100/50 to-white/30 rounded-3xl p-7 ${buttonGlow} shadow-2xl border border-white/20 backdrop-blur-xl max-w-lg mx-auto`}>
@@ -5900,16 +5920,17 @@ const renderHouseTab = () => {
       </div>
 
       <div className={`${glassStyle} bg-white/80 rounded-2xl p-6 ${buttonGlow} shadow-inner`}>
-        {/* House Name + Rename */}
+
+        {/* House Emoji + Name */}
         <div className="relative mb-6 flex flex-col items-center">
-          <h2 className="text-2xl font-extrabold text-center text-[#512DA8] tracking-wide drop-shadow-sm">
+          <span className="text-5xl mb-2 select-none drop-shadow-md" title="Your House Emoji" role="img" aria-label="House Emoji">
+            {gameState.houseEmoji || "🏡"}
+          </span>
+          <h2 className="text-2xl font-extrabold text-center text-[#512DA8] tracking-wide drop-shadow-sm mt-2 mb-2">
             {gameState.houseName || "My Cozy Home"}
           </h2>
           <button
-            onClick={() => {
-              setNewHouseName(gameState.houseName || "");
-              setShowHouseRenameModal(true);
-            }}
+            onClick={() => setShowHouseRenameModal(true)}
             aria-label="Rename house"
             className="absolute right-0 top-1/2 transform -translate-y-1/2 flex items-center justify-center w-10 h-10 bg-purple-100/80 rounded-xl hover:bg-purple-200 transition-colors border border-purple-200 shadow"
           >
@@ -5917,7 +5938,7 @@ const renderHouseTab = () => {
           </button>
         </div>
 
-        {/* Level + Multiplier */}
+        {/* Stats Row */}
         <div className="flex gap-5 mb-6">
           <div className="flex-1 bg-white/60 rounded-xl p-4 text-center border border-purple-100 shadow">
             <div className="text-md font-bold text-purple-900 tracking-wide">Level</div>
@@ -5926,6 +5947,27 @@ const renderHouseTab = () => {
           <div className="flex-1 bg-white/60 rounded-xl p-4 text-center border border-purple-100 shadow">
             <div className="text-md font-bold text-purple-900 tracking-wide">Coin Multiplier</div>
             <div className="text-2xl font-extrabold text-purple-700">{(gameState.houseCoinsMultiplier * 100).toFixed(1)}%</div>
+          </div>
+          <div className="flex-1 bg-white/60 rounded-xl p-4 text-center border border-purple-100 shadow">
+            <div className="text-md font-bold text-purple-900 tracking-wide">Houses Owned</div>
+            <div className="text-2xl font-extrabold text-purple-700">{gameState.housesOwned || 1}</div>
+          </div>
+        </div>
+
+        {/* House Gallery */}
+        <div className="mb-4 flex flex-col items-center">
+          <div className="font-bold text-purple-700 text-md mb-1">House Gallery</div>
+          <div className="flex gap-2">
+            {(gameState.houseGallery || []).length === 0 ? (
+              <span className="text-gray-400 italic text-xs">Sell houses to fill your gallery!</span>
+            ) : (
+              gameState.houseGallery.map((house, idx) => (
+                <div key={idx} className="flex flex-col items-center px-2">
+                  <span className="text-2xl">{house.emoji || "🏡"}</span>
+                  <span className="text-xs text-gray-500">{house.name}</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -5985,32 +6027,82 @@ const renderHouseTab = () => {
           </button>
         </div>
 
-        {/* Referral/Gift Code */}
-        <div className="mt-8 mb-2 p-5 bg-gradient-to-br from-purple-100/60 via-purple-50/80 to-white/80 rounded-2xl shadow flex flex-col items-center w-full max-w-xs mx-auto border border-purple-200">
-          <div className="text-lg font-bold text-purple-700 mb-2 tracking-wide">
-            Enter Gift/Referral Code
+        {/* Sell House Button (if level 25+) */}
+        <div className="flex justify-center w-full mt-5">
+          <button
+            onClick={() => canSell && setShowSellModal(true)}
+            className={`
+              w-full max-w-xs py-4 rounded-2xl font-extrabold text-lg flex items-center justify-center gap-3
+              ${canSell
+                ? "bg-gradient-to-r from-yellow-400 via-red-400 to-pink-500 text-white shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
+                : "bg-gray-200 text-gray-400 cursor-not-allowed"}
+            `}
+            disabled={!canSell}
+            title={canSell ? `Sell house for ${renownReward} Renown Tokens` : `You need to reach Level ${MIN_SELL_LEVEL} to sell your house`}
+          >
+            <i className="fas fa-coins" style={{ fontSize: "1.2em" }} aria-hidden="true" />
+            <span>
+              Sell House
+              {canSell && <span className="ml-2 text-xs bg-purple-700/80 text-white px-2 py-1 rounded-xl shadow-inner">+{renownReward} Renown</span>}
+            </span>
+          </button>
+        </div>
+
+        {/* Sell House Confirmation Modal */}
+        {showSellModal && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+            <div className="bg-white rounded-2xl shadow-xl p-7 max-w-sm w-full">
+              <h3 className="font-extrabold text-lg mb-3 text-purple-700">Sell Your House?</h3>
+              <p className="mb-4 text-gray-700">
+                This will reset your house to <b>Level 1</b> and reward you <b>{renownReward} Renown Tokens</b>.
+                <br />You need to be at least Level {MIN_SELL_LEVEL} to sell.
+              </p>
+              <div className="flex gap-4 mt-2">
+                <button
+                  onClick={handleSellHouse}
+                  className={`flex-1 bg-green-500 text-white rounded-xl py-2 font-bold shadow hover:bg-green-600 ${!canSell && "opacity-50 pointer-events-none"}`}
+                  disabled={!canSell}
+                >
+                  Yes, Sell House
+                </button>
+                <button
+                  onClick={() => setShowSellModal(false)}
+                  className="flex-1 bg-gray-200 text-purple-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="flex w-full gap-2">
+        )}
+
+        {/* Referral Code Redeem (multi-use, nicer UI) */}
+        <div className="mt-10 mb-2 p-6 bg-gradient-to-br from-[#ede9fe] via-[#d1fae5] to-[#fef9c3] rounded-2xl shadow flex flex-col items-center w-full max-w-xs mx-auto border border-purple-200">
+          <div className="text-lg font-bold text-purple-700 mb-2 tracking-wide flex items-center gap-2">
+            <i className="fas fa-gift text-purple-500"></i>
+            Redeem Referral / Gift Code
+          </div>
+          <div className="flex w-full gap-2 mb-2">
             <input
               type="text"
               value={referralInput}
-              onChange={(e) => setReferralInput(e.target.value)}
-              className="flex-1 w-0 px-3 py-2 rounded-xl border border-purple-300 text-[#2d3748] focus:ring-2 focus:ring-[#a78bfa] bg-white/90 font-semibold"
+              onChange={e => setReferralInput(e.target.value)}
+              className="flex-1 w-0 px-3 py-2 rounded-xl border border-purple-300 text-[#2d3748] focus:ring-2 focus:ring-[#a78bfa] bg-white/90 font-semibold text-lg"
               placeholder="Enter code"
               maxLength={32}
-              disabled={referralUsed}
+              autoComplete="off"
             />
             <button
-              className="flex-shrink-0 px-4 py-2 rounded-xl bg-gradient-to-r from-[#a78bfa] to-[#7c3aed] text-white font-bold disabled:opacity-50 transition"
+              className="flex-shrink-0 px-4 py-2 rounded-xl bg-gradient-to-r from-[#a78bfa] to-[#7c3aed] text-white font-bold shadow hover:scale-105 disabled:opacity-50 transition"
               onClick={handleReferralSubmit}
-              disabled={!referralInput || referralUsed}
+              disabled={!referralInput}
             >
-              Confirm
+              Redeem
             </button>
           </div>
           {referralMessage && (
             <div
-              className={`mt-2 text-center font-bold ${
+              className={`mt-1 text-center font-bold text-sm transition-all duration-300 ${
                 referralMessageType === "success"
                   ? "text-green-600"
                   : "text-red-500"
@@ -6020,14 +6112,58 @@ const renderHouseTab = () => {
             </div>
           )}
         </div>
-        {/* Ad Banner (below box) */}
-        <div className="mt-6">
-           
-        </div>
+
+        {/* Ad Banner */}
+        <div className="mt-6"></div>
       </div>
+
+      {/* Rename Modal */}
+      {showHouseRenameModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center z-50" style={{ alignItems: "flex-start", paddingTop: "6rem" }}>
+          <div className={`${glassStyle} bg-white/30 rounded-2xl p-6 max-w-sm mx-4 border border-white/30`}>
+            <h3 className="text-xl font-medium text-[#2d3748] mb-4">Rename Your House</h3>
+            <div className="space-y-4">
+              <div>
+                <input
+                  type="text"
+                  value={newHouseName}
+                  onChange={e => {
+                    setNewHouseName(e.target.value);
+                    setHouseNameError("");
+                  }}
+                  placeholder="Enter house name"
+                  maxLength={30}
+                  className="w-full px-4 py-2 rounded-xl bg-white/40 border border-white/30 text-[#2d3748] placeholder-[#939599]/50 focus:outline-none focus:ring-2 focus:ring-purple-300"
+                />
+                {houseNameError && (
+                  <p className="text-red-500 text-sm mt-1">{houseNameError}</p>
+                )}
+              </div>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => {
+                    setShowHouseRenameModal(false);
+                    setNewHouseName("");
+                    setHouseNameError("");
+                  }}
+                  className="px-4 py-2 rounded-lg text-[#939599] hover:bg-white/20 transition-all duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleHouseRename}
+                  className="px-4 py-2 rounded-lg bg-gradient-to-r from-[#c4b5fd] to-[#a78bfa] text-white shadow-md hover:shadow-lg transition-all duration-200"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-};
+
 
 
   const renderHouseRenameModal = () => (
