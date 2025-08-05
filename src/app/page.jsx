@@ -990,6 +990,29 @@ const [guild, setGuild] = useState(null);
   const [profileName, setProfileName] = useState("");
 const [profileIcon, setProfileIcon] = useState("");
 const [sidebarOpen, setSidebarOpen] = useState(false);
+const MIN_SELL_LEVEL = 25; // Minimum level to sell
+const RENOWN_PER_LEVEL = 5; // Renown tokens per level
+const [showSellModal, setShowSellModal] = useState(false);
+const handleSellHouse = async () => {
+  if (gameState.houseLevel < MIN_SELL_LEVEL) return;
+
+  const renownReward = gameState.houseLevel * RENOWN_PER_LEVEL;
+
+  // Update state (reset house, give renown, add to gallery if needed)
+  setGameState((prev) => ({
+    ...prev,
+    renownTokens: (prev.renownTokens || 0) + renownReward,
+    houseLevel: 1,
+    houseCoinsMultiplier: 1.0,
+    // optionally: houseGallery: [...(prev.houseGallery || []), { name: prev.houseName, emoji: prev.houseEmoji }]
+  }));
+
+  setNotification(`Sold your house for ${renownReward} Renown Tokens!`);
+  setShowSellModal(false);
+
+  // TODO: Save to backend if needed
+  // await saveGame({ ...updatedState });
+};
 
 
   const [activeTab, setActiveTab] = useState("tap");
@@ -5973,6 +5996,36 @@ const renderHouseTab = () => {
           </button>
         </div>
 
+        {/* Sell House Button (shows if level >= 25) */}
+<div className="flex justify-center w-full mt-5">
+  <button
+    onClick={() => setShowSellModal(true)}
+    disabled={gameState.houseLevel < MIN_SELL_LEVEL}
+    className={`
+      w-full max-w-xs py-4 rounded-2xl font-extrabold text-lg flex items-center justify-center gap-3
+      ${gameState.houseLevel >= MIN_SELL_LEVEL
+        ? "bg-gradient-to-r from-yellow-400 via-red-400 to-pink-500 text-white shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
+        : "bg-gray-200 text-gray-400 cursor-not-allowed"}
+    `}
+    title={
+      gameState.houseLevel >= MIN_SELL_LEVEL
+        ? `Sell house for ${gameState.houseLevel * RENOWN_PER_LEVEL} Renown Tokens`
+        : `You need to reach Level ${MIN_SELL_LEVEL} to sell your house`
+    }
+  >
+    <i className="fas fa-coins" style={{ fontSize: "1.2em" }} aria-hidden="true" />
+    <span>
+      Sell House
+      {gameState.houseLevel >= MIN_SELL_LEVEL &&
+        <span className="ml-2 text-xs bg-purple-700/80 text-white px-2 py-1 rounded-xl shadow-inner">
+          +{gameState.houseLevel * RENOWN_PER_LEVEL} Renown
+        </span>
+      }
+    </span>
+  </button>
+</div>
+
+
         {/* Referral/Gift Code */}
         <div className="mt-8 mb-2 p-5 bg-gradient-to-br from-purple-100/60 via-purple-50/80 to-white/80 rounded-2xl shadow flex flex-col items-center w-full max-w-xs mx-auto border border-purple-200">
           <div className="text-lg font-bold text-purple-700 mb-2 tracking-wide">
@@ -5996,6 +6049,34 @@ const renderHouseTab = () => {
               Confirm
             </button>
           </div>
+          {/* Sell House Modal */}
+{showSellModal && (
+  <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+    <div className="bg-white rounded-2xl shadow-xl p-7 max-w-sm w-full">
+      <h3 className="font-extrabold text-lg mb-3 text-purple-700">Sell Your House?</h3>
+      <p className="mb-4 text-gray-700">
+        This will reset your house to <b>Level 1</b> and reward you <b>{gameState.houseLevel * RENOWN_PER_LEVEL} Renown Tokens</b>.<br />
+        You need to be at least Level {MIN_SELL_LEVEL} to sell.
+      </p>
+      <div className="flex gap-4 mt-2">
+        <button
+          onClick={handleSellHouse}
+          className={`flex-1 bg-green-500 text-white rounded-xl py-2 font-bold shadow hover:bg-green-600 ${gameState.houseLevel < MIN_SELL_LEVEL && "opacity-50 pointer-events-none"}`}
+          disabled={gameState.houseLevel < MIN_SELL_LEVEL}
+        >
+          Yes, Sell House
+        </button>
+        <button
+          onClick={() => setShowSellModal(false)}
+          className="flex-1 bg-gray-200 text-purple-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
           {referralMessage && (
             <div
               className={`mt-2 text-center font-bold ${
