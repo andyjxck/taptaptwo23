@@ -3023,14 +3023,14 @@ function getWeatherIcon(currentWeather) {
   }
 
   // Helper: Calculate the *total* coins needed for N tokens
-  function getTotalCoinsForTokens(n, base = 50000000, growth = 1.6) {
+  function getTotalCoinsForTokens(n, base = 30000000, growth = 1.4) {
     // Returns sum of a geometric progression: base * (1 - growth^n) / (1 - growth)
     if (n <= 0) return 0;
     return Math.floor((base * (1 - Math.pow(growth, n))) / (1 - growth));
   }
 
   // Helper: How many tokens should user get for a given coinsEarned
-  function getTokensFromCoins(coins, base = 50000000, growth = 1.6) {
+  function getTokensFromCoins(coins, base = 30000000, growth = 1.4) {
     let tokens = 0;
     while (coins >= getTotalCoinsForTokens(tokens + 1, base, growth)) {
       tokens++;
@@ -4286,8 +4286,8 @@ setShowOfflineEarnings(true); // <-- THIS IS WHAT WAS MISSING!
 const handleReset = useCallback(() => {
   const tokensEarnedRaw = getTokensFromCoins(
     gameState.coinsEarnedThisRun || 0,
-    50000000,
-    1.6
+    30000000,
+    1.4
   );
   const tokensEarned = getRenownTokens(tokensEarnedRaw, activeShopBoosts);
 
