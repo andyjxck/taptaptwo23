@@ -993,48 +993,29 @@ const [sidebarOpen, setSidebarOpen] = useState(false);
 const MIN_SELL_LEVEL = 25; // Minimum level to sell
 const RENOWN_PER_LEVEL = 5; // Renown tokens per level
 const [showSellModal, setShowSellModal] = useState(false);
-  // At top:
-const [lastSellTime, setLastSellTime] = useState(0);
-
-// In useEffect, AFTER you have userId loaded:
-useEffect(() => {
-  if (typeof window !== 'undefined') {
-    const storedSellTime = localStorage.getItem("lastSellTime");
-    setLastSellTime(Number(storedSellTime) || 0);
-  }
-}, []);
 const handleSellHouse = async () => {
-  if (!canSell) return;
+  if (gameState.houseLevel < MIN_SELL_LEVEL) return;
 
   const renownReward = gameState.houseLevel * RENOWN_PER_LEVEL;
 
+  // Update state (reset house, give renown, add to gallery if needed)
   setGameState((prev) => ({
     ...prev,
     renownTokens: (prev.renownTokens || 0) + renownReward,
     houseLevel: 1,
     houseCoinsMultiplier: 1.0,
+    // optionally: houseGallery: [...(prev.houseGallery || []), { name: prev.houseName, emoji: prev.houseEmoji }]
   }));
 
   setNotification(`Sold your house for ${renownReward} Renown Tokens!`);
   setShowSellModal(false);
 
-  // Set cooldown
-  const sellTime = Date.now();
-  localStorage.setItem("lastSellTime", String(sellTime));
-  setLastSellTime(sellTime);
+  // TODO: Save to backend if needed
+  // await saveGame({ ...updatedState });
 };
 
 
-
   const [activeTab, setActiveTab] = useState("tap");
-
-
-
-const now = Date.now();
-const SELL_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours in ms
-const canSell =
-  gameState.houseLevel >= MIN_SELL_LEVEL && now - lastSellTime >= SELL_COOLDOWN_MS;
-const sellCooldownLeft = Math.max(0, SELL_COOLDOWN_MS - (now - lastSellTime));
 
 
 useEffect(() => {
@@ -6015,44 +5996,34 @@ const renderHouseTab = () => {
           </button>
         </div>
 
-   {/* Sell House Button (shows if level >= 25 and cooldown is over) */}
+        {/* Sell House Button (shows if level >= 25) */}
 <div className="flex justify-center w-full mt-5">
   <button
     onClick={() => setShowSellModal(true)}
-    disabled={gameState.houseLevel < MIN_SELL_LEVEL || sellCooldownLeft > 0}
+    disabled={gameState.houseLevel < MIN_SELL_LEVEL}
     className={`
       w-full max-w-xs py-4 rounded-2xl font-extrabold text-lg flex items-center justify-center gap-3
-      ${
-        gameState.houseLevel >= MIN_SELL_LEVEL && sellCooldownLeft === 0
-          ? "bg-gradient-to-r from-yellow-400 via-red-400 to-pink-500 text-white shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
-          : "bg-gray-200 text-gray-400 cursor-not-allowed"
-      }
+      ${gameState.houseLevel >= MIN_SELL_LEVEL
+        ? "bg-gradient-to-r from-yellow-400 via-red-400 to-pink-500 text-white shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
+        : "bg-gray-200 text-gray-400 cursor-not-allowed"}
     `}
     title={
-      gameState.houseLevel < MIN_SELL_LEVEL
-        ? `You need to reach Level ${MIN_SELL_LEVEL} to sell your house`
-        : sellCooldownLeft > 0
-        ? `You can sell again in ${Math.ceil(sellCooldownLeft / (60 * 60 * 1000))} hour${Math.ceil(sellCooldownLeft / (60 * 60 * 1000)) !== 1 ? "s" : ""}`
-        : `Sell house for ${gameState.houseLevel * RENOWN_PER_LEVEL} Renown Tokens`
+      gameState.houseLevel >= MIN_SELL_LEVEL
+        ? `Sell house for ${gameState.houseLevel * RENOWN_PER_LEVEL} Renown Tokens`
+        : `You need to reach Level ${MIN_SELL_LEVEL} to sell your house`
     }
   >
     <i className="fas fa-coins" style={{ fontSize: "1.2em" }} aria-hidden="true" />
     <span>
       Sell House
-      {gameState.houseLevel >= MIN_SELL_LEVEL && sellCooldownLeft === 0 && (
+      {gameState.houseLevel >= MIN_SELL_LEVEL &&
         <span className="ml-2 text-xs bg-purple-700/80 text-white px-2 py-1 rounded-xl shadow-inner">
           +{gameState.houseLevel * RENOWN_PER_LEVEL} Renown
         </span>
-      )}
-      {sellCooldownLeft > 0 && (
-        <span className="ml-2 text-xs bg-gray-500 text-white px-2 py-1 rounded-xl shadow-inner">
-          Cooldown
-        </span>
-      )}
+      }
     </span>
   </button>
 </div>
-
 
 
         {/* Referral/Gift Code */}
@@ -6088,17 +6059,13 @@ const renderHouseTab = () => {
         You need to be at least Level {MIN_SELL_LEVEL} to sell.
       </p>
       <div className="flex gap-4 mt-2">
-       <button
-  onClick={handleSellHouse}
-  className={`
-    flex-1 bg-green-500 text-white rounded-xl py-2 font-bold shadow hover:bg-green-600
-    ${(gameState.houseLevel < MIN_SELL_LEVEL || sellCooldownLeft > 0) && "opacity-50 pointer-events-none"}
-  `}
-  disabled={gameState.houseLevel < MIN_SELL_LEVEL || sellCooldownLeft > 0}
->
-  Yes, Sell House
-</button>
-
+        <button
+          onClick={handleSellHouse}
+          className={`flex-1 bg-green-500 text-white rounded-xl py-2 font-bold shadow hover:bg-green-600 ${gameState.houseLevel < MIN_SELL_LEVEL && "opacity-50 pointer-events-none"}`}
+          disabled={gameState.houseLevel < MIN_SELL_LEVEL}
+        >
+          Yes, Sell House
+        </button>
         <button
           onClick={() => setShowSellModal(false)}
           className="flex-1 bg-gray-200 text-purple-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300"
@@ -6109,13 +6076,6 @@ const renderHouseTab = () => {
     </div>
   </div>
 )}
-
-          {sellCooldownLeft > 0 && (
-  <div className="text-red-500 text-sm font-bold mb-2">
-    You can sell again in {Math.ceil(sellCooldownLeft / (60 * 60 * 1000))} hour{Math.ceil(sellCooldownLeft / (60 * 60 * 1000)) !== 1 ? "s" : ""}
-  </div>
-)}
-
 
           {referralMessage && (
             <div
