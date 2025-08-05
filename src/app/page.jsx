@@ -6601,9 +6601,39 @@ const renderHouseTab = () => {
       ),
       value: Math.floor(gameState.coins),
     },
-    { icon: "👆", value: gameState.totalTaps },
-    { icon: "🔄", value: gameState.resets },
-    { icon: "🏠", value: gameState.houseLevel },
+    { 
+      icon: (
+        <img
+          src="https://ucarecdn.com/fd2f0bab-31a6-4fcb-a50b-9a0d9e86704f/-/format/auto/"
+          alt="Total Taps"
+          className="w-8 h-8 object-contain drop-shadow"
+          draggable="false"
+        />
+      ),
+      value: gameState.totalTaps,
+    },
+    { 
+      icon: (
+        <img
+          src="https://ucarecdn.com/a6acc68f-5a71-4fbe-bcc2-8863b7ff2877/-/format/auto/"
+          alt="Resets"
+          className="w-8 h-8 object-contain drop-shadow"
+          draggable="false"
+        />
+      ),
+      value: gameState.resets,
+    },
+    { 
+      icon: (
+        <img
+          src="https://ucarecdn.com/22eaa50d-6e78-4af4-b36c-5a3d46ca0f47/-/format/auto/"
+          alt="House Level"
+          className="w-8 h-8 object-contain drop-shadow"
+          draggable="false"
+        />
+      ),
+      value: gameState.houseLevel,
+    },
     { 
       icon: (
         <img
@@ -6615,7 +6645,17 @@ const renderHouseTab = () => {
       ),
       value: Math.floor(gameState.renownTokens),
     },
-    { icon: "✴️", value: gameState.permanentMultiplier.toFixed(2) },
+    { 
+      icon: (
+        <img
+          src="https://ucarecdn.com/89b4f2cd-24a9-4667-8dac-b4b351cec190/-/format/auto/"
+          alt="Renown Multiplier"
+          className="w-8 h-8 object-contain drop-shadow"
+          draggable="false"
+        />
+      ),
+      value: gameState.permanentMultiplier.toFixed(2),
+    },
   ].map(({ icon, value }, idx) => (
     <div
       key={idx}
@@ -6629,6 +6669,7 @@ const renderHouseTab = () => {
     </div>
   ))}
 </div>
+
 
   </div>
 )}
