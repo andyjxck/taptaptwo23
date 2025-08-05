@@ -6217,7 +6217,7 @@ const renderHouseTab = ({
         </div>
       </div>
     </div>
-  )};
+  );
 
   function handleHouseRename() {
   if (!newHouseName.trim()) {
@@ -6246,7 +6246,7 @@ const renderHouseTab = ({
 
     const bonus = pickRandomBonus(dailyBonuses);
     setPendingBonus(bonus);
-
+a
     // Apply bonus effect
     setGameState((prev) => {
       let newState = { ...prev };
