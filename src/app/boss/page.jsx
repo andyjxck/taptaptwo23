@@ -7,6 +7,14 @@ import { Users, Flame, ChevronDown, Coins, Crown, Timer, Zap, Settings } from "l
 import useSound from "use-sound";
 import { logPageview } from "@/utilities/logPageview";
 
+const CoinImg = ({ className = "w-5 h-5 inline-block align-middle mx-1" }) => (
+  <img
+    src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/"
+    alt="Coin"
+    className={className}
+    draggable="false"
+  />
+);
 
 function isImageUrl(icon) {
   return (
@@ -759,12 +767,13 @@ function handleCoopJoin() {
                   Level {battleData.current_level || battleData.boss_level}
                 </span>
               </div>
-              <div className="flex items-center space-x-1">
-                <Coins size={14} className="text-yellow-400" />
-                <span className="text-xs opacity-80">
-                  {formatNumberShort(profileData.stats.availableCoins)} coins
-                </span>
-              </div>
+             <div className="flex items-center space-x-1">
+  <CoinImg className="w-4 h-4 inline-block align-middle" />
+  <span className="text-xs opacity-80">
+    {formatNumberShort(profileData.stats.availableCoins)}
+  </span>
+</div>
+
             </div>
             {mode === "solo" && (
               <div className="text-orange-100 text-right">
@@ -890,14 +899,15 @@ function handleCoopJoin() {
               </div>
             </motion.button>
           </div>
-          <div className="text-orange-200 space-y-1 text-sm">
-            <div>
-              Strikes: {tapCount} | +{formatNumberShort(Math.floor(profileData.stats.availableCoins * 0.5))} coins per boss
-            </div>
-            {upgradesData?.stats?.autoTapperDps > 0 && (
-              <div className="text-green-400">
-                ⚡ Auto-Strike: {formatNumberShort(upgradesData.stats.autoTapperDps)} DPS
-              </div>
+         <div className="text-orange-200 space-y-1 text-sm">
+  <div className="flex items-center justify-center">
+    <span>Strikes: {tapCount} | +{formatNumberShort(Math.floor(profileData.stats.availableCoins * 0.5))} </span>
+    <CoinImg className="w-5 h-5 inline-block align-middle ml-1" />
+  </div>
+  {upgradesData?.stats?.autoTapperDps > 0 && (
+    <div className="text-green-400">
+      ⚡ Auto-Strike: {formatNumberShort(upgradesData.stats.autoTapperDps)} DPS
+    </div>
             )}
           </div>
         </motion.div>
