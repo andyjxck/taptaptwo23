@@ -4660,10 +4660,10 @@ const renderLeaderboard = () => (
           onChange={(e) => setLeaderboardType(e.target.value)}
           className="rounded-xl px-5 py-2 bg-white/60 font-semibold text-indigo-800 border border-white/30 shadow focus:outline-none focus:ring-2 focus:ring-indigo-200 transition w-full max-w-xs"
         >
+         <option value="guilds">🛡️ Top Guild Scores</option>
           <option value="renown">🏆 Most Renown Tokens</option>
           <option value="coins">🪙 Most Coins Earned</option>
           <option value="totalTaps">👆 Most Taps</option>
-          <option value="guilds">🛡️ Top Guild Scores</option>
         </select>
       </div>
 
@@ -4715,15 +4715,38 @@ const renderLeaderboard = () => (
                 </span>
                 <span className="text-xs text-white-400">{isGuild ? null : `(${entry.user_id})`}</span>
                 <span className="font-bold text-purple-700 text-sm mt-1">
-                  {leaderboardType === "renown"
-                    ? `${entry.renown_tokens} ⭐`
-                    : leaderboardType === "coins"
-                    ? `${formatNumberShort(Math.floor(entry.total_coins_earned))}🪙`
-                    : leaderboardType === "totalTaps"
-                    ? `${formatNumberShort(entry.total_taps || 0)}👆`
-                    : leaderboardType === "guilds"
-                    ? `${formatNumberShort(entry.guild_score || 0)} pts`
-                    : ""}
+                 {leaderboardType === "renown" ? (
+  <>
+    {entry.renown_tokens}
+    <img
+      src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/"
+      alt="Renown Token"
+      className="inline-block w-5 h-5 ml-1 mb-0.5 align-middle"
+      draggable="false"
+    />
+  </>
+) : leaderboardType === "coins" ? (
+  <>
+    {formatNumberShort(Math.floor(entry.total_coins_earned))}
+    <img
+      src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/"
+      alt="Coin"
+      className="inline-block w-5 h-5 ml-1 mb-0.5 align-middle"
+      draggable="false"
+    />
+  </>
+) : leaderboardType === "totalTaps" ? (
+  <>
+    {formatNumberShort(entry.total_taps || 0)}👆
+  </>
+) : leaderboardType === "guilds" ? (
+  <>
+    {formatNumberShort(entry.guild_score || 0)} pts
+  </>
+) : (
+  ""
+)}
+
                 </span>
               </div>
             );
@@ -4792,15 +4815,38 @@ const renderLeaderboard = () => (
                 </div>
               </div>
               <span className="font-bold text-right text-indigo-900 text-lg sm:text-xl">
-                {leaderboardType === "renown"
-                  ? `${entry.renown_tokens} ⭐`
-                  : leaderboardType === "coins"
-                  ? `${formatNumberShort(Math.floor(entry.total_coins_earned))}🪙`
-                  : leaderboardType === "totalTaps"
-                  ? `${formatNumberShort(entry.total_taps || 0)}👆`
-                  : leaderboardType === "guilds"
-                  ? `${formatNumberShort(entry.guild_score || 0)} pts`
-                  : ""}
+               {leaderboardType === "renown" ? (
+  <>
+    {entry.renown_tokens}
+    <img
+      src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/"
+      alt="Renown Token"
+      className="inline-block w-5 h-5 ml-1 mb-0.5 align-middle"
+      draggable="false"
+    />
+  </>
+) : leaderboardType === "coins" ? (
+  <>
+    {formatNumberShort(Math.floor(entry.total_coins_earned))}
+    <img
+      src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/"
+      alt="Coin"
+      className="inline-block w-5 h-5 ml-1 mb-0.5 align-middle"
+      draggable="false"
+    />
+  </>
+) : leaderboardType === "totalTaps" ? (
+  <>
+    {formatNumberShort(entry.total_taps || 0)}👆
+  </>
+) : leaderboardType === "guilds" ? (
+  <>
+    {formatNumberShort(entry.guild_score || 0)} pts
+  </>
+) : (
+  ""
+)}
+
               </span>
             </div>
           );
@@ -5574,12 +5620,23 @@ const SHOP_THEMES = [
       {/* Coins + Renown Display */}
       <div className="flex justify-center gap-4 mb-8">
         <div className={`${glassStyle} bg-white/40 rounded-2xl p-5 border border-white/40 flex flex-col items-center w-36`}>
-          <span className="text-4xl">🪙</span>
+         <img
+  src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/"
+  alt="Coin"
+  className="w-10 h-10 object-contain drop-shadow"
+  draggable="false"
+/>
           <span className="text-xl font-bold mt-1 text-yellow-400">{formatNumberShort(Math.floor(gameState.coins))}</span>
           <span className="text-xs text-yellow-500 mt-1 font-semibold">Coins</span>
         </div>
         <div className={`${glassStyle} bg-white/40 rounded-2xl p-5 border border-white/40 flex flex-col items-center w-36`}>
-          <span className="text-4xl">⭐</span>
+          <img
+  src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/"
+  alt="Renown Token"
+  className="w-10 h-10 object-contain drop-shadow"
+  draggable="false"
+/>
+
           <span className="text-xl font-bold mt-1 text-pink-400">{Math.floor(gameState.renownTokens)}</span>
           <span className="text-xs text-pink-500 mt-1 font-semibold">Renown</span>
         </div>
@@ -6526,32 +6583,53 @@ const renderHouseTab = () => {
           ]}
     </h2>
 
+<div
+  className="grid grid-cols-3 max-w-xs mx-auto mt-6 mb-10 gap-3
+    bg-gradient-to-br from-white/70 via-purple-100/60 to-purple-200/40
+    border border-white/50 shadow-xl rounded-2xl p-3
+    backdrop-blur"
+>
+  {[
+    { 
+      icon: (
+        <img
+          src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/"
+          alt="Coins"
+          className="w-8 h-8 object-contain drop-shadow"
+          draggable="false"
+        />
+      ),
+      value: Math.floor(gameState.coins),
+    },
+    { icon: "👆", value: gameState.totalTaps },
+    { icon: "🔄", value: gameState.resets },
+    { icon: "🏠", value: gameState.houseLevel },
+    { 
+      icon: (
+        <img
+          src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/"
+          alt="Renown Token"
+          className="w-8 h-8 object-contain drop-shadow"
+          draggable="false"
+        />
+      ),
+      value: Math.floor(gameState.renownTokens),
+    },
+    { icon: "✴️", value: gameState.permanentMultiplier.toFixed(2) },
+  ].map(({ icon, value }, idx) => (
     <div
-      className="grid grid-cols-3 max-w-xs mx-auto mt-6 mb-10 gap-3
-        bg-gradient-to-br from-white/70 via-purple-100/60 to-purple-200/40
-        border border-white/50 shadow-xl rounded-2xl p-3
+      key={idx}
+      className="flex flex-col items-center justify-center rounded-xl px-2 py-2
+        bg-white/50 border border-white/70 shadow
+        transition hover:scale-105 hover:bg-purple-200/80
         backdrop-blur"
     >
-      {[
-        { icon: "🪙", value: Math.floor(gameState.coins) },
-        { icon: "👆", value: gameState.totalTaps },
-        { icon: "🔄", value: gameState.resets },
-        { icon: "🏠", value: gameState.houseLevel },
-        { icon: "⭐", value: Math.floor(gameState.renownTokens) },
-        { icon: "✴️", value: gameState.permanentMultiplier.toFixed(2) },
-      ].map(({ icon, value }, idx) => (
-        <div
-          key={idx}
-          className="flex flex-col items-center justify-center rounded-xl px-2 py-2
-            bg-white/50 border border-white/70 shadow
-            transition hover:scale-105 hover:bg-purple-200/80
-            backdrop-blur"
-        >
-          <span className="text-2xl select-none drop-shadow">{icon}</span>
-          <p className="text-md font-bold mt-0.5 text-[#403258]">{formatNumberShort(value)}</p>
-        </div>
-      ))}
+      <span className="text-2xl select-none drop-shadow">{icon}</span>
+      <p className="text-md font-bold mt-0.5 text-[#403258]">{formatNumberShort(value)}</p>
     </div>
+  ))}
+</div>
+
   </div>
 )}
 
