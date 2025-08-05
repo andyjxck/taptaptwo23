@@ -6891,15 +6891,17 @@ const renderHouseTab = () => {
                 ? getMaxAffordableUpgrades(type, upgradeLevel, gameState.coins)
                 : upgradeMultiplier;
             const totalCost = getTotalUpgradeCost(type, upgradeLevel, multiplier);
-            const canAfford = gameState.coins >= totalCost;
-            const currentValueRaw = gameState[type] || 0;
-            const roundedValue =
-              type === "critChance"
-                ? currentValueRaw
-                : Math.round(currentValueRaw * 10) / 10;
-            const currentValueShort = formatNumberShort(roundedValue);
-            const currentValueFormatted =
-              type === "critChance" ? `${currentValueShort}%` : currentValueShort;
+const critChanceMaxed = type === "critChance" && upgradeLevel >= 300;
+const canAfford = gameState.coins >= totalCost && !critChanceMaxed;
+const currentValueRaw = gameState[type] || 0;
+const roundedValue =
+  type === "critChance"
+    ? currentValueRaw
+    : Math.round(currentValueRaw * 10) / 10;
+const currentValueShort = formatNumberShort(roundedValue);
+const currentValueFormatted =
+  type === "critChance" ? `${currentValueShort}%` : currentValueShort;
+
             return (
               <div
                 key={type}
@@ -6936,17 +6938,20 @@ const renderHouseTab = () => {
                 </div>
                 <p className="text-sm text-purple-700">Current: {currentValueFormatted}</p>
                 <button
-                  onClick={() => handleUpgrade(type, multiplier)}
-                  disabled={!canAfford}
-                  className={`w-full px-4 py-2 rounded-xl font-semibold transition
-                    ${
-                      canAfford
-                        ? "bg-gradient-to-r from-purple-500 via-fuchsia-500 to-purple-700 text-white hover:scale-105 shadow"
-                        : "bg-gray-200/70 text-gray-400 cursor-not-allowed"
-                    }`}
-                >
-                  {`Buy${multiplier > 1 ? ` x${multiplier}` : ""} (${formatNumberShort(totalCost)})`}
-                </button>
+  onClick={() => handleUpgrade(type, multiplier)}
+  disabled={!canAfford}
+  className={`w-full px-4 py-2 rounded-xl font-semibold transition
+    ${
+      canAfford
+        ? "bg-gradient-to-r from-purple-500 via-fuchsia-500 to-purple-700 text-white hover:scale-105 shadow"
+        : "bg-gray-200/70 text-gray-400 cursor-not-allowed"
+    }`}
+>
+  {critChanceMaxed
+    ? "Max Level"
+    : `Buy${multiplier > 1 ? ` x${multiplier}` : ""} (${formatNumberShort(totalCost)})`}
+</button>
+
               </div>
             );
           })}
