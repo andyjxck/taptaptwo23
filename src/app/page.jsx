@@ -2703,20 +2703,18 @@ const handleBuyIcon = async (icon) => {
   const SEASONS = ["Spring", "Summer", "Autumn", "Winter"];
 
   const UPGRADE_COSTS = {
-    tapPower: (level) => Math.floor(20 * Math.pow(1.06, level)),
+  tapPower: (level) => Math.floor(20 * Math.pow(1.08, level)),
 
-    autoTapper: (level) => Math.floor(500 * Math.pow(1.055, level)),
+  autoTapper: (level) => Math.floor(500 * Math.pow(1.055, level)), // unchanged
 
-    critChance: (level) =>
-      level < 84
-        ? Math.floor(40 * Math.pow(1.06, level))
-        : Math.floor(40 * Math.pow(1.06, 84) * Math.pow(1.09, level - 84)),
+  critChance: (level) =>
+    level < 84
+      ? Math.floor(40 * Math.pow(1.06, level))
+      : Math.floor(40 * Math.pow(1.06, 84) * Math.pow(1.09, level - 84)), // unchanged
+
+  tapSpeedBonus: (level) => Math.floor(80 * Math.pow(1.07, level)),
+}
   
-
-  tapSpeedBonus: (level) => Math.floor(80 * Math.pow(1.06, level)),
-
-  }
-
   const weatherDescription = (() => {
     const weather =
       typeof gameState.currentWeather === "string"
@@ -4481,49 +4479,57 @@ const handleUpgrade = useCallback(
       state.coins -= cost;
       upgradesBought++;
 
-      switch (type) {
-        case "tapPower": {
-          const level = state.tapPowerUpgrades + 1;
-          const gain = 0.8 + level * 0.121;
-          state.tapPower = Math.round((state.tapPower + gain) * 10) / 10;
-          state.tapPowerUpgrades += 1;
-          break;
-        }
-        case "autoTapper": {
-          const level = state.autoTapperUpgrades + 1;
-          const gain = 1.7 + level * 1.55;
-          state.autoTapper = Math.round(state.autoTapper + gain);
-          state.autoTapperUpgrades += 1;
-          break;
-        }
-        case "critChance": {
-          const current = state.critChance || 0;
-          const level = state.critChanceUpgrades + 1;
-          const startValue = 5;
-          const maxLevel = 300;
-          const maxValue = 100;
-          const gainPerLevel = (maxValue - startValue) / maxLevel;
-          const newCritChance = startValue + gainPerLevel * level;
-          state.critChance = Math.min(
-            Math.max(current, Math.round(newCritChance * 100) / 100),
-            maxValue
-          );
-          state.critChanceUpgrades += 1;
-          break;
-        }
-        case "tapSpeedBonus": {
-          const level = state.tapSpeedBonusUpgrades + 1;
-          const startValue = level === 1 ? 2 : 0;
-          const gain = startValue + level * 1.4;
-          state.tapSpeedBonus =
-            Math.round((state.tapSpeedBonus + gain) * 10) / 10;
-          state.tapSpeedBonusUpgrades += 1;
-          break;
-        }
-        default:
-          setNotification("Unknown upgrade type!");
-          return;
-      }
+     switch (type) {
+  case "tapPower": {
+    const level = state.tapPowerUpgrades + 1;
+    // Exponential bonus kicks in after level 50 for late game
+    const baseGain = 0.8 + level * 0.15;
+    const bonus = level > 250 ? Math.pow(1.013, level - 50) : 1;
+    const gain = baseGain * bonus;
+    state.tapPower = Math.round((state.tapPower + gain) * 10) / 10;
+    state.tapPowerUpgrades += 1;
+    break;
+  }
+  case "autoTapper": {
+    const level = state.autoTapperUpgrades + 1;
+    // Boost after level 30 for late game
+    const baseGain = 1.7 + level * 1.55;
+    const bonus = level > 300 ? Math.pow(1.01, level - 30) : 1;
+    const gain = baseGain * bonus;
+    state.autoTapper = Math.round(state.autoTapper + gain);
+    state.autoTapperUpgrades += 1;
+    break;
+  }
+  case "critChance": {
+    const current = state.critChance || 0;
+    const level = state.critChanceUpgrades + 1;
+    const startValue = 5;
+    const maxLevel = 300;
+    const maxValue = 100;
+    const gainPerLevel = (maxValue - startValue) / maxLevel;
+    const newCritChance = startValue + gainPerLevel * level;
+    state.critChance = Math.min(
+      Math.max(current, Math.round(newCritChance * 100) / 100),
+      maxValue
+    );
+    state.critChanceUpgrades += 1;
+    break;
+  }
+  case "tapSpeedBonus": {
+    const level = state.tapSpeedBonusUpgrades + 1;
+    // Higher base, extra boost after level 40
+    const baseGain = (level === 1 ? 2 : 0) + level * 1.6;
+    const bonus = level > 400 ? Math.pow(1.016, level - 40) : 1;
+    const gain = baseGain * bonus;
+    state.tapSpeedBonus = Math.round((state.tapSpeedBonus + gain) * 10) / 10;
+    state.tapSpeedBonusUpgrades += 1;
+    break;
+  }
+  default:
+    setNotification("Unknown upgrade type!");
+    return;
+}
+
     }
 
     if (upgradesBought === 0) {
