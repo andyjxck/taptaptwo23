@@ -993,6 +993,16 @@ const [sidebarOpen, setSidebarOpen] = useState(false);
 const MIN_SELL_LEVEL = 25; // Minimum level to sell
 const RENOWN_PER_LEVEL = 5; // Renown tokens per level
 const [showSellModal, setShowSellModal] = useState(false);
+  // At top:
+const [lastSellTime, setLastSellTime] = useState(0);
+
+// In useEffect, AFTER you have userId loaded:
+useEffect(() => {
+  if (typeof window !== 'undefined') {
+    const storedSellTime = localStorage.getItem("lastSellTime");
+    setLastSellTime(Number(storedSellTime) || 0);
+  }
+}, []);
 const handleSellHouse = async () => {
   if (!canSell) return;
 
@@ -1017,9 +1027,8 @@ const handleSellHouse = async () => {
 
 
   const [activeTab, setActiveTab] = useState("tap");
-const [lastSellTime, setLastSellTime] = useState(
-  Number(localStorage.getItem("lastSellTime") || 0)
-);
+
+
 
 const now = Date.now();
 const SELL_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours in ms
