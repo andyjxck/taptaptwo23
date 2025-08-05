@@ -1481,7 +1481,6 @@ const [playBg] = useSound("/sounds/taptaptwobg.mp3", {
   const [snowParticles, setSnowParticles] = useState([]);
   const [hailParticles, setHailParticles] = useState([]);
   const [showHouseRenameModal, setShowHouseRenameModal] = useState(false);
-  const [newHouseName, setNewHouseName] = useState("");
   const [houseNameError, setHouseNameError] = useState("");
   const MADDOX_LOGO =
     "https://ucarecdn.com/7eaeaf25-2192-4082-a415-dd52f360d379/-/format/auto/";
