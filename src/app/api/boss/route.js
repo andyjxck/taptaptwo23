@@ -6,34 +6,67 @@ function safe(val) {
   return typeof val === "number" && !isNaN(val) ? val : 0;
 }
 
-function getBossHP(level, base = 250, scale = 1.2) {
-  return Math.floor(base * Math.pow(scale, level - 1));
+// --- Boss Scaling (MUCH HARDER each level) ---
+function getBossHP(level, tapPower = 1) {
+  // Base HP and exponential growth
+  const BASE_HP = 1000;
+  const GROWTH = 1.35; // Steep growth
+  return Math.floor(BASE_HP * Math.pow(GROWTH, Math.max(level - 1, 0)) * tapPower);
 }
 
-function getCoopBossHP(totalTapPower, base = 250) {
-  return base * (totalTapPower || 1);
+function getCoopBossHP(level, totalTapPower = 1) {
+  // Coop bosses are even tankier and scale with combined power
+  const BASE_HP = 2500;
+  const GROWTH = 1.38;
+  return Math.floor(BASE_HP * Math.pow(GROWTH, Math.max(level - 1, 0)) * (totalTapPower || 1));
 }
 
+// --- Boss Rewards (Grow slowly, farming gets hard) ---
 function getCoinsPerBoss(level) {
-  return Math.floor(500 * Math.pow(1.15, level - 1));
+  const BASE_REWARD = 250;
+  const REWARD_GROWTH = 1.08;
+  return Math.floor(BASE_REWARD * Math.pow(REWARD_GROWTH, Math.max(level - 1, 0)));
 }
 
 function getCoopCoinsPerBoss(level) {
-  return Math.floor(10 * Math.pow(1.15, level - 1));
+  const BASE_REWARD = 40;
+  const REWARD_GROWTH = 1.11;
+  return Math.floor(BASE_REWARD * Math.pow(REWARD_GROWTH, Math.max(level - 1, 0)));
 }
 
+// --- Boss Emoji (20+ distinct bosses, fantasy/monster themed) ---
 function getBossEmoji(level) {
   const emojis = [
-    "👾",
-    "🐲",
-    "🦖",
-    "🐙",
-    "👻",
-    "🤖",
-    "🦈",
-    "🕷️",
-    "🐍",
-    "🦅",
+    "👾", // alien
+    "🐲", // dragon
+    "🦖", // dino
+    "🐙", // kraken
+    "👻", // ghost
+    "🤖", // robot
+    "🦈", // shark
+    "🕷️", // spider
+    "🐍", // snake
+    "🦅", // eagle
+    "🦂", // scorpion
+    "🦇", // bat
+    "🧟", // zombie
+    "🦄", // unicorn boss
+    "🦑", // giant squid
+    "🦾", // cyborg arm (mecha boss)
+    "🐉", // oriental dragon
+    "👹", // ogre/demon
+    "💀", // skull boss
+    "🔥", // fire elemental
+    "❄️", // ice elemental
+    "⚡", // lightning boss
+    "🍄", // giant mushroom
+    "🌪️", // tornado spirit
+    "👽", // space invader
+    "🪓", // axe warrior
+    "🛡️", // shield guardian
+    "🧙", // evil wizard
+    "🦅", // eagle (repeat for cycle)
+    "👑", // king boss
   ];
   return emojis[(level - 1) % emojis.length];
 }
@@ -55,6 +88,7 @@ function generateRoomCode() {
   }
   return out;
 }
+
 
 async function getPlayerTapPower(userId) {
   const { data } = await supabase
