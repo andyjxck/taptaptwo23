@@ -6,32 +6,32 @@ function safe(val) {
   return typeof val === "number" && !isNaN(val) ? val : 0;
 }
 
-// --- Boss Scaling (MUCH HARDER each level) ---
 function getBossHP(level, tapPower = 1) {
-  // Base HP and exponential growth
-  const BASE_HP = 1000;
-  const GROWTH = 1.35; // Steep growth
+  // Insanely tough bosses, especially later levels
+  const BASE_HP = 2500000; // 2.5 Million for Level 1
+  const GROWTH = 1.25;
   return Math.floor(BASE_HP * Math.pow(GROWTH, Math.max(level - 1, 0)) * tapPower);
 }
 
 function getCoopBossHP(level, totalTapPower = 1) {
-  // Coop bosses are even tankier and scale with combined power
-  const BASE_HP = 2500;
-  const GROWTH = 1.38;
+  // Make coop bosses even beefier
+  const BASE_HP = 10000000; // 10 Million for Level 1
+  const GROWTH = 1.26;
   return Math.floor(BASE_HP * Math.pow(GROWTH, Math.max(level - 1, 0)) * (totalTapPower || 1));
 }
 
-// --- Boss Rewards (Grow slowly, farming gets hard) ---
 function getCoinsPerBoss(level) {
-  const BASE_REWARD = 250;
-  const REWARD_GROWTH = 1.08;
-  return Math.floor(BASE_REWARD * Math.pow(REWARD_GROWTH, Math.max(level - 1, 0)));
+  // LEVEL 1 = 5,000,000. Level 100 = ~470,830,950,000+
+  const BASE = 5000000;
+  const GROWTH = 1.21;
+  return Math.floor(BASE * Math.pow(GROWTH, Math.max(level - 1, 0)));
 }
 
 function getCoopCoinsPerBoss(level) {
-  const BASE_REWARD = 40;
-  const REWARD_GROWTH = 1.11;
-  return Math.floor(BASE_REWARD * Math.pow(REWARD_GROWTH, Math.max(level - 1, 0)));
+  // Make coop a little less rewarding
+  const BASE = 20000000;
+  const GROWTH = 1.20;
+  return Math.floor(BASE * Math.pow(GROWTH, Math.max(level - 1, 0)));
 }
 
 // --- Boss Emoji (20+ distinct bosses, fantasy/monster themed) ---
