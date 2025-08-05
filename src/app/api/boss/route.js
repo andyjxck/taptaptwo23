@@ -431,21 +431,21 @@ export async function POST(request) {
       const newCoins = currentCoins + coinsEarned;
 
       const newLevel = currentLevel + 1;
-      const newWeeklyBest = Math.max(safe(progress.weekly_best_level), newLevel);
-      const tapPower = await getPlayerTapPower(userId);
-      const nextBossHp = 250 * (tapPower || 1);
-      const nextEmoji = getBossEmoji(newLevel);
+const newWeeklyBest = Math.max(safe(progress.weekly_best_level), newLevel);
+const tapPower = await getPlayerTapPower(userId);
+const nextBossHp = 250 * (tapPower || 1);
+const nextEmoji = getBossEmoji(newLevel);
 
-      await supabase
-        .from("boss_progress")
-        .update({
-          current_level: newLevel,
-          boss_hp: nextBossHp,
-          boss_max_hp: nextBossHp,
-          boss_emoji: nextEmoji,
-          weekly_best_level: newWeeklyBest,
-        })
-        .eq("user_id", userId);
+await supabase
+  .from("boss_progress")
+  .update({
+    current_level: newLevel,
+    boss_hp: nextBossHp,
+    boss_max_hp: nextBossHp,
+    boss_emoji: nextEmoji,
+    weekly_best_level: newWeeklyBest,
+  })
+  .eq("user_id", userId);
 
   // Fetch total_coins_earned, defaulting to 0 if not present
 const { data: userRow } = await supabase
@@ -494,10 +494,9 @@ await supabase
       }
 
       const level = 1;
-      const playersArr = [userId];
-      const totalTapPower = await getPlayersTotalTapPower(playersArr);
-    const bossHp = Math.floor(getCoopBossHP(totalTapPower));
-
+const playersArr = [userId];
+const totalTapPower = await getPlayersTotalTapPower(playersArr);
+const bossHp = getCoopBossHP(level, totalTapPower); // <<< FIX: pass level, totalTapPower!
 
       const { data: session, error: insertErr } = await supabase
         .from("boss_coop_sessions")
@@ -647,9 +646,10 @@ await supabase
           .select();
         updatedSession = updateArr[0];
    } else {
-  const newLevel = safe(sessionData.boss_level) + 1;
-  const totalTapPower = await getPlayersTotalTapPower(players);
-  const newBossHp = getCoopBossHP(totalTapPower);
+const newLevel = safe(sessionData.boss_level) + 1;
+const totalTapPower = await getPlayersTotalTapPower(players);
+const newBossHp = getCoopBossHP(newLevel, totalTapPower); // <<< FIX: pass newLevel, totalTapPower!
+
 
   // Grab current coins for all players
   const { data: playersCoinsData } = await supabase
