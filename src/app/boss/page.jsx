@@ -211,9 +211,23 @@ useEffect(() => {
       });
   }, [userReady, userId]);
 
+function getBossHp(level) {
+  // Boss HP gets a lot higher each level. Adjust GROWTH for difficulty.
+  const BASE_HP = 1000;
+  const GROWTH = 1.32; // Make this higher if you want even more scaling.
+  return Math.floor(BASE_HP * Math.pow(GROWTH, Math.max(level-1, 0)));
+}
+
+function getBossReward(level) {
+  // Rewards grow slower so you can't farm easy bosses for big gains.
+  const BASE_REWARD = 500;
+  const REWARD_CURVE = 1.1; // Lower means rewards scale less quickly.
+  return Math.floor(BASE_REWARD * Math.pow(REWARD_CURVE, Math.max(level-1, 0)));
+}
 
 
-const hpMax = (battleData?.boss_max_hp || battleData?.boss_hp) || 1;  // fallback 1 to avoid NaN
+const currentLevel = battleData?.current_level || battleData?.boss_level || 1;
+const hpMax = getBossHp(currentLevel);
 const visibleBossHp = Math.max(0, (battleData?.boss_hp || 0) - accumulatedAutoTapDamage);
 const hpPercentage = Math.max(0, Math.min(100, (visibleBossHp / hpMax) * 100));
 
@@ -901,8 +915,10 @@ function handleCoopJoin() {
           </div>
          <div className="text-orange-200 space-y-1 text-sm">
   <div className="flex items-center justify-center">
-    <span>Strikes: {tapCount} | +{formatNumberShort(Math.floor(profileData.stats.availableCoins * 0.5))} </span>
-    <CoinImg className="w-5 h-5 inline-block align-middle ml-1" />
+   <span>
+  Strikes: {tapCount} | +{formatNumberShort(getBossReward(currentLevel))}
+</span>
+<CoinImg className="w-5 h-5 inline-block align-middle ml-1" />
   </div>
   {upgradesData?.stats?.autoTapperDps > 0 && (
     <div className="text-green-400">
