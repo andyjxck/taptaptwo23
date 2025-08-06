@@ -6280,7 +6280,7 @@ const renderHouseTab = () => {
     </div>
   );
 
- const handleHouseRename = async () => {
+const handleHouseRename = async () => {
   if (!newHouseName.trim()) {
     setHouseNameError("Please enter a name");
     return;
@@ -6289,24 +6289,18 @@ const renderHouseTab = () => {
     setHouseNameError("Name too long (max 30 characters)");
     return;
   }
-
   const updatedState = {
     ...gameState,
-    houseName: newHouseName.trim(),   // <-- ensure camelCase, matches backend expectation
+    houseName: newHouseName.trim(),
   };
-
   setGameState(updatedState);
-
-  // Wait a tick to ensure React state is set (just to be safe)
-  await new Promise((resolve) => setTimeout(resolve, 25));
-
-  await saveGame(updatedState);  // <-- always pass the updated copy
-
+  await saveGame(updatedState); // use the copy you just created!
   setShowHouseRenameModal(false);
   setNewHouseName("");
   setHouseNameError("");
   setNotification("House renamed successfully!");
 };
+
 
 
   function claimDailyBonus() {
