@@ -19,6 +19,12 @@ const STATIC_STARS = Array.from({ length: 25 }, (_, i) => {
     };
     });
 
+  // Possible house emojis for variety!
+const HOUSE_EMOJIS = [
+  "🏡", "🏠", "🏘️", "🏚️", "🏢", "🏕️", "🏛️", "🛖", "🏙️", "🏰", "🗼", "🛕", "🏩"
+];
+
+
 const GUILD_ICONS = [
   { id: "tree", name: "Tree", emoji: "🌳" },
   { id: "seedling", name: "Seedling", emoji: "🌱" },
@@ -998,21 +1004,33 @@ const handleSellHouse = async () => {
 
   const renownReward = gameState.houseLevel * RENOWN_PER_LEVEL;
 
-  // Update state (reset house, give renown, add to gallery if needed)
+  // Pick a random emoji from your global HOUSE_EMOJIS array
+  const randomEmoji = HOUSE_EMOJIS[Math.floor(Math.random() * HOUSE_EMOJIS.length)];
+
+  // Gallery update (old house gets added, keep most recent N houses)
+  const galleryLimit = 20; // set your preferred max length
+  const newGallery = [
+    ...(gameState.houseGallery || []),
+    { name: gameState.houseName, emoji: gameState.houseEmoji || "🏡" }
+  ].slice(-galleryLimit);
+
   setGameState((prev) => ({
     ...prev,
     renownTokens: (prev.renownTokens || 0) + renownReward,
     houseLevel: 1,
     houseCoinsMultiplier: 1.0,
-    // optionally: houseGallery: [...(prev.houseGallery || []), { name: prev.houseName, emoji: prev.houseEmoji }]
+    houseName: "My Cozy Home",
+    houseEmoji: randomEmoji,
+    houseGallery: newGallery,
   }));
 
   setNotification(`Sold your house for ${renownReward} Renown Tokens!`);
   setShowSellModal(false);
 
-  // TODO: Save to backend if needed
+  // Optionally save to backend here if needed
   // await saveGame({ ...updatedState });
 };
+
 
 
   const [activeTab, setActiveTab] = useState("tap");
@@ -1112,34 +1130,37 @@ useEffect(() => {
     loadGame();
   }, [userId, pin]);
   const [gameState, setGameState] = useState({
-    coins: 0,
-    tapPower: 1,
-    tapPowerUpgrades: 0,
-    autoTapper: 0,
-    autoTapperUpgrades: 0,
-    critChance: 0,
-    critChanceUpgrades: 0,
-    tapSpeedBonus: 0,
-    tapSpeedBonusUpgrades: 0,
-    totalTaps: 0,
-    totalCoinsEarned: 0,
-    resets: 0,
-    permanentMultiplier: 1,
-    currentSeason: 0,
-    totalUpgradeLevels: 0,
-    houseLevel: 1,
-      highest_house_level: 1,
-    houseDecorations: [],
-    houseTheme: "cottage",
-    houseCoinsMultiplier: 0,
-    hasFirstReset: false,
-    currentWeather: "Clear",
-    currentYear: 0,
-    houseName: "My Cozy Home",
-    profileName: "Player",
-    boostActiveUntil: null,
-    renownTokens: 0,
-  });
+  coins: 0,
+  tapPower: 1,
+  tapPowerUpgrades: 0,
+  autoTapper: 0,
+  autoTapperUpgrades: 0,
+  critChance: 0,
+  critChanceUpgrades: 0,
+  tapSpeedBonus: 0,
+  tapSpeedBonusUpgrades: 0,
+  totalTaps: 0,
+  totalCoinsEarned: 0,
+  resets: 0,
+  permanentMultiplier: 1,
+  currentSeason: 0,
+  totalUpgradeLevels: 0,
+  houseLevel: 1,
+  highest_house_level: 1,
+  houseDecorations: [],
+  houseTheme: "cottage",
+  houseCoinsMultiplier: 0,
+  hasFirstReset: false,
+  currentWeather: "Clear",
+  currentYear: 0,
+  houseName: "My Cozy Home",
+  profileName: "Player",
+  boostActiveUntil: null,
+  renownTokens: 0,
+  houseGallery: [],      // <<=== House history/collection
+  houseEmoji: "🏡",      // <<=== Current house emoji
+});
+
   const assignNewWeather = useCallback(() => {
     const season = gameState.currentSeason ?? 0;
     const theme = gameState.equippedTheme;
@@ -3625,36 +3646,42 @@ const loadGame = async () => {
       // Always calculate renownTokens and permanentMultiplier based on fresh data
       const renownTokens = Number(data.gameState.renown_tokens ?? data.gameState.renownTokens) || 0;
       const permanentMultiplier = 1 + renownTokens * 0.015;
+// Pick a random emoji if missing
+let houseEmoji = data.gameState.house_emoji;
+if (!houseEmoji) {
+  houseEmoji = HOUSE_EMOJIS[Math.floor(Math.random() * HOUSE_EMOJIS.length)];
+}
 
-      setGameState({
-        ...data.gameState,
-        coins: Number(data.gameState.coins),
-        tapPower: Number(data.gameState.tap_power),
-        tapPowerUpgrades: Number(data.gameState.tap_power_upgrades) || 0,
-        autoTapper: Number(data.gameState.auto_tapper),
-        autoTapperUpgrades: Number(data.gameState.auto_tapper_upgrades) || 0,
-        critChance: Number(data.gameState.crit_chance),
-        critChanceUpgrades: Number(data.gameState.crit_chance_upgrades) || 0,
-        tapSpeedBonus: Number(data.gameState.tap_speed_bonus),
-        tapSpeedBonusUpgrades: Number(data.gameState.tap_speed_bonus_upgrades) || 0,
-        totalTaps: Number(data.gameState.total_taps),
-        totalCoinsEarned: Number(data.gameState.total_coins_earned),
-        resets: Number(data.gameState.resets),
-        permanentMultiplier, // always use the calculated value here
-        currentSeason: Number(data.gameState.current_season),
-        houseLevel: Number(data.gameState.house_level),
-        highest_house_level:
-          Number(data.gameState.highest_house_level ?? data.gameState.house_level) || 1,
-        houseCoinsMultiplier: Number(data.gameState.house_coins_multiplier),
-        hasFirstReset: Boolean(data.gameState.has_first_reset),
-        currentWeather: data.gameState.current_weather || "Clear",
-        currentYear: Number(data.gameState.current_year) || 0,
-        houseName: data.gameState.house_name || "My Cozy Home",
-        profileName: data.gameState.profile_name || "Player",
-        coinsEarnedThisRun: Number(data.gameState.coins_earned_this_run) || 0,
-        renownTokens, // the calculated value
-      });
-      // Handle quests and offline earnings as before...
+setGameState({
+  ...data.gameState,
+  coins: Number(data.gameState.coins),
+  tapPower: Number(data.gameState.tap_power),
+  tapPowerUpgrades: Number(data.gameState.tap_power_upgrades) || 0,
+  autoTapper: Number(data.gameState.auto_tapper),
+  autoTapperUpgrades: Number(data.gameState.auto_tapper_upgrades) || 0,
+  critChance: Number(data.gameState.crit_chance),
+  critChanceUpgrades: Number(data.gameState.crit_chance_upgrades) || 0,
+  tapSpeedBonus: Number(data.gameState.tap_speed_bonus),
+  tapSpeedBonusUpgrades: Number(data.gameState.tap_speed_bonus_upgrades) || 0,
+  totalTaps: Number(data.gameState.total_taps),
+  totalCoinsEarned: Number(data.gameState.total_coins_earned),
+  resets: Number(data.gameState.resets),
+  permanentMultiplier,
+  currentSeason: Number(data.gameState.current_season),
+  houseLevel: Number(data.gameState.house_level),
+  highest_house_level: Number(data.gameState.highest_house_level ?? data.gameState.house_level) || 1,
+  houseCoinsMultiplier: Number(data.gameState.house_coins_multiplier),
+  hasFirstReset: Boolean(data.gameState.has_first_reset),
+  currentWeather: data.gameState.current_weather || "Clear",
+  currentYear: Number(data.gameState.current_year) || 0,
+  houseName: data.gameState.house_name || "My Cozy Home",
+  houseEmoji: data.gameState.house_emoji || "🏡",   // Add this line!
+  houseGallery: data.gameState.house_gallery || [], // Add this line!
+  profileName: data.gameState.profile_name || "Player",
+  coinsEarnedThisRun: Number(data.gameState.coins_earned_this_run) || 0,
+  renownTokens,
+});
+
 
       if (data.gameState.currentQuest) {
         const quest = data.gameState.currentQuest;
