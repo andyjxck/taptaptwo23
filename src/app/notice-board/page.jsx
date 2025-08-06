@@ -21,23 +21,23 @@ const devLogs = [
       icon: "🔥",
       label: "Boss Mode & Game Rebalancing",
       text: [
-        "🐉 **Boss Mode:** Inferno Boss has been rebalanced! Boss HP now scales more smoothly (~32% per level) for a fairer challenge and juicier rewards. Note: There is a *known bug* causing boss health to regenerate incorrectly – we’re fixing this ASAP. Thank you for your patience!",
-        "⚖️ **Game Balance:** Core mechanics have been retuned: coin/renown gains, upgrade effectiveness, and progression pacing have all been smoothed out for a more rewarding late game. Expect less grind and more flow."
+        "🐉 Boss Mode: Inferno Boss has been rebalanced! Boss HP now scales more smoothly (~32% per level) for a fairer challenge and juicier rewards. Note: There is a *known bug* causing boss health to regenerate incorrectly – we’re fixing this ASAP. Thank you for your patience!",
+        "⚖️ Game Balance: Core mechanics have been retuned: coin/renown gains, upgrade effectiveness, and progression pacing have all been smoothed out for a more rewarding late game. Expect less grind and more flow."
       ]
     },
     {
       icon: "🏠",
       label: "Prestige with Sell House",
       text: [
-        "Sell your house at **level 50+** to prestige and reset your house for **2 Renown per level**! Earn a fat chunk of renown and start again with all your upgrades intact.",
-        "Your sold houses (name & emoji) are now immortalized in the new **House Gallery**. Every house you sell is saved, letting you track your legacy of homes."
+        "Sell your house at level 50+ to prestige and reset your house for 2 Renown per level! Earn a fat chunk of renown and start again with all your upgrades intact.",
+        "Your sold houses (name & emoji) are now immortalized in the new House Gallery. Every house you sell is saved, letting you track your legacy of homes."
       ]
     },
     {
       icon: "🏡",
       label: "House Emoji & Gallery",
       text: [
-        "Every house gets its own random emoji (🏰, 🏕️, 🗼, etc) on creation! Check the **Gallery** for a lineup of all your previous houses & their emojis.",
+        "Every house gets its own random emoji (🏰, 🏕️, 🗼, etc) on creation! Check the Gallery for a lineup of all your previous houses & their emojis.",
         "Make each house unique and collect them all as your renown builds."
       ]
     },
@@ -45,15 +45,15 @@ const devLogs = [
       icon: "🦄",
       label: "Custom Icons & Themes",
       text: [
-        "Dozens of new **profile icons** are here: 👑 🦄 👻 🤖 🌈 🐱 and more! Collect them, flex them, and stand out in the leaderboard.",
-        "Fresh **house themes**: Pogoda (Day/Night), Zen Garden, Aurora Borealis, Mountain Lake (Day/Night), Desert, Boss & Battle. Change your scenery anytime in the House tab!"
+        "Dozens of new profile icons are here: 👑 🦄 👻 🤖 🌈 🐱 and more! Collect them, flex them, and stand out in the leaderboard.",
+        "Fresh house themes: Pogoda (Day/Night), Zen Garden, Aurora Borealis, Mountain Lake (Day/Night), Desert, Boss & Battle. Change your scenery anytime in the House tab!"
       ]
     },
     {
       icon: "🎁",
       label: "Upgraded Daily Bonuses & Offline Earnings",
       text: [
-        "The old daily chest is OUT. In comes the new **7-day streak daily bonus**! Rewards ramp up all week, with a mega bonus on Day 7 (including renown, coins, and a mystery prize).",
+        "The old daily chest is OUT. In comes the new 7-day streak daily bonus! Rewards ramp up all week, with a mega bonus on Day 7 (including renown, coins, and a mystery prize).",
         "Offline earnings system has been boosted – now you can accumulate up to 3 hours of coins while away, and get an extra multiplier when you return."
       ]
     },
@@ -83,20 +83,20 @@ const devLogs = [
       label: "Boss Mode Is Live! (Beta)",
       text: [
         "Face the mighty Inferno Boss – solo or as a full guild! Defeat bosses for huge coin rewards and weekly glory.",
-        "⭐ **Solo Mode:** Climb the levels, push your limits, and earn coins every time you win. Perfect for late game players looking for more ways to earn.",
-        "🤝 **Co-Op Mode:** Join forces with your **entire guild** (5 players required) for the ultimate challenge! Guild raids will evolve in future updates.",
-        "🐲 **Epic Battles:** Smash the STRIKE button, trigger critical hits, and watch the boss’s HP melt. Teamwork is key in co-op!",
-        "🕑 **Weekly Reset:** Every week, boss levels reset – can you beat your previous high score? (Only your level resets, your weekly best remains until you break it!)",
-        "🪙 **Earn Real Coins:** All coins earned in Boss Mode are instantly synced to your main Tap Tap: Two account. Double-dip on progress!",
-        "⚙️ **Upgrades:** Right now, all upgrades must be bought in the main game. But soon, upgrades will be available directly from Boss Mode too.",
-        "🔨 **Beta Warning:** Boss Mode is still in early beta! Expect bugs, unfinished visuals, and possible weirdness with rewards and progression."
+        "⭐ Solo Mode: Climb the levels, push your limits, and earn coins every time you win. Perfect for late game players looking for more ways to earn.",
+        "🤝 Co-Op Mode: Join forces with your entire guild (5 players required) for the ultimate challenge! Guild raids will evolve in future updates.",
+        "🐲 Epic Battles: Smash the STRIKE button, trigger critical hits, and watch the boss’s HP melt. Teamwork is key in co-op!",
+        "🕑 Weekly Reset: Every week, boss levels reset – can you beat your previous high score? (Only your level resets, your weekly best remains until you break it!)",
+        "🪙 Earn Real Coins: All coins earned in Boss Mode are instantly synced to your main Tap Tap: Two account. Double-dip on progress!",
+        "⚙️ Upgrades: Right now, all upgrades must be bought in the main game. But soon, upgrades will be available directly from Boss Mode too.",
+        "🔨 Beta Warning: Boss Mode is still in early beta! Expect bugs, unfinished visuals, and possible weirdness with rewards and progression."
       ]
     },
     {
       icon: "🆕",
       label: "New Sidebar & UI Revamp",
       text: [
-        "Check out the **all-new sidebar!** Instantly jump to Battle, Boss, Friends, Guilds, Shop, and more from anywhere in the game.",
+        "Check out the all-new sidebar! Instantly jump to Battle, Boss, Friends, Guilds, Shop, and more from anywhere in the game.",
         "Every tab – Home, House, Shop, Friends, and more – has been visually overhauled for a cleaner, snappier, and easier-to-navigate experience.",
         "There’s a dedicated Feedback button in the sidebar now! Spot a bug? Got an idea? Tap Feedback – we see every message."
       ]
