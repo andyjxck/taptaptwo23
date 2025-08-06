@@ -1169,18 +1169,19 @@ if (action === "claimDailyBonus") {
       owned_themes = ${JSON.stringify(updatedThemes)}
     WHERE user_id = ${userIdInt}
   `;
-
-  return {
-    success: true,
-    daily_bonus_streak: nextStreak,
-    claimedDays: nextClaimedDays,
+return {
+  success: true,
+  reward: {
     renown: newRenown,
     coins: newCoins,
     house_level: newHouseLevel,
-    giftType,
-    giftValue,
-    message: `Claimed Day ${streak} daily bonus!`
-  };
+  },
+  daily_bonus_streak: nextStreak,
+  claimedDays: nextClaimedDays,
+  giftType,
+  giftValue,
+  message: `Claimed Day ${streak} daily bonus!`
+};
 }
 
 
