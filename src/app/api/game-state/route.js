@@ -946,9 +946,9 @@ const houseEmoji = gameState.houseEmoji || "🏡";
       owned_themes = EXCLUDED.owned_themes,
       owned_boosts = EXCLUDED.owned_boosts,
       equipped_theme = EXCLUDED.equipped_theme,
-      last_saved = CURRENT_TIMESTAMP,
-       house_gallery = EXCLUDED.house_gallery,
+             house_gallery = EXCLUDED.house_gallery,
     house_emoji = EXCLUDED.house_emoji,
+      last_saved = CURRENT_TIMESTAMP
   `;
 
 await sql`
