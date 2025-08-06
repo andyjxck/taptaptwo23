@@ -11,6 +11,67 @@ const GlassCard = ({ children }) => (
 
 const devLogs = [
   {
+  id: "v2_3_homely",
+  date: "06/08/2025",
+  time: "22:30",
+  title: "🏡 The <span style=\"color:#fd7fa7;font-weight:bold;\">homely</span> Update 🏡",
+  emoji: "🏡",
+  highlights: [
+    {
+      icon: "🔥",
+      label: "Boss Mode & Game Rebalancing",
+      text: [
+        "🐉 **Boss Mode:** Inferno Boss has been rebalanced! Boss HP now scales more smoothly (~32% per level) for a fairer challenge and juicier rewards. Note: There is a *known bug* causing boss health to regenerate incorrectly – we’re fixing this ASAP. Thank you for your patience!",
+        "⚖️ **Game Balance:** Core mechanics have been retuned: coin/renown gains, upgrade effectiveness, and progression pacing have all been smoothed out for a more rewarding late game. Expect less grind and more flow."
+      ]
+    },
+    {
+      icon: "🏠",
+      label: "Prestige with Sell House",
+      text: [
+        "Sell your house at **level 50+** to prestige and reset your house for **2 Renown per level**! Earn a fat chunk of renown and start again with all your upgrades intact.",
+        "Your sold houses (name & emoji) are now immortalized in the new **House Gallery**. Every house you sell is saved, letting you track your legacy of homes."
+      ]
+    },
+    {
+      icon: "🏡",
+      label: "House Emoji & Gallery",
+      text: [
+        "Every house gets its own random emoji (🏰, 🏕️, 🗼, etc) on creation! Check the **Gallery** for a lineup of all your previous houses & their emojis.",
+        "Make each house unique and collect them all as your renown builds."
+      ]
+    },
+    {
+      icon: "🦄",
+      label: "Custom Icons & Themes",
+      text: [
+        "Dozens of new **profile icons** are here: 👑 🦄 👻 🤖 🌈 🐱 and more! Collect them, flex them, and stand out in the leaderboard.",
+        "Fresh **house themes**: Pogoda (Day/Night), Zen Garden, Aurora Borealis, Mountain Lake (Day/Night), Desert, Boss & Battle. Change your scenery anytime in the House tab!"
+      ]
+    },
+    {
+      icon: "🎁",
+      label: "Upgraded Daily Bonuses & Offline Earnings",
+      text: [
+        "The old daily chest is OUT. In comes the new **7-day streak daily bonus**! Rewards ramp up all week, with a mega bonus on Day 7 (including renown, coins, and a mystery prize).",
+        "Offline earnings system has been boosted – now you can accumulate up to 3 hours of coins while away, and get an extra multiplier when you return."
+      ]
+    },
+    {
+      icon: "🐞",
+      label: "Known Issues",
+      text: [
+        "Boss Mode HP scaling bug: Sometimes boss health may reset or regen weirdly. This will be patched soon.",
+        "Let us know if you spot anything else funky! Use the in-game Feedback button or Discord."
+      ]
+    }
+  ],
+  notes: [
+    "Questions or bugs? Hit the Feedback button in-game or join our Discord. We check every message!",
+    "Thanks for playing and supporting Tap Tap: Two. More upgrades and features coming soon – keep building your dream home! Happy Tapping!🏡"
+  ]
+},
+  {
   id: "v2_2_boss_mode",
   date: "30/07/2025",
   time: "18:48",
