@@ -14,8 +14,8 @@ const devLogs = [
   id: "v2_3_homely",
   date: "06/08/2025",
   time: "22:30",
-  title: "🏡 The <span style=\"color:#fd7fa7;font-weight:bold;\">homely</span> Update 🏡",
-  emoji: "🏡",
+  title: "🏡 The Homely Update 🏡",
+  emoji: "⚖️",
   highlights: [
     {
       icon: "🔥",
