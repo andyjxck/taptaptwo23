@@ -5988,22 +5988,6 @@ const renderHouseTab = () => {
 
   return (
     <div className={`${glassStyle} bg-gradient-to-br from-white/60 via-purple-100/50 to-white/30 rounded-3xl p-7 ${buttonGlow} shadow-2xl border border-white/20 backdrop-blur-xl max-w-lg mx-auto`}>
-      {/* DAILY BONUS */}
-      <div className="my-7 flex flex-col items-center">
-        {bonusCooldown === 0 ? (
-          <button
-            onClick={claimDailyBonus}
-            className="px-3 py-2 rounded-2xl bg-gradient-to-r from-green-400 via-green-500 to-green-700 text-white font-bold shadow-xl hover:shadow-2xl active:scale-95 transition"
-          >
-            <span role="img" aria-label="gift">🎁</span> Claim Daily Bonus!
-          </button>
-        ) : (
-          <span className="text-sm text-gray-500 font-medium bg-white/80 px-4 py-2 rounded-full shadow">
-            Next bonus in {Math.ceil(bonusCooldown / 1000 / 60 / 60)} hour{Math.ceil(bonusCooldown / 1000 / 60 / 60) !== 1 && "s"}
-          </span>
-        )}
-      </div>
-
       {/* Main Card */}
       <div className={`${glassStyle} bg-white/80 rounded-2xl p-2 ${buttonGlow} shadow-inner relative`}>
         {/* House Emoji, Name, Gallery Btn */}
