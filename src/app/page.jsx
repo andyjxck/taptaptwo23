@@ -7392,7 +7392,7 @@ const currentValueFormatted =
           setShowOfflineEarnings(false);
           saveGame(newState);
         }}
-        className="w-full py-3 rounded-xl bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200 mb-3"
+        className="w-full py-1.5 rounded-xl bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200 mb-3"
       >
         Claim
       </button>
@@ -7400,7 +7400,7 @@ const currentValueFormatted =
         onClick={() => {
           openDoubleEarningsModal();
         }}
-        className="w-full py-3 rounded-xl bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+        className="w-full py-1.5 rounded-xl bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200"
       >
         Double Earnings! (Sacrifice)
       </button>
