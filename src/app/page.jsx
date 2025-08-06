@@ -7251,7 +7251,6 @@ const currentValueFormatted =
         coins!
       </p>
 
-  {/* ---- 7-Day Daily Bonus GRID (1 2 3 / 4 5 6 /   7) ---- */}
 <div className="bg-white/60 rounded-xl border border-yellow-400/60 p-3 mb-3 text-center shadow">
   <h4 className="font-bold text-yellow-700 text-lg mb-2">
     <i className="fas fa-gift mr-1"></i> Daily Login Bonus
@@ -7263,7 +7262,6 @@ const currentValueFormatted =
       const isClaimed = claimedDays.includes(day);
       const isToday = dailyBonusStreak === day;
       const canClaim = isToday && !isClaimed;
-      // --- Rewards as array of JSX
       const rewards = [
         [<img key="r" src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" className="inline w-5 h-5 mx-0.5" />],
         [<img key="r" src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" className="inline w-5 h-5 mx-0.5" />],
@@ -7296,19 +7294,28 @@ const currentValueFormatted =
         >
           <div className="font-bold text-sm mb-1">{`Day ${day}`}</div>
           <div className="flex justify-center mb-1">{rewards[idx]}</div>
-          {isClaimed && (
-            <span className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-red-400/90 text-white font-bold px-2 py-0.5 rounded text-xs shadow">Claimed</span>
-          )}
-          {canClaim && (
-            <button
-              className="mt-1 px-2 py-1 rounded bg-yellow-400 text-white font-bold text-xs shadow hover:bg-yellow-500"
-              onClick={() => claimDailyBonus(day)}
-            >
-              Claim
-            </button>
-          )}
-          {!isClaimed && !canClaim && (
-            <span className="text-gray-400 text-xs">Locked</span>
+          {isToday ? (
+            isClaimed ? (
+              <button
+                className="mt-1 px-2 py-1 rounded bg-gray-300 text-white font-bold text-xs shadow cursor-not-allowed"
+                disabled
+              >
+                Claimed
+              </button>
+            ) : (
+              <button
+                className="mt-1 px-2 py-1 rounded bg-yellow-400 text-white font-bold text-xs shadow hover:bg-yellow-500"
+                onClick={() => claimDailyBonus(day)}
+              >
+                Claim
+              </button>
+            )
+          ) : (
+            isClaimed ? (
+              <span className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-green-400/90 text-white font-bold px-2 py-0.5 rounded text-xs shadow">Claimed</span>
+            ) : (
+              <span className="text-gray-400 text-xs">Locked</span>
+            )
           )}
         </div>
       );
@@ -7337,25 +7344,35 @@ const currentValueFormatted =
         >
           <div className="font-bold text-sm mb-1">{`Day 7`}</div>
           <div className="flex justify-center mb-1">{rewards}</div>
-          {isClaimed && (
-            <span className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-red-400/90 text-white font-bold px-2 py-0.5 rounded text-xs shadow">Claimed</span>
-          )}
-          {canClaim && (
-            <button
-              className="mt-1 px-2 py-1 rounded bg-yellow-400 text-white font-bold text-xs shadow hover:bg-yellow-500"
-              onClick={() => claimDailyBonus(day)}
-            >
-              Claim
-            </button>
-          )}
-          {!isClaimed && !canClaim && (
-            <span className="text-gray-400 text-xs">Locked</span>
+          {isToday ? (
+            isClaimed ? (
+              <button
+                className="mt-1 px-2 py-1 rounded bg-gray-300 text-white font-bold text-xs shadow cursor-not-allowed"
+                disabled
+              >
+                Claimed
+              </button>
+            ) : (
+              <button
+                className="mt-1 px-2 py-1 rounded bg-yellow-400 text-white font-bold text-xs shadow hover:bg-yellow-500"
+                onClick={() => claimDailyBonus(day)}
+              >
+                Claim
+              </button>
+            )
+          ) : (
+            isClaimed ? (
+              <span className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-green-400/90 text-white font-bold px-2 py-0.5 rounded text-xs shadow">Claimed</span>
+            ) : (
+              <span className="text-gray-400 text-xs">Locked</span>
+            )
           )}
         </div>
       );
     })()}
   </div>
 </div>
+
 
 
       {/* --- Original Claim Button --- */}
