@@ -6160,7 +6160,6 @@ const renderHouseTab = () => {
                   <div key={idx} className="flex flex-col items-center px-2">
                     <span className="text-3xl">{h.emoji || "🏡"}</span>
                     <span className="text-xs font-semibold text-purple-600 max-w-[5rem] truncate">{h.name}</span>
-                    <span className="text-[11px] text-gray-500">Lvl {h.level}</span>
                   </div>
                 ))
               ) : (
