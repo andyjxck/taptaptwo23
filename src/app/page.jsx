@@ -7251,71 +7251,64 @@ const currentValueFormatted =
         coins!
       </p>
 
-    {/* ---- 7-Day Daily Bonus GRID (1 2 3 / 4 5 6 /   7) ---- */}
+  {/* ---- 7-Day Daily Bonus GRID (1 2 3 / 4 5 6 /   7) ---- */}
 <div className="bg-white/60 rounded-xl border border-yellow-400/60 p-3 mb-3 text-center shadow">
   <h4 className="font-bold text-yellow-700 text-lg mb-2">
     <i className="fas fa-gift mr-1"></i> Daily Login Bonus
   </h4>
-  <div className="grid grid-cols-3 gap-1 mb-1">
-    {[0,1,2,3,4,5].map(i => {
-      const dayNum = i+1;
-      const isClaimed = claimedDays.includes(dayNum);
-      const isToday = dailyBonusStreak === dayNum;
-      const rewards = DAILY_BONUSES[i]?.rewards || [];
+  <div className="grid grid-cols-3 gap-2 mb-2">
+    {/* Days 1-6 in 2 rows of 3 */}
+    {Array.from({ length: 6 }, (_, idx) => {
+      const day = idx + 1;
+      const isClaimed = claimedDays.includes(day);
+      const isToday = dailyBonusStreak === day;
+      const canClaim = isToday && !isClaimed;
+      // --- Rewards as array of JSX
+      const rewards = [
+        [<img key="r" src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" className="inline w-5 h-5 mx-0.5" />],
+        [<img key="r" src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" className="inline w-5 h-5 mx-0.5" />],
+        [
+          <img key="r" src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" className="inline w-5 h-5 mx-0.5" />,
+          <img key="c" src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/" alt="Coins" className="inline w-5 h-5 mx-0.5" />
+        ],
+        [
+          <img key="r" src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" className="inline w-5 h-5 mx-0.5" />,
+          <img key="c" src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/" alt="Coins" className="inline w-5 h-5 mx-0.5" />
+        ],
+        [
+          <img key="r" src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" className="inline w-5 h-5 mx-0.5" />,
+          <img key="c" src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/" alt="Coins" className="inline w-5 h-5 mx-0.5" />
+        ],
+        [
+          <img key="r" src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" className="inline w-5 h-5 mx-0.5" />,
+          <img key="c" src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/" alt="Coins" className="inline w-5 h-5 mx-0.5" />
+        ]
+      ];
+
       return (
-        <div key={i} className="relative flex flex-col items-center justify-center border rounded-xl bg-white/80 p-2 min-w-[80px] min-h-[90px]">
-          <span className="font-bold text-xs text-gray-700 mb-1">Day {dayNum}</span>
-          <div className="flex flex-row items-center justify-center gap-1">
-            {rewards.map((reward, idx) => {
-              if (reward.type === "renown") {
-                return (
-                  <img key={idx} src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" title={`${reward.amount} Renown`} className="w-4 h-4" />
-                );
-              }
-              if (reward.type === "coins") {
-                return (
-                  <img key={idx} src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/" alt="Coins" title={`${formatNumberShort(reward.amount)} Coins`} className="w-4 h-4" />
-                );
-              }
-              if (reward.type === "houseLevel") {
-                return (
-                  <img key={idx} src="https://ucarecdn.com/22eaa50d-6e78-4af4-b36c-5a3d46ca0f47/-/format/auto/" alt="House Level" title={`+${reward.amount} House Lv`} className="w-4 h-4" />
-                );
-              }
-              if (reward.type === "mystery") {
-                return (
-                  <img key={idx} src="https://ucarecdn.com/fc53a55b-735b-4148-b0fb-456a23d105af/-/format/auto/" alt="Gift" title="Mystery Gift" className="w-4 h-4" />
-                );
-              }
-              return null;
-            })}
-          </div>
-          <button
-            disabled={!isToday || isClaimed || !canClaimDailyBonus(lastDailyClaim)}
-            onClick={async () => {
-              // CLAIM LOGIC (put your logic here, or call claimDailyBonus with the correct day)
-              if (!isToday || isClaimed || !canClaimDailyBonus(lastDailyClaim)) return;
-              await claimDailyBonus(); // update this if your logic differs!
-              setClaimedDays([...claimedDays, dayNum]);
-            }}
-            className={`mt-2 w-full py-1 rounded font-bold text-xs shadow 
-              ${isClaimed
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : isToday && canClaimDailyBonus(lastDailyClaim)
-                ? "bg-gradient-to-r from-yellow-400 to-yellow-500 text-white hover:scale-105 transition"
-                : "bg-gray-100 text-gray-400 cursor-not-allowed"
-              }`}
-          >
-            {isClaimed
-              ? "Claimed"
-              : isToday && canClaimDailyBonus(lastDailyClaim)
-                ? "Claim"
-                : "Locked"}
-          </button>
+        <div
+          key={day}
+          className={`
+            rounded-lg p-2 flex flex-col items-center border
+            ${canClaim ? "border-yellow-400 bg-yellow-50" : isClaimed ? "border-green-400 bg-green-50" : "border-gray-300 bg-white/70"}
+            relative min-w-[72px] min-h-[72px]
+          `}
+        >
+          <div className="font-bold text-sm mb-1">{`Day ${day}`}</div>
+          <div className="flex justify-center mb-1">{rewards[idx]}</div>
           {isClaimed && (
-            <span className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ transform: "rotate(-15deg)" }}>
-              <span className="bg-red-500 text-white font-extrabold text-[15px] px-2 py-1 rounded opacity-80 shadow-lg" style={{ letterSpacing: 2 }}>CLAIMED</span>
-            </span>
+            <span className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-red-400/90 text-white font-bold px-2 py-0.5 rounded text-xs shadow">Claimed</span>
+          )}
+          {canClaim && (
+            <button
+              className="mt-1 px-2 py-1 rounded bg-yellow-400 text-white font-bold text-xs shadow hover:bg-yellow-500"
+              onClick={() => claimDailyBonus(day)}
+            >
+              Claim
+            </button>
+          )}
+          {!isClaimed && !canClaim && (
+            <span className="text-gray-400 text-xs">Locked</span>
           )}
         </div>
       );
@@ -7323,60 +7316,44 @@ const currentValueFormatted =
   </div>
   {/* Day 7 centered below */}
   <div className="flex justify-center mt-2">
-    <div className="relative flex flex-col items-center justify-center border rounded-xl bg-white/80 p-2 min-w-[80px] min-h-[90px]">
-      <span className="font-bold text-xs text-gray-700 mb-1">Day 7</span>
-      <div className="flex flex-row items-center justify-center gap-1">
-        {DAILY_BONUSES[6].rewards.map((reward, idx) => {
-          if (reward.type === "renown") {
-            return (
-              <img key={idx} src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" title={`${reward.amount} Renown`} className="w-6 h-6" />
-            );
-          }
-          if (reward.type === "coins") {
-            return (
-              <img key={idx} src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/" alt="Coins" title={`${formatNumberShort(reward.amount)} Coins`} className="w-6 h-6" />
-            );
-          }
-          if (reward.type === "houseLevel") {
-            return (
-              <img key={idx} src="https://ucarecdn.com/22eaa50d-6e78-4af4-b36c-5a3d46ca0f47/-/format/auto/" alt="House Level" title={`+${reward.amount} House Lv`} className="w-6 h-6" />
-            );
-          }
-          if (reward.type === "mystery") {
-            return (
-              <img key={idx} src="https://ucarecdn.com/fc53a55b-735b-4148-b0fb-456a23d105af/-/format/auto/" alt="Gift" title="Mystery Gift" className="w-6 h-6" />
-            );
-          }
-          return null;
-        })}
-      </div>
-      <button
-        disabled={!(dailyBonusStreak === 7) || claimedDays.includes(7) || !canClaimDailyBonus(lastDailyClaim)}
-        onClick={async () => {
-          if (dailyBonusStreak !== 7 || claimedDays.includes(7) || !canClaimDailyBonus(lastDailyClaim)) return;
-          await claimDailyBonus(); // update if needed!
-          setClaimedDays([...claimedDays, 7]);
-        }}
-        className={`mt-2 w-full py-1 rounded font-bold text-xs shadow 
-          ${claimedDays.includes(7)
-            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-            : dailyBonusStreak === 7 && canClaimDailyBonus(lastDailyClaim)
-            ? "bg-gradient-to-r from-yellow-400 to-yellow-500 text-white hover:scale-105 transition"
-            : "bg-gray-100 text-gray-400 cursor-not-allowed"
-          }`}
-      >
-        {claimedDays.includes(7)
-          ? "Claimed"
-          : dailyBonusStreak === 7 && canClaimDailyBonus(lastDailyClaim)
-            ? "Claim"
-            : "Locked"}
-      </button>
-      {claimedDays.includes(7) && (
-        <span className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ transform: "rotate(-15deg)" }}>
-          <span className="bg-red-500 text-white font-extrabold text-[15px] px-2 py-1 rounded opacity-80 shadow-lg" style={{ letterSpacing: 2 }}>CLAIMED</span>
-        </span>
-      )}
-    </div>
+    {(() => {
+      const day = 7;
+      const isClaimed = claimedDays.includes(day);
+      const isToday = dailyBonusStreak === day;
+      const canClaim = isToday && !isClaimed;
+      const rewards = [
+        <img key="r" src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" className="inline w-5 h-5 mx-0.5" />,
+        <img key="c" src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/" alt="Coins" className="inline w-5 h-5 mx-0.5" />,
+        <img key="h" src="https://ucarecdn.com/22eaa50d-6e78-4af4-b36c-5a3d46ca0f47/-/format/auto/" alt="House Level" className="inline w-5 h-5 mx-0.5" />,
+        <img key="g" src="https://ucarecdn.com/fc53a55b-735b-4148-b0fb-456a23d105af/-/format/auto/" alt="Gift" className="inline w-5 h-5 mx-0.5" />
+      ];
+      return (
+        <div
+          className={`
+            rounded-lg p-2 flex flex-col items-center border
+            ${canClaim ? "border-yellow-400 bg-yellow-50" : isClaimed ? "border-green-400 bg-green-50" : "border-gray-300 bg-white/70"}
+            relative min-w-[72px] min-h-[72px]
+          `}
+        >
+          <div className="font-bold text-sm mb-1">{`Day 7`}</div>
+          <div className="flex justify-center mb-1">{rewards}</div>
+          {isClaimed && (
+            <span className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-red-400/90 text-white font-bold px-2 py-0.5 rounded text-xs shadow">Claimed</span>
+          )}
+          {canClaim && (
+            <button
+              className="mt-1 px-2 py-1 rounded bg-yellow-400 text-white font-bold text-xs shadow hover:bg-yellow-500"
+              onClick={() => claimDailyBonus(day)}
+            >
+              Claim
+            </button>
+          )}
+          {!isClaimed && !canClaim && (
+            <span className="text-gray-400 text-xs">Locked</span>
+          )}
+        </div>
+      );
+    })()}
   </div>
 </div>
 
@@ -7601,32 +7578,6 @@ const currentValueFormatted =
   </div>
 )}
 {showDoubleEarningsModal && renderDoubleEarningsModal()}
-
-{showBonusModal && pendingBonus && (
-  <div
-    className="fixed inset-0 bg-black/60 z-50 flex justify-center"
-    style={{ alignItems: "flex-start", paddingTop: "6rem" }}
-  >
-    <div
-      className="bg-gradient-to-br from-red-400/60 via-white/10 to-red-700/70
-        backdrop-blur-2xl rounded-2xl p-8 shadow-2xl border border-white/20 flex flex-col items-center max-w-xs w-full"
-      style={{
-        background:
-          "linear-gradient(135deg,rgba(252,165,165,0.95),rgba(255,255,255,0.2),rgba(239,68,68,0.85))",
-        boxShadow: "0 8px 32px 0 rgba(239,68,68,0.15)",
-      }}
-    >
-      <h2 className="text-2xl mb-2 font-bold text-white drop-shadow">Daily Bonus!</h2>
-      <p className="text-lg mb-4 text-white/90">{pendingBonus.label}</p>
-      <button
-        onClick={() => setShowBonusModal(false)}
-        className="mt-2 px-5 py-2 rounded-lg bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold shadow hover:shadow-xl transition"
-      >
-        Close
-      </button>
-    </div>
-  </div>
-)}
 
 {showMaddoxModal && (
   <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
