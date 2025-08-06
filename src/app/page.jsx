@@ -1018,7 +1018,7 @@ const MIN_SELL_LEVEL = 50; // Minimum level to sell
 const RENOWN_PER_LEVEL = 2; // Renown tokens per level
 const [showSellModal, setShowSellModal] = useState(false);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
-
+const [hasClaimedToday, setHasClaimedToday] = useState(false);
 const handleSellHouse = async () => {
   if (gameState.houseLevel < MIN_SELL_LEVEL) return;
 
