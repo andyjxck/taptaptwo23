@@ -1077,7 +1077,7 @@ if (action === "claimDailyBonus") {
     owned_themes,
     renown_tokens,
     coins,
-    house_level
+    house_level,
   } = rows[0];
 
   let streak = Number(daily_bonus_streak) || 1;
@@ -1088,13 +1088,30 @@ if (action === "claimDailyBonus") {
   try { claimedDays = claimed_daily_bonus_days ? JSON.parse(claimed_daily_bonus_days) : []; } catch { claimedDays = []; }
   if (!Array.isArray(claimedDays)) claimedDays = [];
 
-  // Reset claimed days if week complete or too many days passed
+  // --- Block claim if already claimed today (based on streak & last claim date) ---
+  // (Allowing only one claim per day, regardless of claimedDays)
+  let alreadyClaimedToday = false;
+  if (last) {
+    // Check if last claim is same calendar date (server time)
+    const lastDate = last.toISOString().slice(0, 10); // "YYYY-MM-DD"
+    const nowDate = now.toISOString().slice(0, 10);
+    alreadyClaimedToday = lastDate === nowDate;
+  }
+  if (alreadyClaimedToday) {
+    return {
+      error: "Already claimed for today",
+      streak,
+      claimedDays,
+    };
+  }
+
+  // --- Reset claimed days if week complete or too many days passed (48+ hr gap) ---
   if (claimedDays.length >= 7 || (last && (now - last) > 2 * 86400000)) {
     claimedDays = [];
     streak = 1;
   }
 
-  // Block if already claimed for today
+  // --- Prevent double-claim if someone manages to claim same streak in one day
   if (claimedDays.includes(streak)) {
     return { error: "Already claimed for today", streak, claimedDays };
   }
@@ -1107,7 +1124,7 @@ if (action === "claimDailyBonus") {
     { renown: 50, coins: 50000000, house: 0 },
     { renown: 100, coins: 60000000, house: 0 },
     { renown: 250, coins: 100000000, house: 0 },
-    { renown: 300, coins: 150000000, house: 10, gift: true }
+    { renown: 300, coins: 150000000, house: 10, gift: true },
   ];
 
   const bonus = DAILY_BONUSES[streak - 1];
@@ -1115,24 +1132,24 @@ if (action === "claimDailyBonus") {
   let newCoins = (Number(coins) || 0) + (bonus.coins || 0);
   let newHouseLevel = (Number(house_level) || 1) + (bonus.house || 0);
 
-  // Handle gift
+  // --- Handle gift on Day 7 ---
   let updatedIcons = owned_profile_icons ? (typeof owned_profile_icons === "string" ? JSON.parse(owned_profile_icons) : owned_profile_icons) : [];
   let updatedThemes = owned_themes ? (typeof owned_themes === "string" ? JSON.parse(owned_themes) : owned_themes) : [];
   let giftType = null;
   let giftValue = null;
 
   if (bonus.gift) {
-       const allIcons = [
-  "tree", "seedling", "cloudMoon", "sun", "star", "alien", "fire", "ghost", "cat", "unicorn", "robot", "crown",
-  "icecream", "rocket", "rainbow", "mouse", "frog", "fox", "penguin", "bunny", "duck", "hamster", "owl", "hedgehog",
-  "panda", "monkey", "bee", "butterfly", "ladybug", "chick", "bear", "dolphin", "whale", "snail", "peach", "avocado",
-  "mushroom", "cherry", "cookie", "lighthouse", "moon", "comet", "snowflake", "maple", "eclipse", "mountain",
-  "clover", "sakura", "balloon", "logo", "maddox", "dog", "diamond", "dragon", "mermaid", "wizard", "crystalball", "cactus", "volcano",
-  "jellyfish", "starstruck", "medal", "ninja", "phoenix", "pirate", "vampire", "dragonfruit"
-];
-  const allThemes = [
-    "heaven","hell","maddoxtheme","space","city_night","midnight","island","barn","city","forest","beach","seasons"
-  ];
+    const allIcons = [
+      "tree", "seedling", "cloudMoon", "sun", "star", "alien", "fire", "ghost", "cat", "unicorn", "robot", "crown",
+      "icecream", "rocket", "rainbow", "mouse", "frog", "fox", "penguin", "bunny", "duck", "hamster", "owl", "hedgehog",
+      "panda", "monkey", "bee", "butterfly", "ladybug", "chick", "bear", "dolphin", "whale", "snail", "peach", "avocado",
+      "mushroom", "cherry", "cookie", "lighthouse", "moon", "comet", "snowflake", "maple", "eclipse", "mountain",
+      "clover", "sakura", "balloon", "logo", "maddox", "dog", "diamond", "dragon", "mermaid", "wizard", "crystalball", "cactus", "volcano",
+      "jellyfish", "starstruck", "medal", "ninja", "phoenix", "pirate", "vampire", "dragonfruit"
+    ];
+    const allThemes = [
+      "heaven", "hell", "maddoxtheme", "space", "city_night", "midnight", "island", "barn", "city", "forest", "beach", "seasons"
+    ];
     const iconPool = allIcons.filter(icon => !updatedIcons.includes(icon));
     const themePool = allThemes.filter(theme => !updatedThemes.includes(theme));
     if (iconPool.length && (!themePool.length || Math.random() < 0.5)) {
@@ -1148,14 +1165,14 @@ if (action === "claimDailyBonus") {
     }
   }
 
-  // Add this day as claimed
+  // --- Add this day as claimed ---
   claimedDays.push(streak);
 
-  // If just claimed day 7, reset streak and claimed days for next cycle
+  // --- If just claimed day 7, reset streak and claimed days for next cycle ---
   let nextStreak = streak >= 7 ? 1 : streak + 1;
   let nextClaimedDays = streak >= 7 ? [] : claimedDays;
 
-  // Save all changes
+  // --- Save all changes (including new last_daily_claim timestamp) ---
   await sql`
     UPDATE game_saves
     SET
@@ -1169,19 +1186,20 @@ if (action === "claimDailyBonus") {
       owned_themes = ${JSON.stringify(updatedThemes)}
     WHERE user_id = ${userIdInt}
   `;
-return {
-  success: true,
-  reward: {
-    renown: newRenown,
-    coins: newCoins,
-    house_level: newHouseLevel,
-  },
-  daily_bonus_streak: nextStreak,
-  claimedDays: nextClaimedDays,
-  giftType,
-  giftValue,
-  message: `Claimed Day ${streak} daily bonus!`
-};
+
+  return {
+    success: true,
+    reward: {
+      renown: bonus.renown || 0,
+      coins: bonus.coins || 0,
+      house_level: bonus.house || 0,
+    },
+    daily_bonus_streak: nextStreak,
+    claimedDays: nextClaimedDays,
+    giftType,
+    giftValue,
+    message: `Claimed Day ${streak} daily bonus!`
+  };
 }
 
 
