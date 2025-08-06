@@ -7229,7 +7229,7 @@ const currentValueFormatted =
 {showOfflineEarnings && pendingOfflineEarnings && (
   <div
     className="fixed inset-0 bg-black/50 flex justify-center z-50"
-    style={{ alignItems: "flex-start", paddingTop: "3rem" }}
+    style={{ alignItems: "flex-start", paddingTop: "1rem" }}
   >
     <div
       className="bg-gradient-to-br from-purple-400/50 via-purple-200/40 to-purple-600/60 backdrop-blur-xl rounded-2xl p-7 max-w-sm w-full border border-white/30 shadow-lg relative"
@@ -7242,7 +7242,7 @@ const currentValueFormatted =
       }}
     >
       <h3 className="text-xl font-medium text-[#2d3748] mb-4">Offline Earnings!</h3>
-      <p className="mb-4 text-lg text-[#939599] text-center">
+      <p className="mb-4 text-lg text-[#363636] text-center">
         You were offline for {formatDuration(pendingOfflineEarnings.seconds)}.<br />
         You earned{" "}
         <span className="font-bold text-green-600">
