@@ -990,8 +990,8 @@ const [guild, setGuild] = useState(null);
   const [profileName, setProfileName] = useState("");
 const [profileIcon, setProfileIcon] = useState("");
 const [sidebarOpen, setSidebarOpen] = useState(false);
-const MIN_SELL_LEVEL = 25; // Minimum level to sell
-const RENOWN_PER_LEVEL = 5; // Renown tokens per level
+const MIN_SELL_LEVEL = 50; // Minimum level to sell
+const RENOWN_PER_LEVEL = 2; // Renown tokens per level
 const [showSellModal, setShowSellModal] = useState(false);
 const handleSellHouse = async () => {
   if (gameState.houseLevel < MIN_SELL_LEVEL) return;
