@@ -1058,41 +1058,48 @@ const houseEmoji = rows[0].house_emoji || "🏡";
     },
   };
 }
-
-    // --- DAILY BONUS CLAIM ---
 if (action === "claimDailyBonus") {
-  // Columns required in game_saves: last_daily_claim, daily_bonus_streak
-  // Expect: userIdInt, day (1-7), claimDate (ms/iso, from frontend)
-  // Handles updating streak and last claim date
-
   // Fetch latest save
   const rows = await sql`
-    SELECT last_daily_claim, daily_bonus_streak, owned_profile_icons, owned_themes, renown_tokens, coins, house_level
+    SELECT last_daily_claim, daily_bonus_streak, claimed_daily_bonus_days, owned_profile_icons, owned_themes, renown_tokens, coins, house_level
     FROM game_saves
     WHERE user_id = ${userIdInt}
   `;
   if (!rows || rows.length === 0) {
     return { error: "Save not found" };
   }
-  let { last_daily_claim, daily_bonus_streak, owned_profile_icons, owned_themes, renown_tokens, coins, house_level } = rows[0];
 
-  // --- Streak Calculation ---
+  let {
+    last_daily_claim,
+    daily_bonus_streak,
+    claimed_daily_bonus_days,
+    owned_profile_icons,
+    owned_themes,
+    renown_tokens,
+    coins,
+    house_level
+  } = rows[0];
+
   let streak = Number(daily_bonus_streak) || 1;
   let last = last_daily_claim ? new Date(last_daily_claim) : null;
-  let now = new Date(typeof claimDate === "string" || typeof claimDate === "number" ? claimDate : Date.now());
+  let now = new Date();
 
-  // If claimed yesterday, streak +1. If missed a day, reset streak.
-  if (last) {
-    const days = Math.floor((now - new Date(last)) / (1000 * 60 * 60 * 24));
-    if (days === 1) streak = Math.min(streak + 1, 7);
-    else if (days > 1) streak = 1;
-    // else: streak stays if same day, but frontend should block multi-claim
-  } else {
+  let claimedDays = [];
+  try { claimedDays = claimed_daily_bonus_days ? JSON.parse(claimed_daily_bonus_days) : []; } catch { claimedDays = []; }
+  if (!Array.isArray(claimedDays)) claimedDays = [];
+
+  // Reset claimed days if week complete or too many days passed
+  if (claimedDays.length >= 7 || (last && (now - last) > 2 * 86400000)) {
+    claimedDays = [];
     streak = 1;
   }
 
+  // Block if already claimed for today
+  if (claimedDays.includes(streak)) {
+    return { error: "Already claimed for today", streak, claimedDays };
+  }
+
   // --- REWARD LOGIC ---
-  // Your bonuses for each day
   const DAILY_BONUSES = [
     { renown: 10, coins: 0, house: 0 },
     { renown: 20, coins: 0, house: 0 },
@@ -1100,22 +1107,22 @@ if (action === "claimDailyBonus") {
     { renown: 50, coins: 50000000, house: 0 },
     { renown: 100, coins: 60000000, house: 0 },
     { renown: 250, coins: 100000000, house: 0 },
-    { renown: 300, coins: 150000000, house: 10, gift: true },
+    { renown: 300, coins: 150000000, house: 10, gift: true }
   ];
 
-  const bonus = DAILY_BONUSES[Math.max(0, Math.min(streak - 1, 6))];
+  const bonus = DAILY_BONUSES[streak - 1];
   let newRenown = (Number(renown_tokens) || 0) + (bonus.renown || 0);
   let newCoins = (Number(coins) || 0) + (bonus.coins || 0);
   let newHouseLevel = (Number(house_level) || 1) + (bonus.house || 0);
 
-  // --- Mystery Gift (Day 7) ---
+  // Handle gift
   let updatedIcons = owned_profile_icons ? (typeof owned_profile_icons === "string" ? JSON.parse(owned_profile_icons) : owned_profile_icons) : [];
   let updatedThemes = owned_themes ? (typeof owned_themes === "string" ? JSON.parse(owned_themes) : owned_themes) : [];
   let giftType = null;
   let giftValue = null;
+
   if (bonus.gift) {
-    // Randomly give either a new icon or a new theme
-    const allIcons = [
+       const allIcons = [
   "tree", "seedling", "cloudMoon", "sun", "star", "alien", "fire", "ghost", "cat", "unicorn", "robot", "crown",
   "icecream", "rocket", "rainbow", "mouse", "frog", "fox", "penguin", "bunny", "duck", "hamster", "owl", "hedgehog",
   "panda", "monkey", "bee", "butterfly", "ladybug", "chick", "bear", "dolphin", "whale", "snail", "peach", "avocado",
@@ -1141,7 +1148,14 @@ if (action === "claimDailyBonus") {
     }
   }
 
-  // --- Update DB ---
+  // Add this day as claimed
+  claimedDays.push(streak);
+
+  // If just claimed day 7, reset streak and claimed days for next cycle
+  let nextStreak = streak >= 7 ? 1 : streak + 1;
+  let nextClaimedDays = streak >= 7 ? [] : claimedDays;
+
+  // Save all changes
   await sql`
     UPDATE game_saves
     SET
@@ -1149,7 +1163,8 @@ if (action === "claimDailyBonus") {
       coins = ${newCoins},
       house_level = ${newHouseLevel},
       last_daily_claim = ${now.toISOString()},
-      daily_bonus_streak = ${streak},
+      daily_bonus_streak = ${nextStreak},
+      claimed_daily_bonus_days = ${JSON.stringify(nextClaimedDays)},
       owned_profile_icons = ${JSON.stringify(updatedIcons)},
       owned_themes = ${JSON.stringify(updatedThemes)}
     WHERE user_id = ${userIdInt}
@@ -1157,7 +1172,8 @@ if (action === "claimDailyBonus") {
 
   return {
     success: true,
-    daily_bonus_streak: streak,
+    daily_bonus_streak: nextStreak,
+    claimedDays: nextClaimedDays,
     renown: newRenown,
     coins: newCoins,
     house_level: newHouseLevel,
@@ -1166,7 +1182,6 @@ if (action === "claimDailyBonus") {
     message: `Claimed Day ${streak} daily bonus!`
   };
 }
-
 
 
 if (action === "getLeaderboard") {
