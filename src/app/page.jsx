@@ -1020,7 +1020,7 @@ const [showSellModal, setShowSellModal] = useState(false);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
 const [hasClaimedToday, setHasClaimedToday] = useState(false);
   const [claimedDays, setClaimedDays] = useState([]); // e.g. [1,2,3]
-const todayIdx = (dailyBonusStreak - 1) % 7;
+
 
 const handleSellHouse = async () => {
   if (gameState.houseLevel < MIN_SELL_LEVEL) return;
@@ -1555,6 +1555,7 @@ const [playBg] = useSound("/sounds/taptaptwobg.mp3", {
   const [showBonusModal, setShowBonusModal] = useState(false);
   const [pendingDailyBonus, setPendingDailyBonus] = useState(null);
 const [dailyBonusStreak, setDailyBonusStreak] = useState(1); 
+  const todayIdx = (dailyBonusStreak - 1) % 7;
   const [bonusCooldown, setBonusCooldown] = useState(0);
   const DISCOUNT_FACTOR = 0.8; // 20% discount
 const [showGuildChat, setShowGuildChat] = useState(true);
