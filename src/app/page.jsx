@@ -952,6 +952,24 @@ const WEATHER_ICONS = {
   Clear: "☀️"
 };
 
+const DAILY_BONUSES = [
+  { day: 1, rewards: [{ type: "renown", amount: 10 }] },
+  { day: 2, rewards: [{ type: "renown", amount: 20 }] },
+  { day: 3, rewards: [{ type: "renown", amount: 30 }, { type: "coins", amount: 10000000 }] },
+  { day: 4, rewards: [{ type: "renown", amount: 50 }, { type: "coins", amount: 50000000 }] },
+  { day: 5, rewards: [{ type: "renown", amount: 100 }, { type: "coins", amount: 60000000 }] },
+  { day: 6, rewards: [{ type: "renown", amount: 250 }, { type: "coins", amount: 100000000 }] },
+  { 
+    day: 7, 
+    rewards: [
+      { type: "renown", amount: 300 }, 
+      { type: "coins", amount: 150000000 }, 
+      { type: "houseLevel", amount: 10 },
+      { type: "mystery", amount: 1 }
+    ] 
+  },
+];
+
 
 
 function MainComponent() {
@@ -1532,6 +1550,8 @@ const [playBg] = useSound("/sounds/taptaptwobg.mp3", {
   const [referralMessageType, setReferralMessageType] = useState("success");
   const [pendingBonus, setPendingBonus] = useState(null);
   const [showBonusModal, setShowBonusModal] = useState(false);
+  const [pendingDailyBonus, setPendingDailyBonus] = useState(null);
+const [dailyBonusStreak, setDailyBonusStreak] = useState(1); 
   const [bonusCooldown, setBonusCooldown] = useState(0);
   const DISCOUNT_FACTOR = 0.8; // 20% discount
 const [showGuildChat, setShowGuildChat] = useState(true);
@@ -1756,6 +1776,33 @@ const handleCreateGuild = async (e) => {
   };
 
 
+function isNewDay(lastClaimTs) {
+  if (!lastClaimTs) return true;
+  const last = new Date(lastClaimTs);
+  const now = new Date();
+  return last.getUTCFullYear() !== now.getUTCFullYear() ||
+         last.getUTCMonth() !== now.getUTCMonth() ||
+         last.getUTCDate() !== now.getUTCDate();
+}
+
+function getCurrentStreak(lastClaimTs, prevStreak) {
+  if (!lastClaimTs) return 1;
+  const last = new Date(lastClaimTs);
+  const now = new Date();
+  const diff = now.setHours(0,0,0,0) - last.setHours(0,0,0,0);
+  if (diff === 86400000) return Math.min(prevStreak + 1, 7); // next day, streak up (max 7)
+  if (diff > 86400000) return 1; // missed a day, reset streak
+  return prevStreak; // same day, don't change
+}
+
+function getBonusForDay(day) {
+  return DAILY_BONUSES[(day-1) % 7]?.rewards || [];
+}
+
+function getRandomProfileIcon() {
+  const unlocked = PROFILE_ICONS.filter(i => !i.isLimited);
+  return unlocked[Math.floor(Math.random() * unlocked.length)];
+}
 
   
 const renderFriendsTab = () => {
@@ -3761,13 +3808,16 @@ setShowOfflineEarnings(true); // <-- THIS IS WHAT WAS MISSING!
 };
 
   useEffect(() => {
-    if (canClaimDailyBonus(lastDailyClaim)) {
-      setBonusCooldown(0);
+  if (showOfflineEarnings) {
+    if (isNewDay(lastDailyClaim) && !hasClaimedToday) {
+      const nextStreak = getNextStreak(lastDailyClaim, dailyBonusStreak);
+      setDailyBonusStreak(nextStreak);
+      setPendingDailyBonus(getBonusForDay(nextStreak));
     } else {
-      // Milliseconds left until next claim allowed
-      setBonusCooldown(getNextDailyReset(lastDailyClaim) - Date.now());
+      setPendingDailyBonus(null);
     }
-  }, [lastDailyClaim]);
+  }
+}, [showOfflineEarnings, lastDailyClaim, hasClaimedToday]);
 
   useEffect(() => {
     // If equippedTheme exists and is NOT "seasons", don't cycle seasons or year
@@ -7203,6 +7253,7 @@ const currentValueFormatted =
         boxShadow: "0 8px 32px 0 rgba(124,58,237,0.18)",
       }}
     >
+
       <h3 className="text-xl font-medium text-[#2d3748] mb-4">Offline Earnings!</h3>
       <p className="mb-4 text-lg text-[#939599] text-center">
         You were offline for{" "}
@@ -7215,6 +7266,92 @@ const currentValueFormatted =
         coins!
       </p>
 
+      {/* ---- 7-Day Daily Bonus VISUAL + Claim ---- */}
+      {pendingDailyBonus && (
+        <div className="bg-white/60 rounded-xl border border-yellow-400/60 p-3 mb-3 text-center shadow">
+          <h4 className="font-bold text-yellow-700 text-lg mb-2">
+            <i className="fas fa-gift mr-1"></i> Daily Login Bonus – Day {dailyBonusStreak}
+          </h4>
+          <div className="flex items-center justify-center gap-3 mb-1">
+            {pendingDailyBonus.map((reward, idx) => {
+              if (reward.type === "renown") {
+                return (
+                  <span key={idx} className="flex flex-col items-center mx-1">
+                    <img src="/icons/renown.svg" alt="Renown" className="w-7 h-7" />
+                    <span className="text-purple-700 font-semibold">{reward.amount} Renown</span>
+                  </span>
+                );
+              }
+              if (reward.type === "coins") {
+                return (
+                  <span key={idx} className="flex flex-col items-center mx-1">
+                    <img src="/icons/coins.svg" alt="Coins" className="w-7 h-7" />
+                    <span className="text-yellow-700 font-semibold">{formatNumberShort(reward.amount)} Coins</span>
+                  </span>
+                );
+              }
+              if (reward.type === "houseLevel") {
+                return (
+                  <span key={idx} className="flex flex-col items-center mx-1">
+                    <img src="/icons/house.svg" alt="House" className="w-7 h-7" />
+                    <span className="text-indigo-700 font-semibold">+{reward.amount} House Lv</span>
+                  </span>
+                );
+              }
+              if (reward.type === "mystery") {
+                return (
+                  <span key={idx} className="flex flex-col items-center mx-1">
+                    <img src="/icons/gift.svg" alt="Gift" className="w-7 h-7" />
+                    <span className="text-pink-700 font-semibold">Mystery Gift!</span>
+                  </span>
+                );
+              }
+              return null;
+            })}
+          </div>
+          <button
+            onClick={async () => {
+              // Apply each bonus
+              let newState = { ...gameState };
+              pendingDailyBonus.forEach(r => {
+                if (r.type === "renown") newState.renownTokens = (newState.renownTokens || 0) + r.amount;
+                if (r.type === "coins") newState.coins = (newState.coins || 0) + r.amount;
+                if (r.type === "houseLevel") newState.houseLevel = (newState.houseLevel || 1) + r.amount;
+                if (r.type === "mystery") {
+                  const mystery = getRandomProfileIcon();
+                  // You should have logic to add it to user's collection
+                  setNotification(`You received a new profile icon: ${mystery.name} ${mystery.emoji}`);
+                  // TODO: update backend collection for the user
+                }
+              });
+              setGameState(newState);
+
+              // Update streak, claim time, etc.
+              const now = Date.now();
+              setLastDailyClaim(now);
+              setPendingDailyBonus(null);
+
+              // Save to backend here if you want:
+              fetch("/api/game-state", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  userId,
+                  pin,
+                  action: "saveDailyClaim",
+                  lastDailyClaim: now,
+                  dailyBonusStreak: dailyBonusStreak,
+                }),
+              });
+            }}
+            className="w-full py-2 rounded-xl bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-bold shadow hover:scale-105 transition mt-2"
+          >
+            Claim Daily Bonus
+          </button>
+        </div>
+      )}
+
+      {/* --- Original Claim Button --- */}
       <button
         onClick={() => {
           const newState = {
@@ -7243,6 +7380,7 @@ const currentValueFormatted =
     </div>
   </div>
 )}
+
 
 {showHardResetModal && (
   <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
