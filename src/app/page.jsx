@@ -6280,25 +6280,34 @@ const renderHouseTab = () => {
     </div>
   );
 
-  const handleHouseRename = () => {
-    if (!newHouseName.trim()) {
-      setHouseNameError("Please enter a name");
-      return;
-    }
-    if (newHouseName.length > 30) {
-      setHouseNameError("Name too long (max 30 characters)");
-      return;
-    }
+  const handleHouseRename = async () => {
+  if (!newHouseName.trim()) {
+    setHouseNameError("Please enter a name");
+    return;
+  }
+  if (newHouseName.length > 30) {
+    setHouseNameError("Name too long (max 30 characters)");
+    return;
+  }
 
-    setGameState((prev) => ({
-      ...prev,
-      houseName: newHouseName.trim(),
-    }));
-    setShowHouseRenameModal(false);
-    setNewHouseName("");
-    setHouseNameError("");
-    setNotification("House renamed successfully!");
-  };
+  // Update state
+  setGameState((prev) => ({
+    ...prev,
+    houseName: newHouseName.trim(),
+  }));
+
+  // Save to backend immediately (so it persists after refresh)
+  await saveGame({
+    ...gameState,
+    houseName: newHouseName.trim(),
+  });
+
+  setShowHouseRenameModal(false);
+  setNewHouseName("");
+  setHouseNameError("");
+  setNotification("House renamed successfully!");
+};
+
 
   function claimDailyBonus() {
     if (!canClaimDailyBonus(lastDailyClaim)) {
