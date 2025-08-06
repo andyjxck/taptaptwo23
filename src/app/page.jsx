@@ -7257,43 +7257,43 @@ const currentValueFormatted =
   </h4>
   <div className="grid grid-cols-3 gap-2 mb-2">
     {/* Days 1-6 in 2 rows of 3 */}
-    {Array.from({ length: 6 }, (_, idx) => {
+    {[
+      { renown: 10, coins: 0, house: 0 },
+      { renown: 20, coins: 0, house: 0 },
+      { renown: 30, coins: 10000000, house: 0 },
+      { renown: 50, coins: 50000000, house: 0 },
+      { renown: 100, coins: 60000000, house: 0 },
+      { renown: 250, coins: 100000000, house: 0 }
+    ].map((reward, idx) => {
       const day = idx + 1;
       const isClaimed = claimedDays.includes(day);
       const isToday = dailyBonusStreak === day;
       const canClaim = isToday && !isClaimed;
-      const rewards = [
-        [<img key="r" src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" className="inline w-5 h-5 mx-0.5" />],
-        [<img key="r" src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" className="inline w-5 h-5 mx-0.5" />],
-        [
-          <img key="r" src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" className="inline w-5 h-5 mx-0.5" />,
-          <img key="c" src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/" alt="Coins" className="inline w-5 h-5 mx-0.5" />
-        ],
-        [
-          <img key="r" src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" className="inline w-5 h-5 mx-0.5" />,
-          <img key="c" src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/" alt="Coins" className="inline w-5 h-5 mx-0.5" />
-        ],
-        [
-          <img key="r" src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" className="inline w-5 h-5 mx-0.5" />,
-          <img key="c" src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/" alt="Coins" className="inline w-5 h-5 mx-0.5" />
-        ],
-        [
-          <img key="r" src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" className="inline w-5 h-5 mx-0.5" />,
-          <img key="c" src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/" alt="Coins" className="inline w-5 h-5 mx-0.5" />
-        ]
-      ];
-
       return (
         <div
           key={day}
           className={`
             rounded-lg p-2 flex flex-col items-center border
             ${canClaim ? "border-yellow-400 bg-yellow-50" : isClaimed ? "border-green-400 bg-green-50" : "border-gray-300 bg-white/70"}
-            relative min-w-[72px] min-h-[72px]
+            relative min-w-[72px] min-h-[88px]
           `}
         >
           <div className="font-bold text-sm mb-1">{`Day ${day}`}</div>
-          <div className="flex justify-center mb-1">{rewards[idx]}</div>
+          <div className="flex flex-row gap-1 justify-center mb-0.5">
+            <img src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" className="inline w-5 h-5 mx-0.5" />
+            {reward.coins > 0 && (
+              <img src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/" alt="Coins" className="inline w-5 h-5 mx-0.5" />
+            )}
+          </div>
+          <div className="flex flex-col gap-0.5 items-center mb-1">
+            <span className="text-[11px] text-black font-normal">{reward.renown} Renown</span>
+            {reward.coins > 0 && (
+              <span className="text-[11px] text-black font-normal">{reward.coins.toLocaleString()} Coins</span>
+            )}
+            {reward.house > 0 && (
+              <span className="text-[11px] text-black font-normal">{reward.house} House Level</span>
+            )}
+          </div>
           {isToday ? (
             isClaimed ? (
               <button
@@ -7325,25 +7325,36 @@ const currentValueFormatted =
   <div className="flex justify-center mt-2">
     {(() => {
       const day = 7;
+      const reward = {
+        renown: 300,
+        coins: 150000000,
+        house: 10,
+        gift: true
+      };
       const isClaimed = claimedDays.includes(day);
       const isToday = dailyBonusStreak === day;
       const canClaim = isToday && !isClaimed;
-      const rewards = [
-        <img key="r" src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" className="inline w-5 h-5 mx-0.5" />,
-        <img key="c" src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/" alt="Coins" className="inline w-5 h-5 mx-0.5" />,
-        <img key="h" src="https://ucarecdn.com/22eaa50d-6e78-4af4-b36c-5a3d46ca0f47/-/format/auto/" alt="House Level" className="inline w-5 h-5 mx-0.5" />,
-        <img key="g" src="https://ucarecdn.com/fc53a55b-735b-4148-b0fb-456a23d105af/-/format/auto/" alt="Gift" className="inline w-5 h-5 mx-0.5" />
-      ];
       return (
         <div
           className={`
             rounded-lg p-2 flex flex-col items-center border
             ${canClaim ? "border-yellow-400 bg-yellow-50" : isClaimed ? "border-green-400 bg-green-50" : "border-gray-300 bg-white/70"}
-            relative min-w-[72px] min-h-[72px]
+            relative min-w-[72px] min-h-[108px]
           `}
         >
           <div className="font-bold text-sm mb-1">{`Day 7`}</div>
-          <div className="flex justify-center mb-1">{rewards}</div>
+          <div className="flex flex-row gap-1 justify-center mb-0.5">
+            <img src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" className="inline w-5 h-5 mx-0.5" />
+            <img src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/" alt="Coins" className="inline w-5 h-5 mx-0.5" />
+            <img src="https://ucarecdn.com/22eaa50d-6e78-4af4-b36c-5a3d46ca0f47/-/format/auto/" alt="House Level" className="inline w-5 h-5 mx-0.5" />
+            <img src="https://ucarecdn.com/fc53a55b-735b-4148-b0fb-456a23d105af/-/format/auto/" alt="Gift" className="inline w-5 h-5 mx-0.5" />
+          </div>
+          <div className="flex flex-col gap-0.5 items-center mb-1">
+            <span className="text-[11px] text-black font-normal">{reward.renown} Renown</span>
+            <span className="text-[11px] text-black font-normal">{reward.coins.toLocaleString()} Coins</span>
+            <span className="text-[11px] text-black font-normal">{reward.house} House Level</span>
+            <span className="text-[11px] text-black font-normal">Mystery Gift!</span>
+          </div>
           {isToday ? (
             isClaimed ? (
               <button
