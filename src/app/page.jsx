@@ -7253,7 +7253,7 @@ const currentValueFormatted =
   <h4 className="font-bold text-yellow-700 text-lg mb-2">
     <i className="fas fa-gift mr-1"></i> Daily Login Bonus
   </h4>
-  <div className="grid grid-cols-3 gap-3 mb-3">
+  <div className="grid grid-cols-3 gap-1 mb-1">
     {[0,1,2,3,4,5].map(i => {
       const dayNum = i+1;
       const isClaimed = claimedDays.includes(dayNum);
@@ -7266,22 +7266,22 @@ const currentValueFormatted =
             {rewards.map((reward, idx) => {
               if (reward.type === "renown") {
                 return (
-                  <img key={idx} src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" title={`${reward.amount} Renown`} className="w-6 h-6" />
+                  <img key={idx} src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" title={`${reward.amount} Renown`} className="w-4 h-4" />
                 );
               }
               if (reward.type === "coins") {
                 return (
-                  <img key={idx} src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/" alt="Coins" title={`${formatNumberShort(reward.amount)} Coins`} className="w-6 h-6" />
+                  <img key={idx} src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/" alt="Coins" title={`${formatNumberShort(reward.amount)} Coins`} className="w-4 h-4" />
                 );
               }
               if (reward.type === "houseLevel") {
                 return (
-                  <img key={idx} src="https://ucarecdn.com/22eaa50d-6e78-4af4-b36c-5a3d46ca0f47/-/format/auto/" alt="House Level" title={`+${reward.amount} House Lv`} className="w-6 h-6" />
+                  <img key={idx} src="https://ucarecdn.com/22eaa50d-6e78-4af4-b36c-5a3d46ca0f47/-/format/auto/" alt="House Level" title={`+${reward.amount} House Lv`} className="w-4 h-4" />
                 );
               }
               if (reward.type === "mystery") {
                 return (
-                  <img key={idx} src="https://ucarecdn.com/fc53a55b-735b-4148-b0fb-456a23d105af/-/format/auto/" alt="Gift" title="Mystery Gift" className="w-6 h-6" />
+                  <img key={idx} src="https://ucarecdn.com/fc53a55b-735b-4148-b0fb-456a23d105af/-/format/auto/" alt="Gift" title="Mystery Gift" className="w-4 h-4" />
                 );
               }
               return null;
