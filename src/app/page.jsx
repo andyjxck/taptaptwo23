@@ -7256,19 +7256,23 @@ const currentValueFormatted =
     <i className="fas fa-gift mr-1"></i> Daily Login Bonus
   </h4>
   <div className="grid grid-cols-3 gap-2 mb-2">
-    {/* Days 1-6 in 2 rows of 3 */}
     {[
-      { renown: 10, coins: 0, house: 0 },
-      { renown: 20, coins: 0, house: 0 },
-      { renown: 30, coins: 10000000, house: 0 },
-      { renown: 50, coins: 50000000, house: 0 },
-      { renown: 100, coins: 60000000, house: 0 },
-      { renown: 250, coins: 100000000, house: 0 }
+      // day 1-6 rewards (put in the same order as their icons)
+      { icons: ['renown'], values: [10] },
+      { icons: ['renown'], values: [20] },
+      { icons: ['renown', 'coins'], values: [30, 10000000] },
+      { icons: ['renown', 'coins'], values: [50, 50000000] },
+      { icons: ['renown', 'coins'], values: [100, 60000000] },
+      { icons: ['renown', 'coins'], values: [250, 100000000] },
     ].map((reward, idx) => {
       const day = idx + 1;
       const isClaimed = claimedDays.includes(day);
       const isToday = dailyBonusStreak === day;
       const canClaim = isToday && !isClaimed;
+      const iconMap = {
+        renown: "https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/",
+        coins: "https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/",
+      };
       return (
         <div
           key={day}
@@ -7280,19 +7284,12 @@ const currentValueFormatted =
         >
           <div className="font-bold text-sm mb-1">{`Day ${day}`}</div>
           <div className="flex flex-row gap-1 justify-center mb-0.5">
-            <img src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" className="inline w-5 h-5 mx-0.5" />
-            {reward.coins > 0 && (
-              <img src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/" alt="Coins" className="inline w-5 h-5 mx-0.5" />
-            )}
-          </div>
-          <div className="flex flex-col gap-0.5 items-center mb-1">
-            <span className="text-[11px] text-black font-normal">{reward.renown} Renown</span>
-            {reward.coins > 0 && (
-              <span className="text-[11px] text-black font-normal">{reward.coins.toLocaleString()} Coins</span>
-            )}
-            {reward.house > 0 && (
-              <span className="text-[11px] text-black font-normal">{reward.house} House Level</span>
-            )}
+            {reward.icons.map((icon, i) => (
+              <div key={icon} className="flex flex-col items-center">
+                <img src={iconMap[icon]} alt="" className="inline w-5 h-5 mx-0.5" />
+                <span className="text-[11px] text-black font-semibold leading-none">{reward.values[i].toLocaleString()}</span>
+              </div>
+            ))}
           </div>
           {isToday ? (
             isClaimed ? (
@@ -7325,15 +7322,16 @@ const currentValueFormatted =
   <div className="flex justify-center mt-2">
     {(() => {
       const day = 7;
-      const reward = {
-        renown: 300,
-        coins: 150000000,
-        house: 10,
-        gift: true
-      };
       const isClaimed = claimedDays.includes(day);
       const isToday = dailyBonusStreak === day;
       const canClaim = isToday && !isClaimed;
+      // All icons in row, with values underneath
+      const icons = [
+        { img: "https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/", val: 300 },
+        { img: "https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/", val: 150000000 },
+        { img: "https://ucarecdn.com/22eaa50d-6e78-4af4-b36c-5a3d46ca0f47/-/format/auto/", val: 10 },
+        { img: "https://ucarecdn.com/fc53a55b-735b-4148-b0fb-456a23d105af/-/format/auto/", val: "?" }
+      ];
       return (
         <div
           className={`
@@ -7344,16 +7342,14 @@ const currentValueFormatted =
         >
           <div className="font-bold text-sm mb-1">{`Day 7`}</div>
           <div className="flex flex-row gap-1 justify-center mb-0.5">
-            <img src="https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/" alt="Renown" className="inline w-5 h-5 mx-0.5" />
-            <img src="https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/" alt="Coins" className="inline w-5 h-5 mx-0.5" />
-            <img src="https://ucarecdn.com/22eaa50d-6e78-4af4-b36c-5a3d46ca0f47/-/format/auto/" alt="House Level" className="inline w-5 h-5 mx-0.5" />
-            <img src="https://ucarecdn.com/fc53a55b-735b-4148-b0fb-456a23d105af/-/format/auto/" alt="Gift" className="inline w-5 h-5 mx-0.5" />
-          </div>
-          <div className="flex flex-col gap-0.5 items-center mb-1">
-            <span className="text-[11px] text-black font-normal">{reward.renown} Renown</span>
-            <span className="text-[11px] text-black font-normal">{reward.coins.toLocaleString()} Coins</span>
-            <span className="text-[11px] text-black font-normal">{reward.house} House Level</span>
-            <span className="text-[11px] text-black font-normal">Mystery Gift!</span>
+            {icons.map((icon, i) => (
+              <div key={i} className="flex flex-col items-center">
+                <img src={icon.img} alt="" className="inline w-5 h-5 mx-0.5" />
+                <span className="text-[11px] text-black font-semibold leading-none">
+                  {typeof icon.val === "number" ? icon.val.toLocaleString() : icon.val}
+                </span>
+              </div>
+            ))}
           </div>
           {isToday ? (
             isClaimed ? (
@@ -7383,7 +7379,6 @@ const currentValueFormatted =
     })()}
   </div>
 </div>
-
 
 
       {/* --- Original Claim Button --- */}
