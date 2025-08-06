@@ -7257,7 +7257,6 @@ const currentValueFormatted =
   </h4>
   <div className="grid grid-cols-3 gap-2 mb-2">
     {[
-      // day 1-6 rewards (put in the same order as their icons)
       { icons: ['renown'], values: [10] },
       { icons: ['renown'], values: [20] },
       { icons: ['renown', 'coins'], values: [30, 10000000] },
@@ -7287,7 +7286,7 @@ const currentValueFormatted =
             {reward.icons.map((icon, i) => (
               <div key={icon} className="flex flex-col items-center">
                 <img src={iconMap[icon]} alt="" className="inline w-5 h-5 mx-0.5" />
-                <span className="text-[11px] text-black font-semibold leading-none">{reward.values[i].toLocaleString()}</span>
+                <span className="text-[9px] text-black font-semibold leading-none" style={{ marginTop: 0 }}>{formatNumberShort(reward.values[i])}</span>
               </div>
             ))}
           </div>
@@ -7325,7 +7324,6 @@ const currentValueFormatted =
       const isClaimed = claimedDays.includes(day);
       const isToday = dailyBonusStreak === day;
       const canClaim = isToday && !isClaimed;
-      // All icons in row, with values underneath
       const icons = [
         { img: "https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/", val: 300 },
         { img: "https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/", val: 150000000 },
@@ -7345,8 +7343,8 @@ const currentValueFormatted =
             {icons.map((icon, i) => (
               <div key={i} className="flex flex-col items-center">
                 <img src={icon.img} alt="" className="inline w-5 h-5 mx-0.5" />
-                <span className="text-[11px] text-black font-semibold leading-none">
-                  {typeof icon.val === "number" ? icon.val.toLocaleString() : icon.val}
+                <span className="text-[9px] text-black font-semibold leading-none" style={{ marginTop: 0 }}>
+                  {formatNumberShort(icon.val)}
                 </span>
               </div>
             ))}
