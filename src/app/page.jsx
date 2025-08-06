@@ -7229,7 +7229,7 @@ const currentValueFormatted =
 {showOfflineEarnings && pendingOfflineEarnings && (
   <div
     className="fixed inset-0 bg-black/50 flex justify-center z-50"
-    style={{ alignItems: "flex-start", paddingTop: "6rem" }}
+    style={{ alignItems: "flex-start", paddingTop: "3rem" }}
   >
     <div
       className="bg-gradient-to-br from-purple-400/50 via-purple-200/40 to-purple-600/60 backdrop-blur-xl rounded-2xl p-7 max-w-sm w-full border border-white/30 shadow-lg relative"
