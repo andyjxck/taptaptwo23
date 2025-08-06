@@ -828,7 +828,8 @@ if (action === "save") {
   const ownedProfileIconsJSON = JSON.stringify(gameState.ownedProfileIcons || []);
   const profileIcon = gameState.profileIcon || null;
   const coinsEarnedThisRun = Number(gameState.coinsEarnedThisRun) || 0;
-
+const houseGalleryJSON = JSON.stringify(gameState.houseGallery || []);
+const houseEmoji = gameState.houseEmoji || "🏡";
   await sql`
     INSERT INTO game_saves (
       user_id,
@@ -866,7 +867,9 @@ if (action === "save") {
       coins_earned_this_run,
       owned_themes,
       owned_boosts,
-      equipped_theme
+      equipped_theme,
+          house_gallery,
+    house_emoji
     ) VALUES (
       ${userIdInt},
       ${Number(gameState.coins) || 0},
@@ -903,7 +906,9 @@ if (action === "save") {
       ${Math.floor(coinsEarnedThisRun)},
       ${JSON.stringify(gameState.ownedThemes || ["seasons"])},
       ${JSON.stringify(gameState.ownedBoosts || [])},
-      ${String(gameState.equippedTheme || "seasons")}
+      ${String(gameState.equippedTheme || "seasons")},
+      ${houseGalleryJSON},
+    ${houseEmoji}
     )
     ON CONFLICT (user_id) DO UPDATE SET
       coins = EXCLUDED.coins,
@@ -941,7 +946,9 @@ if (action === "save") {
       owned_themes = EXCLUDED.owned_themes,
       owned_boosts = EXCLUDED.owned_boosts,
       equipped_theme = EXCLUDED.equipped_theme,
-      last_saved = CURRENT_TIMESTAMP
+      last_saved = CURRENT_TIMESTAMP,
+       house_gallery = EXCLUDED.house_gallery,
+    house_emoji = EXCLUDED.house_emoji,
   `;
 
 await sql`
@@ -1019,6 +1026,15 @@ if (action === "load") {
 
   const equippedTheme = rows[0].equipped_theme || "seasons";
 
+  let houseGalleryArr = [];
+try {
+  houseGalleryArr = rows[0].house_gallery ? JSON.parse(rows[0].house_gallery) : [];
+} catch {}
+if (!Array.isArray(houseGalleryArr)) houseGalleryArr = [];
+
+const houseEmoji = rows[0].house_emoji || "🏡";
+
+  
   return {
     gameState: {
       ...rows[0],
@@ -1036,6 +1052,8 @@ if (action === "load") {
       equippedTheme,
       permanentMultiplier: Number(rows[0].permanent_multiplier) || 1,
       limitedStock,
+         houseGallery: houseGalleryArr,
+    houseEmoji,
     },
   };
 }
