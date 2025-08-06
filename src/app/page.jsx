@@ -3667,11 +3667,9 @@ async function removeFriend(friendId) {
   );
 
 const loadGame = async () => {
-  setLoading(true); // Show loading overlay
+  setLoading(true);
 
   if (!userId || !pin) {
-    // If you ever want to re-enable redirect, add:
-    // window.location.href = "/login";
     setLoading(false);
     return;
   }
@@ -3687,8 +3685,6 @@ const loadGame = async () => {
       if (response.status === 401) {
         localStorage.removeItem("userId");
         localStorage.removeItem("pin");
-        // If you ever want to re-enable redirect, add:
-        // window.location.href = "/login";
         setLoading(false);
         return;
       }
@@ -3697,46 +3693,60 @@ const loadGame = async () => {
 
     const data = await response.json();
     if (data.gameState) {
-      // Always calculate renownTokens and permanentMultiplier based on fresh data
+      // Calculate renownTokens and permanentMultiplier
       const renownTokens = Number(data.gameState.renown_tokens ?? data.gameState.renownTokens) || 0;
       const permanentMultiplier = 1 + renownTokens * 0.015;
-// Pick a random emoji if missing
-let houseEmoji = data.gameState.house_emoji;
-if (!houseEmoji) {
-  houseEmoji = HOUSE_EMOJIS[Math.floor(Math.random() * HOUSE_EMOJIS.length)];
-}
 
-setGameState({
-  ...data.gameState,
-  coins: Number(data.gameState.coins),
-  tapPower: Number(data.gameState.tap_power),
-  tapPowerUpgrades: Number(data.gameState.tap_power_upgrades) || 0,
-  autoTapper: Number(data.gameState.auto_tapper),
-  autoTapperUpgrades: Number(data.gameState.auto_tapper_upgrades) || 0,
-  critChance: Number(data.gameState.crit_chance),
-  critChanceUpgrades: Number(data.gameState.crit_chance_upgrades) || 0,
-  tapSpeedBonus: Number(data.gameState.tap_speed_bonus),
-  tapSpeedBonusUpgrades: Number(data.gameState.tap_speed_bonus_upgrades) || 0,
-  totalTaps: Number(data.gameState.total_taps),
-  totalCoinsEarned: Number(data.gameState.total_coins_earned),
-  resets: Number(data.gameState.resets),
-  permanentMultiplier,
-  currentSeason: Number(data.gameState.current_season),
-  houseLevel: Number(data.gameState.house_level),
-  highest_house_level: Number(data.gameState.highest_house_level ?? data.gameState.house_level) || 1,
-  houseCoinsMultiplier: Number(data.gameState.house_coins_multiplier),
-  hasFirstReset: Boolean(data.gameState.has_first_reset),
-  currentWeather: data.gameState.current_weather || "Clear",
-  currentYear: Number(data.gameState.current_year) || 0,
-  houseName: data.gameState.house_name || "My Cozy Home",
-  houseEmoji: data.gameState.house_emoji || "🏡",   // Add this line!
-  houseGallery: data.gameState.house_gallery || [], // Add this line!
-  profileName: data.gameState.profile_name || "Player",
-  coinsEarnedThisRun: Number(data.gameState.coins_earned_this_run) || 0,
-  renownTokens,
-});
+      // House emoji fallback
+      let houseEmoji = data.gameState.house_emoji;
+      if (!houseEmoji) {
+        houseEmoji = HOUSE_EMOJIS[Math.floor(Math.random() * HOUSE_EMOJIS.length)];
+      }
 
+      // Set main game state
+      setGameState({
+        ...data.gameState,
+        coins: Number(data.gameState.coins),
+        tapPower: Number(data.gameState.tap_power),
+        tapPowerUpgrades: Number(data.gameState.tap_power_upgrades) || 0,
+        autoTapper: Number(data.gameState.auto_tapper),
+        autoTapperUpgrades: Number(data.gameState.auto_tapper_upgrades) || 0,
+        critChance: Number(data.gameState.crit_chance),
+        critChanceUpgrades: Number(data.gameState.crit_chance_upgrades) || 0,
+        tapSpeedBonus: Number(data.gameState.tap_speed_bonus),
+        tapSpeedBonusUpgrades: Number(data.gameState.tap_speed_bonus_upgrades) || 0,
+        totalTaps: Number(data.gameState.total_taps),
+        totalCoinsEarned: Number(data.gameState.total_coins_earned),
+        resets: Number(data.gameState.resets),
+        permanentMultiplier,
+        currentSeason: Number(data.gameState.current_season),
+        houseLevel: Number(data.gameState.house_level),
+        highest_house_level: Number(data.gameState.highest_house_level ?? data.gameState.house_level) || 1,
+        houseCoinsMultiplier: Number(data.gameState.house_coins_multiplier),
+        hasFirstReset: Boolean(data.gameState.has_first_reset),
+        currentWeather: data.gameState.current_weather || "Clear",
+        currentYear: Number(data.gameState.current_year) || 0,
+        houseName: data.gameState.house_name || "My Cozy Home",
+        houseEmoji: houseEmoji,
+        houseGallery: data.gameState.house_gallery || [],
+        profileName: data.gameState.profile_name || "Player",
+        coinsEarnedThisRun: Number(data.gameState.coins_earned_this_run) || 0,
+        renownTokens,
+      });
 
+      // ----- DAILY BONUS SYNC -----
+      setDailyBonusStreak(Number(data.gameState.daily_bonus_streak) || 1);
+
+      // Load claimed days array from backend (or empty array)
+      let claimed = [];
+      try {
+        claimed = data.gameState.claimedDays || data.gameState.claimed_daily_bonus_days || [];
+        if (typeof claimed === "string") claimed = JSON.parse(claimed);
+        if (!Array.isArray(claimed)) claimed = [];
+      } catch { claimed = []; }
+      setClaimedDays(claimed);
+
+      // ----- QUEST LOGIC -----
       if (data.gameState.currentQuest) {
         const quest = data.gameState.currentQuest;
         const questTemplate = QUEST_TEMPLATES.find((q) => q.id === quest.id);
@@ -3765,38 +3775,31 @@ setGameState({
         setCanClaimQuest(false);
       }
 
+      // ----- OFFLINE EARNINGS -----
       if (data.gameState.lastDailyClaim) {
         setLastDailyClaim(Number(data.gameState.lastDailyClaim));
-        localStorage.setItem(
-          "lastDailyClaim",
-          String(data.gameState.lastDailyClaim)
-        );
+        localStorage.setItem("lastDailyClaim", String(data.gameState.lastDailyClaim));
       }
 
-const lastActive = Number(localStorage.getItem("lastActiveTime"));
-if (lastActive && !isNaN(lastActive)) {
-  const now = Date.now();
-  const seconds = Math.floor((now - lastActive) / 1000);
-  if (seconds > 30) {
-    const maxSeconds = 3 * 60 * 60;
-    const offlineSeconds = Math.min(seconds, maxSeconds);
-    const coins =
-      getAutoTapper(
-        Number(data.gameState.auto_tapper),
-        activeShopBoosts
-      ) * offlineSeconds;
-    setPendingOfflineEarnings({
-      seconds: offlineSeconds,
-      coins: coins,
-    });
-setShowOfflineEarnings(true); // <-- THIS IS WHAT WAS MISSING!
-  }
-  localStorage.removeItem("lastActiveTime");
-}
+      const lastActive = Number(localStorage.getItem("lastActiveTime"));
+      if (lastActive && !isNaN(lastActive)) {
+        const now = Date.now();
+        const seconds = Math.floor((now - lastActive) / 1000);
+        if (seconds > 30) {
+          const maxSeconds = 3 * 60 * 60;
+          const offlineSeconds = Math.min(seconds, maxSeconds);
+          const coins =
+            getAutoTapper(Number(data.gameState.auto_tapper), activeShopBoosts) * offlineSeconds;
+          setPendingOfflineEarnings({
+            seconds: offlineSeconds,
+            coins: coins,
+          });
+          setShowOfflineEarnings(true);
+        }
+        localStorage.removeItem("lastActiveTime");
+      }
 
-
-
-
+      // ----- BOOSTS -----
       if (data.gameState.boost_active_until) {
         const boostEnd = new Date(data.gameState.boost_active_until);
         if (boostEnd > new Date()) {
@@ -3808,7 +3811,7 @@ setShowOfflineEarnings(true); // <-- THIS IS WHAT WAS MISSING!
   } catch (error) {
     console.error("Error loading game:", error);
   } finally {
-    setLoading(false); // Hide loading overlay always at the end
+    setLoading(false);
   }
 };
 
