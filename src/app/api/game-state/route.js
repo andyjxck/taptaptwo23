@@ -804,6 +804,7 @@ if (action === "buyLimitedItem") {
   return { success: true, permanentMultiplier };
 }
 
+    
 
 if (action === "save") {
   if (!gameState || typeof gameState !== "object") {
@@ -1057,6 +1058,115 @@ const houseEmoji = rows[0].house_emoji || "🏡";
     },
   };
 }
+
+    // --- DAILY BONUS CLAIM ---
+if (action === "claimDailyBonus") {
+  // Columns required in game_saves: last_daily_claim, daily_bonus_streak
+  // Expect: userIdInt, day (1-7), claimDate (ms/iso, from frontend)
+  // Handles updating streak and last claim date
+
+  // Fetch latest save
+  const rows = await sql`
+    SELECT last_daily_claim, daily_bonus_streak, owned_profile_icons, owned_themes, renown_tokens, coins, house_level
+    FROM game_saves
+    WHERE user_id = ${userIdInt}
+  `;
+  if (!rows || rows.length === 0) {
+    return { error: "Save not found" };
+  }
+  let { last_daily_claim, daily_bonus_streak, owned_profile_icons, owned_themes, renown_tokens, coins, house_level } = rows[0];
+
+  // --- Streak Calculation ---
+  let streak = Number(daily_bonus_streak) || 1;
+  let last = last_daily_claim ? new Date(last_daily_claim) : null;
+  let now = new Date(typeof claimDate === "string" || typeof claimDate === "number" ? claimDate : Date.now());
+
+  // If claimed yesterday, streak +1. If missed a day, reset streak.
+  if (last) {
+    const days = Math.floor((now - new Date(last)) / (1000 * 60 * 60 * 24));
+    if (days === 1) streak = Math.min(streak + 1, 7);
+    else if (days > 1) streak = 1;
+    // else: streak stays if same day, but frontend should block multi-claim
+  } else {
+    streak = 1;
+  }
+
+  // --- REWARD LOGIC ---
+  // Your bonuses for each day
+  const DAILY_BONUSES = [
+    { renown: 10, coins: 0, house: 0 },
+    { renown: 20, coins: 0, house: 0 },
+    { renown: 30, coins: 10000000, house: 0 },
+    { renown: 50, coins: 50000000, house: 0 },
+    { renown: 100, coins: 60000000, house: 0 },
+    { renown: 250, coins: 100000000, house: 0 },
+    { renown: 300, coins: 150000000, house: 10, gift: true },
+  ];
+
+  const bonus = DAILY_BONUSES[Math.max(0, Math.min(streak - 1, 6))];
+  let newRenown = (Number(renown_tokens) || 0) + (bonus.renown || 0);
+  let newCoins = (Number(coins) || 0) + (bonus.coins || 0);
+  let newHouseLevel = (Number(house_level) || 1) + (bonus.house || 0);
+
+  // --- Mystery Gift (Day 7) ---
+  let updatedIcons = owned_profile_icons ? (typeof owned_profile_icons === "string" ? JSON.parse(owned_profile_icons) : owned_profile_icons) : [];
+  let updatedThemes = owned_themes ? (typeof owned_themes === "string" ? JSON.parse(owned_themes) : owned_themes) : [];
+  let giftType = null;
+  let giftValue = null;
+  if (bonus.gift) {
+    // Randomly give either a new icon or a new theme
+    const allIcons = [
+  "tree", "seedling", "cloudMoon", "sun", "star", "alien", "fire", "ghost", "cat", "unicorn", "robot", "crown",
+  "icecream", "rocket", "rainbow", "mouse", "frog", "fox", "penguin", "bunny", "duck", "hamster", "owl", "hedgehog",
+  "panda", "monkey", "bee", "butterfly", "ladybug", "chick", "bear", "dolphin", "whale", "snail", "peach", "avocado",
+  "mushroom", "cherry", "cookie", "lighthouse", "moon", "comet", "snowflake", "maple", "eclipse", "mountain",
+  "clover", "sakura", "balloon", "logo", "maddox", "dog", "diamond", "dragon", "mermaid", "wizard", "crystalball", "cactus", "volcano",
+  "jellyfish", "starstruck", "medal", "ninja", "phoenix", "pirate", "vampire", "dragonfruit"
+];
+  const allThemes = [
+    "heaven","hell","maddoxtheme","space","city_night","midnight","island","barn","city","forest","beach","seasons"
+  ];
+    const iconPool = allIcons.filter(icon => !updatedIcons.includes(icon));
+    const themePool = allThemes.filter(theme => !updatedThemes.includes(theme));
+    if (iconPool.length && (!themePool.length || Math.random() < 0.5)) {
+      const icon = iconPool[Math.floor(Math.random() * iconPool.length)];
+      updatedIcons.push(icon);
+      giftType = "profile_icon";
+      giftValue = icon;
+    } else if (themePool.length) {
+      const theme = themePool[Math.floor(Math.random() * themePool.length)];
+      updatedThemes.push(theme);
+      giftType = "theme";
+      giftValue = theme;
+    }
+  }
+
+  // --- Update DB ---
+  await sql`
+    UPDATE game_saves
+    SET
+      renown_tokens = ${newRenown},
+      coins = ${newCoins},
+      house_level = ${newHouseLevel},
+      last_daily_claim = ${now.toISOString()},
+      daily_bonus_streak = ${streak},
+      owned_profile_icons = ${JSON.stringify(updatedIcons)},
+      owned_themes = ${JSON.stringify(updatedThemes)}
+    WHERE user_id = ${userIdInt}
+  `;
+
+  return {
+    success: true,
+    daily_bonus_streak: streak,
+    renown: newRenown,
+    coins: newCoins,
+    house_level: newHouseLevel,
+    giftType,
+    giftValue,
+    message: `Claimed Day ${streak} daily bonus!`
+  };
+}
+
 
 
 if (action === "getLeaderboard") {
