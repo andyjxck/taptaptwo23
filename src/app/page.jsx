@@ -4504,6 +4504,15 @@ const handleTap = useCallback(() => {
   localStorage.setItem("lastActiveTime", Date.now());
 }, [gameState, lastTapTimes, hasBoost, userId, pin]);
 
+useEffect(() => {
+  // Fetch lastDailyClaim, dailyBonusStreak from backend as part of gameState
+  // If eligible (hasn't claimed today), show the modal
+  const todayStr = new Date().toISOString().slice(0,10);
+  const lastClaimStr = lastDailyClaim ? new Date(lastDailyClaim).toISOString().slice(0,10) : "";
+  if (todayStr !== lastClaimStr) {
+    setShowBonusModal(true); // Or whatever triggers your modal
+  }
+}, [lastDailyClaim]);
 
 const handleUpgrade = useCallback(
   (type, multiplier = 1) => {
@@ -6302,58 +6311,43 @@ const handleHouseRename = async () => {
 
 
 
-  function claimDailyBonus() {
-    if (!canClaimDailyBonus(lastDailyClaim)) {
-      setNotification("Daily bonus not available yet!");
-      return;
-    }
+async function claimDailyBonus() {
+  // Call server to claim, which will validate, update streak, and return reward
+  const res = await fetch("/api/game-state", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      userId,
+      pin,
+      action: "claimDailyBonus",
+    }),
+  });
 
-    const bonus = pickRandomBonus(dailyBonuses);
-    setPendingBonus(bonus);
+  const data = await res.json();
 
-    // Apply bonus effect
-    setGameState((prev) => {
-      let newState = { ...prev };
-
-      if (bonus.type === "upgrade") {
-        const upgradeKey = bonus.upgradeType;
-        newState[upgradeKey] = (newState[upgradeKey] || 0) + bonus.amount;
-        newState[`${upgradeKey}Upgrades`] =
-          (newState[`${upgradeKey}Upgrades`] || 0) + bonus.amount;
-      } else if (bonus.type === "coins") {
-        const extra = Math.floor(newState.coins * bonus.percent);
-        newState.coins += extra;
-        newState.totalCoinsEarned += extra;
-      } else if (bonus.type === "houseLevel") {
-        newState.houseLevel = (newState.houseLevel || 1) + bonus.amount;
-      } else if (bonus.type === "multiplier") {
-        newState.tempMultiplier = {
-          percent: bonus.percent,
-          expires: Date.now() + bonus.durationHours * 3600 * 1000,
-        };
-      }
-      return newState;
-    });
-
-    // Store claim time
-    const now = Date.now();
-    localStorage.setItem("lastDailyClaim", String(now));
-    setLastDailyClaim(now);
-
-    // Save to backend if you want to track on server
-    fetch("/api/game-state", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId,
-        pin,
-        action: "saveDailyClaim",
-        lastDailyClaim: now, // <--- IMPORTANT: store this value in DB!
-      }),
-    });
-
-    setShowBonusModal(true);
+  if (!data.success) {
+    setNotification(data.error || "Could not claim daily bonus!");
+    return;
   }
+
+  // Server returns: { streak, reward, mysteryGift? }
+  setPendingBonus(data.reward);
+  setDailyBonusStreak(data.streak); // If you want to display the current day/streak
+  setShowBonusModal(true);
+
+  // Also update game state to show coins/renown/houseLevel/mysteryGift if needed
+  setGameState((prev) => ({
+    ...prev,
+    coins: prev.coins + (data.reward.coins || 0),
+    renownTokens: prev.renownTokens + (data.reward.renown || 0),
+    houseLevel: prev.houseLevel + (data.reward.house_level || 0),
+    // handle mystery gift if you want
+  }));
+
+  // Optionally update `lastDailyClaim` for local use
+  setLastDailyClaim(Date.now());
+}
+
   return (
 <div
   className={`relative min-h-screen transition-colors duration-1000 pb-25
