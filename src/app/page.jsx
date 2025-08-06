@@ -6280,7 +6280,7 @@ const renderHouseTab = () => {
     </div>
   );
 
-  const handleHouseRename = async () => {
+ const handleHouseRename = async () => {
   if (!newHouseName.trim()) {
     setHouseNameError("Please enter a name");
     return;
@@ -6290,17 +6290,17 @@ const renderHouseTab = () => {
     return;
   }
 
-  // Update state
-  setGameState((prev) => ({
-    ...prev,
-    houseName: newHouseName.trim(),
-  }));
-
-  // Save to backend immediately (so it persists after refresh)
-  await saveGame({
+  const updatedState = {
     ...gameState,
-    houseName: newHouseName.trim(),
-  });
+    houseName: newHouseName.trim(),   // <-- ensure camelCase, matches backend expectation
+  };
+
+  setGameState(updatedState);
+
+  // Wait a tick to ensure React state is set (just to be safe)
+  await new Promise((resolve) => setTimeout(resolve, 25));
+
+  await saveGame(updatedState);  // <-- always pass the updated copy
 
   setShowHouseRenameModal(false);
   setNewHouseName("");
