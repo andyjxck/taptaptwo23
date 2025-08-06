@@ -7242,7 +7242,7 @@ const currentValueFormatted =
       }}
     >
       <h3 className="text-xl font-medium text-[#2d3748] mb-4">Offline Earnings!</h3>
-      <p className="mb-4 text-lg text-[#363636] text-center">
+      <p className="mb-4 text-sm text-[#363636] text-center">
         You were offline for {formatDuration(pendingOfflineEarnings.seconds)}.<br />
         You earned{" "}
         <span className="font-bold text-green-600">
