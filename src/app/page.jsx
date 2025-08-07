@@ -7733,7 +7733,6 @@ const currentValueFormatted =
       );
     })()}
   </div>
-</>
 
       {/* --- Main Offline Claim Button --- */}
       <button
