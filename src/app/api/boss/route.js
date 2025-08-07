@@ -357,7 +357,7 @@ if (action === "solo_tap") {
     weekly_best: newWeeklyBest,
     damage_dealt: damage,
   });
-}
+};
 
 
   if (action === "coop_create") {
