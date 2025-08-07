@@ -214,14 +214,14 @@ useEffect(() => {
 function getBossHp(level) {
   // Boss HP gets a lot higher each level. Adjust GROWTH for difficulty.
   const BASE_HP = 1000;
-  const GROWTH = 1.32; // Make this higher if you want even more scaling.
+  const GROWTH = 1.31; // Make this higher if you want even more scaling.
   return Math.floor(BASE_HP * Math.pow(GROWTH, Math.max(level-1, 0)));
 }
 
 function getBossReward(level) {
   // Rewards grow slower so you can't farm easy bosses for big gains.
   const BASE_REWARD = 500;
-  const REWARD_CURVE = 1.1; // Lower means rewards scale less quickly.
+  const REWARD_CURVE = 1.15; // Lower means rewards scale less quickly.
   return Math.floor(BASE_REWARD * Math.pow(REWARD_CURVE, Math.max(level-1, 0)));
 }
 
