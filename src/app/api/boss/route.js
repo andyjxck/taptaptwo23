@@ -129,7 +129,7 @@ async function ensureSoloProgress(userId) {
 }
 
 // ---------- GET HANDLER ----------
-export async function GET(request: Request) {
+export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const action = searchParams.get("action");
   const userId = searchParams.get("userId");
@@ -249,7 +249,7 @@ export async function GET(request: Request) {
 }
 
 // ---------- POST HANDLER ----------
-export async function POST(request: Request) {
+export async function POST(request) {
   let body: any;
   try {
     body = await request.json();
