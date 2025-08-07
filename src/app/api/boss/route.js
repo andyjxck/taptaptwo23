@@ -257,56 +257,19 @@ export async function POST(request) {
 
   const action = body.action;
 
-try {
-  if (action === "solo_tap") {
-    const { userId, damage } = body;
-    if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
-    if (typeof damage !== "number" || damage <= 0)
-      return NextResponse.json({ error: "Valid damage required" }, { status: 400 });
+if (action === "solo_tap") {
+  const { userId, damage } = body;
+  if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
+  if (typeof damage !== "number" || damage <= 0)
+    return NextResponse.json({ error: "Valid damage required" }, { status: 400 });
 
-    const progress = await ensureSoloProgress(userId);
+  const progress = await ensureSoloProgress(userId);
+  const currentLevel = safe(progress.current_level);
+  const bossMaxHp = safe(progress.boss_max_hp) || getBossHP(currentLevel);
+  const currentBossHp = safe(progress.boss_hp) ?? bossMaxHp;
 
-    if (safe(progress.boss_hp) <= 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Boss already defeated. Please reload.",
-          current_boss_hp: progress.boss_hp,
-          needs_reload: true,
-        },
-        { status: 409 }
-      );
-    }
-
-    const currentLevel = progress.current_level;
-    const bossMaxHp = safe(progress.boss_max_hp) || getBossHP(currentLevel);
-    const currentBossHp = safe(progress.boss_hp) ?? bossMaxHp;
-
-    const newBossHp = Math.max(0, currentBossHp - damage);
-    const isBossDefeated = newBossHp === 0;
-
-    if (!isBossDefeated) {
-      await supabase.from("boss_progress").update({ boss_hp: newBossHp }).eq("user_id", userId);
-      return NextResponse.json({
-        success: true,
-        damage_dealt: damage,
-        boss_defeated: false,
-        current_boss_hp: newBossHp,
-        boss_max_hp: bossMaxHp,
-      });
-    }
-
-    const coinsEarned = getCoinsPerBoss(currentLevel);
-
-    const { data: gs } = await supabase
-      .from("game_saves")
-      .select("coins,total_coins_earned")
-      .eq("user_id", userId)
-      .single();
-    const currentCoins = safe(gs?.coins);
-    const currentEarned = safe(gs?.total_coins_earned);
-
-    const newCoins = currentCoins + coinsEarned;
+  // If already dead (desync), just respawn
+  if (currentBossHp <= 0) {
     const newLevel = currentLevel + 1;
     const nextHp = getBossHP(newLevel);
     const nextEmoji = getBossEmoji(newLevel);
@@ -323,26 +286,79 @@ try {
       })
       .eq("user_id", userId);
 
-    await supabase
-      .from("game_saves")
-      .update({
-        coins: newCoins,
-        total_coins_earned: currentEarned + coinsEarned,
-      })
-      .eq("user_id", userId);
-
     return NextResponse.json({
       success: true,
-      boss_defeated: true,
-      coins_earned: coinsEarned,
-      total_coins: newCoins,
+      boss_respawned: true,
       current_boss_hp: nextHp,
       boss_max_hp: nextHp,
       boss_emoji: nextEmoji,
-      weekly_best: newWeeklyBest,
-      damage_dealt: damage,
+      coins_per_boss: getCoinsPerBoss(newLevel),
     });
   }
+
+  // Deal damage
+  const newBossHp = Math.max(0, currentBossHp - damage);
+  const isBossDefeated = newBossHp === 0;
+
+  if (!isBossDefeated) {
+    await supabase.from("boss_progress").update({ boss_hp: newBossHp }).eq("user_id", userId);
+    return NextResponse.json({
+      success: true,
+      boss_defeated: false,
+      damage_dealt: damage,
+      current_boss_hp: newBossHp,
+      boss_max_hp: bossMaxHp,
+    });
+  }
+
+  // Boss defeated → reward + respawn
+  const coinsEarned = getCoinsPerBoss(currentLevel);
+  const { data: gs } = await supabase
+    .from("game_saves")
+    .select("coins,total_coins_earned")
+    .eq("user_id", userId)
+    .single();
+
+  const currentCoins = safe(gs?.coins);
+  const currentEarned = safe(gs?.total_coins_earned);
+  const newCoins = currentCoins + coinsEarned;
+  const newLevel = currentLevel + 1;
+  const nextHp = getBossHP(newLevel);
+  const nextEmoji = getBossEmoji(newLevel);
+  const newWeeklyBest = Math.max(safe(progress.weekly_best_level), newLevel);
+
+  await supabase
+    .from("boss_progress")
+    .update({
+      current_level: newLevel,
+      boss_hp: nextHp,
+      boss_max_hp: nextHp,
+      boss_emoji: nextEmoji,
+      weekly_best_level: newWeeklyBest,
+    })
+    .eq("user_id", userId);
+
+  await supabase
+    .from("game_saves")
+    .update({
+      coins: newCoins,
+      total_coins_earned: currentEarned + coinsEarned,
+    })
+    .eq("user_id", userId);
+
+  return NextResponse.json({
+    success: true,
+    boss_defeated: true,
+    coins_earned: coinsEarned,
+    total_coins: newCoins,
+    current_boss_hp: nextHp,
+    boss_max_hp: nextHp,
+    boss_emoji: nextEmoji,
+    weekly_best: newWeeklyBest,
+    damage_dealt: damage,
+  });
+}
+
 
   if (action === "coop_create") {
     const { userId } = body;
