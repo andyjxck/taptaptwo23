@@ -113,8 +113,6 @@ async function ensureSoloProgress(userId) {
     bossProgress = data;
   }
 
-
-  // Backfill null hp/max if needed
   if (bossProgress.boss_hp == null || bossProgress.boss_max_hp == null) {
     const fixedHp = getBossHP(bossProgress.current_level || 1);
     await supabase
@@ -228,7 +226,7 @@ export async function GET(request) {
         return NextResponse.json({ error: "Session not found" }, { status: 404 });
 
       const sessionData = sessions[0];
-      const players: any[] = Array.isArray(sessionData.players) ? sessionData.players : [];
+      const players = Array.isArray(sessionData.players) ? sessionData.players : [];
       if (!players.includes(userId))
         return NextResponse.json({ error: "User not in this session" }, { status: 403 });
 
@@ -243,14 +241,14 @@ export async function GET(request) {
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json({ error: error.message || "Unknown error" }, { status: 500 });
   }
 }
 
 // ---------- POST HANDLER ----------
 export async function POST(request) {
-  let body: any;
+  let body;
   try {
     body = await request.json();
   } catch {
@@ -260,6 +258,7 @@ export async function POST(request) {
   const action = body.action;
 
   try {
+    // … (continue here with exact same logic, just no :type annotations)
     if (action === "solo_tap") {
       const { userId, damage } = body;
       if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
@@ -570,7 +569,7 @@ export async function POST(request) {
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json({ error: error.message || "Unknown error" }, { status: 500 });
   }
 }
