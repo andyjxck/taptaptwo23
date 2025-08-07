@@ -5816,6 +5816,10 @@ const SHOP_THEMES = [
 };
 const renderProfileTab = () => {
 
+  
+  const limitedStock = gameState.limitedStock || {};
+
+
     const SHOP_THEMES = [
   {
     id: "seasons",
