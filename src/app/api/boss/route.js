@@ -114,100 +114,116 @@ export async function GET(request) {
   const roomCode = searchParams.get("roomCode");
 
   try {
-    if (action === "profile") {
-      if (!userId)
-        return NextResponse.json({ error: "userId required" }, { status: 400 });
+  if (action === "profile") {
+  if (!userId)
+    return NextResponse.json({ error: "userId required" }, { status: 400 });
 
-      let { data: gameSave } = await supabase
-        .from("game_saves")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
+  // Ensure game save exists
+  let { data: gameSave } = await supabase
+    .from("game_saves")
+    .select("*")
+    .eq("user_id", userId)
+    .single();
 
-      if (!gameSave) {
-        const { data } = await supabase
-          .from("game_saves")
-          .insert([
-            {
-              user_id: userId,
-              profile_name: "Fire Warrior",
-              profile_icon: "🔥",
-              tap_power_upgrades: 1,
-              auto_tapper_upgrades: 0,
-              crit_chance_upgrades: 0,
-              tap_speed_bonus_upgrades: 0,
-              tap_power: 1,
-              auto_tapper: 0,
-              crit_chance: 0,
-              tap_speed_bonus: 0,
-              coins: 0,
-            },
-          ])
-          .select()
-          .single();
-        gameSave = data;
-      }
+  if (!gameSave) {
+    const { data } = await supabase
+      .from("game_saves")
+      .insert([{
+        user_id: userId,
+        profile_name: "Fire Warrior",
+        profile_icon: "🔥",
+        tap_power_upgrades: 1,
+        auto_tapper_upgrades: 0,
+        crit_chance_upgrades: 0,
+        tap_speed_bonus_upgrades: 0,
+        tap_power: 1,
+        auto_tapper: 0,
+        crit_chance: 0,
+        tap_speed_bonus: 0,
+        coins: 0,
+      }])
+      .select()
+      .single();
+    gameSave = data;
+  }
 
-      let { data: bossProgress } = await supabase
-        .from("boss_progress")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
+  // Ensure boss progress exists (spawn with frontend-matching HP)
+  let { data: bossProgress } = await supabase
+    .from("boss_progress")
+    .select("*")
+    .eq("user_id", userId)
+    .single();
 
-      if (!bossProgress) {
-        const tapPower = safe(gameSave.tap_power) || 1;
-        const bossHp = 250 * tapPower;
-        const { data } = await supabase
-          .from("boss_progress")
-          .insert([
-            {
-              user_id: userId,
-              current_level: 1,
-              boss_hp: bossHp,
-              boss_max_hp: bossHp,
-              boss_emoji: "🔥",
-              next_reset: getNextWeeklyReset(),
-              total_coins: 0,
-              weekly_best_level: 1,
-              total_level: 1,
-            },
-          ])
-          .select()
-          .single();
-        bossProgress = data;
-      }
+  if (!bossProgress) {
+    const lvl = 1;
+    const hp = getBossHP(lvl);
+    const { data } = await supabase
+      .from("boss_progress")
+      .insert([{
+        user_id: userId,
+        current_level: lvl,
+        boss_hp: hp,
+        boss_max_hp: hp,
+        boss_emoji: getBossEmoji(lvl),
+        next_reset: getNextWeeklyReset(),
+        total_coins: 0,
+        weekly_best_level: lvl,
+        total_level: lvl,
+        last_reset_date: new Date().toISOString(),
+      }])
+      .select()
+      .single();
+    bossProgress = data;
+  }
 
-      const upgradeLevel =
-        safe(gameSave.tap_power_upgrades) +
-        safe(gameSave.auto_tapper_upgrades) +
-        safe(gameSave.crit_chance_upgrades) +
-        safe(gameSave.tap_speed_bonus_upgrades);
+  // Safety: align stored max HP with frontend formula at current level
+  const expectedMax = getBossHP(bossProgress.current_level || 1);
+  if (bossProgress.boss_max_hp !== expectedMax) {
+    const fixedHp = Math.min(
+      bossProgress.boss_hp == null ? expectedMax : bossProgress.boss_hp,
+      expectedMax
+    );
+    await supabase
+      .from("boss_progress")
+      .update({ boss_hp: fixedHp, boss_max_hp: expectedMax })
+      .eq("user_id", userId);
+    bossProgress.boss_hp = fixedHp;
+    bossProgress.boss_max_hp = expectedMax;
+  }
 
-      const totalLevel = safe(bossProgress.current_level) + upgradeLevel;
+  // Compute total level (progress level + upgrade levels)
+  const upgradeLevel =
+    safe(gameSave.tap_power_upgrades) +
+    safe(gameSave.auto_tapper_upgrades) +
+    safe(gameSave.crit_chance_upgrades) +
+    safe(gameSave.tap_speed_bonus_upgrades);
 
-      if (bossProgress.total_level !== totalLevel) {
-        await supabase
-          .from("boss_progress")
-          .update({ total_level: totalLevel })
-          .eq("user_id", userId);
-      }
+  const totalLevel = safe(bossProgress.current_level) + upgradeLevel;
 
-      return NextResponse.json({
-        profile: {
-          user_id: gameSave.user_id,
-          profile_name: gameSave.profile_name,
-          profile_icon: gameSave.profile_icon,
-          total_level: totalLevel,
-        },
-        stats: {
-          bossLevel: bossProgress.current_level,
-          totalCoins: safe(gameSave.coins),
-          availableCoins: safe(gameSave.coins),
-          upgradeLevel,
-          weeklyBest: bossProgress.weekly_best_level,
-        },
-      });
-    }
+  if (bossProgress.total_level !== totalLevel) {
+    await supabase
+      .from("boss_progress")
+      .update({ total_level: totalLevel })
+      .eq("user_id", userId);
+    bossProgress.total_level = totalLevel;
+  }
+
+  return NextResponse.json({
+    profile: {
+      user_id: gameSave.user_id,
+      profile_name: gameSave.profile_name,
+      profile_icon: gameSave.profile_icon,
+      total_level: totalLevel,
+    },
+    stats: {
+      bossLevel: bossProgress.current_level,
+      totalCoins: safe(gameSave.coins),
+      availableCoins: safe(gameSave.coins),
+      upgradeLevel,
+      weeklyBest: bossProgress.weekly_best_level,
+    },
+  });
+}
 
     if (action === "upgrades") {
       if (!userId)
@@ -257,61 +273,69 @@ export async function GET(request) {
       });
     }
 
-    if (action === "progress") {
-      if (!userId)
-        return NextResponse.json({ error: "User ID required" }, { status: 400 });
+if (action === "progress") {
+  if (!userId)
+    return NextResponse.json({ error: "User ID required" }, { status: 400 });
 
-      let { data: progress } = await supabase
-        .from("boss_progress")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
+  // Try to fetch progress
+  let { data: progress } = await supabase
+    .from("boss_progress")
+    .select("*")
+    .eq("user_id", userId)
+    .single();
 
-      if (!progress) {
-        const tapPower = await getPlayerTapPower(userId);
-        const bossHp = 250 * (tapPower || 1);
-        const { data } = await supabase
-          .from("boss_progress")
-          .insert([
-            {
-              user_id: userId,
-              current_level: 1,
-              boss_hp: bossHp,
-              boss_max_hp: bossHp,
-              total_coins: 0,
-              weekly_best_level: 1,
-              last_reset_date: new Date().toISOString(),
-            },
-          ])
-          .select()
-          .single();
-        progress = data;
-      }
-
-      if (progress.boss_hp === null) {
-        const tapPower = await getPlayerTapPower(userId);
-        const bossHp = 250 * (tapPower || 1);
-        await supabase
-          .from("boss_progress")
-          .update({ boss_hp: bossHp, boss_max_hp: bossHp })
-          .eq("user_id", userId);
-        progress.boss_hp = bossHp;
-        progress.boss_max_hp = bossHp;
-      }
-
-      return NextResponse.json({
-        success: true,
-        current_level: progress.current_level,
-        boss_hp: progress.boss_hp,
-        boss_max_hp: progress.boss_max_hp,
-        boss_emoji: getBossEmoji(progress.current_level),
-        total_coins: progress.total_coins,
-        weekly_best_level: progress.weekly_best_level,
-        coins_per_boss: getCoinsPerBoss(progress.current_level),
+  // If no record exists, create one
+  if (!progress) {
+    const lvl = 1;
+    const hp = getBossHP(lvl); // Use proper formula
+    const { data } = await supabase
+      .from("boss_progress")
+      .insert([{
+        user_id: userId,
+        current_level: lvl,
+        boss_hp: hp,
+        boss_max_hp: hp,
+        boss_emoji: getBossEmoji(lvl),
+        total_coins: 0,
+        weekly_best_level: lvl,
+        last_reset_date: new Date().toISOString(),
         next_reset: getNextWeeklyReset(),
-        last_reset_date: progress.last_reset_date,
-      });
-    }
+        total_level: lvl,
+      }])
+      .select()
+      .single();
+    progress = data;
+  }
+
+  // Safety: Ensure boss HP is never null and always matches current level formula
+  const expectedMax = getBossHP(progress.current_level || 1);
+  if (progress.boss_max_hp !== expectedMax || progress.boss_hp === null) {
+    const fixedHp = progress.boss_hp == null ? expectedMax : Math.min(progress.boss_hp, expectedMax);
+    await supabase
+      .from("boss_progress")
+      .update({
+        boss_hp: fixedHp,
+        boss_max_hp: expectedMax
+      })
+      .eq("user_id", userId);
+    progress.boss_hp = fixedHp;
+    progress.boss_max_hp = expectedMax;
+  }
+
+  return NextResponse.json({
+    success: true,
+    current_level: progress.current_level,
+    boss_hp: progress.boss_hp,
+    boss_max_hp: progress.boss_max_hp,
+    boss_emoji: getBossEmoji(progress.current_level),
+    total_coins: safe(progress.total_coins),
+    weekly_best_level: progress.weekly_best_level,
+    coins_per_boss: getCoinsPerBoss(progress.current_level),
+    next_reset: progress.next_reset || getNextWeeklyReset(),
+    last_reset_date: progress.last_reset_date,
+  });
+}
+
 
     if (action === "coop_session") {
       if (!roomCode)
@@ -365,114 +389,113 @@ export async function POST(request) {
   const action = body.action;
 
   try {
-    if (action === "solo_tap") {
-      const { userId, damage } = body;
-      if (!userId)
-        return NextResponse.json({ error: "User ID required" }, { status: 400 });
-      if (typeof damage !== "number" || damage <= 0)
-        return NextResponse.json({ error: "Valid damage required" }, { status: 400 });
+if (action === "solo_tap") {
+  const { userId, damage } = body;
+  if (!userId)
+    return NextResponse.json({ error: "User ID required" }, { status: 400 });
+  if (typeof damage !== "number" || damage <= 0)
+    return NextResponse.json({ error: "Valid damage required" }, { status: 400 });
 
-      let { data: progress } = await supabase
-        .from("boss_progress")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
+  // Load current solo progress
+  let { data: progress } = await supabase
+    .from("boss_progress")
+    .select("*")
+    .eq("user_id", userId)
+    .single();
 
-      if (!progress)
-        return NextResponse.json(
-          { error: "User progress not found" },
-          { status: 404 }
-        );
+  if (!progress)
+    return NextResponse.json({ error: "User progress not found" }, { status: 404 });
 
-      if (safe(progress.boss_hp) <= 0) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Boss already defeated. Please reload.",
-            current_boss_hp: progress.boss_hp,
-            needs_reload: true,
-          },
-          { status: 409 }
-        );
-      }
+  // If boss is already dead, tell client to reload (keeps your existing UX)
+  if (safe(progress.boss_hp) <= 0) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Boss already defeated. Please reload.",
+        current_boss_hp: progress.boss_hp,
+        needs_reload: true,
+      },
+      { status: 409 }
+    );
+  }
 
-      const currentLevel = progress.current_level;
-      const bossMaxHp = safe(progress.boss_max_hp) || getBossHP(currentLevel);
-      let currentBossHp = safe(progress.boss_hp) ?? bossMaxHp;
+  // Consistent with frontend: fallback to calculated max if missing
+  const currentLevel = progress.current_level;
+  const bossMaxHp = safe(progress.boss_max_hp) || getBossHP(currentLevel);
+  const currentBossHp = (progress.boss_hp ?? bossMaxHp);
 
-      let newBossHp = Math.max(0, currentBossHp - damage);
-      const isBossDefeated = newBossHp === 0;
+  const newBossHp = Math.max(0, currentBossHp - damage);
+  const isBossDefeated = newBossHp === 0;
 
-      if (!isBossDefeated) {
-        await supabase
-          .from("boss_progress")
-          .update({ boss_hp: newBossHp })
-          .eq("user_id", userId);
-        return NextResponse.json({
-          success: true,
-          damage_dealt: damage,
-          boss_defeated: false,
-          current_boss_hp: newBossHp,
-          boss_max_hp: bossMaxHp,
-        });
-      }
+  // Not defeated: just write new HP
+  if (!isBossDefeated) {
+    await supabase
+      .from("boss_progress")
+      .update({ boss_hp: newBossHp })
+      .eq("user_id", userId);
 
-      const { data: gameSave } = await supabase
-        .from("game_saves")
-        .select("coins")
-        .eq("user_id", userId)
-        .single();
+    return NextResponse.json({
+      success: true,
+      damage_dealt: damage,
+      boss_defeated: false,
+      current_boss_hp: newBossHp,
+      boss_max_hp: bossMaxHp,
+    });
+  }
 
-      const currentCoins = safe(gameSave?.coins);
-      const coinsEarned = Math.floor(currentCoins * 0.5);
-      const newCoins = currentCoins + coinsEarned;
+  // Defeated: award fixed per-level reward (matches frontend)
+  const coinsEarned = getCoinsPerBoss(currentLevel);
 
-      const newLevel = currentLevel + 1;
-const newWeeklyBest = Math.max(safe(progress.weekly_best_level), newLevel);
-const tapPower = await getPlayerTapPower(userId);
-const nextBossHp = 250 * (tapPower || 1);
-const nextEmoji = getBossEmoji(newLevel);
+  // Get user's coin totals (coins + total_coins_earned)
+  const { data: gs } = await supabase
+    .from("game_saves")
+    .select("coins,total_coins_earned")
+    .eq("user_id", userId)
+    .single();
 
-await supabase
-  .from("boss_progress")
-  .update({
-    current_level: newLevel,
-    boss_hp: nextBossHp,
-    boss_max_hp: nextBossHp,
+  const currentCoins = safe(gs?.coins);
+  const currentEarned = safe(gs?.total_coins_earned);
+
+  const newCoins = currentCoins + coinsEarned;
+  const newLevel = currentLevel + 1;
+  const nextHp = getBossHP(newLevel);            // <<< use frontend-matching formula
+  const nextEmoji = getBossEmoji(newLevel);
+  const newWeeklyBest = Math.max(safe(progress.weekly_best_level), newLevel);
+
+  // Progress to next boss
+  await supabase
+    .from("boss_progress")
+    .update({
+      current_level: newLevel,
+      boss_hp: nextHp,
+      boss_max_hp: nextHp,
+      boss_emoji: nextEmoji,
+      weekly_best_level: newWeeklyBest,
+    })
+    .eq("user_id", userId);
+
+  // Update coins
+  await supabase
+    .from("game_saves")
+    .update({
+      coins: newCoins,
+      total_coins_earned: currentEarned + coinsEarned,
+    })
+    .eq("user_id", userId);
+
+  return NextResponse.json({
+    success: true,
+    boss_defeated: true,
+    coins_earned: coinsEarned,
+    total_coins: newCoins,
+    current_boss_hp: nextHp,
+    boss_max_hp: nextHp,
     boss_emoji: nextEmoji,
-    weekly_best_level: newWeeklyBest,
-  })
-  .eq("user_id", userId);
+    weekly_best: newWeeklyBest,
+    damage_dealt: damage,
+  });
+}
 
-  // Fetch total_coins_earned, defaulting to 0 if not present
-const { data: userRow } = await supabase
-  .from("game_saves")
-  .select("total_coins_earned")
-  .eq("user_id", userId)
-  .single();
-const currentTotalEarned = safe(userRow?.total_coins_earned);
-
-await supabase
-  .from("game_saves")
-  .update({
-    coins: newCoins,
-    total_coins_earned: currentTotalEarned + coinsEarned,
-  })
-  .eq("user_id", userId);
-
-
-      return NextResponse.json({
-        success: true,
-        boss_defeated: true,
-        coins_earned: coinsEarned,
-        total_coins: newCoins,
-        current_boss_hp: nextBossHp,
-        boss_max_hp: nextBossHp,
-        boss_emoji: nextEmoji,
-        weekly_best: newWeeklyBest,
-        damage_dealt: damage,
-      });
-    }
 
     if (action === "coop_create") {
       const { userId } = body;
