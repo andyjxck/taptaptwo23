@@ -2,28 +2,29 @@ import { supabase } from "@/utilities/supabaseClient";
 import { NextResponse } from "next/server";
 
 // ---------- HELPERS ----------
-function safe(val: any) {
+function safe(val) {
   return typeof val === "number" && !isNaN(val) ? val : 0;
 }
 
 // Match FRONTEND boss HP exactly
-function getBossHP(level: number) {
+function getBossHP(level) {
   const BASE_HP = 1000;
   const GROWTH = 1.32;
   return Math.floor(BASE_HP * Math.pow(GROWTH, Math.max(level - 1, 0)));
 }
 
 // Use SAME reward curve frontend shows (+500 base, 1.1 growth)
-function getCoinsPerBoss(level: number) {
+function getCoinsPerBoss(level) {
   const BASE = 500;
   const GROWTH = 1.1;
   return Math.floor(BASE * Math.pow(GROWTH, Math.max(level - 1, 0)));
 }
 
 // Boss Emoji set
-function getBossEmoji(level: number) {
+function getBossEmoji(level) {
   const emojis = [
-    "👾","🐲","🦖","🐙","👻","🤖","🦈","🕷️","🐍","🦅","🦂","🦇","🧟","🦄","🦑","🦾","🐉","👹","💀","🔥","❄️","⚡","🍄","🌪️","👽","🪓","🛡️","🧙","🦅","👑",
+    "👾", "🐲", "🦖", "🐙", "👻", "🤖", "🦈", "🕷️", "🐍", "🦅", "🦂", "🦇", "🧟", "🦄", "🦑", "🦾",
+    "🐉", "👹", "💀", "🔥", "❄️", "⚡", "🍄", "🌪️", "👽", "🪓", "🛡️", "🧙", "🦅", "👑"
   ];
   return emojis[(Math.max(1, level) - 1) % emojis.length];
 }
@@ -40,11 +41,13 @@ function getNextWeeklyReset() {
 function generateRoomCode() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let out = "";
-  for (let i = 0; i < 6; i++) out += chars.charAt(Math.floor(Math.random() * chars.length));
+  for (let i = 0; i < 6; i++) {
+    out += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
   return out;
 }
 
-async function ensureGameSave(userId: string | number) {
+async function ensureGameSave(userId) {
   let { data: gameSave } = await supabase
     .from("game_saves")
     .select("*")
@@ -74,12 +77,12 @@ async function ensureGameSave(userId: string | number) {
       ])
       .select()
       .single();
-    gameSave = data!;
+    gameSave = data;
   }
   return gameSave;
 }
 
-async function ensureSoloProgress(userId: string | number) {
+async function ensureSoloProgress(userId) {
   let { data: bossProgress } = await supabase
     .from("boss_progress")
     .select("*")
@@ -107,8 +110,9 @@ async function ensureSoloProgress(userId: string | number) {
       ])
       .select()
       .single();
-    bossProgress = data!;
+    bossProgress = data;
   }
+
 
   // Backfill null hp/max if needed
   if (bossProgress.boss_hp == null || bossProgress.boss_max_hp == null) {
