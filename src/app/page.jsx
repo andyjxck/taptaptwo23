@@ -5814,12 +5814,19 @@ const SHOP_THEMES = [
     </div>
   );
 };
-
-
- const renderProfileTab = () => {
+const renderProfileTab = () => {
   // Find the icon object for the currently equipped icon
   const equippedIconObj =
     PROFILE_ICONS.find((ic) => ic.id === gameState.profileIcon) || null;
+
+  // Helper to find current equipped theme
+  const equippedThemeObj = [
+    ...SHOP_THEMES,
+    ...Object.entries(CUSTOM_THEMES).map(([id, t]) => ({
+      ...t,
+      id,
+    })),
+  ].find((t) => t.id === gameState.equippedTheme);
 
   return (
     <div className={`${glassStyle} bg-gradient-to-br from-white/80 via-purple-100/80 to-white/70 rounded-3xl p-7 ${buttonGlow} shadow-2xl border border-white/20 backdrop-blur-xl max-w-lg mx-auto space-y-8`}>
@@ -5827,6 +5834,18 @@ const SHOP_THEMES = [
       <h2 className="text-3xl font-crimson-text text-center text-[#4527A0] drop-shadow tracking-wider mb-4">
         Profile
       </h2>
+
+      {/* Stats Row */}
+      <div className="flex gap-2 mb-4">
+        <div className="flex-1 bg-white/60 rounded-xl p-2 text-center border border-purple-100 shadow">
+          <div className="text-xs font-bold text-purple-900 tracking-wide">Level</div>
+          <div className="text-xl font-extrabold text-purple-700">{gameState.houseLevel}</div>
+        </div>
+        <div className="flex-1 bg-white/60 rounded-xl p-2 text-center border border-purple-100 shadow">
+          <div className="text-xs font-bold text-purple-900 tracking-wide">Multiplier</div>
+          <div className="text-lg font-extrabold text-purple-700">{(gameState.houseCoinsMultiplier * 100).toFixed(1)}%</div>
+        </div>
+      </div>
 
       {/* Profile Icon */}
       <div className="flex flex-col items-center">
@@ -5866,8 +5885,103 @@ const SHOP_THEMES = [
         />
       </div>
 
+      {/* Backpack / Inventory */}
+      <div className="mt-8">
+        <h3 className="text-xl font-bold mb-6 text-yellow-500 text-center">Backpack / Inventory</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Themes */}
+          <div>
+            <h4 className="font-semibold mb-2 text-blue-500">Themes</h4>
+            <div className="space-y-2">
+              {(ownedThemes || []).length === 0 && (
+                <div className="text-gray-400 text-sm">No themes owned.</div>
+              )}
+              {(ownedThemes || []).map((themeId) => {
+                const theme = [
+                  ...SHOP_THEMES,
+                  ...Object.entries(CUSTOM_THEMES).map(([id, t]) => ({
+                    ...t,
+                    id,
+                  })),
+                ].find((t) => t.id === themeId);
+                if (!theme) return null;
+                const isEquipped = gameState.equippedTheme === theme.id;
+                return (
+                  <div
+                    key={theme.id}
+                    className={`flex items-center justify-between rounded-xl px-3 py-2 cursor-pointer border transition-all
+                      ${theme.isLimited ? "border-yellow-400 bg-yellow-100" : "border-gray-200 bg-white"}
+                      ${isEquipped ? "ring-2 ring-green-400" : ""}
+                    `}
+                    onClick={() => {
+                      setGameState((prev) => ({
+                        ...prev,
+                        equippedTheme: isEquipped ? "seasons" : theme.id,
+                      }));
+                      setNotification(
+                        isEquipped
+                          ? "Theme unequipped!"
+                          : `Equipped theme: ${theme.name}`
+                      );
+                    }}
+                    title={theme.name}
+                  >
+                    <span className="text-2xl mr-2">{theme.emoji || "🎨"}</span>
+                    <span className="font-medium">{theme.name || theme.id}</span>
+                    {theme.isLimited && (
+                      <span className="text-yellow-500 font-bold ml-2">★</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          {/* Profile Icons */}
+          <div>
+            <h4 className="font-semibold mb-2 text-green-500">Icons</h4>
+            <div className="space-y-2">
+              {(ownedIcons || []).length === 0 && (
+                <div className="text-gray-400 text-sm">No icons owned.</div>
+              )}
+              {(ownedIcons || []).map((iconId) => {
+                const icon = PROFILE_ICONS.find((i) => i.id === iconId);
+                if (!icon) return null;
+                const isEquipped = gameState.profileIcon === icon.id;
+                return (
+                  <div
+                    key={icon.id}
+                    className={`flex items-center rounded-xl px-3 py-2 cursor-pointer border w-full min-w-0 transition-all
+                      ${icon.isLimited ? "border-yellow-400 bg-yellow-100" : "border-gray-200 bg-white"}
+                      ${isEquipped ? "ring-2 ring-green-400" : ""}
+                    `}
+                    onClick={() => {
+                      setGameState((prev) => ({
+                        ...prev,
+                        profileIcon: isEquipped ? null : icon.id,
+                      }));
+                      setNotification(
+                        isEquipped
+                          ? "Icon unequipped!"
+                          : `Equipped icon: ${icon.name}`
+                      );
+                    }}
+                    title={icon.name}
+                  >
+                    <span className="text-2xl mr-2">{icon.emoji}</span>
+                    <span className="font-medium">{icon.name}</span>
+                    {icon.isLimited && (
+                      <span className="text-yellow-500 font-bold ml-2">★</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Save Button */}
-      <div className="flex flex-col items-center space-y-6 mt-4 w-full max-w-xs mx-auto">
+      <div className="flex flex-col items-center space-y-6 mt-6 w-full max-w-xs mx-auto">
         <button
           onClick={() => {
             saveGame({ ...gameState });
@@ -5901,12 +6015,10 @@ const SHOP_THEMES = [
           </button>
         </div>
       </div>
-      <div className="mt-8">
-         
-      </div>
     </div>
   );
 };
+
 
 
   const renderResetTab = () => {
