@@ -388,19 +388,37 @@ try {
     });
   }
 
-  if (action === "increment_total_taps") {
-    const { userId, amount } = body;
-    if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
-    const increment = typeof amount === "number" && amount > 0 ? amount : 1;
+if (action === "increment_total_taps") {
+  const { userId, amount } = body;
+  if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
+  const increment = typeof amount === "number" && amount > 0 ? amount : 1;
 
-    const { error } = await supabase
-      .from("game_saves")
-      .update({ total_taps: (supabase).literal(`total_taps + ${increment}`) })
-      .eq("user_id", userId);
+  // Fetch current total_taps
+  const { data: gs, error: fetchErr } = await supabase
+    .from("game_saves")
+    .select("total_taps")
+    .eq("user_id", userId)
+    .single();
 
-    if (error) return NextResponse.json({ error: "Failed to increment total_taps" }, { status: 500 });
-    return NextResponse.json({ success: true });
+  if (fetchErr) {
+    return NextResponse.json({ error: "Failed to fetch total_taps" }, { status: 500 });
   }
+
+  const newTotal = safe(gs?.total_taps) + increment;
+
+  // Update with incremented value
+  const { error: updateErr } = await supabase
+    .from("game_saves")
+    .update({ total_taps: newTotal })
+    .eq("user_id", userId);
+
+  if (updateErr) {
+    return NextResponse.json({ error: "Failed to update total_taps" }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true, new_total_taps: newTotal });
+}
+
 
   if (action === "coop_join") {
     const { roomCode, userId } = body;
