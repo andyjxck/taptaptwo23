@@ -5987,6 +5987,13 @@ const renderProfileTab = () => {
   },
 
 ];
+
+   const ownedIcons = gameState.ownedProfileIcons || [];
+  const equippedIcon = gameState.profileIcon || null;
+  const ownedThemes = gameState.ownedThemes || ["seasons"];
+  const equippedTheme = gameState.equippedTheme || "seasons";
+  const ownedBoosts = gameState.ownedBoosts || [];
+  const canAfford = (price) => (gameState.renownTokens || 0) >= price;
   // Find the icon object for the currently equipped icon
   const equippedIconObj =
     PROFILE_ICONS.find((ic) => ic.id === gameState.profileIcon) || null;
