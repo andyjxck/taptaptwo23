@@ -7588,24 +7588,24 @@ const currentValueFormatted =
         <h4 className="font-bold text-yellow-700 text-lg mb-2">
           <i className="fas fa-gift mr-1"></i> Daily Login Bonus
         </h4>
-
-        {/** ------ DAILY BONUS LOGIC ------ **/}
         {(() => {
           // --- UTILITY FUNCTIONS ---
           function isNewDay(lastClaimTs) {
             if (!lastClaimTs) return true;
             const last = new Date(lastClaimTs);
             const now = new Date();
-            return last.getUTCFullYear() !== now.getUTCFullYear() ||
+            return (
+              last.getUTCFullYear() !== now.getUTCFullYear() ||
               last.getUTCMonth() !== now.getUTCMonth() ||
-              last.getUTCDate() !== now.getUTCDate();
+              last.getUTCDate() !== now.getUTCDate()
+            );
           }
 
           function getCurrentStreak(lastClaimTs, prevStreak) {
             if (!lastClaimTs) return 1;
             const last = new Date(lastClaimTs);
             const now = new Date();
-            const diff = now.setHours(0,0,0,0) - last.setHours(0,0,0,0);
+            const diff = now.setHours(0, 0, 0, 0) - last.setHours(0, 0, 0, 0);
             if (diff === 86400000) return Math.min(prevStreak + 1, 7); // next day, streak up (max 7)
             if (diff > 86400000) return 1; // missed a day, reset streak
             return prevStreak; // same day, don't change
@@ -7616,131 +7616,175 @@ const currentValueFormatted =
           const streakDay = getCurrentStreak(lastDailyClaim, dailyBonusStreak);
 
           const dailyBonuses = [
-            { icons: ['renown'], values: [10] },
-            { icons: ['renown'], values: [20] },
-            { icons: ['renown', 'coins'], values: [30, 10000000] },
-            { icons: ['renown', 'coins'], values: [50, 50000000] },
-            { icons: ['renown', 'coins'], values: [100, 60000000] },
-            { icons: ['renown', 'coins'], values: [250, 100000000] }
+            { icons: ["renown"], values: [10] },
+            { icons: ["renown"], values: [20] },
+            { icons: ["renown", "coins"], values: [30, 10000000] },
+            { icons: ["renown", "coins"], values: [50, 50000000] },
+            { icons: ["renown", "coins"], values: [100, 60000000] },
+            { icons: ["renown", "coins"], values: [250, 100000000] },
           ];
 
-          // Render days 1-6 as a grid
+          // --- GRID DAYS 1-6 ---
           return (
-           <>
-  <div className="grid grid-cols-3 gap-2 mb-2">
-    {[1, 2, 3, 4, 5, 6].map((day) => {
-      const reward = dailyBonuses[day - 1];
-      const isClaimed = claimedDays.includes(day);
-      const isCurrentDay = streakDay === day;
-      const canClaim = canClaimToday && isCurrentDay && !isClaimed;
-      const iconMap = {
-        renown: "https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/",
-        coins: "https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/",
-      };
+            <>
+              <div className="grid grid-cols-3 gap-2 mb-2">
+                {[1, 2, 3, 4, 5, 6].map((day) => {
+                  const reward = dailyBonuses[day - 1];
+                  const isClaimed = claimedDays.includes(day);
+                  const isCurrentDay = streakDay === day;
+                  const canClaim = canClaimToday && isCurrentDay && !isClaimed;
+                  const iconMap = {
+                    renown:
+                      "https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/",
+                    coins:
+                      "https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/",
+                  };
 
-      return (
-        <div
-          key={day}
-          className={`
-            rounded-lg p-2 flex flex-col items-center border
-            ${canClaim ? "border-yellow-400 bg-yellow-50" : isClaimed ? "border-green-400 bg-green-50" : "border-gray-300 bg-white/70"}
-            relative min-w-[72px] min-h-[88px]
-          `}
-        >
-          <div className="font-bold text-sm mb-1">{`Day ${day}`}</div>
-          <div className="flex flex-row gap-1 justify-center mb-0.5">
-            {reward.icons.map((icon, i) => (
-              <div key={icon} className="flex flex-col items-center">
-                <img src={iconMap[icon]} alt="" className="inline w-5 h-5 mx-0.5" />
-                <span className="text-[9px] text-black font-semibold leading-none" style={{ marginTop: 0 }}>
-                  {formatNumberShort(reward.values[i])}
-                </span>
+                  return (
+                    <div
+                      key={day}
+                      className={`
+                        rounded-lg p-2 flex flex-col items-center border
+                        ${
+                          canClaim
+                            ? "border-yellow-400 bg-yellow-50"
+                            : isClaimed
+                            ? "border-green-400 bg-green-50"
+                            : "border-gray-300 bg-white/70"
+                        }
+                        relative min-w-[72px] min-h-[88px]
+                      `}
+                    >
+                      <div className="font-bold text-sm mb-1">{`Day ${day}`}</div>
+                      <div className="flex flex-row gap-1 justify-center mb-0.5">
+                        {reward.icons.map((icon, i) => (
+                          <div key={icon} className="flex flex-col items-center">
+                            <img
+                              src={iconMap[icon]}
+                              alt=""
+                              className="inline w-5 h-5 mx-0.5"
+                            />
+                            <span
+                              className="text-[9px] text-black font-semibold leading-none"
+                              style={{ marginTop: 0 }}
+                            >
+                              {formatNumberShort(reward.values[i])}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      {canClaim ? (
+                        <button
+                          className="mt-1 px-2 py-1 rounded bg-yellow-400 text-white font-bold text-xs shadow hover:bg-yellow-500"
+                          onClick={() => claimDailyBonus(day, streakDay)}
+                        >
+                          Claim
+                        </button>
+                      ) : isClaimed ? (
+                        <button
+                          className="mt-1 px-2 py-1 rounded bg-gray-300 text-white font-bold text-xs shadow cursor-not-allowed"
+                          disabled
+                        >
+                          Claimed
+                        </button>
+                      ) : (
+                        <span className="text-gray-400 text-xs">Locked</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
-          {canClaim ? (
-            <button
-              className="mt-1 px-2 py-1 rounded bg-yellow-400 text-white font-bold text-xs shadow hover:bg-yellow-500"
-              onClick={() => claimDailyBonus(day, streakDay)}
-            >
-              Claim
-            </button>
-          ) : isClaimed ? (
-            <button
-              className="mt-1 px-2 py-1 rounded bg-gray-300 text-white font-bold text-xs shadow cursor-not-allowed"
-              disabled
-            >
-              Claimed
-            </button>
-          ) : (
-            <span className="text-gray-400 text-xs">Locked</span>
-          )}
-        </div>
-      );
-    })}
-  </div>
-  {/* Day 7, centered below */}
-  <div className="flex justify-center mt-2">
-    {(() => {
-      const day = 7;
-      const isClaimed = claimedDays.includes(day);
-      const isCurrentDay = streakDay === day;
-      const canClaim = canClaimToday && isCurrentDay && !isClaimed;
-      const icons = [
-        { img: "https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/", val: 300 },
-        { img: "https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/", val: 150000000 },
-        { img: "https://ucarecdn.com/22eaa50d-6e78-4af4-b36c-5a3d46ca0f47/-/format/auto/", val: 10 },
-        { img: "https://ucarecdn.com/fc53a55b-735b-4148-b0fb-456a23d105af/-/format/auto/", val: "?" }
-      ];
+              {/* --- DAY 7, CENTERED BELOW --- */}
+              <div className="flex justify-center mt-2">
+                {(() => {
+                  const day = 7;
+                  const isClaimed = claimedDays.includes(day);
+                  const isCurrentDay = streakDay === day;
+                  const canClaim = canClaimToday && isCurrentDay && !isClaimed;
+                  const icons = [
+                    {
+                      img: "https://ucarecdn.com/6ae6fafa-645c-4e28-b042-2bee9521de7e/-/format/auto/",
+                      val: 300,
+                    },
+                    {
+                      img: "https://ucarecdn.com/2a2314df-d316-4a65-8c6b-91b69e6d1e5d/-/format/auto/",
+                      val: 150000000,
+                    },
+                    {
+                      img: "https://ucarecdn.com/22eaa50d-6e78-4af4-b36c-5a3d46ca0f47/-/format/auto/",
+                      val: 10,
+                    },
+                    {
+                      img: "https://ucarecdn.com/fc53a55b-735b-4148-b0fb-456a23d105af/-/format/auto/",
+                      val: "?",
+                    },
+                  ];
 
-      return (
-        <div
-          className={`
-            rounded-lg p-2 flex flex-col items-center border
-            ${canClaim ? "border-yellow-400 bg-yellow-50" : isClaimed ? "border-green-400 bg-green-50" : "border-gray-300 bg-white/70"}
-            relative min-w-[72px] min-h-[108px]
-          `}
-        >
-          <div className="font-bold text-sm mb-1">{`Day 7`}</div>
-          <div className="flex flex-row gap-1 justify-center mb-0.5">
-            {icons.map((icon, i) => (
-              <div key={i} className="flex flex-col items-center">
-                <img src={icon.img} alt="" className="inline w-5 h-5 mx-0.5" />
-                <span className="text-[9px] text-black font-semibold leading-none" style={{ marginTop: 0 }}>
-                  {formatNumberShort(icon.val)}
-                </span>
+                  return (
+                    <div
+                      className={`
+                        rounded-lg p-2 flex flex-col items-center border
+                        ${
+                          canClaim
+                            ? "border-yellow-400 bg-yellow-50"
+                            : isClaimed
+                            ? "border-green-400 bg-green-50"
+                            : "border-gray-300 bg-white/70"
+                        }
+                        relative min-w-[72px] min-h-[108px]
+                      `}
+                    >
+                      <div className="font-bold text-sm mb-1">{`Day 7`}</div>
+                      <div className="flex flex-row gap-1 justify-center mb-0.5">
+                        {icons.map((icon, i) => (
+                          <div key={i} className="flex flex-col items-center">
+                            <img
+                              src={icon.img}
+                              alt=""
+                              className="inline w-5 h-5 mx-0.5"
+                            />
+                            <span
+                              className="text-[9px] text-black font-semibold leading-none"
+                              style={{ marginTop: 0 }}
+                            >
+                              {formatNumberShort(icon.val)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      {canClaim ? (
+                        <button
+                          className="mt-1 px-2 py-1 rounded bg-yellow-400 text-white font-bold text-xs shadow hover:bg-yellow-500"
+                          onClick={() => claimDailyBonus(day, streakDay)}
+                        >
+                          Claim
+                        </button>
+                      ) : isClaimed ? (
+                        <button
+                          className="mt-1 px-2 py-1 rounded bg-gray-300 text-white font-bold text-xs shadow cursor-not-allowed"
+                          disabled
+                        >
+                          Claimed
+                        </button>
+                      ) : (
+                        <span className="text-gray-400 text-xs">Locked</span>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
-            ))}
-          </div>
-          {canClaim ? (
-            <button
-              className="mt-1 px-2 py-1 rounded bg-yellow-400 text-white font-bold text-xs shadow hover:bg-yellow-500"
-              onClick={() => claimDailyBonus(day, streakDay)}
-            >
-              Claim
-            </button>
-          ) : isClaimed ? (
-            <button
-              className="mt-1 px-2 py-1 rounded bg-gray-300 text-white font-bold text-xs shadow cursor-not-allowed"
-              disabled
-            >
-              Claimed
-            </button>
-          ) : (
-            <span className="text-gray-400 text-xs">Locked</span>
-          )}
-        </div>
-      );
-    })()}
-  </div>
-
+            </>
+          );
+        })()}
+      </div>
       {/* --- Main Offline Claim Button --- */}
       <button
         onClick={() => {
           const newState = {
             ...gameState,
             coins: gameState.coins + pendingOfflineEarnings.coins,
-            totalCoinsEarned: gameState.totalCoinsEarned + pendingOfflineEarnings.coins,
+            totalCoinsEarned:
+              gameState.totalCoinsEarned + pendingOfflineEarnings.coins,
           };
           setGameState(newState);
           setPendingOfflineEarnings(null);
@@ -7762,6 +7806,7 @@ const currentValueFormatted =
     </div>
   </div>
 )}
+
 {showHardResetModal && (
   <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
     <div
