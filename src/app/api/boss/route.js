@@ -257,309 +257,250 @@ export async function POST(request) {
 
   const action = body.action;
 
-  try {
-    // … (continue here with exact same logic, just no :type annotations)
-    if (action === "solo_tap") {
-      const { userId, damage } = body;
-      if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
-      if (typeof damage !== "number" || damage <= 0)
-        return NextResponse.json({ error: "Valid damage required" }, { status: 400 });
+try {
+  if (action === "solo_tap") {
+    const { userId, damage } = body;
+    if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
+    if (typeof damage !== "number" || damage <= 0)
+      return NextResponse.json({ error: "Valid damage required" }, { status: 400 });
 
-      const progress = await ensureSoloProgress(userId);
+    const progress = await ensureSoloProgress(userId);
 
-      if (safe(progress.boss_hp) <= 0) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Boss already defeated. Please reload.",
-            current_boss_hp: progress.boss_hp,
-            needs_reload: true,
-          },
-          { status: 409 }
-        );
-      }
+    if (safe(progress.boss_hp) <= 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Boss already defeated. Please reload.",
+          current_boss_hp: progress.boss_hp,
+          needs_reload: true,
+        },
+        { status: 409 }
+      );
+    }
 
-      const currentLevel = progress.current_level;
-      const bossMaxHp = safe(progress.boss_max_hp) || getBossHP(currentLevel);
-      const currentBossHp = safe(progress.boss_hp) ?? bossMaxHp;
+    const currentLevel = progress.current_level;
+    const bossMaxHp = safe(progress.boss_max_hp) || getBossHP(currentLevel);
+    const currentBossHp = safe(progress.boss_hp) ?? bossMaxHp;
 
-      const newBossHp = Math.max(0, currentBossHp - damage);
-      const isBossDefeated = newBossHp === 0;
+    const newBossHp = Math.max(0, currentBossHp - damage);
+    const isBossDefeated = newBossHp === 0;
 
-      if (!isBossDefeated) {
-        await supabase.from("boss_progress").update({ boss_hp: newBossHp }).eq("user_id", userId);
-        return NextResponse.json({
-          success: true,
-          damage_dealt: damage,
-          boss_defeated: false,
-          current_boss_hp: newBossHp,
-          boss_max_hp: bossMaxHp,
-        });
-      }
-
-      // Defeated: pay fixed per-level reward (frontend shows this)
-      const coinsEarned = getCoinsPerBoss(currentLevel);
-
-      // get coins + total_coins_earned
-      const { data: gs } = await supabase
-        .from("game_saves")
-        .select("coins,total_coins_earned")
-        .eq("user_id", userId)
-        .single();
-      const currentCoins = safe(gs?.coins);
-      const currentEarned = safe(gs?.total_coins_earned);
-
-      const newCoins = currentCoins + coinsEarned;
-      const newLevel = currentLevel + 1;
-      const nextHp = getBossHP(newLevel);
-      const nextEmoji = getBossEmoji(newLevel);
-      const newWeeklyBest = Math.max(safe(progress.weekly_best_level), newLevel);
-
-      await supabase
-        .from("boss_progress")
-        .update({
-          current_level: newLevel,
-          boss_hp: nextHp,
-          boss_max_hp: nextHp,
-          boss_emoji: nextEmoji,
-          weekly_best_level: newWeeklyBest,
-        })
-        .eq("user_id", userId);
-
-      await supabase
-        .from("game_saves")
-        .update({
-          coins: newCoins,
-          total_coins_earned: currentEarned + coinsEarned,
-        })
-        .eq("user_id", userId);
-
+    if (!isBossDefeated) {
+      await supabase.from("boss_progress").update({ boss_hp: newBossHp }).eq("user_id", userId);
       return NextResponse.json({
         success: true,
-        boss_defeated: true,
-        coins_earned: coinsEarned,
-        total_coins: newCoins,
-        current_boss_hp: nextHp,
-        boss_max_hp: nextHp,
-        boss_emoji: nextEmoji,
-        weekly_best: newWeeklyBest,
         damage_dealt: damage,
+        boss_defeated: false,
+        current_boss_hp: newBossHp,
+        boss_max_hp: bossMaxHp,
       });
     }
 
-    if (action === "coop_create") {
-      const { userId } = body;
-      if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
+    const coinsEarned = getCoinsPerBoss(currentLevel);
 
-      // unique code
-      let roomCode: string;
-      while (true) {
-        roomCode = generateRoomCode();
-        const { data: exists } = await supabase
-          .from("boss_coop_sessions")
-          .select("room_code")
-          .eq("room_code", roomCode)
-          .eq("is_active", true);
-        if (!exists || exists.length === 0) break;
-      }
+    const { data: gs } = await supabase
+      .from("game_saves")
+      .select("coins,total_coins_earned")
+      .eq("user_id", userId)
+      .single();
+    const currentCoins = safe(gs?.coins);
+    const currentEarned = safe(gs?.total_coins_earned);
 
-      const level = 1;
-      const hp = getBossHP(level); // match frontend bar
+    const newCoins = currentCoins + coinsEarned;
+    const newLevel = currentLevel + 1;
+    const nextHp = getBossHP(newLevel);
+    const nextEmoji = getBossEmoji(newLevel);
+    const newWeeklyBest = Math.max(safe(progress.weekly_best_level), newLevel);
 
-      const { data: session, error: insertErr } = await supabase
+    await supabase
+      .from("boss_progress")
+      .update({
+        current_level: newLevel,
+        boss_hp: nextHp,
+        boss_max_hp: nextHp,
+        boss_emoji: nextEmoji,
+        weekly_best_level: newWeeklyBest,
+      })
+      .eq("user_id", userId);
+
+    await supabase
+      .from("game_saves")
+      .update({
+        coins: newCoins,
+        total_coins_earned: currentEarned + coinsEarned,
+      })
+      .eq("user_id", userId);
+
+    return NextResponse.json({
+      success: true,
+      boss_defeated: true,
+      coins_earned: coinsEarned,
+      total_coins: newCoins,
+      current_boss_hp: nextHp,
+      boss_max_hp: nextHp,
+      boss_emoji: nextEmoji,
+      weekly_best: newWeeklyBest,
+      damage_dealt: damage,
+    });
+  }
+
+  if (action === "coop_create") {
+    const { userId } = body;
+    if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
+
+    let roomCode;
+    while (true) {
+      roomCode = generateRoomCode();
+      const { data: exists } = await supabase
         .from("boss_coop_sessions")
-        .insert([
-          {
-            room_code: roomCode,
-            boss_hp: hp,
-            boss_max_hp: hp,
-            boss_level: level,
-            players: [userId],
-            is_active: true,
-            total_coins: 0,
-          },
-        ])
-        .select()
-        .single();
+        .select("room_code")
+        .eq("room_code", roomCode)
+        .eq("is_active", true);
+      if (!exists || exists.length === 0) break;
+    }
 
-      if (insertErr) throw insertErr;
+    const level = 1;
+    const hp = getBossHP(level);
 
+    const { data: session, error: insertErr } = await supabase
+      .from("boss_coop_sessions")
+      .insert([{
+        room_code: roomCode,
+        boss_hp: hp,
+        boss_max_hp: hp,
+        boss_level: level,
+        players: [userId],
+        is_active: true,
+        total_coins: 0,
+      }])
+      .select()
+      .single();
+
+    if (insertErr) throw insertErr;
+
+    return NextResponse.json({
+      success: true,
+      session: {
+        ...session,
+        boss_emoji: getBossEmoji(level),
+        coins_per_boss: getCoinsPerBoss(level),
+      },
+    });
+  }
+
+  if (action === "increment_total_taps") {
+    const { userId, amount } = body;
+    if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
+    const increment = typeof amount === "number" && amount > 0 ? amount : 1;
+
+    const { error } = await supabase
+      .from("game_saves")
+      .update({ total_taps: (supabase).literal(`total_taps + ${increment}`) })
+      .eq("user_id", userId);
+
+    if (error) return NextResponse.json({ error: "Failed to increment total_taps" }, { status: 500 });
+    return NextResponse.json({ success: true });
+  }
+
+  if (action === "coop_join") {
+    const { roomCode, userId } = body;
+    if (!roomCode) return NextResponse.json({ error: "Room code is required" }, { status: 400 });
+    if (!userId) return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+
+    const { data: sessions } = await supabase
+      .from("boss_coop_sessions")
+      .select("*")
+      .eq("room_code", roomCode.toUpperCase())
+      .eq("is_active", true);
+
+    if (!sessions || sessions.length === 0)
+      return NextResponse.json({ error: "Room not found or inactive" }, { status: 404 });
+
+    const session = sessions[0];
+    const currentPlayers = Array.isArray(session.players) ? session.players : [];
+
+    if (currentPlayers.length >= 5 && !currentPlayers.includes(userId))
+      return NextResponse.json({ error: "Room is full" }, { status: 400 });
+
+    if (currentPlayers.includes(userId)) {
       return NextResponse.json({
         success: true,
         session: {
           ...session,
-          boss_emoji: getBossEmoji(level),
-          coins_per_boss: getCoinsPerBoss(level),
+          boss_emoji: getBossEmoji(session.boss_level),
+          coins_per_boss: getCoinsPerBoss(session.boss_level),
         },
       });
     }
 
-    // Atomically increment total_taps
-    if (action === "increment_total_taps") {
-      const { userId, amount } = body;
-      if (!userId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
-      const increment = typeof amount === "number" && amount > 0 ? amount : 1;
+    const newPlayers = [...currentPlayers, userId];
+    const { data: updatedSessionArr } = await supabase
+      .from("boss_coop_sessions")
+      .update({ players: newPlayers })
+      .eq("room_code", session.room_code)
+      .select();
 
-      const { error } = await supabase
-        .from("game_saves")
-        .update({ total_taps: (supabase as any).literal(`total_taps + ${increment}`) })
-        .eq("user_id", userId);
+    const updatedSession = updatedSessionArr && updatedSessionArr[0];
 
-      if (error) return NextResponse.json({ error: "Failed to increment total_taps" }, { status: 500 });
-      return NextResponse.json({ success: true });
-    }
+    return NextResponse.json({
+      success: true,
+      session: {
+        ...updatedSession,
+        boss_emoji: getBossEmoji(updatedSession.boss_level),
+        coins_per_boss: getCoinsPerBoss(updatedSession.boss_level),
+      },
+    });
+  }
 
-    if (action === "coop_join") {
-      const { roomCode, userId } = body;
-      if (!roomCode) return NextResponse.json({ error: "Room code is required" }, { status: 400 });
-      if (!userId) return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+  if (action === "coop_tap") {
+    const { roomCode, userId, damage } = body;
+    if (!roomCode) return NextResponse.json({ error: "Room code is required" }, { status: 400 });
+    if (!userId) return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+    if (typeof damage !== "number" || damage <= 0)
+      return NextResponse.json({ error: "Valid damage required" }, { status: 400 });
 
-      const { data: sessions } = await supabase
-        .from("boss_coop_sessions")
-        .select("*")
-        .eq("room_code", roomCode.toUpperCase())
-        .eq("is_active", true);
+    const { data: sessions } = await supabase
+      .from("boss_coop_sessions")
+      .select("*")
+      .eq("room_code", roomCode.toUpperCase())
+      .eq("is_active", true);
 
-      if (!sessions || sessions.length === 0)
-        return NextResponse.json({ error: "Room not found or inactive" }, { status: 404 });
+    if (!sessions || sessions.length === 0)
+      return NextResponse.json({ error: "Session not found" }, { status: 404 });
 
-      const session = sessions[0];
-      const currentPlayers: any[] = Array.isArray(session.players) ? session.players : [];
+    const sessionData = sessions[0];
+    const players = Array.isArray(sessionData.players) ? sessionData.players : [];
 
-      if (currentPlayers.length >= 5 && !currentPlayers.includes(userId))
-        return NextResponse.json({ error: "Room is full" }, { status: 400 });
+    if (!players.includes(userId))
+      return NextResponse.json({ error: "User not in this session" }, { status: 403 });
 
-      if (currentPlayers.includes(userId)) {
-        return NextResponse.json({
-          success: true,
-          session: {
-            ...session,
-            boss_emoji: getBossEmoji(session.boss_level),
-            coins_per_boss: getCoinsPerBoss(session.boss_level),
-          },
-        });
-      }
-
-      const newPlayers = [...currentPlayers, userId];
-      const { data: updatedSessionArr } = await supabase
-        .from("boss_coop_sessions")
-        .update({ players: newPlayers })
-        .eq("room_code", session.room_code)
-        .select();
-
-      const updatedSession = updatedSessionArr![0];
-
-      return NextResponse.json({
-        success: true,
-        session: {
-          ...updatedSession,
-          boss_emoji: getBossEmoji(updatedSession.boss_level),
-          coins_per_boss: getCoinsPerBoss(updatedSession.boss_level),
+    if (safe(sessionData.boss_hp) <= 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Boss already defeated. Wait for server to spawn new boss.",
+          current_boss_hp: sessionData.boss_hp,
+          needs_reload: true,
         },
-      });
-    }
-
-    if (action === "coop_tap") {
-      const { roomCode, userId, damage } = body;
-      if (!roomCode) return NextResponse.json({ error: "Room code is required" }, { status: 400 });
-      if (!userId) return NextResponse.json({ error: "User ID is required" }, { status: 400 });
-      if (typeof damage !== "number" || damage <= 0)
-        return NextResponse.json({ error: "Valid damage required" }, { status: 400 });
-
-      const { data: sessions } = await supabase
-        .from("boss_coop_sessions")
-        .select("*")
-        .eq("room_code", roomCode.toUpperCase())
-        .eq("is_active", true);
-
-      if (!sessions || sessions.length === 0)
-        return NextResponse.json({ error: "Session not found" }, { status: 404 });
-
-      const sessionData = sessions[0];
-      const players: any[] = Array.isArray(sessionData.players) ? sessionData.players : [];
-
-      if (!players.includes(userId))
-        return NextResponse.json({ error: "User not in this session" }, { status: 403 });
-
-      if (safe(sessionData.boss_hp) <= 0) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Boss already defeated. Wait for server to spawn new boss.",
-            current_boss_hp: sessionData.boss_hp,
-            needs_reload: true,
-          },
-          { status: 409 }
-        );
-      }
-
-      const newHp = Math.max(0, safe(sessionData.boss_hp) - damage);
-      const bossDefeated = newHp === 0;
-
-      if (!bossDefeated) {
-        const { data: updateArr } = await supabase
-          .from("boss_coop_sessions")
-          .update({ boss_hp: newHp })
-          .eq("room_code", sessionData.room_code)
-          .select();
-        const updatedSession = updateArr![0];
-
-        return NextResponse.json({
-          success: true,
-          boss_defeated: false,
-          coins_earned: 0,
-          session: {
-            ...updatedSession,
-            boss_emoji: getBossEmoji(updatedSession.boss_level),
-            coins_per_boss: getCoinsPerBoss(updatedSession.boss_level),
-          },
-        });
-      }
-
-      // Boss defeated in COOP: give each player fixed level reward (same as solo for UI consistency)
-      const level = safe(sessionData.boss_level);
-      const rewardPerPlayer = getCoinsPerBoss(level);
-
-      const { data: playersCoins } = await supabase
-        .from("game_saves")
-        .select("user_id, coins, total_coins_earned")
-        .in("user_id", players);
-
-      const rewards: { user_id: any; reward: number }[] = [];
-      await Promise.all(
-        (playersCoins || []).map(async (p) => {
-          const reward = rewardPerPlayer;
-          rewards.push({ user_id: p.user_id, reward });
-
-          await supabase
-            .from("game_saves")
-            .update({
-              coins: safe(p.coins) + reward,
-              total_coins_earned: safe(p.total_coins_earned) + reward,
-            })
-            .eq("user_id", p.user_id);
-        })
+        { status: 409 }
       );
+    }
 
-      const newLevel = level + 1;
-      const newBossHp = getBossHP(newLevel);
+    const newHp = Math.max(0, safe(sessionData.boss_hp) - damage);
+    const bossDefeated = newHp === 0;
 
+    if (!bossDefeated) {
       const { data: updateArr } = await supabase
         .from("boss_coop_sessions")
-        .update({
-          boss_level: newLevel,
-          boss_hp: newBossHp,
-          boss_max_hp: newBossHp,
-        })
+        .update({ boss_hp: newHp })
         .eq("room_code", sessionData.room_code)
         .select();
-
-      const updatedSession = updateArr![0];
+      const updatedSession = updateArr && updateArr[0];
 
       return NextResponse.json({
         success: true,
-        boss_defeated: true,
-        rewards,
+        boss_defeated: false,
+        coins_earned: 0,
         session: {
           ...updatedSession,
           boss_emoji: getBossEmoji(updatedSession.boss_level),
@@ -568,8 +509,58 @@ export async function POST(request) {
       });
     }
 
-    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
-  } catch (error) {
-    return NextResponse.json({ error: error.message || "Unknown error" }, { status: 500 });
+    const level = safe(sessionData.boss_level);
+    const rewardPerPlayer = getCoinsPerBoss(level);
+
+    const { data: playersCoins } = await supabase
+      .from("game_saves")
+      .select("user_id, coins, total_coins_earned")
+      .in("user_id", players);
+
+    const rewards = [];
+    await Promise.all(
+      (playersCoins || []).map(async (p) => {
+        const reward = rewardPerPlayer;
+        rewards.push({ user_id: p.user_id, reward });
+
+        await supabase
+          .from("game_saves")
+          .update({
+            coins: safe(p.coins) + reward,
+            total_coins_earned: safe(p.total_coins_earned) + reward,
+          })
+          .eq("user_id", p.user_id);
+      })
+    );
+
+    const newLevel = level + 1;
+    const newBossHp = getBossHP(newLevel);
+
+    const { data: updateArr } = await supabase
+      .from("boss_coop_sessions")
+      .update({
+        boss_level: newLevel,
+        boss_hp: newBossHp,
+        boss_max_hp: newBossHp,
+      })
+      .eq("room_code", sessionData.room_code)
+      .select();
+
+    const updatedSession = updateArr && updateArr[0];
+
+    return NextResponse.json({
+      success: true,
+      boss_defeated: true,
+      rewards,
+      session: {
+        ...updatedSession,
+        boss_emoji: getBossEmoji(updatedSession.boss_level),
+        coins_per_boss: getCoinsPerBoss(updatedSession.boss_level),
+      },
+    });
   }
+
+  return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+} catch (error) {
+  return NextResponse.json({ error: error.message || "Unknown error" }, { status: 500 });
 }
