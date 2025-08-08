@@ -12,184 +12,192 @@ import {
   Pause,
   Play,
   Dice6,
-  RotateCw,
-  Wand2,
   Merge,
+  RotateCw,
+  Timer,
+  Wand2,
 } from "lucide-react";
 
 /**
- * Tap Tap: Arcane Siege — v3.1 (Global Targeting)
- * - CHANGE: All defenders can attack ANY enemy on the board (no range checks).
- *   Target selection = enemy closest to the Arcane Core (highest threat).
- * - Everything else remains from v3 (auto-place, merge-2, surge/overdrive, ultimates, hazards, save/load).
+ * Tap Tap: Towers — Lucky-Defense-style, Tap-first
+ * ------------------------------------------------
+ * - 5x3 board (slots). Summon auto-places on first empty slot; costs scale.
+ * - Merge: toggle Merge Mode → tap Unit A → tap Unit B (same element & level).
+ *   Result = level+1, stats = A + B (we use additive stats so “literally adds” makes sense).
+ * - No local boosts. Only global tap boost driven by tap-speed combo meter.
+ *   Tap anywhere (including empty space) to keep the combo alive.
+ *   Multiplier = 1.0 → 1.8 based on combo; also speeds up RoF slightly.
+ * - Targeting:
+ *   • Level 1 units (the “weakest ones”) can shoot ANY enemy on the board.
+ *   • Level 2+ units must have the enemy inside their fixed range zone.
+ * - Waves: 20s timer per wave, spawns paced across that time. Boss on wave 10, 20, …
+ * - Mobile-first glass UI + placeholders for images (background, coins, tokens).
+ * - Save/Load via /api/towers (anonymous saveId in localStorage).
  */
 
+const BOARD_W = 5;
+const BOARD_H = 3;
 const TICK_MS = 50;
-const GLOBAL_SURGE_CD = 4000;
-const GLOBAL_SURGE_DURATION = 2000;
-const LOCAL_OVERDRIVE_CD = 2000;
-const LOCAL_OVERDRIVE_DURATION = 1500;
-const ARCANE_PER_TAP = 12;
-const ARCANE_MAX = 100;
 
-const START_GOLD = 100;
+const START_GOLD = 50;
 const START_LIVES = 20;
 
-const NODES = 12;
+const SUMMON_BASE = 20;
+const SUMMON_SCALE = 1.18;
 
-const ELEMENTS = ["fire", "ice", "storm", "nature"];
+const WAVE_DURATION_MS = 20000; // 20s visible timer
+
+// --- Combo (global tap) ---
+const COMBO_ADD = 14;        // per tap
+const COMBO_DECAY_PER_SEC = 22; // natural decay
+const COMBO_MAX = 100;       // cap
+// Dmg/Speed multiplier curve (1.0 → 1.8 as combo goes 0→100)
+const comboMultiplier = (combo) => 1 + 0.8 * (combo / COMBO_MAX);
+
+// --- Elements / visuals ---
+const ELEMENTS = ["pyro", "frost", "volt", "nature"];
 const COLORS = {
-  fire: "#FF6A3D",
-  ice: "#71D1F4",
-  storm: "#A78BFA",
+  pyro: "#FF6A3D",
+  frost: "#71D1F4",
+  volt: "#A78BFA",
   nature: "#34D399",
 };
+const ICONS = { pyro: Flame, frost: Snowflake, volt: Zap, nature: Leaf };
 
-const ENEMIES = {
-  swarmer: { hp: 14, speed: 1.2, radius: 10, gold: 3 },
-  bruiser: { hp: 40, speed: 0.8, radius: 12, gold: 6 },
-  assassin: { hp: 22, speed: 1.6, radius: 10, gold: 5, leap: true },
-  shield: { hp: 30, speed: 0.9, radius: 12, gold: 6, shield: 20 },
-  boss: { hp: 260, speed: 0.9, radius: 18, gold: 40, aura: true },
-};
-
+// --- Unit base stats (additive-friendly) ---
+// rof = shots per second (additive-friendly too). range in px.
 const UNIT_BASE = {
-  fire: {
-    name: "Fire Mage",
-    icon: Flame,
-    base: { dmg: 8, range: 140, rate: 650, aoe: 32 }, // range kept for future but ignored in targeting
-  },
-  ice: {
-    name: "Frost Adept",
-    icon: Snowflake,
-    base: { dmg: 6, range: 145, rate: 650, slow: 0.45, slowMs: 1200 },
-  },
-  storm: {
-    name: "Spark Shaman",
-    icon: Zap,
-    base: { dmg: 7, range: 165, rate: 600, chains: 3, falloff: 0.65 },
-  },
-  nature: {
-    name: "Druid",
-    icon: Leaf,
-    base: { dmg: 6, range: 145, rate: 650, rootMs: 700, rootChance: 0.12, allyBuff: 0.06 },
-  },
+  pyro:   { dmg: 10, rof: 1.6, range: 140, aoe: 30 },
+  frost:  { dmg: 8,  rof: 1.5, range: 150, slow: 0.4, slowMs: 900 },
+  volt:   { dmg: 7,  rof: 2.0, range: 160, chains: 2, falloff: 0.65 },
+  nature: { dmg: 7,  rof: 1.5, range: 150, rootChance: 0.12, rootMs: 700, allyBuff: 0.06 },
 };
 
-// ---------- helpers ----------
-const now = () => Date.now();
-const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
-const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
-const rid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
-const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-function pickWeighted(pairs) {
-  const total = pairs.reduce((a, b) => a + b.w, 0);
-  let r = Math.random() * total;
-  for (const p of pairs) {
-    if (r < p.w) return p.key;
-    r -= p.w;
-  }
-  return pairs[pairs.length - 1].key;
+// Level scaling used for *initial* creation at that level (merges add on top anyway)
+function levelInitStats(base, level) {
+  if (level <= 1) return { ...base };
+  const mult = 1 + (level - 1) * 0.5;
+  return {
+    ...base,
+    dmg: Math.round(base.dmg * mult),
+    rof: base.rof + (level - 1) * 0.2,
+    range: Math.round(base.range * (1 + (level - 1) * 0.05)),
+    aoe: base.aoe ? Math.round(base.aoe * (1 + (level - 1) * 0.1)) : undefined,
+    chains: base.chains ? Math.min(6, base.chains + Math.floor((level - 1) / 2)) : undefined,
+    falloff: base.falloff,
+    slow: base.slow,
+    slowMs: base.slowMs ? base.slowMs + (level - 1) * 60 : undefined,
+    rootChance: base.rootChance ? Math.min(0.8, base.rootChance + (level - 1) * 0.02) : undefined,
+    rootMs: base.rootMs ? base.rootMs + (level - 1) * 60 : undefined,
+    allyBuff: base.allyBuff ? base.allyBuff + (level - 1) * 0.02 : undefined,
+  };
 }
 
-// Combine/Double stat rules for merge-2
-function mergedStats(a, b) {
-  const out = {};
-  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
-  for (const k of keys) {
-    const av = a[k] ?? 0;
-    const bv = b[k] ?? 0;
-    if (k === "rate") {
-      out.rate = Math.max(120, Math.round(Math.min(av || 9999, bv || 9999) / 2)); // faster
-    } else if (k === "falloff") {
-      out.falloff = clamp(((av || 0.65) + (bv || 0.65)) / 2, 0.4, 0.9);
-    } else if (k === "slow" || k === "allyBuff") {
-      out[k] = clamp((av + bv) * 2, 0, 0.9);
-    } else if (k === "rootChance") {
-      const pAny = 1 - (1 - av) * (1 - bv);
-      out.rootChance = clamp(pAny * 2, 0, 0.85);
-    } else if (k === "range") {
-      out.range = clamp((av + bv) * 2, 60, 280);
-    } else if (k === "chains") {
-      out.chains = Math.min(8, (av + bv) * 2 || 0);
-    } else if (k === "aoe" || k === "slowMs" || k === "rootMs" || k === "dmg") {
-      out[k] = (av + bv) * 2;
-    } else {
-      if (typeof av === "number" || typeof bv === "number") {
-        out[k] = (av + bv) * 2;
-      }
-    }
+// Additive merge: literally sum numeric properties
+function addStats(a, b) {
+  const out = { ...a };
+  for (const k of Object.keys(b)) {
+    if (typeof b[k] === "number") out[k] = (out[k] || 0) + b[k];
   }
-  if (!out.dmg) out.dmg = 2;
-  if (!out.range) out.range = 120;
-  if (!out.rate) out.rate = 600;
   return out;
 }
 
-function unitPowerScore(stats) {
-  const dps = (stats.dmg || 0) * (1000 / (stats.rate || 600));
-  const extras =
-    (stats.aoe ? stats.aoe * 0.2 : 0) +
-    (stats.chains ? stats.chains * 2 : 0) +
-    (stats.slow ? stats.slow * 10 : 0) +
-    (stats.rootChance ? stats.rootChance * 12 : 0) +
-    (stats.allyBuff ? stats.allyBuff * 10 : 0);
-  return dps + extras;
-}
+// Enemy templates (per wave)
+const ENEMY_TYPES = {
+  grunt: (w) => ({ hp: 26 + w * 9, speed: 1.0 + w * 0.02, gold: 3, r: 10 }),
+  swift: (w) => ({ hp: 20 + w * 7, speed: 1.45 + w * 0.025, gold: 3, r: 9 }),
+  tank:  (w) => ({ hp: 75 + w * 18, speed: 0.7 + w * 0.015, gold: 6, r: 13 }),
+  shield:(w) => ({ hp: 40 + w * 10, shield: 28 + w * 9, speed: 0.9 + w * 0.02, gold: 6, r: 12 }),
+  boss:  (w) => ({ hp: 550 + w * 120, speed: 0.9 + w * 0.02, gold: 50, r: 18 }),
+};
 
-// ---------- component ----------
-export default function ArcaneSiege() {
+// Helpers
+const now = () => Date.now();
+const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+const rid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
+const lerp = (a, b, t) => a + (b - a) * t;
+
+export default function TowersPage() {
   // Layout
   const containerRef = useRef(null);
-  const [size, setSize] = useState({ w: 360, h: 640, cx: 180, cy: 320 });
-  const [ringAngle, setRingAngle] = useState(0);
+  const [rect, setRect] = useState({ w: 360, h: 640 });
 
   // Game
   const [gold, setGold] = useState(START_GOLD);
   const [lives, setLives] = useState(START_LIVES);
+  const [renownTokens, setRenownTokens] = useState(0);
+
   const [wave, setWave] = useState(1);
   const [paused, setPaused] = useState(false);
   const [gameOver, setGameOver] = useState(false);
 
-  // Taps
-  const [globalBoostUntil, setGlobalBoostUntil] = useState(0);
-  const [globalCdUntil, setGlobalCdUntil] = useState(0);
-  const [arcane, setArcane] = useState(0);
-  const [chosenPath, setChosenPath] = useState(null);
+  // Summon
+  const [summonCost, setSummonCost] = useState(SUMMON_BASE);
 
-  // Roll / Merge
-  const [rollCost, setRollCost] = useState(40);
+  // Board
+  const [board, setBoard] = useState([]); // { id, element, level, stats, cellIndex, cd }
   const [mergeMode, setMergeMode] = useState(false);
-  const [mergeSourceId, setMergeSourceId] = useState(null);
+  const [mergeSrcId, setMergeSrcId] = useState(null);
 
-  // Units & enemies
-  const [units, setUnits] = useState([]); // {id, element, stats, nodeIndex, localUntil, localCdUntil, level}
+  // Taps (global)
+  const [combo, setCombo] = useState(0);
+  const lastTapRef = useRef(0);
+
+  // Enemies & spawns
   const [enemies, setEnemies] = useState([]);
+  const spawnQueueRef = useRef([]);
+  const spawnEveryRef = useRef(600); // ms between spawns inside a wave
+  const spawnTimerRef = useRef(0);
+  const waveEndAtRef = useRef(now() + WAVE_DURATION_MS);
+  const [waveTimeLeft, setWaveTimeLeft] = useState(WAVE_DURATION_MS / 1000);
 
-  // Portals & hazards
-  const portalsRef = useRef(4);
-
-  // Floaters
-  const [floaters, setFloaters] = useState([]);
-  const addFloater = (text, x, y, color = "#FFD76B") => {
-    const id = rid();
-    setFloaters((p) => [...p, { id, text, x, y, color }]);
-    setTimeout(() => setFloaters((p) => p.filter((f) => f.id !== id)), 900);
-  };
-
-  // Save id
+  // Save
   const saveIdRef = useRef(null);
 
-  // Nodes positions
-  const nodes = useMemo(() => {
-    const R = Math.min(size.w, size.h) * 0.36;
+  // Board cell centers (for rendering units)
+  const cells = useMemo(() => {
+    const areaW = rect.w * 0.84;
+    const areaH = rect.h * 0.5;
+    const cx = rect.w / 2;
+    const cy = rect.h * 0.52;
+
+    const left = cx - areaW / 2;
+    const top = cy - areaH / 2;
+
+    const cellW = areaW / BOARD_W;
+    const cellH = areaH / BOARD_H;
+
     const arr = [];
-    for (let i = 0; i < NODES; i++) {
-      const a = (i / NODES) * Math.PI * 2 + (ringAngle * Math.PI) / 180;
-      arr.push({ x: size.cx + Math.cos(a) * R, y: size.cy + Math.sin(a) * R });
+    for (let y = 0; y < BOARD_H; y++) {
+      for (let x = 0; x < BOARD_W; x++) {
+        arr.push({
+          x: Math.round(left + x * cellW + cellW / 2),
+          y: Math.round(top + y * cellH + cellH / 2),
+        });
+      }
     }
     return arr;
-  }, [size, ringAngle]);
+  }, [rect]);
+
+  // Path points (serpentine two-lane look)
+  const pathPoints = useMemo(() => {
+    const inset = 54;
+    const left = inset;
+    const right = rect.w - inset;
+    const y1 = rect.h * 0.25;
+    const y2 = rect.h * 0.62;
+    const entryX = left - 40;
+    const exitX = right + 40;
+    return [
+      { x: entryX, y: y1 },
+      { x: right, y: y1 },
+      { x: right, y: y2 },
+      { x: left, y: y2 },
+      { x: left, y: y1 },
+      { x: exitX, y: y1 },
+    ];
+  }, [rect]);
 
   // Resize observer
   useEffect(() => {
@@ -197,26 +205,26 @@ export default function ArcaneSiege() {
     if (!el) return;
     const ro = new ResizeObserver(() => {
       const r = el.getBoundingClientRect();
-      setSize({ w: r.width, h: r.height, cx: r.width / 2, cy: r.height / 2 });
+      setRect({ w: r.width, h: r.height });
     });
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
 
-  // Start/load
+  // Init / load
   useEffect(() => {
     const sid =
-      localStorage.getItem("arcaneSaveId") ||
+      localStorage.getItem("towersSaveId") ||
       (() => {
         const id = rid();
-        localStorage.setItem("arcaneSaveId", id);
+        localStorage.setItem("towersSaveId", id);
         return id;
       })();
     saveIdRef.current = sid;
 
     (async () => {
       try {
-        const res = await fetch("/api/arcanesiege", {
+        const res = await fetch("/api/towers", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "load", saveId: sid }),
@@ -225,123 +233,215 @@ export default function ArcaneSiege() {
         if (json?.gameData) {
           restore(json.gameData);
         } else {
-          spawnWave(1);
+          startWave(1);
         }
       } catch {
-        spawnWave(1);
+        startWave(1);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Hazards
-  useEffect(() => {
-    if (wave > 1 && wave % 5 === 0) {
-      setRingAngle((a) => a + 20 + Math.floor(Math.random() * 12));
-      portalsRef.current = Math.min(8, portalsRef.current + 1);
-      addFloater("Battlefield Shift!", size.cx, size.cy, "#FFE57F");
-    }
-  }, [wave]); // eslint-disable-line
+  // Start a wave
+  function startWave(w) {
+    setWave(w);
+    enqueueWave(w);
+    waveEndAtRef.current = now() + WAVE_DURATION_MS;
+    setWaveTimeLeft(Math.ceil(WAVE_DURATION_MS / 1000));
+  }
 
-  // Game loop (GLOBAL TARGETING)
+  // Create a wave blueprint
+  function makeWave(w) {
+    const list = [];
+    const count = 12 + Math.floor(w * 1.8);
+    for (let i = 0; i < count; i++) {
+      const t =
+        i % 10 === 9
+          ? "swift"
+          : i % 8 === 7
+          ? "shield"
+          : i % 6 === 5
+          ? "tank"
+          : "grunt";
+      const base =
+        t === "swift"
+          ? ENEMY_TYPES.swift(w)
+          : t === "shield"
+          ? ENEMY_TYPES.shield(w)
+          : t === "tank"
+          ? ENEMY_TYPES.tank(w)
+          : ENEMY_TYPES.grunt(w);
+      list.push({ type: t, base });
+    }
+    if (w % 10 === 0) list.push({ type: "boss", base: ENEMY_TYPES.boss(w) });
+    return list;
+  }
+
+  function enqueueWave(w) {
+    spawnQueueRef.current = makeWave(w);
+    spawnEveryRef.current = Math.max(250, Math.floor(WAVE_DURATION_MS / (spawnQueueRef.current.length + 2)));
+    spawnTimerRef.current = 0;
+  }
+
+  // Spawn a specific enemy descriptor into the field
+  function spawnEnemy(desc) {
+    const a = pathPoints[0];
+    const b = pathPoints[1];
+    const e = {
+      id: rid(),
+      kind: desc.type,
+      hp: desc.base.hp,
+      shieldHp: desc.base.shield ? Math.round(desc.base.shield) : 0,
+      speed: desc.base.speed,
+      gold: desc.base.gold,
+      r: desc.base.r,
+      seg: 0,     // current segment index along path
+      t: 0,       // segment interpolation 0..1
+      x: a.x,
+      y: a.y,
+      slowUntil: 0,
+      rootedUntil: 0,
+    };
+    setEnemies((prev) => [...prev, e]);
+  }
+
+  // Game loop
   useEffect(() => {
     if (paused || gameOver) return;
     const iv = setInterval(() => {
+      // Wave timer
+      const leftMs = Math.max(0, waveEndAtRef.current - now());
+      setWaveTimeLeft(Math.ceil(leftMs / 1000));
+
+      // Spawn pacing within wave window
+      spawnTimerRef.current += TICK_MS;
+      if (spawnQueueRef.current.length > 0 && spawnTimerRef.current >= spawnEveryRef.current && leftMs > 0) {
+        spawnTimerRef.current = 0;
+        const next = spawnQueueRef.current.shift();
+        spawnEnemy(next);
+      }
+
+      // Move enemies
       setEnemies((prev) => {
-        let arr = [...prev];
+        let arr = prev.map((e) => {
+          if (e.rootedUntil > now()) return { ...e }; // rooted, no move
 
-        // Move enemies
-        arr = arr
-          .map((e) => {
-            const rooted = now() < e.rootedUntil;
-            const slowMul = now() < e.slowUntil ? 0.45 : 1;
-            const spd = rooted ? 0 : e.speed * slowMul;
-            if (e.leap && Math.random() < 0.02) {
-              const a = Math.atan2(size.cy - e.y, size.cx - e.x);
-              e.x += Math.cos(a) * 30;
-              e.y += Math.sin(a) * 30;
-            }
-            const ang = Math.atan2(size.cy - e.y, size.cx - e.x);
-            e.x += Math.cos(ang) * spd;
-            e.y += Math.sin(ang) * spd;
-            if (dist(e.x, e.y, size.cx, size.cy) <= 22) {
-              setLives((l) => l - 1);
-              return null;
-            }
-            return e;
-          })
-          .filter(Boolean);
+          const pA = pathPoints[e.seg];
+          const pB = pathPoints[e.seg + 1];
+          if (!pB) return { ...e, reached: true };
 
-        // Unit attacks — ANY enemy on board
-        if (units.length && arr.length) {
-          const gBoost = now() < globalBoostUntil ? 1.3 : 1;
-          arr = arr.map((e) => ({ ...e }));
-          // Pre-sort by threat (closest to core)
-          const byThreat = arr
-            .map((e, idx) => ({ e, idx, d: dist(e.x, e.y, size.cx, size.cy) }))
-            .sort((a, b) => a.d - b.d); // lowest distance = highest threat
+          const len = Math.max(1, dist(pA.x, pA.y, pB.x, pB.y));
+          const spd = e.speed * (e.slowUntil > now() ? 0.45 : 1);
+          const dt = (spd / len);
+          let t = e.t + dt;
+          let seg = e.seg;
+          while (t >= 1 && pathPoints[seg + 1]) {
+            t -= 1;
+            seg++;
+          }
+          const A = pathPoints[seg];
+          const B = pathPoints[seg + 1] || A;
+          const x = lerp(A.x, B.x, t);
+          const y = lerp(A.y, B.y, t);
 
-          for (const u of units) {
-            u._nextAtk = u._nextAtk ?? 0;
-            if (now() < u._nextAtk) continue;
+          return { ...e, seg, t, x, y };
+        });
 
-            const st = u.stats;
-            const localBoost = now() < (u.localUntil || 0) ? 1.5 : 1;
-            const dmgBase = st.dmg * gBoost * localBoost * (1 + (st.allyBuff || 0));
+        // Reached core -> lose life
+        const survivors = [];
+        let lost = 0;
+        for (const e of arr) {
+          if (e.reached) lost++;
+          else survivors.push(e);
+        }
+        if (lost) setLives((l) => l - lost);
+        return survivors;
+      });
 
-            if (byThreat.length === 0) break;
-            const primary = byThreat[0]; // most dangerous target
+      // Defenders attack
+      setEnemies((prevEnemies) => {
+        if (!prevEnemies.length || !board.length) return prevEnemies;
+        const m = comboMultiplier(combo); // dmg / rof global multiplier
 
-            if (u.element === "fire") {
-              // Splash around primary (AoE still uses st.aoe radius)
-              for (let j = 0; j < arr.length; j++) {
-                const e = arr[j];
-                if (dist(e.x, e.y, primary.e.x, primary.e.y) <= (st.aoe || 28)) {
-                  arr[j] = applyDamage(arr[j], dmgBase);
-                }
-              }
-              hitFx(primary.e.x, primary.e.y, COLORS.fire);
-            } else if (u.element === "ice") {
-              const t = { ...arr[primary.idx] };
-              t.slowUntil = Math.max(t.slowUntil || 0, now() + (st.slowMs || 900));
-              arr[primary.idx] = applyDamage(t, dmgBase);
-              hitFx(t.x, t.y, COLORS.ice);
-            } else if (u.element === "storm") {
-              // Chain from primary across globally nearest hops
-              let dmg = dmgBase;
-              let last = primary;
+        // clone enemies
+        let arr = prevEnemies.map((e) => ({ ...e }));
+
+        for (const unit of board) {
+          unit._cd = unit._cd ?? 0;
+          unit._cd -= TICK_MS / (1000 / 1000); // normalized
+          const rof = (unit.stats.rof || 1) * (1 + (m - 1) * 0.5); // rof also benefits but less than dmg
+          const fireEveryMs = Math.max(100, 1000 / rof);
+
+          if (unit._cd > 0) continue;
+          unit._cd = fireEveryMs;
+
+          // Choose target set
+          let targets = arr;
+          if (unit.level > 1) {
+            // level 2+ must be in range
+            const p = cells[unit.cellIndex];
+            targets = arr
+              .map((e, idx) => ({ e, idx, d: dist(e.x, e.y, p.x, p.y) }))
+              .filter((o) => o.d <= (unit.stats.range || 140));
+          } else {
+            // level 1 can hit anywhere (no filtering)
+            targets = arr.map((e, idx) => ({ e, idx, d: 0 }));
+          }
+
+          if (!targets.length) continue;
+
+          // Prioritize closest to end (highest segment then highest t)
+          targets.sort((a, b) => (b.e.seg - a.e.seg) || (b.e.t - a.e.t));
+
+          const dmgBase = unit.stats.dmg * m * (1 + (unit.stats.allyBuff || 0));
+
+          if (unit.element === "pyro") {
+            const primary = targets[0].e;
+            // AoE splash
+            arr = arr.map((e, idx) => {
+              const within = dist(e.x, e.y, primary.x, primary.y) <= (unit.stats.aoe || 28);
+              return within ? applyDamage(e, dmgBase) : e;
+            });
+            hitFx(primary.x, primary.y, COLORS.pyro);
+
+          } else if (unit.element === "frost") {
+            const tgt = targets[0];
+            const t = { ...arr[tgt.idx] };
+            t.slowUntil = Math.max(t.slowUntil || 0, now() + (unit.stats.slowMs || 900));
+            arr[tgt.idx] = applyDamage(t, dmgBase);
+            hitFx(t.x, t.y, COLORS.frost);
+
+          } else if (unit.element === "volt") {
+            let hops = 0;
+            let dmg = dmgBase;
+            let last = targets[0];
+            arr[last.idx] = applyDamage(arr[last.idx], dmg);
+            hitFx(last.e.x, last.e.y, COLORS.volt);
+            while (hops < (unit.stats.chains || 2)) {
+              const next = arr
+                .map((e, idx) => ({ e, idx, d: dist(e.x, e.y, last.e.x, last.e.y) }))
+                .filter((o) => o.idx !== last.idx)
+                .sort((a, b) => a.d - b.d)[0];
+              if (!next) break;
+              hops++;
+              dmg *= unit.stats.falloff || 0.65;
+              last = next;
               arr[last.idx] = applyDamage(arr[last.idx], dmg);
-              hitFx(last.e.x, last.e.y, COLORS.storm);
-              let hops = 1;
-              const maxHops = st.chains || 2;
-              const fall = st.falloff || 0.65;
-              while (hops <= maxHops) {
-                // find next nearest to last.e (global set)
-                const next = arr
-                  .map((e, idx) => ({ e, idx, d: dist(e.x, e.y, last.e.x, last.e.y) }))
-                  .filter((o) => o.idx !== last.idx)
-                  .sort((a, b) => a.d - b.d)[0];
-                if (!next) break;
-                last = next;
-                dmg *= fall;
-                arr[last.idx] = applyDamage(arr[last.idx], dmg);
-                hitFx(last.e.x, last.e.y, COLORS.storm);
-                hops++;
-              }
-            } else if (u.element === "nature") {
-              const t = { ...arr[primary.idx] };
-              if (Math.random() < (st.rootChance || 0.1)) {
-                t.rootedUntil = Math.max(t.rootedUntil || 0, now() + (st.rootMs || 600));
-              }
-              arr[primary.idx] = applyDamage(t, dmgBase);
-              hitFx(t.x, t.y, COLORS.nature);
+              hitFx(last.e.x, last.e.y, COLORS.volt);
             }
 
-            u._nextAtk = now() + (st.rate || 650);
+          } else if (unit.element === "nature") {
+            const tgt = targets[0];
+            const t = { ...arr[tgt.idx] };
+            if (Math.random() < (unit.stats.rootChance || 0.1)) {
+              t.rootedUntil = Math.max(t.rootedUntil || 0, now() + (unit.stats.rootMs || 600));
+            }
+            arr[tgt.idx] = applyDamage(t, dmgBase);
+            hitFx(t.x, t.y, COLORS.nature);
           }
         }
 
-        // Cleanup & gold
+        // Cleanup + gold
         let earned = 0;
         const alive = [];
         for (const e of arr) {
@@ -350,111 +450,123 @@ export default function ArcaneSiege() {
         }
         if (earned) setGold((g) => g + earned);
 
-        // Next wave
-        if (alive.length === 0) {
+        // If wave time ended AND no enemies left AND queue empty → next wave
+        if (alive.length === 0 && spawnQueueRef.current.length === 0 && now() >= waveEndAtRef.current) {
           setTimeout(() => {
-            if (!paused && !gameOver) {
-              setWave((w) => w + 1);
-              spawnWave(wave + 1);
-              saveProgress();
-            }
-          }, 500);
+            if (!paused && !gameOver) startWave(wave + 1);
+          }, 600);
         }
+
         return alive;
       });
 
-      // Game over check
-      setLives((l) => {
-        if (l <= 0) {
+      // Combo decay
+      setCombo((c) => clamp(c - (COMBO_DECAY_PER_SEC * (TICK_MS / 1000)), 0, COMBO_MAX));
+
+      // Death check
+      setLives((L) => {
+        if (L <= 0) {
           setGameOver(true);
           return 0;
         }
-        return l;
+        return L;
       });
     }, TICK_MS);
     return () => clearInterval(iv);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paused, gameOver, units, globalBoostUntil, wave, size.cx, size.cy]);
+  }, [paused, gameOver, board, cells, wave]);
 
-  function applyDamage(e, amount) {
-    const out = { ...e };
-    if (out.shieldHp > 0) {
-      const s = Math.min(out.shieldHp, amount);
-      out.shieldHp -= s;
-      amount -= s;
+  function applyDamage(e, dmg) {
+    let left = dmg;
+    if (e.shieldHp > 0) {
+      const s = Math.min(left, e.shieldHp);
+      e.shieldHp -= s;
+      left -= s;
     }
-    if (amount > 0) out.hp -= amount;
-    return out;
-  }
-  function hitFx(x, y, color) {
-    addFloater("•", x, y, color);
+    if (left > 0) e.hp -= left;
+    return e;
   }
 
-  // Spawns
-  function spawnWave(w) {
-    const batch = [];
-    const portals = portalsRef.current;
-    const base = 6 + w;
-    const count = Math.min(26, base + Math.floor(w / 2));
-    for (let i = 0; i < count; i++) {
-      const angle =
-        (Math.floor(Math.random() * portals) / portals) * Math.PI * 2 +
-        Math.random() * ((Math.PI * 2) / portals) * 0.5;
-      const R = Math.max(size.w, size.h) * 0.55;
-      const x = size.cx + Math.cos(angle) * R;
-      const y = size.cy + Math.sin(angle) * R;
-      const typeKey = pickWeighted([
-        { key: "swarmer", w: 40 + w * 1.1 },
-        { key: "bruiser", w: 25 + w * 0.7 },
-        { key: "assassin", w: 18 + w * 0.55 },
-        { key: "shield", w: 17 + w * 0.45 },
-      ]);
-      const t = ENEMIES[typeKey];
-      batch.push({
-        id: rid(),
-        kind: typeKey,
-        x,
-        y,
-        hp: Math.round(t.hp * (1 + w * 0.18)),
-        speed: t.speed * (1 + w * 0.02),
-        radius: t.radius,
-        gold: t.gold,
-        shieldHp: t.shield ? Math.round(t.shield * (1 + w * 0.1)) : 0,
-        leap: !!t.leap,
-        aura: !!t.aura,
-        slowUntil: 0,
-        rootedUntil: 0,
-      });
-    }
-    if (w % 10 === 0) {
-      const angle = Math.random() * Math.PI * 2;
-      const R = Math.max(size.w, size.h) * 0.6;
-      const x = size.cx + Math.cos(angle) * R;
-      const y = size.cy + Math.sin(angle) * R;
-      const b = ENEMIES.boss;
-      batch.push({
-        id: rid(),
-        kind: "boss",
-        x,
-        y,
-        hp: Math.round(b.hp * (1 + w * 0.3)),
-        speed: b.speed * (1 + w * 0.02),
-        radius: b.radius,
-        gold: b.gold,
-        shieldHp: 0,
-        leap: false,
-        aura: true,
-        slowUntil: 0,
-        rootedUntil: 0,
-      });
-    }
-    setEnemies((prev) => [...prev, ...batch]);
+  // --- Input ---
+  function onTap(e) {
+    // Global tap: increase combo regardless of merge mode (so tapping always helps)
+    setCombo((c) => clamp(c + COMBO_ADD, 0, COMBO_MAX));
+    lastTapRef.current = now();
   }
 
-  // Save/restore
-  async function saveProgress() {
+  // Merge interactions
+  function onCellTap(cellIdx) {
+    const u = board.find((b) => b.cellIndex === cellIdx);
+    if (!mergeMode) {
+      // no local boosts anymore; tapping board is just for merge when enabled
+      return;
+    }
+    if (!u) return;
+
+    if (!mergeSrcId) {
+      setMergeSrcId(u.id);
+      return;
+    }
+    if (mergeSrcId === u.id) {
+      setMergeSrcId(null);
+      return;
+    }
+    const src = board.find((b) => b.id === mergeSrcId);
+    if (!src) return;
+
+    // Must match element & level
+    if (src.element !== u.element || src.level !== u.level) {
+      setMergeSrcId(null);
+      return;
+    }
+
+    // Merge: stats = statsA + statsB; level+1 at u's spot, free src's cell.
+    const merged = addStats(src.stats, u.stats);
+    const newUnit = {
+      id: rid(),
+      element: u.element,
+      level: u.level + 1,
+      stats: merged,
+      cellIndex: u.cellIndex,
+      _cd: 0,
+    };
+
+    setBoard((prev) => {
+      const keep = prev.filter((x) => x.id !== src.id && x.id !== u.id);
+      // place merged at u cell; src cell becomes empty (auto-place uses first empty anyway)
+      return [...keep, newUnit];
+    });
+    setMergeSrcId(null);
+  }
+
+  // Summon
+  function firstEmptyCell() {
+    const occupied = new Set(board.map((b) => b.cellIndex));
+    for (let i = 0; i < BOARD_W * BOARD_H; i++) {
+      if (!occupied.has(i)) return i;
+    }
+    return -1;
+  }
+
+  function summon() {
+    if (gold < summonCost) return;
+    const idx = firstEmptyCell();
+    if (idx < 0) return; // full
+    const element = ELEMENTS[Math.floor(Math.random() * ELEMENTS.length)];
+    const level = 1;
+    const base = levelInitStats(UNIT_BASE[element], level);
+    setBoard((prev) => [
+      ...prev,
+      { id: rid(), element, level, stats: { ...base }, cellIndex: idx, _cd: 0 },
+    ]);
+    setGold((g) => g - summonCost);
+    setSummonCost((c) => Math.ceil(c * SUMMON_SCALE));
+  }
+
+  // Save/Load
+  async function save() {
     try {
-      await fetch("/api/arcanesiege", {
+      await fetch("/api/towers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -463,368 +575,161 @@ export default function ArcaneSiege() {
           gameData: {
             gold,
             lives,
+            renownTokens,
             wave,
-            ringAngle,
-            portals: portalsRef.current,
-            units,
+            board,
             enemies,
-            arcane,
-            chosenPath,
-            rollCost,
+            summonCost,
             timestamp: now(),
           },
         }),
       });
     } catch {}
   }
+
   function restore(g) {
     setGold(g.gold ?? START_GOLD);
     setLives(g.lives ?? START_LIVES);
+    setRenownTokens(g.renownTokens ?? 0);
     setWave(g.wave ?? 1);
-    setRingAngle(g.ringAngle ?? 0);
-    portalsRef.current = g.portals ?? 4;
-    setUnits(g.units ?? []);
+    setBoard(g.board ?? []);
     setEnemies(g.enemies ?? []);
-    setArcane(g.arcane ?? 0);
-    setChosenPath(g.chosenPath ?? null);
-    setRollCost(g.rollCost ?? 40);
-    if (!g.enemies?.length) spawnWave(g.wave ?? 1);
+    setSummonCost(g.summonCost ?? SUMMON_BASE);
+    waveEndAtRef.current = now() + WAVE_DURATION_MS;
+    enqueueWave(g.wave ?? 1);
+    setWaveTimeLeft(Math.ceil(WAVE_DURATION_MS / 1000));
   }
 
-  // Input handling
-  const isGlobalReady = now() >= globalCdUntil;
-  const onFieldPointerDown = (e) => {
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = (e.clientX ?? e.touches?.[0]?.clientX) - rect.left;
-    const y = (e.clientY ?? e.touches?.[0]?.clientY) - rect.top;
-
-    // Click on node?
-    const hitR = 28;
-    let hitIdx = -1;
-    for (let i = 0; i < nodes.length; i++) {
-      if (dist(x, y, nodes[i].x, nodes[i].y) <= hitR) {
-        hitIdx = i;
-        break;
-      }
-    }
-
-    if (hitIdx >= 0) {
-      const unit = units.find((u) => u.nodeIndex === hitIdx);
-      if (mergeMode) {
-        if (!unit) {
-          addFloater("Select two matching units", nodes[hitIdx].x, nodes[hitIdx].y, "#fff");
-          return;
-        }
-        if (!mergeSourceId) {
-          setMergeSourceId(unit.id);
-          addFloater("Source selected", nodes[hitIdx].x, nodes[hitIdx].y, COLORS[unit.element]);
-        } else {
-          const src = units.find((u) => u.id === mergeSourceId);
-          if (!src || src.id === unit.id) {
-            setMergeSourceId(null);
-            return;
-          }
-          if (src.element !== unit.element) {
-            addFloater("Must match element", nodes[hitIdx].x, nodes[hitIdx].y, "#ffaaaa");
-            setMergeSourceId(null);
-            return;
-          }
-          // merge src into unit here
-          const merged = mergedStats(src.stats, unit.stats);
-          setUnits((prev) => {
-            const keep = prev.filter((u) => u.id !== src.id && u.id !== unit.id);
-            return [
-              ...keep,
-              {
-                id: rid(),
-                element: unit.element,
-                stats: merged,
-                nodeIndex: unit.nodeIndex,
-                localUntil: 0,
-                localCdUntil: 0,
-                level: (unit.level || 1) + (src.level || 1),
-              },
-            ];
-          });
-          setMergeSourceId(null);
-          addFloater("Merged!", nodes[hitIdx].x, nodes[hitIdx].y, COLORS[unit.element]);
-        }
-        return;
-      }
-
-      // Local overdrive
-      if (unit) {
-        if (now() < unit.localCdUntil) {
-          globalTap(x, y);
-          return;
-        }
-        setUnits((prev) =>
-          prev.map((u) =>
-            u.id === unit.id
-              ? {
-                  ...u,
-                  localUntil: now() + LOCAL_OVERDRIVE_DURATION,
-                  localCdUntil: now() + LOCAL_OVERDRIVE_CD,
-                }
-              : u
-          )
-        );
-        addFloater("OVERDRIVE!", nodes[hitIdx].x, nodes[hitIdx].y, COLORS[unit.element]);
-        gainArcane(ARCANE_PER_TAP, x, y);
-        return;
-      }
-
-      // empty node — treat as global
-      globalTap(x, y);
-      return;
-    }
-
-    // empty field
-    globalTap(x, y);
-  };
-
-  function globalTap(x, y) {
-    if (isGlobalReady) {
-      setGlobalBoostUntil(now() + GLOBAL_SURGE_DURATION);
-      setGlobalCdUntil(now() + GLOBAL_SURGE_CD);
-      addFloater("GLOBAL SURGE!", x, y, "#FFE57F");
-    } else {
-      addFloater("+", x, y, "#eee");
-    }
-    gainArcane(ARCANE_PER_TAP, x, y);
-  }
-
-  function gainArcane(val, x, y) {
-    setArcane((a) => {
-      const n = clamp(a + val, 0, ARCANE_MAX);
-      if (n >= ARCANE_MAX) {
-        if (chosenPath) castUltimate(chosenPath, x ?? size.cx, y ?? size.cy);
-        return 0;
-      }
-      return n;
-    });
-  }
-
-  function castUltimate(path, x, y) {
-    addFloater("ULTIMATE!", x, y, "#FFFFFF");
-    if (path === "fire") {
-      setEnemies((prev) => {
-        let arr = [...prev];
-        for (let i = 0; i < 8; i++) {
-          if (!arr.length) break;
-          const idx = Math.floor(Math.random() * arr.length);
-          if (arr[idx]) {
-            arr[idx] = applyDamage(arr[idx], 40);
-            for (let j = 0; j < arr.length; j++) {
-              if (j === idx) continue;
-              if (dist(arr[j].x, arr[j].y, arr[idx].x, arr[idx].y) < 48) {
-                arr[j] = applyDamage(arr[j], 20);
-              }
-            }
-          }
-        }
-        return arr;
-      });
-    } else if (path === "ice") {
-      setEnemies((prev) =>
-        prev.map((e) => ({
-          ...e,
-          slowUntil: now() + 3500,
-          rootedUntil: Math.random() < 0.25 ? now() + 1200 : e.rootedUntil,
-        }))
-      );
-    } else if (path === "storm") {
-      setEnemies((prev) => prev.map((e) => applyDamage(e, 55)));
-    } else if (path === "nature") {
-      setUnits((prev) =>
-        prev.map((u) => ({ ...u, localUntil: Math.max(u.localUntil, now() + 2000) }))
-      );
-      setEnemies((prev) => prev.map((e) => ({ ...e, rootedUntil: now() + 1000 })));
-    }
-  }
-
-  // Rolling & auto-placement (unchanged)
-  function rollUnit() {
-    const element = pick(ELEMENTS);
-    autoPlaceOrMerge(element);
-  }
-  function baseStatsFor(element) {
-    return { ...UNIT_BASE[element].base };
-  }
-  function firstEmptyNode() {
-    const occupied = new Set(units.map((u) => u.nodeIndex));
-    for (let i = 0; i < nodes.length; i++) if (!occupied.has(i)) return i;
-    return -1;
-  }
-  function weakestUnitIndex() {
-    if (!units.length) return -1;
-    let worst = 0;
-    let worstScore = unitPowerScore(units[0].stats);
-    for (let i = 1; i < units.length; i++) {
-      const s = unitPowerScore(units[i].stats);
-      if (s < worstScore) {
-        worst = i;
-        worstScore = s;
-      }
-    }
-    return worst;
-  }
-  function autoPlaceOrMerge(element) {
-    let idx = firstEmptyNode();
-    if (idx >= 0) {
-      setUnits((prev) => [
-        ...prev,
-        {
-          id: rid(),
-          element,
-          stats: baseStatsFor(element),
-          nodeIndex: idx,
-          localUntil: 0,
-          localCdUntil: 0,
-          level: 1,
-        },
-      ]);
-      addFloater("Placed!", nodes[idx].x, nodes[idx].y, COLORS[element]);
-      return;
-    }
-    const same = units
-      .map((u, i) => ({ u, i, s: unitPowerScore(u.stats) }))
-      .filter((x) => x.u.element === element)
-      .sort((a, b) => a.s - b.s);
-    if (same.length >= 2) {
-      const a = same[0];
-      const b = same[1];
-      const merged = mergedStats(a.u.stats, b.u.stats);
-      const targetNode = b.u.nodeIndex;
-      setUnits((prev) => {
-        const keep = prev.filter((_, i) => i !== a.i && i !== b.i);
-        return [
-          ...keep,
-          {
-            id: rid(),
-            element,
-            stats: merged,
-            nodeIndex: targetNode,
-            localUntil: 0,
-            localCdUntil: 0,
-            level: (a.u.level || 1) + (b.u.level || 1),
-          },
-          {
-            id: rid(),
-            element,
-            stats: baseStatsFor(element),
-            nodeIndex: a.u.nodeIndex,
-            localUntil: 0,
-            localCdUntil: 0,
-            level: 1,
-          },
-        ];
-      });
-      addFloater("Auto-merge + Place!", nodes[targetNode].x, nodes[targetNode].y, COLORS[element]);
-      return;
-    }
-    const wIdx = weakestUnitIndex();
-    if (wIdx >= 0) {
-      const targetNode = units[wIdx].nodeIndex;
-      setUnits((prev) => {
-        const keep = prev.filter((_, i) => i !== wIdx);
-        return [
-          ...keep,
-          {
-            id: rid(),
-            element,
-            stats: baseStatsFor(element),
-            nodeIndex: targetNode,
-            localUntil: 0,
-            localCdUntil: 0,
-            level: 1,
-          },
-        ];
-      });
-      addFloater("Replaced weakest", nodes[targetNode].x, nodes[targetNode].y, COLORS[element]);
-    }
-  }
-
-  // UI State/controls
-  const togglePause = () => setPaused((p) => !p);
-  const resetGame = () => {
+  function resetGame() {
     setGold(START_GOLD);
     setLives(START_LIVES);
+    setRenownTokens(0);
     setWave(1);
-    setRingAngle(0);
-    portalsRef.current = 4;
-    setUnits([]);
+    setBoard([]);
     setEnemies([]);
-    setArcane(0);
-    setGlobalBoostUntil(0);
-    setGlobalCdUntil(0);
-    setChosenPath(null);
-    setRollCost(40);
+    setSummonCost(SUMMON_BASE);
+    setCombo(0);
     setMergeMode(false);
-    setMergeSourceId(null);
+    setMergeSrcId(null);
     setGameOver(false);
-    setTimeout(() => spawnWave(1), 100);
-  };
+    startWave(1);
+  }
 
-  const globalCdLeft = Math.max(0, globalCdUntil - now());
-  const globalActiveLeft = Math.max(0, globalBoostUntil - now());
+  // UI helpers
+  const coinImg =
+    "https://ucarecdn.com/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/-/format/auto/"; // 🔁 replace with your coin image
+  const tokenImg =
+    "https://ucarecdn.com/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/-/format/auto/"; // 🔁 replace with renown token image
+  const bgImg =
+    "https://ucarecdn.com/cccccccc-cccc-cccc-cccc-cccccccccccc/-/format/auto/"; // 🔁 replace with your background image
 
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-[100svh] overflow-hidden bg-gradient-to-b from-indigo-700 via-purple-700 to-pink-600"
+      className="relative w-full h-[100svh] overflow-hidden"
+      onPointerDown={onTap}
+      style={{
+        backgroundImage: `url("${bgImg}")`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
     >
-      {/* Tap layer */}
-      <div className="absolute inset-0" onPointerDown={onFieldPointerDown} />
+      {/* Backdrop gradient overlay (glassy layer) */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40" />
 
-      {/* Core */}
-      <motion.div
-        className="absolute rounded-full"
-        style={{
-          width: 46,
-          height: 46,
-          left: size.cx - 23,
-          top: size.cy - 23,
-          background:
-            "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(255,255,255,0.1))",
-          border: "1px solid rgba(255,255,255,0.5)",
-          boxShadow: "0 0 25px rgba(255,255,255,0.4)",
-          backdropFilter: "blur(8px)",
-        }}
-        animate={{ scale: now() < globalBoostUntil ? 1.08 : 1 }}
-        transition={{ type: "spring", stiffness: 100, damping: 12 }}
-      />
-
-      {/* Nodes & Units */}
-      {nodes.map((p, idx) => {
-        const unit = units.find((u) => u.nodeIndex === idx);
-        const isSrc = unit && unit.id === mergeSourceId;
-        return (
-          <div key={idx} className="absolute" style={{ left: p.x - 18, top: p.y - 18, width: 36, height: 36 }}>
-            <div
-              className="w-full h-full rounded-full border"
-              style={{
-                borderColor: isSrc ? "#fff" : "rgba(255,255,255,0.5)",
-                background: "rgba(255,255,255,0.12)",
-                backdropFilter: "blur(6px)",
-                boxShadow: isSrc ? "0 0 16px rgba(255,255,255,0.9)" : "0 2px 8px rgba(0,0,0,0.25)",
-              }}
-            />
-            {unit && <UnitBadge u={unit} />}
+      {/* Top HUD */}
+      <div className="absolute top-2 left-2 right-2 z-20">
+        <div className="glass flex items-center justify-between px-3 py-2 rounded-xl text-white">
+          <div className="flex items-center gap-3 text-sm">
+            <span className="inline-flex items-center gap-1">
+              <img src={coinImg} alt="Coins" className="w-4 h-4 object-contain" />
+              {gold}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Heart size={14} /> {lives}
+            </span>
+            <span>Wave {wave}</span>
           </div>
-        );
-      })}
+          <div className="flex items-center gap-2">
+            <button className="btn" onClick={() => setPaused((p) => !p)} aria-label={paused ? "Resume" : "Pause"}>
+              {paused ? <Play size={16} /> : <Pause size={16} />}
+            </button>
+            <button className="btn" onClick={save} aria-label="Save">
+              <RotateCw size={16} />
+            </button>
+          </div>
+        </div>
 
-      {/* Enemies */}
+        {/* Wave timer + Combo meter */}
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <div className="glass px-3 py-2 rounded-xl text-white flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs">
+              <Timer size={14} />
+              <span>Wave Time</span>
+            </div>
+            <div className="font-mono text-sm">{String(waveTimeLeft).padStart(2, "0")}s</div>
+          </div>
+
+          <div className="glass px-3 py-2 rounded-xl text-white">
+            <div className="flex items-center justify-between mb-1 text-[11px]">
+              <span className="inline-flex items-center gap-1">
+                <Wand2 size={12} /> Combo
+              </span>
+              <span className="font-mono">{Math.round(combo)}%</span>
+            </div>
+            <div className="w-full h-2 rounded-full bg-white/20 overflow-hidden">
+              <div className="h-full bg-white" style={{ width: `${(combo / COMBO_MAX) * 100}%` }} />
+            </div>
+            <div className="text-[10px] opacity-80 mt-1">
+              Mult: {comboMultiplier(combo).toFixed(2)}× dmg / { (1 + (comboMultiplier(combo)-1)*0.5).toFixed(2)}× rof
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Board */}
+      <div className="absolute inset-x-0 top-[22%] bottom-[18%] z-10">
+        {/* board frame */}
+        <div className="absolute inset-4 rounded-3xl border border-white/25 bg-white/10 backdrop-blur-xl shadow-2xl" />
+        {/* cells */}
+        {cells.map((c, idx) => {
+          const unit = board.find((b) => b.cellIndex === idx);
+          const isSrc = unit && unit.id === mergeSrcId;
+          return (
+            <div
+              key={idx}
+              className="absolute"
+              style={{ left: c.x - 28, top: c.y - 28, width: 56, height: 56 }}
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                onCellTap(idx);
+              }}
+            >
+              <div
+                className="w-full h-full rounded-xl border"
+                style={{
+                  borderColor: isSrc ? "#fff" : "rgba(255,255,255,0.35)",
+                  background: "rgba(255,255,255,0.12)",
+                  backdropFilter: "blur(8px)",
+                  boxShadow: isSrc ? "0 0 16px rgba(255,255,255,0.8)" : "0 2px 10px rgba(0,0,0,0.25)",
+                }}
+              />
+              {unit && <UnitBadge unit={unit} color={COLORS[unit.element]} />}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Enemies on path */}
       {enemies.map((e) => (
         <motion.div
           key={e.id}
-          className="absolute rounded-full"
+          className="absolute rounded-full z-20"
           style={{
-            left: e.x - e.radius,
-            top: e.y - e.radius,
-            width: e.radius * 2,
-            height: e.radius * 2,
+            left: e.x - e.r,
+            top: e.y - e.r,
+            width: e.r * 2,
+            height: e.r * 2,
             background:
               e.kind === "boss"
                 ? "linear-gradient(135deg, #FFD54F, #FF7043)"
@@ -837,170 +742,70 @@ export default function ArcaneSiege() {
         />
       ))}
 
-      {/* Floaters */}
-      <AnimatePresence>
-        {floaters.map((f) => (
-          <motion.div
-            key={f.id}
-            initial={{ opacity: 1, y: 0 }}
-            animate={{ opacity: 0, y: -22 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.9 }}
-            className="absolute text-xs font-semibold pointer-events-none"
-            style={{ left: f.x, top: f.y, color: f.color }}
-          >
-            {f.text}
-          </motion.div>
-        ))}
-      </AnimatePresence>
+      {/* Controls Dock */}
+      <div className="absolute bottom-2 left-2 right-2 z-20">
+        <div className="glass rounded-2xl px-3 py-2 text-white">
+          <div className="flex items-center gap-2">
+            <button
+              className={`btn flex-1 ${gold < summonCost ? "opacity-60" : ""}`}
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                summon();
+              }}
+              disabled={gold < summonCost}
+            >
+              <Dice6 size={16} />
+              <span className="ml-1 text-xs">Summon ({summonCost})</span>
+            </button>
 
-      {/* Top HUD */}
-      <div className="absolute top-2 left-2 right-2 flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-white glass z-20">
-        <div className="flex items-center gap-3 text-sm">
-          <span className="inline-flex items-center gap-1">
-            <Coins size={14} /> {gold}
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <Heart size={14} /> {lives}
-          </span>
-          <span>Wave {wave}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="btn" onClick={() => setPaused((p) => !p)} aria-label={paused ? "Resume" : "Pause"}>
-            {paused ? <Play size={16} /> : <Pause size={16} />}
-          </button>
-          <button className="btn" onClick={saveProgress} aria-label="Save">
-            <RotateCw size={16} />
-          </button>
-        </div>
-      </div>
+            <button
+              className={`btn flex-1 ${mergeMode ? "ring-2 ring-white" : ""}`}
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                setMergeMode((m) => !m);
+                setMergeSrcId(null);
+              }}
+            >
+              <Merge size={16} />
+              <span className="ml-1 text-xs">{mergeMode ? "Merge: ON" : "Merge: OFF"}</span>
+            </button>
 
-      {/* Arcane Bar */}
-      <div className="absolute top-12 left-2 right-2 rounded-xl px-3 py-2 text-white glass z-20">
-        <div className="text-[11px] mb-1 flex justify-between">
-          <span className="inline-flex items-center gap-1">
-            <Wand2 size={14} /> Arcane Charge
-          </span>
-          <span>{arcane}%</span>
-        </div>
-        <div className="w-full h-2 rounded-full bg-white/20 overflow-hidden">
-          <div className="h-full bg-white" style={{ width: `${(arcane / ARCANE_MAX) * 100}%` }} />
-        </div>
-      </div>
-
-      {/* Bottom Dock */}
-      <div className="absolute bottom-2 left-2 right-2 rounded-2xl px-3 py-2 text-white glass z-20">
-        {/* Choose Path (colored) */}
-        {!chosenPath && (
-          <div className="mb-2">
-            <div className="text-[11px] opacity-90 mb-1">Choose your Arcane Path:</div>
-            <div className="flex gap-2">
-              {ELEMENTS.map((el) => {
-                const Icon = UNIT_BASE[el].icon;
-                return (
-                  <button
-                    key={el}
-                    className="flex-1 py-2 rounded-xl font-bold border"
-                    style={{
-                      background: `linear-gradient(135deg, ${COLORS[el]}55, ${COLORS[el]}33)`,
-                      borderColor: `${COLORS[el]}88`,
-                    }}
-                    onClick={() => setChosenPath(el)}
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <Icon size={16} />
-                      <span className="text-xs capitalize">{el}</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+            <button
+              className="btn flex-1"
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                resetGame();
+              }}
+            >
+              <RotateCw size={16} />
+              <span className="ml-1 text-xs">Restart</span>
+            </button>
           </div>
-        )}
 
-        {/* Main controls */}
-        <div className="flex items-center justify-between gap-2">
-          <button
-            className={`btn flex-1 ${gold < rollCost ? "opacity-60" : ""}`}
-            onClick={() => {
-              if (gold < rollCost) return;
-              setGold((g) => g - rollCost);
-              setRollCost((c) => Math.round(c * 1.15 + 5));
-              rollUnit();
-            }}
-            disabled={gold < rollCost}
-          >
-            <Dice6 size={16} />
-            <span className="text-xs ml-1">Roll ({rollCost})</span>
-          </button>
-
-          <button
-            className={`btn flex-1 ${isGlobalReady ? "" : "opacity-60"}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              const rect = containerRef.current.getBoundingClientRect();
-              globalTap(rect.left + size.cx, rect.top + size.cy);
-            }}
-          >
-            <Zap size={16} />
-            <span className="text-xs ml-1">
-              Surge {globalActiveLeft > 0 ? "ON" : isGlobalReady ? "Ready" : `(${Math.ceil(globalCdLeft / 1000)}s)`}
-            </span>
-          </button>
-
-          <button
-            className={`btn flex-1 ${mergeMode ? "ring-2 ring-white" : ""}`}
-            onClick={() => {
-              setMergeMode((m) => !m);
-              setMergeSourceId(null);
-            }}
-          >
-            <Merge size={16} />
-            <span className="text-xs ml-1">{mergeMode ? "Merge: ON" : "Merge: OFF"}</span>
-          </button>
-
-          <button className="btn flex-1" onClick={resetGame}>
-            <RotateCw size={16} />
-            <span className="text-xs ml-1">Restart</span>
-          </button>
+          {/* token / images area (customizable) */}
+          <div className="mt-2 flex items-center justify-center gap-4 text-xs">
+            <div className="inline-flex items-center gap-1 opacity-90">
+              <img src={tokenImg} alt="Renown" className="w-4 h-4 object-contain" />
+              <span>{renownTokens}</span>
+            </div>
+            <div className="opacity-70">Tap faster = stronger global boost</div>
+          </div>
         </div>
       </div>
 
-      {/* Pause/GameOver Curtains */}
+      {/* Pause / GameOver curtains */}
       <AnimatePresence>
-        {(paused || gameOver || !chosenPath) && (
+        {(paused || gameOver) && (
           <motion.div
-            className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-30"
+            className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-sm text-white"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {!chosenPath ? (
-              <div className="glass px-4 py-3 rounded-xl text-white">
-                <div className="text-sm mb-2 font-semibold">Choose your Arcane Path to begin</div>
-                <div className="flex gap-2">
-                  {ELEMENTS.map((el) => {
-                    const Icon = UNIT_BASE[el].icon;
-                    return (
-                      <button
-                        key={el}
-                        className="btn"
-                        style={{
-                          background: `linear-gradient(135deg, ${COLORS[el]}55, ${COLORS[el]}33)`,
-                          borderColor: `${COLORS[el]}88`,
-                        }}
-                        onClick={() => setChosenPath(el)}
-                      >
-                        <Icon size={18} />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : gameOver ? (
-              <div className="glass px-5 py-4 rounded-xl text-white text-center">
-                <div className="text-lg font-bold mb-1">Defenses Fallen</div>
-                <div className="text-sm mb-3">You reached Wave {wave}</div>
+            {gameOver ? (
+              <div className="glass px-5 py-4 rounded-xl text-center">
+                <div className="text-lg font-bold mb-2">Defenses Fallen</div>
+                <div className="mb-3">Wave {wave}</div>
                 <div className="flex gap-2 justify-center">
                   <button className="btn" onClick={resetGame}>
                     <RotateCw size={16} /> <span className="ml-1 text-xs">Retry</span>
@@ -1011,8 +816,8 @@ export default function ArcaneSiege() {
                 </div>
               </div>
             ) : (
-              <div className="glass px-5 py-4 rounded-xl text-white text-center">
-                <div className="text-sm mb-2">Paused</div>
+              <div className="glass px-5 py-4 rounded-xl text-center">
+                <div className="mb-2">Paused</div>
                 <button className="btn" onClick={() => setPaused(false)}>
                   <Play size={16} /> <span className="ml-1 text-xs">Resume</span>
                 </button>
@@ -1022,34 +827,36 @@ export default function ArcaneSiege() {
         )}
       </AnimatePresence>
 
-      {/* Styles */}
-      <style>{glassCss}</style>
+      <style>{styles}</style>
     </div>
   );
 }
 
-// --- UI bits ---
-function UnitBadge({ u }) {
-  const Icon = UNIT_BASE[u.element].icon;
-  const active = now() < (u.localUntil || 0);
+function UnitBadge({ unit, color }) {
+  const Icon = ICONS[unit.element];
   return (
-    <motion.div
-      className="absolute inset-0 rounded-full flex items-center justify-center"
-      animate={{ scale: active ? 1.12 : 1 }}
-      transition={{ type: "spring", stiffness: 140, damping: 12 }}
-      style={{ color: COLORS[u.element], textShadow: "0 2px 6px rgba(0,0,0,0.35)" }}
-    >
-      <Icon size={18} />
-    </motion.div>
+    <div className="absolute inset-0 rounded-xl flex items-center justify-center">
+      <div
+        className="absolute inset-0 rounded-xl"
+        style={{
+          boxShadow: `inset 0 0 0 2px ${color}66, 0 8px 16px rgba(0,0,0,0.25)`,
+        }}
+      />
+      <div className="text-white text-xs font-bold absolute top-1 left-1 px-1.5 py-0.5 rounded-md"
+        style={{ background: `${color}55`, border: `1px solid ${color}88` }}>
+        L{unit.level}
+      </div>
+      <Icon size={20} style={{ color }} />
+    </div>
   );
 }
 
-const glassCss = `
+const styles = `
 .glass {
   background: rgba(255,255,255,0.12);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(255,255,255,0.35);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
 }
 .btn {
   display: inline-flex;
@@ -1057,11 +864,10 @@ const glassCss = `
   justify-content: center;
   background: rgba(255,255,255,0.18);
   border: 1px solid rgba(255,255,255,0.35);
-  border-radius: 10px;
-  padding: 6px 10px;
+  border-radius: 12px;
+  padding: 8px 10px;
   font-size: 12px;
   line-height: 1;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
 }
 `;
-
