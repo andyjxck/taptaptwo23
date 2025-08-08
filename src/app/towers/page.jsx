@@ -13,87 +13,54 @@ import {
   Play,
   Dice6,
   RotateCw,
-  Shield,
-  Crown,
   Wand2,
+  Sword,
+  Merge,
+  Sparkles,
 } from "lucide-react";
 
 /**
- * Tap Tap: Arcane Siege
- * - Mobile-first, portrait layout
+ * Tap Tap: Arcane Siege — v3
+ * - Mobile-first portrait UI (glassmorphism, battle/boss-mode inspired)
  * - Circular battlefield with energy nodes around the Arcane Core
- * - Roll random units (elements) and place them on nodes
- * - Auto-fusion: 3 duplicates => evolve to next tier
- * - Tap anywhere = Global Surge (CD 4s) | Tap a unit = Focused Overdrive (CD 2s per unit)
- * - Arcane Charge fills with taps; on full => element Ultimate auto-casts
- * - Hazards every 5 waves: rotate node ring & add enemy portal pressure
- * - Supabase save/load via /api/arcanesiege
- *
- * No external assets required. All UI is Tailwind + Lucide + basic shapes.
+ * - AUTO-PLACE on roll:
+ *    1) Place on first empty node
+ *    2) If full → auto-merge two weakest of the same element (to free a node), then place
+ *    3) Else replace the weakest unit
+ * - MERGE MODE: tap Unit A → Unit B (same element) to combine and DOUBLE stats
+ *   Merge rules:
+ *     - For additive stats (dmg, range, aoe, chains, slowMs, rootMs, allyBuff): new = (a+b)*2 (then clamped)
+ *     - For rate (ms between shots): new = max(120, floor(min(a,b)/2))  // ≈ double fire rate
+ *     - For percentages (slow, rootChance, falloff): sensible combine + clamp
+ * - Tapping:
+ *    • Global surge (button or empty field): +30% dmg/+20% speed, 2s, 4s CD
+ *    • Tap unit (not in merge mode): +100% dmg/+50% speed (local), 1.5s, 2s CD
+ * - Arcane Charge: fills with taps; when 100, casts the chosen Path Ultimate instantly
+ * - Hazards every 5 waves: rotate ring & add portals
+ * - Save/Load via /api/arcanesiege (anonymous saveId in localStorage)
  */
 
-const TICK_MS = 50; // game loop interval
+const TICK_MS = 50;
 const GLOBAL_SURGE_CD = 4000;
 const GLOBAL_SURGE_DURATION = 2000;
 const LOCAL_OVERDRIVE_CD = 2000;
 const LOCAL_OVERDRIVE_DURATION = 1500;
-const ARCANE_PER_TAP = 12; // ~9 taps = full
+const ARCANE_PER_TAP = 12;
 const ARCANE_MAX = 100;
+
 const START_GOLD = 100;
 const START_LIVES = 20;
 
-const ELEMENTS = ["fire", "ice", "storm", "nature"];
+const NODES = 12;
 
-// Base stats by element & tier
-const UNIT_BASE = {
-  fire: {
-    name: "Fire Mage",
-    color: "#FF6A3D",
-    icon: Flame,
-    // tier: [dmg, range, rate(ms between attacks)], plus AoE radius
-    tiers: [
-      { dmg: 6, range: 130, rate: 700, aoe: 30 },
-      { dmg: 11, range: 145, rate: 650, aoe: 38 },
-      { dmg: 18, range: 160, rate: 600, aoe: 48 },
-    ],
-    fusedNames: ["Inferno Sorcerer", "Phoenix Avatar"],
-  },
-  ice: {
-    name: "Frost Adept",
-    color: "#71D1F4",
-    icon: Snowflake,
-    tiers: [
-      { dmg: 4, range: 130, rate: 700, slow: 0.35, slowMs: 1200 },
-      { dmg: 7, range: 150, rate: 650, slow: 0.45, slowMs: 1400 },
-      { dmg: 12, range: 170, rate: 600, slow: 0.55, slowMs: 1700 },
-    ],
-    fusedNames: ["Glacier Witch", "Eternal Blizzard"],
-  },
-  storm: {
-    name: "Spark Shaman",
-    color: "#A78BFA",
-    icon: Zap,
-    tiers: [
-      { dmg: 5, range: 150, rate: 650, chains: 2, falloff: 0.65 },
-      { dmg: 9, range: 170, rate: 600, chains: 3, falloff: 0.65 },
-      { dmg: 16, range: 190, rate: 550, chains: 4, falloff: 0.65 },
-    ],
-    fusedNames: ["Storm Caller", "Tempest Lord"],
-  },
-  nature: {
-    name: "Druid",
-    color: "#34D399",
-    icon: Leaf,
-    tiers: [
-      { dmg: 4, range: 130, rate: 700, rootMs: 600, rootChance: 0.1, allyBuff: 0.05 },
-      { dmg: 7, range: 150, rate: 650, rootMs: 800, rootChance: 0.13, allyBuff: 0.08 },
-      { dmg: 12, range: 170, rate: 600, rootMs: 1000, rootChance: 0.16, allyBuff: 0.12 },
-    ],
-    fusedNames: ["Grove Keeper", "Ancient Ent"],
-  },
+const ELEMENTS = ["fire", "ice", "storm", "nature"];
+const COLORS = {
+  fire: "#FF6A3D",
+  ice: "#71D1F4",
+  storm: "#A78BFA",
+  nature: "#34D399",
 };
 
-// Enemy types
 const ENEMIES = {
   swarmer: { hp: 14, speed: 1.2, radius: 10, gold: 3 },
   bruiser: { hp: 40, speed: 0.8, radius: 12, gold: 6 },
@@ -102,19 +69,36 @@ const ENEMIES = {
   boss: { hp: 260, speed: 0.9, radius: 18, gold: 40, aura: true },
 };
 
-function randId() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
-function clamp(n, min, max) {
-  return Math.max(min, Math.min(max, n));
-}
-function distance(ax, ay, bx, by) {
-  const dx = ax - bx;
-  const dy = ay - by;
-  return Math.sqrt(dx * dx + dy * dy);
-}
+const UNIT_BASE = {
+  fire: {
+    name: "Fire Mage",
+    icon: Flame,
+    base: { dmg: 8, range: 140, rate: 650, aoe: 32 },
+  },
+  ice: {
+    name: "Frost Adept",
+    icon: Snowflake,
+    base: { dmg: 6, range: 145, rate: 650, slow: 0.45, slowMs: 1200 },
+  },
+  storm: {
+    name: "Spark Shaman",
+    icon: Zap,
+    base: { dmg: 7, range: 165, rate: 600, chains: 3, falloff: 0.65 },
+  },
+  nature: {
+    name: "Druid",
+    icon: Leaf,
+    base: { dmg: 6, range: 145, rate: 650, rootMs: 700, rootChance: 0.12, allyBuff: 0.06 },
+  },
+};
+
+// ---------- helpers ----------
+const now = () => Date.now();
+const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
+const rid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 function pickWeighted(pairs) {
-  // pairs: [{key, w}]
   const total = pairs.reduce((a, b) => a + b.w, 0);
   let r = Math.random() * total;
   for (const p of pairs) {
@@ -123,229 +107,350 @@ function pickWeighted(pairs) {
   }
   return pairs[pairs.length - 1].key;
 }
-function now() {
-  return Date.now();
+
+// Combine/Double stat rules for merge-2
+function mergedStats(a, b) {
+  const out = {};
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  for (const k of keys) {
+    const av = a[k] ?? 0;
+    const bv = b[k] ?? 0;
+    if (k === "rate") {
+      out.rate = Math.max(120, Math.round(Math.min(av || 9999, bv || 9999) / 2)); // faster
+    } else if (k === "falloff") {
+      out.falloff = clamp(((av || 0.65) + (bv || 0.65)) / 2, 0.4, 0.9);
+    } else if (k === "slow" || k === "allyBuff") {
+      out[k] = clamp((av + bv) * 2, 0, 0.9);
+    } else if (k === "rootChance") {
+      const pAny = 1 - (1 - av) * (1 - bv);
+      out.rootChance = clamp(pAny * 2, 0, 0.85);
+    } else if (k === "range") {
+      out.range = clamp((av + bv) * 2, 60, 280);
+    } else if (k === "chains") {
+      out.chains = Math.min(8, (av + bv) * 2 || 0);
+    } else if (k === "aoe" || k === "slowMs" || k === "rootMs" || k === "dmg") {
+      out[k] = (av + bv) * 2;
+    } else {
+      if (typeof av === "number" || typeof bv === "number") {
+        out[k] = (av + bv) * 2;
+      }
+    }
+  }
+  // sanity minimums
+  if (!out.dmg) out.dmg = 2;
+  if (!out.range) out.range = 120;
+  if (!out.rate) out.rate = 600;
+  return out;
 }
 
-export default function ArcaneSiege() {
-  // --- Layout refs ---
-  const containerRef = useRef(null);
-  const [size, setSize] = useState({ w: 360, h: 640, cx: 180, cy: 320 }); // default portrait
-  const [ringAngle, setRingAngle] = useState(0); // rotates with hazards
-  const NODES = 12; // fixed node count around the core
+function unitPowerScore(stats) {
+  // crude DPS-ish: dmg per second, with bonuses
+  const dps = (stats.dmg || 0) * (1000 / (stats.rate || 600));
+  const extras =
+    (stats.aoe ? stats.aoe * 0.2 : 0) +
+    (stats.chains ? stats.chains * 2 : 0) +
+    (stats.slow ? stats.slow * 10 : 0) +
+    (stats.rootChance ? stats.rootChance * 12 : 0) +
+    (stats.allyBuff ? stats.allyBuff * 10 : 0);
+  return dps + extras;
+}
 
-  // --- Core game state ---
+// ---------- component ----------
+export default function ArcaneSiege() {
+  // Layout
+  const containerRef = useRef(null);
+  const [size, setSize] = useState({ w: 360, h: 640, cx: 180, cy: 320 });
+  const [ringAngle, setRingAngle] = useState(0);
+
+  // Game
   const [gold, setGold] = useState(START_GOLD);
   const [lives, setLives] = useState(START_LIVES);
   const [wave, setWave] = useState(1);
   const [paused, setPaused] = useState(false);
   const [gameOver, setGameOver] = useState(false);
 
-  // Tap systems
+  // Taps
   const [globalBoostUntil, setGlobalBoostUntil] = useState(0);
   const [globalCdUntil, setGlobalCdUntil] = useState(0);
   const [arcane, setArcane] = useState(0);
-  const [chosenPath, setChosenPath] = useState(null); // 'fire' | 'ice' | 'storm' | 'nature'
+  const [chosenPath, setChosenPath] = useState(null);
 
-  // Units & hand
-  const [hand, setHand] = useState([]); // [{id, element, tier:1}]
-  const [units, setUnits] = useState([]); // [{id, element, tier, nodeIndex, localUntil, localCdUntil, level}]
-  const [selectedUnitId, setSelectedUnitId] = useState(null);
+  // Roll / Merge
   const [rollCost, setRollCost] = useState(40);
+  const [mergeMode, setMergeMode] = useState(false);
+  const [mergeSourceId, setMergeSourceId] = useState(null);
 
-  // Enemies
-  const [enemies, setEnemies] = useState([]); // [{...type, id, x,y, hp, speed, status:{slowUntil, rootedUntil}, shieldHp}]
-  const portalsRef = useRef(4); // enemy spawn portals, increase under hazards
+  // Units & enemies
+  const [units, setUnits] = useState([]); // {id, element, stats, nodeIndex, localUntil, localCdUntil, level}
+  const [enemies, setEnemies] = useState([]);
 
-  // Floating feedback
+  // Portals & hazards
+  const portalsRef = useRef(4);
+
+  // Floaters
   const [floaters, setFloaters] = useState([]);
   const addFloater = (text, x, y, color = "#FFD76B") => {
-    const id = randId();
-    setFloaters((p) => [...p, { id, text, x, y, color, born: now() }]);
+    const id = rid();
+    setFloaters((p) => [...p, { id, text, x, y, color }]);
     setTimeout(() => setFloaters((p) => p.filter((f) => f.id !== id)), 900);
   };
 
-  // Save ID for anonymous saves
+  // Save id
   const saveIdRef = useRef(null);
 
-  // --- Derived layout: node positions on a ring around center ---
+  // Nodes positions
   const nodes = useMemo(() => {
-    const R = Math.min(size.w, size.h) * 0.36; // ring radius
+    const R = Math.min(size.w, size.h) * 0.36;
     const arr = [];
     for (let i = 0; i < NODES; i++) {
-      const angle = ((i / NODES) * Math.PI * 2) + (ringAngle * Math.PI / 180);
-      arr.push({
-        x: size.cx + Math.cos(angle) * R,
-        y: size.cy + Math.sin(angle) * R,
-      });
+      const a = (i / NODES) * Math.PI * 2 + (ringAngle * Math.PI) / 180;
+      arr.push({ x: size.cx + Math.cos(a) * R, y: size.cy + Math.sin(a) * R });
     }
     return arr;
   }, [size, ringAngle]);
 
-  // --- Resize observer to keep it mobile-first responsive ---
+  // Resize observer
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const ro = new ResizeObserver(() => {
-      const rect = el.getBoundingClientRect();
-      const w = rect.width;
-      const h = rect.height;
-      setSize({ w, h, cx: w / 2, cy: h / 2 });
+      const r = el.getBoundingClientRect();
+      setSize({ w: r.width, h: r.height, cx: r.width / 2, cy: r.height / 2 });
     });
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
 
-  // --- Utility: get screen position helper ---
-  const pageToLocal = (e) => {
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = (e.clientX ?? e.touches?.[0]?.clientX) - rect.left;
-    const y = (e.clientY ?? e.touches?.[0]?.clientY) - rect.top;
-    return { x, y };
-  };
+  // Start/load
+  useEffect(() => {
+    const sid =
+      localStorage.getItem("arcaneSaveId") ||
+      (() => {
+        const id = rid();
+        localStorage.setItem("arcaneSaveId", id);
+        return id;
+      })();
+    saveIdRef.current = sid;
 
-  // --- Roll system: rarity weights -> element ---
-  const rollUnit = () => {
-    // We keep it "unique": rarity controls a bonus to tier chances and stat rolls later if you want to expand.
-    const rarity = pickWeighted([
-      { key: "common", w: 50 },
-      { key: "rare", w: 30 },
-      { key: "epic", w: 15 },
-      { key: "legendary", w: 5 },
-    ]);
-    const element = pickWeighted([
-      { key: "fire", w: 25 },
-      { key: "ice", w: 25 },
-      { key: "storm", w: 25 },
-      { key: "nature", w: 25 },
-    ]);
-    const id = randId();
-    // Start at base tier 1. (Rarity can be used later for special passives.)
-    const unit = { id, element, tier: 1, rarity, level: 1 };
-    setHand((prev) => (prev.length >= 3 ? [prev[0], prev[1], unit] : [...prev, unit]));
-  };
+    (async () => {
+      try {
+        const res = await fetch("/api/arcanesiege", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "load", saveId: sid }),
+        });
+        const json = await res.json();
+        if (json?.gameData) {
+          restore(json.gameData);
+        } else {
+          spawnWave(1);
+        }
+      } catch {
+        spawnWave(1);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const handleRoll = () => {
-    if (gold < rollCost) return;
-    setGold((g) => g - rollCost);
-    setRollCost((c) => Math.round(c * 1.15 + 5));
-    rollUnit();
-  };
-
-  // --- Placement: tap an empty node to place first in hand ---
-  const placeOnNode = (nodeIndex, tapX, tapY) => {
-    if (hand.length === 0) {
-      // No unit to place -> treat as global tap
-      triggerTap({ x: tapX, y: tapY, maybeNodeIndex: nodeIndex });
-      return;
+  // Hazards
+  useEffect(() => {
+    if (wave > 1 && wave % 5 === 0) {
+      setRingAngle((a) => a + 20 + Math.floor(Math.random() * 12));
+      portalsRef.current = Math.min(8, portalsRef.current + 1);
+      addFloater("Battlefield Shift!", size.cx, size.cy, "#FFE57F");
     }
-    // If node already occupied, try local boost
-    const existing = units.find((u) => u.nodeIndex === nodeIndex);
-    if (existing) {
-      triggerUnitTap(existing, tapX, tapY);
-      return;
-    }
-    const [unit, ...rest] = hand;
-    const newUnit = {
-      id: unit.id,
-      element: unit.element,
-      tier: unit.tier,
-      level: unit.level,
-      nodeIndex,
-      localUntil: 0,
-      localCdUntil: 0,
-    };
-    const merged = autoFusion([...units, newUnit]);
-    setUnits(merged);
-    setHand(rest);
-    addFloater("Placed!", nodes[nodeIndex].x, nodes[nodeIndex].y, "#B3F7A3");
-  };
+  }, [wave]); // eslint-disable-line
 
-  // --- Auto-fusion: 3 of the same element & tier -> +1 tier ---
-  const autoFusion = (list) => {
-    const key = (u) => `${u.element}-t${u.tier}`;
-    const groups = list.reduce((acc, u) => {
-      const k = key(u);
-      acc[k] = acc[k] || [];
-      acc[k].push(u);
-      return acc;
-    }, {});
-    let changed = false;
-    for (const k of Object.keys(groups)) {
-      const group = groups[k];
-      while (group.length >= 3) {
-        // Upgrade one, remove two oldest
-        const toUpgrade = group.shift();
-        const remove1 = group.shift();
-        const remove2 = group.shift();
-        // Apply upgrade if not max tier
-        const idxToUpgrade = list.findIndex((x) => x.id === toUpgrade.id);
-        if (idxToUpgrade >= 0) {
-          const upgraded = { ...list[idxToUpgrade] };
-          if (upgraded.tier < 3) {
-            upgraded.tier += 1;
-            const fam = UNIT_BASE[upgraded.element];
-            const tierName =
-              upgraded.tier === 2 ? fam.fusedNames[0] : fam.fusedNames[1];
-            addFloater(`Fusion! ${tierName}`, nodes[upgraded.nodeIndex]?.x ?? size.cx, nodes[upgraded.nodeIndex]?.y ?? size.cy, fam.color);
-            list[idxToUpgrade] = upgraded;
-            // Remove two others from list
-            list = list.filter(
-              (x) => x.id !== remove1.id && x.id !== remove2.id
-            );
-            changed = true;
+  // Game loop
+  useEffect(() => {
+    if (paused || gameOver) return;
+    const iv = setInterval(() => {
+      setEnemies((prev) => {
+        let arr = [...prev];
+
+        // Move enemies
+        arr = arr
+          .map((e) => {
+            const rooted = now() < e.rootedUntil;
+            const slowMul = now() < e.slowUntil ? 0.45 : 1;
+            const spd = rooted ? 0 : e.speed * slowMul;
+            if (e.leap && Math.random() < 0.02) {
+              const a = Math.atan2(size.cy - e.y, size.cx - e.x);
+              e.x += Math.cos(a) * 30;
+              e.y += Math.sin(a) * 30;
+            }
+            const ang = Math.atan2(size.cy - e.y, size.cx - e.x);
+            e.x += Math.cos(ang) * spd;
+            e.y += Math.sin(ang) * spd;
+            if (dist(e.x, e.y, size.cx, size.cy) <= 22) {
+              setLives((l) => l - 1);
+              return null;
+            }
+            return e;
+          })
+          .filter(Boolean);
+
+        // Unit attacks
+        if (units.length && arr.length) {
+          const gBoost = now() < globalBoostUntil ? 1.3 : 1;
+          arr = arr.map((e) => ({ ...e }));
+          for (const u of units) {
+            u._nextAtk = u._nextAtk ?? 0;
+            if (now() < u._nextAtk) continue;
+            const node = nodes[u.nodeIndex];
+            if (!node) continue;
+            const st = u.stats;
+            const localBoost = now() < (u.localUntil || 0) ? 1.5 : 1;
+            const dmgBase = st.dmg * gBoost * localBoost * (1 + (st.allyBuff || 0));
+            // find nearest target
+            const inRange = arr
+              .map((e, idx) => ({ e, idx, d: dist(e.x, e.y, node.x, node.y) }))
+              .filter((o) => o.d <= st.range)
+              .sort((a, b) => a.d - b.d);
+            if (inRange.length === 0) continue;
+
+            if (u.element === "fire") {
+              const p = inRange[0].e;
+              for (let j = 0; j < arr.length; j++) {
+                const e = arr[j];
+                if (dist(e.x, e.y, p.x, p.y) <= (st.aoe || 28)) {
+                  arr[j] = applyDamage(arr[j], dmgBase);
+                }
+              }
+              hitFx(p.x, p.y, COLORS.fire);
+            } else if (u.element === "ice") {
+              const o = inRange[0];
+              const t = { ...o.e };
+              t.slowUntil = Math.max(t.slowUntil || 0, now() + (st.slowMs || 900));
+              arr[o.idx] = applyDamage(t, dmgBase);
+              hitFx(t.x, t.y, COLORS.ice);
+            } else if (u.element === "storm") {
+              let dmg = dmgBase;
+              let last = inRange[0];
+              arr[last.idx] = applyDamage(arr[last.idx], dmg);
+              hitFx(last.e.x, last.e.y, COLORS.storm);
+              let hops = 1;
+              const maxHops = st.chains || 2;
+              const fall = st.falloff || 0.65;
+              while (hops <= maxHops) {
+                const cands = arr
+                  .map((e, idx) => ({ e, idx, d: dist(e.x, e.y, last.e.x, last.e.y) }))
+                  .filter((o) => o.d <= st.range * 0.9 && o.idx !== last.idx)
+                  .sort((a, b) => a.d - b.d);
+                if (!cands.length) break;
+                last = cands[0];
+                dmg *= fall;
+                arr[last.idx] = applyDamage(arr[last.idx], dmg);
+                hitFx(last.e.x, last.e.y, COLORS.storm);
+                hops++;
+              }
+            } else if (u.element === "nature") {
+              const o = inRange[0];
+              const t = { ...o.e };
+              if (Math.random() < (st.rootChance || 0.1)) {
+                t.rootedUntil = Math.max(t.rootedUntil || 0, now() + (st.rootMs || 600));
+              }
+              arr[o.idx] = applyDamage(t, dmgBase);
+              hitFx(t.x, t.y, COLORS.nature);
+            }
+
+            u._nextAtk = now() + (st.rate || 650);
           }
         }
-      }
-    }
-    // If more possible chains, re-run once (cheap).
-    return changed ? autoFusion(list) : list;
-  };
 
-  // --- Enemy spawning / wave control ---
-  const spawnWave = (w) => {
+        // Cleanup & gold
+        let earned = 0;
+        const alive = [];
+        for (const e of arr) {
+          if (e.hp <= 0) earned += e.gold;
+          else alive.push(e);
+        }
+        if (earned) setGold((g) => g + earned);
+
+        // Wave clear → next
+        if (alive.length === 0) {
+          setTimeout(() => {
+            if (!paused && !gameOver) {
+              setWave((w) => w + 1);
+              spawnWave(wave + 1);
+              saveProgress();
+            }
+          }, 500);
+        }
+        return alive;
+      });
+
+      // Game over check
+      setLives((l) => {
+        if (l <= 0) {
+          setGameOver(true);
+          return 0;
+        }
+        return l;
+      });
+    }, TICK_MS);
+    return () => clearInterval(iv);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paused, gameOver, units, nodes, globalBoostUntil, wave]);
+
+  function applyDamage(e, amount) {
+    const out = { ...e };
+    if (out.shieldHp > 0) {
+      const s = Math.min(out.shieldHp, amount);
+      out.shieldHp -= s;
+      amount -= s;
+    }
+    if (amount > 0) out.hp -= amount;
+    return out;
+  }
+  function hitFx(x, y, color) {
+    addFloater("•", x, y, color);
+  }
+
+  // Spawns
+  function spawnWave(w) {
     const batch = [];
     const portals = portalsRef.current;
-    const base = 6 + w; // base count increases
-    const count = Math.min(24, base + Math.floor(w / 2));
+    const base = 6 + w;
+    const count = Math.min(26, base + Math.floor(w / 2));
     for (let i = 0; i < count; i++) {
-      const angle = (Math.floor(Math.random() * portals) / portals) * Math.PI * 2 + Math.random() * (Math.PI * 2 / portals) * 0.5;
+      const angle =
+        (Math.floor(Math.random() * portals) / portals) * Math.PI * 2 +
+        Math.random() * ((Math.PI * 2) / portals) * 0.5;
       const R = Math.max(size.w, size.h) * 0.55;
       const x = size.cx + Math.cos(angle) * R;
       const y = size.cy + Math.sin(angle) * R;
       const typeKey = pickWeighted([
-        { key: "swarmer", w: 40 + w * 1.2 },
+        { key: "swarmer", w: 40 + w * 1.1 },
         { key: "bruiser", w: 25 + w * 0.7 },
-        { key: "assassin", w: 18 + w * 0.5 },
-        { key: "shield", w: 17 + w * 0.4 },
+        { key: "assassin", w: 18 + w * 0.55 },
+        { key: "shield", w: 17 + w * 0.45 },
       ]);
-
-      const type = ENEMIES[typeKey];
+      const t = ENEMIES[typeKey];
       batch.push({
-        id: randId(),
+        id: rid(),
         kind: typeKey,
         x,
         y,
-        hp: Math.round(type.hp * (1 + w * 0.18)),
-        speed: type.speed * (1 + w * 0.02),
-        radius: type.radius,
-        gold: type.gold,
-        shieldHp: type.shield ? Math.round(type.shield * (1 + w * 0.1)) : 0,
-        leap: !!type.leap,
-        aura: !!type.aura,
+        hp: Math.round(t.hp * (1 + w * 0.18)),
+        speed: t.speed * (1 + w * 0.02),
+        radius: t.radius,
+        gold: t.gold,
+        shieldHp: t.shield ? Math.round(t.shield * (1 + w * 0.1)) : 0,
+        leap: !!t.leap,
+        aura: !!t.aura,
         slowUntil: 0,
         rootedUntil: 0,
       });
     }
     if (w % 10 === 0) {
-      // Boss
       const angle = Math.random() * Math.PI * 2;
       const R = Math.max(size.w, size.h) * 0.6;
       const x = size.cx + Math.cos(angle) * R;
       const y = size.cy + Math.sin(angle) * R;
       const b = ENEMIES.boss;
       batch.push({
-        id: randId(),
+        id: rid(),
         kind: "boss",
         x,
         y,
@@ -361,253 +466,177 @@ export default function ArcaneSiege() {
       });
     }
     setEnemies((prev) => [...prev, ...batch]);
+  }
+
+  // Save/restore
+  async function saveProgress() {
+    try {
+      await fetch("/api/arcanesiege", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "save",
+          saveId: saveIdRef.current,
+          gameData: {
+            gold,
+            lives,
+            wave,
+            ringAngle,
+            portals: portalsRef.current,
+            units,
+            enemies,
+            arcane,
+            chosenPath,
+            rollCost,
+            timestamp: now(),
+          },
+        }),
+      });
+    } catch {}
+  }
+  function restore(g) {
+    setGold(g.gold ?? START_GOLD);
+    setLives(g.lives ?? START_LIVES);
+    setWave(g.wave ?? 1);
+    setRingAngle(g.ringAngle ?? 0);
+    portalsRef.current = g.portals ?? 4;
+    setUnits(g.units ?? []);
+    setEnemies(g.enemies ?? []);
+    setArcane(g.arcane ?? 0);
+    setChosenPath(g.chosenPath ?? null);
+    setRollCost(g.rollCost ?? 40);
+    if (!g.enemies?.length) spawnWave(g.wave ?? 1);
+  }
+
+  // Input handling
+  const isGlobalReady = now() >= globalCdUntil;
+  const onFieldPointerDown = (e) => {
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = (e.clientX ?? e.touches?.[0]?.clientX) - rect.left;
+    const y = (e.clientY ?? e.touches?.[0]?.clientY) - rect.top;
+
+    // Click on node?
+    const hitR = 28;
+    let hitIdx = -1;
+    for (let i = 0; i < nodes.length; i++) {
+      if (dist(x, y, nodes[i].x, nodes[i].y) <= hitR) {
+        hitIdx = i;
+        break;
+      }
+    }
+
+    if (hitIdx >= 0) {
+      const unit = units.find((u) => u.nodeIndex === hitIdx);
+      if (mergeMode) {
+        if (!unit) {
+          addFloater("Select two matching units", nodes[hitIdx].x, nodes[hitIdx].y, "#fff");
+          return;
+        }
+        if (!mergeSourceId) {
+          setMergeSourceId(unit.id);
+          addFloater("Source selected", nodes[hitIdx].x, nodes[hitIdx].y, COLORS[unit.element]);
+        } else {
+          const src = units.find((u) => u.id === mergeSourceId);
+          if (!src || src.id === unit.id) {
+            setMergeSourceId(null);
+            return;
+          }
+          if (src.element !== unit.element) {
+            addFloater("Must match element", nodes[hitIdx].x, nodes[hitIdx].y, "#ffaaaa");
+            setMergeSourceId(null);
+            return;
+          }
+          // merge src into unit here
+          const merged = mergedStats(src.stats, unit.stats);
+          setUnits((prev) => {
+            const keep = prev.filter((u) => u.id !== src.id && u.id !== unit.id);
+            return [
+              ...keep,
+              {
+                id: rid(),
+                element: unit.element,
+                stats: merged,
+                nodeIndex: unit.nodeIndex,
+                localUntil: 0,
+                localCdUntil: 0,
+                level: (unit.level || 1) + (src.level || 1),
+              },
+            ];
+          });
+          setMergeSourceId(null);
+          addFloater("Merged!", nodes[hitIdx].x, nodes[hitIdx].y, COLORS[unit.element]);
+        }
+        return;
+      }
+
+      // Local overdrive
+      if (unit) {
+        if (now() < unit.localCdUntil) {
+          // fallback global tap if local on CD
+          globalTap(x, y);
+          return;
+        }
+        setUnits((prev) =>
+          prev.map((u) =>
+            u.id === unit.id
+              ? {
+                  ...u,
+                  localUntil: now() + LOCAL_OVERDRIVE_DURATION,
+                  localCdUntil: now() + LOCAL_OVERDRIVE_CD,
+                }
+              : u
+          )
+        );
+        addFloater("OVERDRIVE!", nodes[hitIdx].x, nodes[hitIdx].y, COLORS[unit.element]);
+        gainArcane(ARCANE_PER_TAP, x, y);
+        return;
+      }
+
+      // empty node — treat as global
+      globalTap(x, y);
+      return;
+    }
+
+    // empty field
+    globalTap(x, y);
   };
 
-  // Hazards every 5 waves
-  useEffect(() => {
-    if (wave > 1 && wave % 5 === 0) {
-      setRingAngle((a) => a + 18 + Math.floor(Math.random() * 10)); // rotate nodes
-      portalsRef.current = Math.min(8, portalsRef.current + 1); // more spawn portals
-      addFloater("Battlefield Shift!", size.cx, size.cy, "#FFD76B");
-    }
-  }, [wave]); // eslint-disable-line
-
-  // --- Game loop ---
-  useEffect(() => {
-    if (paused || gameOver) return;
-    const iv = setInterval(() => {
-      setEnemies((prev) => {
-        let arr = [...prev];
-
-        // Move enemies toward core
-        arr = arr
-          .map((e) => {
-            const isRooted = now() < e.rootedUntil;
-            const speedFactor =
-              (now() < e.slowUntil ? 0.45 : 1) * (e.kind === "boss" ? 0.9 : 1);
-            const spd = isRooted ? 0 : e.speed * speedFactor;
-
-            // Leaping assassins: quick hop closer once per ~2s randomly
-            if (e.leap && Math.random() < 0.02) {
-              const ang = Math.atan2(size.cy - e.y, size.cx - e.x);
-              e.x += Math.cos(ang) * 30;
-              e.y += Math.sin(ang) * 30;
-            }
-
-            const ang = Math.atan2(size.cy - e.y, size.cx - e.x);
-            e.x += Math.cos(ang) * spd;
-            e.y += Math.sin(ang) * spd;
-
-            // Reached core?
-            if (distance(e.x, e.y, size.cx, size.cy) <= 22) {
-              setLives((l) => l - 1);
-              return null;
-            }
-            return e;
-          })
-          .filter(Boolean);
-
-        // Unit attacks
-        if (units.length > 0 && arr.length > 0) {
-          const gBoost = now() < globalBoostUntil ? 1.3 : 1;
-          arr = arr.map((enemy) => ({ ...enemy })); // shallow copy for mutation
-          for (const u of units) {
-            // Decide if unit can fire at tick
-            u._nextAtk = u._nextAtk ?? 0;
-            if (now() < (u._nextAtk || 0)) continue;
-
-            const fam = UNIT_BASE[u.element];
-            const tier = fam.tiers[u.tier - 1];
-            const node = nodes[u.nodeIndex];
-            if (!node) continue;
-
-            // find nearest enemy in range
-            const inRange = arr
-              .map((e, idx) => ({ e, idx, d: distance(e.x, e.y, node.x, node.y) }))
-              .filter((o) => o.d <= tier.range)
-              .sort((a, b) => a.d - b.d);
-
-            if (inRange.length === 0) continue;
-
-            // Damage calc
-            const localBoost = now() < (u.localUntil || 0) ? 2 : 1;
-            const allyBuff =
-              u.element === "nature" ? 1 + tier.allyBuff : 1;
-
-            const dmgBase = tier.dmg * gBoost * localBoost * allyBuff;
-
-            // Apply element effects
-            if (u.element === "fire") {
-              // Splash on nearest target
-              const primary = inRange[0].e;
-              for (let j = 0; j < arr.length; j++) {
-                const e = arr[j];
-                if (distance(e.x, e.y, primary.x, primary.y) <= tier.aoe) {
-                  arr[j] = applyDamage(arr[j], dmgBase);
-                }
-              }
-              addHitFx(primary.x, primary.y, fam.color);
-            } else if (u.element === "ice") {
-              const target = inRange[0].e;
-              const slowed = { ...target };
-              slowed.slowUntil = Math.max(slowed.slowUntil, now() + tier.slowMs);
-              arr[inRange[0].idx] = applyDamage(slowed, dmgBase);
-              addHitFx(target.x, target.y, fam.color);
-            } else if (u.element === "storm") {
-              // Chain lightning
-              let dmg = dmgBase;
-              let last = inRange[0];
-              arr[last.idx] = applyDamage(arr[last.idx], dmg);
-              addHitFx(last.e.x, last.e.y, fam.color);
-              let hops = 1;
-              while (hops <= tier.chains) {
-                // find next closest from last target within range/1.2
-                const candidates = arr
-                  .map((e, idx) => ({ e, idx, d: distance(e.x, e.y, last.e.x, last.e.y) }))
-                  .filter((o) => o.d <= tier.range * 0.9 && o.idx !== last.idx)
-                  .sort((a, b) => a.d - b.d);
-                if (candidates.length === 0) break;
-                last = candidates[0];
-                dmg *= tier.falloff;
-                arr[last.idx] = applyDamage(arr[last.idx], dmg);
-                addHitFx(last.e.x, last.e.y, fam.color);
-                hops++;
-              }
-            } else if (u.element === "nature") {
-              // Root chance + light dmg, and minor ally aura captured by allyBuff
-              const target = inRange[0].e;
-              if (Math.random() < tier.rootChance) {
-                const rooted = { ...target, rootedUntil: Math.max(target.rootedUntil, now() + tier.rootMs) };
-                arr[inRange[0].idx] = applyDamage(rooted, dmgBase);
-              } else {
-                arr[inRange[0].idx] = applyDamage(target, dmgBase);
-              }
-              addHitFx(target.x, target.y, fam.color);
-            }
-
-            u._nextAtk = now() + tier.rate; // schedule next shot
-          }
-        }
-
-        // Cleanup dead enemies & reward gold
-        const alive = [];
-        let earned = 0;
-        for (const e of arr) {
-          if (e.hp <= 0) {
-            earned += e.gold;
-          } else {
-            alive.push(e);
-          }
-        }
-        if (earned > 0) setGold((g) => g + earned);
-
-        // Wave cleared?
-        if (alive.length === 0) {
-          // Start next wave after a breath
-          setTimeout(() => {
-            if (!paused && !gameOver) {
-              setWave((w) => w + 1);
-              spawnWave(wave + 1);
-              // Auto-save on wave up
-              saveProgress();
-            }
-          }, 600);
-        }
-        return alive;
-      });
-
-      // Check game over
-      setLives((l) => {
-        if (l <= 0) {
-          setGameOver(true);
-          return 0;
-        }
-        return l;
-      });
-    }, TICK_MS);
-    return () => clearInterval(iv);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paused, gameOver, units, nodes, globalBoostUntil, wave]);
-
-  // Apply damage (shield first if any)
-  function applyDamage(enemy, amount) {
-    const e = { ...enemy };
-    if (e.shieldHp > 0) {
-      const s = Math.min(e.shieldHp, amount);
-      e.shieldHp -= s;
-      amount -= s;
-    }
-    if (amount > 0) e.hp -= amount;
-    return e;
-  }
-
-  // Simple hit FX using floaters
-  function addHitFx(x, y, color) {
-    addFloater("•", x, y, color);
-  }
-
-  // --- Tap handling: local (unit) vs global area ---
-  const triggerTap = ({ x, y, maybeNodeIndex }) => {
-    // If global cd ready -> surge
-    if (now() >= globalCdUntil) {
+  function globalTap(x, y) {
+    if (isGlobalReady) {
       setGlobalBoostUntil(now() + GLOBAL_SURGE_DURATION);
       setGlobalCdUntil(now() + GLOBAL_SURGE_CD);
       addFloater("GLOBAL SURGE!", x, y, "#FFE57F");
     } else {
-      // No global available -> try to select or just add arcane charge
       addFloater("+", x, y, "#eee");
     }
-    addArcane(ARCANE_PER_TAP, { x, y });
-  };
+    gainArcane(ARCANE_PER_TAP, x, y);
+  }
 
-  const triggerUnitTap = (unit, x, y) => {
-    if (now() < unit.localCdUntil) {
-      // Fallback to global if local on cooldown
-      triggerTap({ x, y });
-      return;
-    }
-    const boosted = units.map((u) =>
-      u.id === unit.id
-        ? {
-            ...u,
-            localUntil: now() + LOCAL_OVERDRIVE_DURATION,
-            localCdUntil: now() + LOCAL_OVERDRIVE_CD,
-          }
-        : u
-    );
-    setUnits(boosted);
-    addFloater("OVERDRIVE!", x, y, UNIT_BASE[unit.element].color);
-    addArcane(ARCANE_PER_TAP, { x, y });
-  };
-
-  const addArcane = (val, pos) => {
+  function gainArcane(val, x, y) {
     setArcane((a) => {
-      const next = clamp(a + val, 0, ARCANE_MAX);
-      if (next >= ARCANE_MAX) {
-        // Trigger Ultimate instantly
-        if (chosenPath) {
-          castUltimate(chosenPath, pos?.x ?? size.cx, pos?.y ?? size.cy);
-        }
+      const n = clamp(a + val, 0, ARCANE_MAX);
+      if (n >= ARCANE_MAX) {
+        if (chosenPath) castUltimate(chosenPath, x ?? size.cx, y ?? size.cy);
         return 0;
       }
-      return next;
+      return n;
     });
-  };
+  }
 
-  const castUltimate = (path, x, y) => {
+  function castUltimate(path, x, y) {
     addFloater("ULTIMATE!", x, y, "#FFFFFF");
     if (path === "fire") {
-      // Meteor Storm: blast random enemies in AoE
+      // Meteors
       setEnemies((prev) => {
         let arr = [...prev];
         for (let i = 0; i < 8; i++) {
+          if (!arr.length) break;
           const idx = Math.floor(Math.random() * arr.length);
           if (arr[idx]) {
             arr[idx] = applyDamage(arr[idx], 40);
-            // splash around it
             for (let j = 0; j < arr.length; j++) {
               if (j === idx) continue;
-              if (distance(arr[j].x, arr[j].y, arr[idx].x, arr[idx].y) < 48) {
+              if (dist(arr[j].x, arr[j].y, arr[idx].x, arr[idx].y) < 48) {
                 arr[j] = applyDamage(arr[j], 20);
               }
             }
@@ -616,7 +645,6 @@ export default function ArcaneSiege() {
         return arr;
       });
     } else if (path === "ice") {
-      // Blizzard: slow everything hard and freeze some
       setEnemies((prev) =>
         prev.map((e) => ({
           ...e,
@@ -625,148 +653,138 @@ export default function ArcaneSiege() {
         }))
       );
     } else if (path === "storm") {
-      // Super chain: zap N enemies hard
-      setEnemies((prev) => {
-        let arr = [...prev];
-        for (let i = 0; i < Math.min(10, arr.length); i++) {
-          const idx = Math.floor(Math.random() * arr.length);
-          if (arr[idx]) arr[idx] = applyDamage(arr[idx], 55);
-        }
-        return arr;
-      });
+      setEnemies((prev) => prev.map((e) => applyDamage(e, 55)));
     } else if (path === "nature") {
-      // Bloom: big ally buff window + root many foes
       setUnits((prev) =>
-        prev.map((u) => ({
-          ...u,
-          localUntil: Math.max(u.localUntil, now() + 2000),
-        }))
+        prev.map((u) => ({ ...u, localUntil: Math.max(u.localUntil, now() + 2000) }))
       );
-      setEnemies((prev) =>
-        prev.map((e) => ({
-          ...e,
-          rootedUntil: now() + 1000,
-        }))
-      );
+      setEnemies((prev) => prev.map((e) => ({ ...e, rootedUntil: now() + 1000 })));
     }
-  };
+  }
 
-  // --- Input handler on game field ---
-  const onFieldPointerDown = (e) => {
-    const pt = pageToLocal(e);
-    // Check if tapped near a node
-    const hitRadius = 28;
-    let hitNode = -1;
-    for (let i = 0; i < nodes.length; i++) {
-      if (distance(pt.x, pt.y, nodes[i].x, nodes[i].y) <= hitRadius) {
-        hitNode = i;
-        break;
+  // Rolling & auto-placement
+  function rollUnit() {
+    const element = pick(ELEMENTS);
+    autoPlaceOrMerge(element);
+  }
+
+  function baseStatsFor(element) {
+    return { ...UNIT_BASE[element].base };
+  }
+
+  function firstEmptyNode() {
+    const occupied = new Set(units.map((u) => u.nodeIndex));
+    for (let i = 0; i < nodes.length; i++) if (!occupied.has(i)) return i;
+    return -1;
+  }
+
+  function weakestUnitIndex() {
+    if (!units.length) return -1;
+    let worst = 0;
+    let worstScore = unitPowerScore(units[0].stats);
+    for (let i = 1; i < units.length; i++) {
+      const s = unitPowerScore(units[i].stats);
+      if (s < worstScore) {
+        worst = i;
+        worstScore = s;
       }
     }
-    if (hitNode >= 0) {
-      const unit = units.find((u) => u.nodeIndex === hitNode);
-      if (unit) {
-        setSelectedUnitId(unit.id);
-        triggerUnitTap(unit, pt.x, pt.y);
-      } else {
-        placeOnNode(hitNode, pt.x, pt.y);
-      }
-    } else {
-      // Empty field: global tap
-      triggerTap({ x: pt.x, y: pt.y });
+    return worst;
+  }
+
+  function autoPlaceOrMerge(element) {
+    // place if empty
+    let idx = firstEmptyNode();
+    if (idx >= 0) {
+      setUnits((prev) => [
+        ...prev,
+        {
+          id: rid(),
+          element,
+          stats: baseStatsFor(element),
+          nodeIndex: idx,
+          localUntil: 0,
+          localCdUntil: 0,
+          level: 1,
+        },
+      ]);
+      addFloater("Placed!", nodes[idx].x, nodes[idx].y, COLORS[element]);
+      return;
     }
-  };
 
-  // --- Start / Load ---
-  useEffect(() => {
-    // create or read saveId
-    const sid =
-      localStorage.getItem("arcaneSaveId") ||
-      (() => {
-        const id = randId();
-        localStorage.setItem("arcaneSaveId", id);
-        return id;
-      })();
-    saveIdRef.current = sid;
+    // no empty — try auto-merge two weakest of same element
+    const same = units
+      .map((u, i) => ({ u, i, s: unitPowerScore(u.stats) }))
+      .filter((x) => x.u.element === element)
+      .sort((a, b) => a.s - b.s);
 
-    // Load progress if any
-    (async () => {
-      try {
-        const res = await fetch("/api/arcanesiege", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "load", saveId: sid }),
-        });
-        const json = await res.json();
-        if (json?.gameData) {
-          restoreProgress(json.gameData);
-        } else {
-          // fresh game
-          spawnWave(1);
-        }
-      } catch (err) {
-        console.warn("Load failed", err);
-        spawnWave(1);
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const saveProgress = async () => {
-    try {
-      const payload = {
-        gold,
-        lives,
-        wave,
-        ringAngle,
-        portals: portalsRef.current,
-        hand,
-        units,
-        enemies,
-        chosenPath,
-        rollCost,
-        timestamp: now(),
-      };
-      await fetch("/api/arcanesiege", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "save",
-          saveId: saveIdRef.current,
-          gameData: payload,
-        }),
+    if (same.length >= 2) {
+      const a = same[0];
+      const b = same[1];
+      const merged = mergedStats(a.u.stats, b.u.stats);
+      const targetNode = b.u.nodeIndex;
+      setUnits((prev) => {
+        const keep = prev.filter((_, i) => i !== a.i && i !== b.i);
+        // merged unit on b's node
+        const mergedUnit = {
+          id: rid(),
+          element,
+          stats: merged,
+          nodeIndex: targetNode,
+          localUntil: 0,
+          localCdUntil: 0,
+          level: (a.u.level || 1) + (b.u.level || 1),
+        };
+        // we freed a node (a.u.nodeIndex). Place rolled fresh unit there.
+        return [
+          ...keep,
+          mergedUnit,
+          {
+            id: rid(),
+            element,
+            stats: baseStatsFor(element),
+            nodeIndex: a.u.nodeIndex,
+            localUntil: 0,
+            localCdUntil: 0,
+            level: 1,
+          },
+        ];
       });
-    } catch (err) {
-      console.warn("Save failed", err);
+      addFloater("Auto-merge + Place!", nodes[targetNode].x, nodes[targetNode].y, COLORS[element]);
+      return;
     }
-  };
 
-  const restoreProgress = (g) => {
-    setGold(g.gold ?? START_GOLD);
-    setLives(g.lives ?? START_LIVES);
-    setWave(g.wave ?? 1);
-    setRingAngle(g.ringAngle ?? 0);
-    portalsRef.current = g.portals ?? 4;
-    setHand(g.hand ?? []);
-    setUnits(g.units ?? []);
-    setEnemies(g.enemies ?? []);
-    setChosenPath(g.chosenPath ?? null);
-    setRollCost(g.rollCost ?? 40);
-    if (!g.enemies || g.enemies.length === 0) spawnWave(g.wave ?? 1);
-  };
+    // still no — replace weakest
+    const wIdx = weakestUnitIndex();
+    if (wIdx >= 0) {
+      const targetNode = units[wIdx].nodeIndex;
+      setUnits((prev) => {
+        const keep = prev.filter((_, i) => i !== wIdx);
+        return [
+          ...keep,
+          {
+            id: rid(),
+            element,
+            stats: baseStatsFor(element),
+            nodeIndex: targetNode,
+            localUntil: 0,
+            localCdUntil: 0,
+            level: 1,
+          },
+        ];
+      });
+      addFloater("Replaced weakest", nodes[targetNode].x, nodes[targetNode].y, COLORS[element]);
+    }
+  }
 
-  // --- Pause/Resume handler ---
-  const togglePause = () => {
-    setPaused((p) => !p);
-  };
-
+  // UI State/controls
+  const togglePause = () => setPaused((p) => !p);
   const resetGame = () => {
     setGold(START_GOLD);
     setLives(START_LIVES);
     setWave(1);
     setRingAngle(0);
     portalsRef.current = 4;
-    setHand([]);
     setUnits([]);
     setEnemies([]);
     setArcane(0);
@@ -774,41 +792,25 @@ export default function ArcaneSiege() {
     setGlobalCdUntil(0);
     setChosenPath(null);
     setRollCost(40);
+    setMergeMode(false);
+    setMergeSourceId(null);
     setGameOver(false);
     setTimeout(() => spawnWave(1), 100);
   };
 
-  // --- UI helpers ---
-  const isGlobalReady = now() >= globalCdUntil;
+  // Render helpers
   const globalCdLeft = Math.max(0, globalCdUntil - now());
   const globalActiveLeft = Math.max(0, globalBoostUntil - now());
-  const selectedUnit = units.find((u) => u.id === (selectedUnitId || ""));
 
-  const upgradeSelected = () => {
-    if (!selectedUnit) return;
-    const cost = 30 + selectedUnit.level * 20;
-    if (gold < cost) return;
-    setGold((g) => g - cost);
-    setUnits((prev) =>
-      prev.map((u) =>
-        u.id === selectedUnit.id ? { ...u, level: u.level + 1 } : u
-      )
-    );
-    addFloater("Level Up!", nodes[selectedUnit.nodeIndex].x, nodes[selectedUnit.nodeIndex].y, "#9AE6B4");
-  };
-
-  // --- Render ---
   return (
-    <div className="relative w-full h-[100svh] overflow-hidden bg-gradient-to-b from-purple-600 via-indigo-600 to-blue-600" ref={containerRef}>
-      {/* Tap Layer */}
-      <div
-        className="absolute inset-0"
-        onPointerDown={onFieldPointerDown}
-        role="button"
-        aria-label="Game Field"
-      />
+    <div
+      ref={containerRef}
+      className="relative w-full h-[100svh] overflow-hidden bg-gradient-to-b from-indigo-700 via-purple-700 to-pink-600"
+    >
+      {/* Tap layer */}
+      <div className="absolute inset-0" onPointerDown={onFieldPointerDown} />
 
-      {/* Arcane Core */}
+      {/* Core */}
       <motion.div
         className="absolute rounded-full"
         style={{
@@ -818,40 +820,30 @@ export default function ArcaneSiege() {
           top: size.cy - 23,
           background:
             "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(255,255,255,0.1))",
-          boxShadow: "0 0 25px rgba(255,255,255,0.5)",
           border: "1px solid rgba(255,255,255,0.5)",
+          boxShadow: "0 0 25px rgba(255,255,255,0.4)",
           backdropFilter: "blur(8px)",
         }}
         animate={{ scale: now() < globalBoostUntil ? 1.08 : 1 }}
         transition={{ type: "spring", stiffness: 100, damping: 12 }}
       />
 
-      {/* Nodes */}
+      {/* Nodes & Units */}
       {nodes.map((p, idx) => {
-        const occupant = units.find((u) => u.nodeIndex === idx);
-        const isSelected = occupant && occupant.id === selectedUnitId;
+        const unit = units.find((u) => u.nodeIndex === idx);
+        const isSrc = unit && unit.id === mergeSourceId;
         return (
-          <div
-            key={idx}
-            className="absolute"
-            style={{ left: p.x - 18, top: p.y - 18, width: 36, height: 36 }}
-          >
-            {/* Node base */}
+          <div key={idx} className="absolute" style={{ left: p.x - 18, top: p.y - 18, width: 36, height: 36 }}>
             <div
               className="w-full h-full rounded-full border"
               style={{
-                borderColor: "rgba(255,255,255,0.5)",
+                borderColor: isSrc ? "#fff" : "rgba(255,255,255,0.5)",
                 background: "rgba(255,255,255,0.12)",
                 backdropFilter: "blur(6px)",
-                boxShadow: isSelected
-                  ? "0 0 15px rgba(255,255,255,0.8)"
-                  : "0 2px 8px rgba(0,0,0,0.25)",
+                boxShadow: isSrc ? "0 0 16px rgba(255,255,255,0.9)" : "0 2px 8px rgba(0,0,0,0.25)",
               }}
             />
-            {/* Unit if present */}
-            {occupant && (
-              <UnitBadge u={occupant} fam={UNIT_BASE[occupant.element]} active={now() < (occupant.localUntil || 0)} />
-            )}
+            {unit && <UnitBadge u={unit} />}
           </div>
         );
       })}
@@ -876,29 +868,7 @@ export default function ArcaneSiege() {
             boxShadow: "0 3px 10px rgba(0,0,0,0.35)",
           }}
         >
-          {e.aura && (
-            <div
-              className="absolute rounded-full"
-              style={{
-                inset: "-8px",
-                border: "1px dashed rgba(255,255,255,0.6)",
-              }}
-            />
-          )}
-          {e.shieldHp > 0 && (
-            <Shield
-              size={12}
-              color="#E3F2FD"
-              className="absolute -top-3 -left-3 drop-shadow"
-            />
-          )}
-          {e.kind === "boss" && (
-            <Crown
-              size={12}
-              color="#FFF5B1"
-              className="absolute -top-3 -right-3 drop-shadow"
-            />
-          )}
+          {e.aura && <div className="absolute rounded-full" style={{ inset: "-8px", border: "1px dashed rgba(255,255,255,0.6)" }} />}
         </motion.div>
       ))}
 
@@ -908,7 +878,7 @@ export default function ArcaneSiege() {
           <motion.div
             key={f.id}
             initial={{ opacity: 1, y: 0 }}
-            animate={{ opacity: 0, y: -24 }}
+            animate={{ opacity: 0, y: -22 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.9 }}
             className="absolute text-xs font-semibold pointer-events-none"
@@ -919,8 +889,8 @@ export default function ArcaneSiege() {
         ))}
       </AnimatePresence>
 
-      {/* HUD Top */}
-      <div className="absolute top-2 left-2 right-2 flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-white glass">
+      {/* Top HUD */}
+      <div className="absolute top-2 left-2 right-2 flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-white glass z-20">
         <div className="flex items-center gap-3 text-sm">
           <span className="inline-flex items-center gap-1">
             <Coins size={14} /> {gold}
@@ -928,16 +898,10 @@ export default function ArcaneSiege() {
           <span className="inline-flex items-center gap-1">
             <Heart size={14} /> {lives}
           </span>
-          <span className="inline-flex items-center gap-1">
-            Wave {wave}
-          </span>
+          <span>Wave {wave}</span>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            className="btn"
-            onClick={togglePause}
-            aria-label={paused ? "Resume" : "Pause"}
-          >
+          <button className="btn" onClick={togglePause} aria-label={paused ? "Resume" : "Pause"}>
             {paused ? <Play size={16} /> : <Pause size={16} />}
           </button>
           <button className="btn" onClick={saveProgress} aria-label="Save">
@@ -947,7 +911,7 @@ export default function ArcaneSiege() {
       </div>
 
       {/* Arcane Bar */}
-      <div className="absolute top-12 left-2 right-2 rounded-xl px-3 py-2 text-white glass">
+      <div className="absolute top-12 left-2 right-2 rounded-xl px-3 py-2 text-white glass z-20">
         <div className="text-[11px] mb-1 flex justify-between">
           <span className="inline-flex items-center gap-1">
             <Wand2 size={14} /> Arcane Charge
@@ -955,29 +919,33 @@ export default function ArcaneSiege() {
           <span>{arcane}%</span>
         </div>
         <div className="w-full h-2 rounded-full bg-white/20 overflow-hidden">
-          <div
-            className="h-full bg-white"
-            style={{ width: `${(arcane / ARCANE_MAX) * 100}%` }}
-          />
+          <div className="h-full bg-white" style={{ width: `${(arcane / ARCANE_MAX) * 100}%` }} />
         </div>
       </div>
 
-      {/* Bottom Controls */}
-      <div className="absolute bottom-2 left-2 right-2 rounded-2xl px-3 py-2 text-white glass">
-        {/* Path selector (at start) */}
+      {/* Bottom Dock */}
+      <div className="absolute bottom-2 left-2 right-2 rounded-2xl px-3 py-2 text-white glass z-20">
+        {/* Choose Path (colored) */}
         {!chosenPath && (
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs opacity-90">Choose your Arcane Path:</span>
+          <div className="mb-2">
+            <div className="text-[11px] opacity-90 mb-1">Choose your Arcane Path:</div>
             <div className="flex gap-2">
               {ELEMENTS.map((el) => {
                 const Icon = UNIT_BASE[el].icon;
                 return (
                   <button
                     key={el}
-                    className="btn px-2 py-1"
+                    className="flex-1 py-2 rounded-xl font-bold border"
+                    style={{
+                      background: `linear-gradient(135deg, ${COLORS[el]}55, ${COLORS[el]}33)`,
+                      borderColor: `${COLORS[el]}88`,
+                    }}
                     onClick={() => setChosenPath(el)}
                   >
-                    <Icon size={16} />
+                    <div className="flex items-center justify-center gap-2">
+                      <Icon size={16} />
+                      <span className="text-xs capitalize">{el}</span>
+                    </div>
                   </button>
                 );
               })}
@@ -985,13 +953,17 @@ export default function ArcaneSiege() {
           </div>
         )}
 
-        {/* Main bar */}
-        <div className="mt-2 flex items-center justify-between gap-2">
+        {/* Main controls */}
+        <div className="flex items-center justify-between gap-2">
           <button
             className={`btn flex-1 ${gold < rollCost ? "opacity-60" : ""}`}
-            onClick={handleRoll}
+            onClick={() => {
+              if (gold < rollCost) return;
+              setGold((g) => g - rollCost);
+              setRollCost((c) => Math.round(c * 1.15 + 5));
+              rollUnit();
+            }}
             disabled={gold < rollCost}
-            aria-label="Roll"
           >
             <Dice6 size={16} />
             <span className="text-xs ml-1">Roll ({rollCost})</span>
@@ -999,10 +971,10 @@ export default function ArcaneSiege() {
 
           <button
             className={`btn flex-1 ${isGlobalReady ? "" : "opacity-60"}`}
-            onClick={() =>
-              triggerTap({ x: size.cx, y: size.cy })
-            }
-            aria-label="Global Surge"
+            onClick={(e) => {
+              e.stopPropagation();
+              globalTap(size.cx, size.cy);
+            }}
           >
             <Zap size={16} />
             <span className="text-xs ml-1">
@@ -1011,47 +983,28 @@ export default function ArcaneSiege() {
           </button>
 
           <button
-            className="btn flex-1"
-            onClick={resetGame}
-            aria-label="Restart"
+            className={`btn flex-1 ${mergeMode ? "ring-2 ring-white" : ""}`}
+            onClick={() => {
+              setMergeMode((m) => !m);
+              setMergeSourceId(null);
+            }}
           >
+            <Merge size={16} />
+            <span className="text-xs ml-1">{mergeMode ? "Merge: ON" : "Merge: OFF"}</span>
+          </button>
+
+          <button className="btn flex-1" onClick={resetGame}>
             <RotateCw size={16} />
             <span className="text-xs ml-1">Restart</span>
           </button>
         </div>
-
-        {/* Hand */}
-        <div className="mt-2 flex items-center gap-2">
-          {hand.length === 0 && (
-            <span className="text-[11px] opacity-80">Roll to get a unit, then tap a node to place it.</span>
-          )}
-          {hand.map((u) => (
-            <HandBadge key={u.id} u={u} />
-          ))}
-        </div>
-
-        {/* Selected unit quick actions */}
-        {selectedUnit && (
-          <div className="mt-2 flex items-center justify-between">
-            <span className="text-[11px] opacity-90">
-              {niceUnitName(selectedUnit)} — Lvl {selectedUnit.level}
-            </span>
-            <button
-              className={`btn ${gold < 30 + selectedUnit.level * 20 ? "opacity-60" : ""}`}
-              onClick={upgradeSelected}
-              disabled={gold < 30 + selectedUnit.level * 20}
-            >
-              Upgrade ({30 + selectedUnit.level * 20})
-            </button>
-          </div>
-        )}
       </div>
 
-      {/* Pause Curtain */}
+      {/* Pause/GameOver Curtains */}
       <AnimatePresence>
         {(paused || gameOver || !chosenPath) && (
           <motion.div
-            className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+            className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-30"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -1066,6 +1019,10 @@ export default function ArcaneSiege() {
                       <button
                         key={el}
                         className="btn"
+                        style={{
+                          background: `linear-gradient(135deg, ${COLORS[el]}55, ${COLORS[el]}33)`,
+                          borderColor: `${COLORS[el]}88`,
+                        }}
                         onClick={() => setChosenPath(el)}
                       >
                         <Icon size={18} />
@@ -1090,7 +1047,7 @@ export default function ArcaneSiege() {
             ) : (
               <div className="glass px-5 py-4 rounded-xl text-white text-center">
                 <div className="text-sm mb-2">Paused</div>
-                <button className="btn" onClick={togglePause}>
+                <button className="btn" onClick={() => setPaused(false)}>
                   <Play size={16} /> <span className="ml-1 text-xs">Resume</span>
                 </button>
               </div>
@@ -1099,50 +1056,24 @@ export default function ArcaneSiege() {
         )}
       </AnimatePresence>
 
-      {/* Glassmorphism helper */}
+      {/* Styles */}
       <style>{glassCss}</style>
     </div>
   );
 }
 
-function niceUnitName(u) {
-  const fam = UNIT_BASE[u.element];
-  if (u.tier === 1) return fam.name;
-  if (u.tier === 2) return fam.fusedNames[0];
-  return fam.fusedNames[1];
-}
-
-function HandBadge({ u }) {
-  const fam = UNIT_BASE[u.element];
-  const Icon = fam.icon;
-  return (
-    <div className="flex items-center gap-1 px-2 py-1 rounded-lg glass border border-white/30">
-      <Icon size={14} color={fam.color} />
-      <span className="text-[11px]">{fam.name}</span>
-      <span className="text-[10px] opacity-80">(T{u.tier})</span>
-    </div>
-  );
-}
-
-function UnitBadge({ u, fam, active }) {
-  const Icon = fam.icon;
+// --- UI bits ---
+function UnitBadge({ u }) {
+  const Icon = UNIT_BASE[u.element].icon;
+  const active = now() < (u.localUntil || 0);
   return (
     <motion.div
       className="absolute inset-0 rounded-full flex items-center justify-center"
-      animate={{ scale: active ? 1.1 : 1 }}
+      animate={{ scale: active ? 1.12 : 1 }}
       transition={{ type: "spring", stiffness: 140, damping: 12 }}
-      style={{
-        color: fam.color,
-        textShadow: "0 2px 6px rgba(0,0,0,0.35)",
-      }}
+      style={{ color: COLORS[u.element], textShadow: "0 2px 6px rgba(0,0,0,0.35)" }}
     >
       <Icon size={18} />
-      <span
-        className="absolute -bottom-4 text-[10px] font-semibold"
-        style={{ color: "white" }}
-      >
-        T{u.tier}
-      </span>
     </motion.div>
   );
 }
@@ -1167,4 +1098,3 @@ const glassCss = `
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 `;
-
