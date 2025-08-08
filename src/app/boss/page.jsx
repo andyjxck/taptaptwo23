@@ -281,7 +281,7 @@ useEffect(() => {
 function getBossHp(level) {
   // Boss HP gets a lot higher each level. Adjust GROWTH for difficulty.
   const BASE_HP = 10000;
-  const GROWTH = 1.29; // Make this higher if you want even more scaling.
+  const GROWTH = 1.23; // Make this higher if you want even more scaling.
   return Math.floor(BASE_HP * Math.pow(GROWTH, Math.max(level-1, 0)));
 }
 
