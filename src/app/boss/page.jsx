@@ -247,19 +247,12 @@ const hpPercentage = Math.max(0, Math.min(100, (visibleBossHp / Math.max(1, hpMa
 
   // --- FUNCTION: HANDLE MANUAL TAP ---
 // --- TAP HANDLER ---
-// Note: DO NOT call setsoloRealtime or setcoopRealtime; let realtime handle all updates!
-// --- TAP HANDLER ---
 async function handleTap() {
-  // Determine current battle state based on mode
   const isSolo = mode === "solo";
   const battle = isSolo ? soloRealtime : coopRealtime;
 
   // Safety checks
-  if (
-    (isSolo && (!battle || battle.boss_hp <= 0)) ||
-    (!isSolo && (!battle || battle.boss_hp <= 0))
-  )
-    return;
+  if (!battle || battle.boss_hp <= 0) return;
 
   const tapPower = upgradesData?.stats?.tapPower || 1;
   const autoTapperDps = upgradesData?.stats?.autoTapperDps || 0;
@@ -268,8 +261,8 @@ async function handleTap() {
   const isCrit = Math.random() < 0.05;
   const critMultiplier = isCrit ? 3 : 1;
 
-  // Calculate tap + auto tapper (always add autoTapperDps on tap, both solo and coop)
-  const totalDamage = tapPower * critMultiplier + autoTapperDps + accumulatedAutoTapDamage;
+  // Calculate tap + auto tapper (we add accumulator at click)
+  const totalDamage = Math.floor(tapPower * critMultiplier + autoTapperDps + accumulatedAutoTapDamage);
 
   // Show floating damage number
   const dmgId = Date.now() + Math.random();
@@ -277,7 +270,7 @@ async function handleTap() {
     ...prev,
     {
       id: dmgId,
-      damage: Math.floor(totalDamage),
+      damage: totalDamage,
       isCrit,
       x: Math.random() * 120 - 60,
       y: Math.random() * 60 - 30,
@@ -289,22 +282,18 @@ async function handleTap() {
 
   // Prepare request
   const action = isSolo ? "solo_tap" : "coop_tap";
-  const body = {
-    action,
-    userId,
-    damage: Math.floor(totalDamage),
-  };
+  const body = { action, userId, damage: totalDamage };
+  if (!isSolo) body.roomCode = battle.room_code;
+
+  // --- Coop optimistic update (SAFE): only apply if this tap does NOT kill the boss
   if (!isSolo) {
-    body.roomCode = battle.room_code;
-    // >>> FIX: Optimistic update so HP doesn't flash 0 <<<
-    setcoopRealtime((prev) =>
-      prev
-        ? {
-            ...prev,
-            boss_hp: Math.max(0, prev.boss_hp - Math.floor(totalDamage)),
-          }
-        : prev
-    );
+    setcoopRealtime((prev) => {
+      if (!prev) return prev;
+      const nextHp = Math.max(0, prev.boss_hp - totalDamage);
+      // If this tap would kill, SKIP optimism to avoid overwriting the new spawned boss state.
+      if (nextHp === 0) return prev;
+      return { ...prev, boss_hp: nextHp };
+    });
   }
 
   try {
@@ -315,42 +304,44 @@ async function handleTap() {
     });
     const data = await res.json();
 
-// Reset auto tap damage accumulator (always)
-setAccumulatedAutoTapDamage(0);
+    // Always clear the accumulator after a sent tap
+    setAccumulatedAutoTapDamage(0);
 
-// Increment total_taps safely via the backend (avoids client-side SQL & RLS issues)
-try {
-  await fetch("/api/boss", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "increment_total_taps", userId, amount: 1 }),
-  });
-} catch (err) {
-  console.error("Failed to increment total_taps:", err);
-}
+    // Increment total_taps via backend (no client-side SQL)
+    try {
+      await fetch("/api/boss", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "increment_total_taps", userId, amount: 1 }),
+      });
+    } catch (err) {
+      console.error("Failed to increment total_taps:", err);
+    }
 
-
-    // Victory celebration (let realtime reload the battle state)
-    if (data.boss_defeated) {
+    if (data?.boss_defeated) {
+      // Victory animation; realtime will push the new level & HP
       setShowCelebration(true);
       setTimeout(() => setShowCelebration(false), 1600);
 
-      // Optionally reload profile data for rewards/coins/level up
-      const newProfile = await fetch(
-        `/api/boss?action=profile&userId=${userId}`
-      ).then((r) => r.json());
-      setProfileData(newProfile);
+      // Refresh profile (coins etc.)
+      try {
+        const newProfile = await fetch(`/api/boss?action=profile&userId=${userId}`).then((r) => r.json());
+        setProfileData(newProfile);
+      } catch (e) {
+        console.error("Failed to refresh profile after boss kill:", e);
+      }
 
       setTapCount(0);
       return;
     }
 
-    // Just bump local tap count (realtime will update HP automatically)
+    // No kill: just bump local tap count; realtime covers HP sync
     setTapCount((prev) => prev + 1);
   } catch (error) {
     console.error("Error sending tap damage:", error);
   }
 }
+
 
 
 // --- TAP BUTTON HANDLER ---
