@@ -226,23 +226,49 @@ function getBossReward(level) {
 }
 
 
-// --- BOSS HP / PROGRESS (trust DB when available; prevents coop desync) ---
-const currentLevel = battleData?.current_level ?? battleData?.boss_level ?? 1;
+// --- BOSS HP / PROGRESS (robust: resets accumulator on new boss, caps subtraction) ---
+const level = battleData?.current_level ?? battleData?.boss_level ?? 1;
 
-// Prefer boss_max_hp from the DB (coop scales by party tap power).
-// Fallback to local formula only if DB value is missing.
-const hpMax = (typeof battleData?.boss_max_hp === "number" && battleData.boss_max_hp > 0)
-  ? battleData.boss_max_hp
-  : getBossHp(currentLevel);
+// Prefer DB's max HP (coop may scale by party power); fallback to local formula.
+const hpMaxFromDb =
+  (typeof battleData?.boss_max_hp === "number" && battleData.boss_max_hp > 0)
+    ? battleData.boss_max_hp
+    : getBossHp(level);
 
-// Always read current HP from DB, but visually subtract any batched auto-tap damage
-// to keep the bar smooth until we POST and reset the accumulator.
-const rawHp = typeof battleData?.boss_hp === "number" ? battleData.boss_hp : 0;
-const visibleBossHp = Math.max(0, rawHp - accumulatedAutoTapDamage);
+// Unique ID for the current boss instance (changes when level or max HP changes)
+const bossId = `${mode}:${battleData?.room_code ?? "solo"}:${level}:${hpMaxFromDb}`;
 
-// Guard against divide-by-zero, clamp 0..100
-const hpPercentage = Math.max(0, Math.min(100, (visibleBossHp / Math.max(1, hpMax)) * 100));
+// Reset carried-over auto damage whenever a NEW boss appears
+const bossIdRef = useRef(bossId);
+useEffect(() => {
+  if (bossIdRef.current !== bossId) {
+    bossIdRef.current = bossId;
+    setAccumulatedAutoTapDamage(0);
+    setTapCount(0);
+  }
+}, [bossId]);
 
+// If HP suddenly jumps up (server spawned new boss), clear accumulator as well
+const prevHpRef = useRef(Number(battleData?.boss_hp ?? 0));
+useEffect(() => {
+  const prev = prevHpRef.current;
+  const curr = Math.max(0, Number(battleData?.boss_hp ?? 0));
+  prevHpRef.current = curr;
+
+  // Big upward jump = new boss; zero pending auto-damage
+  if (curr > prev && (curr - prev) > Math.max(1, hpMaxFromDb * 0.25)) {
+    setAccumulatedAutoTapDamage(0);
+    setTapCount(0);
+  }
+}, [battleData?.boss_hp, hpMaxFromDb]);
+
+// --- Visible HP (cap subtraction so a fresh boss can't look nearly dead) ---
+const rawHp = Math.max(0, Number(battleData?.boss_hp ?? 0));
+const pendingAuto = Math.min(Math.max(0, accumulatedAutoTapDamage), rawHp);
+const visibleBossHp = Math.max(0, rawHp - pendingAuto);
+
+const hpMax = Math.max(1, hpMaxFromDb);
+const hpPercentage = Math.max(0, Math.min(100, (visibleBossHp / hpMax) * 100));
 
 
   // --- FUNCTION: HANDLE MANUAL TAP ---
