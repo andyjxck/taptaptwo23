@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { FaBolt, FaSnowflake, FaCrosshairs, FaBomb, FaCoins, FaHeart, FaPause } from "react-icons/fa";
 
 export default function TapTapTowers() {
   // ===== GAME STATE =====
@@ -284,3 +283,4 @@ if (typeof document !== "undefined") {
   styleSheet.innerText = styles;
   document.head.appendChild(styleSheet);
 }
+
