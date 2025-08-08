@@ -225,18 +225,17 @@ function getBossReward(level) {
   return Math.floor(BASE_REWARD * Math.pow(REWARD_CURVE, Math.max(level-1, 0)));
 }
 
-
 // --- BOSS HP / PROGRESS (robust: resets accumulator on new boss, caps subtraction) ---
-const level = battleData?.current_level ?? battleData?.boss_level ?? 1;
+const currentLevel = battleData?.current_level ?? battleData?.boss_level ?? 1;
 
 // Prefer DB's max HP (coop may scale by party power); fallback to local formula.
 const hpMaxFromDb =
   (typeof battleData?.boss_max_hp === "number" && battleData.boss_max_hp > 0)
     ? battleData.boss_max_hp
-    : getBossHp(level);
+    : getBossHp(currentLevel);
 
 // Unique ID for the current boss instance (changes when level or max HP changes)
-const bossId = `${mode}:${battleData?.room_code ?? "solo"}:${level}:${hpMaxFromDb}`;
+const bossId = `${mode}:${battleData?.room_code ?? "solo"}:${currentLevel}:${hpMaxFromDb}`;
 
 // Reset carried-over auto damage whenever a NEW boss appears
 const bossIdRef = useRef(bossId);
@@ -269,7 +268,6 @@ const visibleBossHp = Math.max(0, rawHp - pendingAuto);
 
 const hpMax = Math.max(1, hpMaxFromDb);
 const hpPercentage = Math.max(0, Math.min(100, (visibleBossHp / hpMax) * 100));
-
 
   // --- FUNCTION: HANDLE MANUAL TAP ---
 // --- TAP HANDLER ---
