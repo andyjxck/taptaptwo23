@@ -768,7 +768,6 @@ export default function ArcaneSiege() {
 
   const globalCdLeft = Math.max(0, globalCdUntil - now());
   const globalActiveLeft = Math.max(0, globalBoostUntil - now());
-  const isGlobalReady = now() >= globalCdUntil;
 
   return (
     <div
@@ -1065,3 +1064,4 @@ const glassCss = `
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 `;
+
