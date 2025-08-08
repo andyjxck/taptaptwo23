@@ -211,6 +211,73 @@ useEffect(() => {
       });
   }, [userReady, userId]);
 
+  // --- AUTO DPS SENDER (posts accumulated damage without clicks) ---
+// --- AUTO DPS SENDER (posts accumulated damage without clicks) ---
+const autoPostingRef = useRef(false);
+
+useEffect(() => {
+  if (!(mode === "solo" || mode === "coop")) return;
+  if (!battleData) return;
+
+  const tick = async () => {
+    if (autoPostingRef.current) return;
+
+    const autoDmg = Math.floor(accumulatedAutoTapDamage);
+    if (autoDmg <= 0) return;
+
+    // if the server already spawned a fresh boss, don't subtract stale damage
+    if (!battleData?.boss_hp || battleData.boss_hp <= 0) {
+      setAccumulatedAutoTapDamage(0);
+      return;
+    }
+
+    autoPostingRef.current = true;
+    try {
+      const isSolo = mode === "solo";
+      const body = {
+        action: isSolo ? "solo_tap" : "coop_tap",
+        userId,
+        damage: autoDmg,
+        ...(isSolo ? {} : { roomCode }),
+      };
+
+      const res = await fetch("/api/boss", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      // consume what you posted (smooth HP bar)
+      setAccumulatedAutoTapDamage((prev) => Math.max(0, prev - autoDmg));
+
+      // if boss died, do the same flair/profile refresh as manual taps
+      if (res.ok) {
+        const data = await res.json().catch(() => null);
+        if (data?.boss_defeated) {
+          setShowCelebration(true);
+          setTimeout(() => setShowCelebration(false), 1600);
+          try {
+            const newProfile = await fetch(
+              `/api/boss?action=profile&userId=${userId}`
+            ).then((r) => r.json());
+            setProfileData(newProfile);
+          } catch {}
+          setTapCount(0);
+        }
+      }
+      // if 409 -> boss already defeated; realtime will push the new boss, nothing to do
+    } catch (e) {
+      // keep accumulator; we'll retry on next tick
+    } finally {
+      autoPostingRef.current = false;
+    }
+  };
+
+  const id = setInterval(tick, 750);
+  return () => clearInterval(id);
+}, [mode, battleData, accumulatedAutoTapDamage, userId, roomCode]);
+
+
 function getBossHp(level) {
   // Boss HP gets a lot higher each level. Adjust GROWTH for difficulty.
   const BASE_HP = 10000;
@@ -285,8 +352,7 @@ async function handleTap() {
   const isCrit = Math.random() < 0.05;
   const critMultiplier = isCrit ? 3 : 1;
 
-  // Calculate tap + auto tapper (we add accumulator at click)
-  const totalDamage = Math.floor(tapPower * critMultiplier + autoTapperDps + accumulatedAutoTapDamage);
+const totalDamage = Math.floor(tapPower * critMultiplier);
 
   // Show floating damage number
   const dmgId = Date.now() + Math.random();
@@ -936,7 +1002,7 @@ function handleCoopJoin() {
                   STRIKE!
                 </div>
                 <div className="text-xs opacity-90 mt-1">
-                  {upgradesData?.stats?.tapPower || 1} DMG
+                  {formatNumberShort(upgradesData?.stats?.tapPower || 1)} DMG
                 </div>
               </div>
             </motion.button>
