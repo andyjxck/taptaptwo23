@@ -1,9 +1,9 @@
 "use client";
 import { supabase } from "@/utilities/supabaseClient";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Flame, ChevronDown, Coins, Crown, Timer, Zap, Settings } from "lucide-react";
+import { Users, Flame, ChevronDown, Crown, Timer, Zap, Settings } from "lucide-react";
 import useSound from "use-sound";
 import { logPageview } from "@/utilities/logPageview";
 
@@ -25,86 +25,10 @@ function isImageUrl(icon) {
   );
 }
 
-// --- SOLO BOSS REALTIME HOOK ---
-function useRealtimeSoloBoss(userId) {
-  const [soloRealtime, setsoloRealtime] = useState(null);
-
-  useEffect(() => {
-    if (!userId) return;
-
-    // Initial load
-    supabase
-      .from("boss_progress")
-      .select("*")
-      .eq("user_id", userId)
-      .single()
-      .then(({ data }) => setsoloRealtime(data));
-
-    // Realtime subscribe
-    const channel = supabase
-      .channel("solo-boss")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "boss_progress",
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => setsoloRealtime(payload.new)
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [userId]);
-
-  return soloRealtime;
-}
-
-function useRealtimeCoopBoss(roomCode) {
-  const [coopRealtime, setcoopRealtime] = useState(null);
-
-  useEffect(() => {
-    if (!roomCode) return;
-
-    // Initial load
-    supabase
-      .from("boss_coop_sessions")
-      .select("*")
-      .eq("room_code", roomCode)
-      .single()
-      .then(({ data }) => setcoopRealtime(data));
-
-    // Realtime subscribe
-    const channel = supabase
-      .channel("coop-boss")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "boss_coop_sessions",
-          filter: `room_code=eq.${roomCode}`,
-        },
-        (payload) => setcoopRealtime(payload.new)
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [roomCode]);
-
-  // NOTE: return as [state, setter]
-  return [coopRealtime, setcoopRealtime];
-}
-
-
-
+// ---------- NUMBER FORMAT ----------
 function formatNumberShort(num) {
-  if (num < 1000) return num?.toString() ?? "0";
+  if (typeof num !== "number") num = Number(num || 0);
+  if (num < 1000) return num.toString();
   const units = [
     { value: 1e33, symbol: "Dc" },
     { value: 1e30, symbol: "Nn" },
@@ -120,15 +44,109 @@ function formatNumberShort(num) {
   ];
   for (let i = 0; i < units.length; i++) {
     if (num >= units[i].value) {
-      const formatted = (num / units[i].value)
-        .toFixed(1)
-        .replace(/\.0$/, "");
+      const formatted = (num / units[i].value).toFixed(1).replace(/\.0$/, "");
       return formatted + units[i].symbol;
     }
   }
-  return num?.toString() ?? "0";
+  return num.toString();
 }
 
+// ---------- REALTIME HOOKS ----------
+function useRealtimeSoloBoss(userId) {
+  const [soloRealtime, setSoloRealtime] = useState(null);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    // Initial load from DB (cheap) – UI shows something immediately
+    supabase
+      .from("boss_progress")
+      .select("*")
+      .eq("user_id", userId)
+      .single()
+      .then(({ data }) => {
+        if (data) setSoloRealtime(data);
+      })
+      .catch(() => {});
+
+    // Realtime subscribe
+    const channel = supabase
+      .channel("solo-boss")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "boss_progress",
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => payload?.new && setSoloRealtime(payload.new)
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
+
+  return soloRealtime;
+}
+
+function useRealtimeCoopBoss(roomCode) {
+  const [coopRealtime, setCoopRealtime] = useState(null);
+
+  useEffect(() => {
+    if (!roomCode) return;
+
+    // Initial load
+    supabase
+      .from("boss_coop_sessions")
+      .select("*")
+      .eq("room_code", roomCode)
+      .single()
+      .then(({ data }) => {
+        if (data) setCoopRealtime(data);
+      })
+      .catch(() => {});
+
+    // Realtime subscribe
+    const channel = supabase
+      .channel("coop-boss")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "boss_coop_sessions",
+          filter: `room_code=eq.${roomCode}`,
+        },
+        (payload) => payload?.new && setCoopRealtime(payload.new)
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [roomCode]);
+
+  return [coopRealtime, setCoopRealtime];
+}
+
+// ---------- BOSS MATH ----------
+function getBossHp(level) {
+  const BASE_HP = 10000;
+  const GROWTH = 1.23;
+  return Math.floor(BASE_HP * Math.pow(GROWTH, Math.max(level - 1, 0)));
+}
+function getBossReward(level) {
+  const BASE_REWARD = 10000000;
+  const REWARD_CURVE = 1.115;
+  return Math.floor(BASE_REWARD * Math.pow(REWARD_CURVE, Math.max(level - 1, 0)));
+}
+
+// =====================================
+// ============== PAGE =================
+// =====================================
 export default function BossModePage() {
   const router = useRouter();
 
@@ -136,9 +154,12 @@ export default function BossModePage() {
   const [userId, setUserId] = useState("");
   const [pin, setPin] = useState("");
   const [userReady, setUserReady] = useState(false);
-   const [muted, setMuted] = useState(false);
+
+  // --- SOUND ---
+  const [muted, setMuted] = useState(false);
   const [playClick] = useSound("/sounds/click.wav", { volume: muted ? 0 : 0.4 });
-  // --- MENU/UI STATE ---
+
+  // --- UI STATE ---
   const [mode, setMode] = useState(""); // "", "solo", "coop-create", "coop-join", "coop"
   const [roomCode, setRoomCode] = useState("");
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -146,144 +167,247 @@ export default function BossModePage() {
   const [tapCount, setTapCount] = useState(0);
   const [showDamageNumbers, setShowDamageNumbers] = useState([]);
 
-  // --- PROFILE & UPGRADES STATE ---
+  // --- DATA STATE ---
   const [profileData, setProfileData] = useState(null);
   const [upgradesData, setUpgradesData] = useState(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const [upgradesLoading, setUpgradesLoading] = useState(false);
 
-  // --- SOLO BOSS STATE ---
-// LIVE DATA (after you know userId, mode)
-const soloRealtime = useRealtimeSoloBoss(userId);
-const [coopRealtime, setcoopRealtime] = useRealtimeCoopBoss(mode === "coop" ? roomCode : null);
+  // --- LIVE DATA (depends on auth/mode) ---
+  const soloRealtime = useRealtimeSoloBoss(userId);
+  const [coopRealtime, setCoopRealtime] = useRealtimeCoopBoss(mode === "coop" ? roomCode : null);
+  const battleData = mode === "solo" ? soloRealtime : coopRealtime;
 
-// This is now your main boss/session data!
-const battleData = mode === "solo" ? soloRealtime : coopRealtime;
-
+  // --- OTHER STATE ---
   const [coopError, setCoopError] = useState("");
   const [coopJoining, setCoopJoining] = useState(false);
   const [coopCreating, setCoopCreating] = useState(false);
-
-  // --- BUTTON LOCK & LOADING ---
   const [pageLoading, setPageLoading] = useState(true);
 
-  // --- DAMAGE STATE ---
+  // --- DAMAGE ACCUMULATOR ---
   const [accumulatedAutoTapDamage, setAccumulatedAutoTapDamage] = useState(0);
-// --- EFFECTS: AUTH INIT ---
-useEffect(() => {
-  const storedUserId = localStorage.getItem("userId");
-  const storedPin = localStorage.getItem("pin");
-  if (!storedUserId || !storedPin) {
-    window.location.href = "/login";
-    return;
-  }
-  setUserId(storedUserId);
-  setPin(storedPin);
-  setUserReady(true);
+  const autoPostingRef = useRef(false);
 
-  // --- LOG PAGEVIEW after confirming auth ---
-  logPageview({
-    userId: parseInt(storedUserId, 10),
-    // You can add pagePath: "/your-page" if you want a custom path,
-    // otherwise it will use window.location.pathname
-    // referrer is auto-detected
-  });
-}, []);
-
-
-// --- EFFECTS: LOAD PROFILE & UPGRADES ON LOGIN ---
-useEffect(() => {
-  if (!userReady) return;
-  setProfileLoading(true);
-  setUpgradesLoading(true);
-  Promise.all([
-    fetch(`/api/boss?action=profile&userId=${userId}`).then((r) => r.json()),
-    fetch(`/api/boss?action=upgrades&userId=${userId}`).then((r) => r.json()),
-  ])
-    .then(([profile, upgrades]) => {
-      setProfileData(profile);
-      setUpgradesData(upgrades);
-    })
-    .finally(() => {
-      setProfileLoading(false);
-      setUpgradesLoading(false);
-      setPageLoading(false);
-    });
-}, [userReady, userId]);
-
-// ---------- NEW: minute heartbeat so state never goes stale ----------
-useEffect(() => {
-  if (!userReady || !userId) return;
-  const id = setInterval(() => {
-    // This hits the backend so the lazy reset code can run if needed.
-    fetch(`/api/boss?action=progress&userId=${userId}`, { cache: "no-store" })
-      .then((r) => r.json())
-      .catch(() => {});
-  }, 60_000); // every 60s
-  return () => clearInterval(id);
-}, [userReady, userId]);
-
-// ---------- NEW: trigger reset the moment timer reaches 0 ----------
-useEffect(() => {
-  if (!userReady || !userId) return;
-
-  let triggered = false;
-  const tick = () => {
-    const ns = soloRealtime?.next_reset ? new Date(soloRealtime.next_reset).getTime() : null;
-    if (!ns) return;
-
-    const now = Date.now();
-    if (!triggered && now >= ns) {
-      triggered = true;
-      // Call backend to perform lazy reset & set the NEXT Friday 15:00 UTC
-      fetch(`/api/boss?action=progress&userId=${userId}`, { cache: "no-store" })
-        .then(() => {
-          // optional: re-pull profile too so coins/levels snap instantly
-          return fetch(`/api/boss?action=profile&userId=${userId}`, { cache: "no-store" });
-        })
-        .then((r) => r?.json?.())
-        .then((p) => p && setProfileData(p))
-        .catch(() => {});
-      // allow future triggers if something weird happens
-      setTimeout(() => (triggered = false), 5_000);
-    }
-  };
-
-  // check every second so the reset is instant for the player
-  const id = setInterval(tick, 1000);
-  return () => clearInterval(id);
-}, [userReady, userId, soloRealtime?.next_reset]);
-
-
-  // --- AUTO DPS SENDER (posts accumulated damage without clicks) ---
-// --- AUTO DPS SENDER (posts accumulated damage without clicks) ---
-const autoPostingRef = useRef(false);
-
-useEffect(() => {
-  if (!(mode === "solo" || mode === "coop")) return;
-  if (!battleData) return;
-
-  const tick = async () => {
-    if (autoPostingRef.current) return;
-
-    const autoDmg = Math.floor(accumulatedAutoTapDamage);
-    if (autoDmg <= 0) return;
-
-    // if the server already spawned a fresh boss, don't subtract stale damage
-    if (!battleData?.boss_hp || battleData.boss_hp <= 0) {
-      setAccumulatedAutoTapDamage(0);
+  // ---------- AUTH INIT ----------
+  useEffect(() => {
+    const storedUserId = localStorage.getItem("userId");
+    const storedPin = localStorage.getItem("pin");
+    if (!storedUserId || !storedPin) {
+      window.location.href = "/login";
       return;
     }
+    setUserId(storedUserId);
+    setPin(storedPin);
+    setUserReady(true);
 
-    autoPostingRef.current = true;
+    logPageview({
+      userId: parseInt(storedUserId, 10),
+    });
+  }, []);
+
+  // ---------- LOAD PROFILE & UPGRADES ----------
+  useEffect(() => {
+    if (!userReady || !userId) return;
+    setProfileLoading(true);
+    setUpgradesLoading(true);
+
+    Promise.all([
+      fetch(`/api/boss?action=profile&userId=${userId}`, { cache: "no-store" }).then((r) => r.json()),
+      fetch(`/api/boss?action=upgrades&userId=${userId}`, { cache: "no-store" }).then((r) => r.json()),
+    ])
+      .then(([profile, upgrades]) => {
+        setProfileData(profile || null);
+        setUpgradesData(upgrades || null);
+      })
+      .finally(() => {
+        setProfileLoading(false);
+        setUpgradesLoading(false);
+        setPageLoading(false);
+      });
+  }, [userReady, userId]);
+
+  // ---------- HEARTBEAT (triggers backend lazy reset if due) ----------
+  useEffect(() => {
+    if (!userReady || !userId) return;
+    const id = setInterval(() => {
+      fetch(`/api/boss?action=progress&userId=${userId}`, { cache: "no-store" }).catch(() => {});
+    }, 60_000);
+    return () => clearInterval(id);
+  }, [userReady, userId]);
+
+  // ---------- INSTANT RESET WHEN COUNTDOWN HITS 0 (SOLO ONLY) ----------
+  useEffect(() => {
+    if (!userReady || !userId) return;
+    if (mode !== "solo") return;
+
+    let triggered = false;
+    const tick = () => {
+      const ns = soloRealtime?.next_reset ? new Date(soloRealtime.next_reset).getTime() : null;
+      if (!ns) return;
+      const now = Date.now();
+      if (!triggered && now >= ns) {
+        triggered = true;
+        // Hit progress to let backend perform lazy reset + set NEXT Friday 15:00 UTC
+        fetch(`/api/boss?action=progress&userId=${userId}`, { cache: "no-store" })
+          .then(() =>
+            fetch(`/api/boss?action=profile&userId=${userId}`, { cache: "no-store" })
+              .then((r) => r.json())
+              .then((p) => p && setProfileData(p))
+          )
+          .catch(() => {});
+        // Reopen window to allow future trigger in case clock drift/race
+        setTimeout(() => (triggered = false), 5000);
+      }
+    };
+
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [userReady, userId, mode, soloRealtime?.next_reset]);
+
+  // ---------- AUTO DPS POSTER (SOLO & COOP) ----------
+  useEffect(() => {
+    if (!(mode === "solo" || mode === "coop")) return;
+    if (!battleData) return;
+
+    const tick = async () => {
+      if (autoPostingRef.current) return;
+
+      const autoDmg = Math.floor(accumulatedAutoTapDamage);
+      if (autoDmg <= 0) return;
+
+      // If boss already dead, drop pending accumulator
+      if (!battleData?.boss_hp || battleData.boss_hp <= 0) {
+        setAccumulatedAutoTapDamage(0);
+        return;
+      }
+
+      autoPostingRef.current = true;
+      try {
+        const isSolo = mode === "solo";
+        const body = {
+          action: isSolo ? "solo_tap" : "coop_tap",
+          userId,
+          damage: autoDmg,
+          ...(isSolo ? {} : { roomCode }),
+        };
+
+        const res = await fetch("/api/boss", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+
+        // consume what you posted (keeps the bar smooth)
+        setAccumulatedAutoTapDamage((prev) => Math.max(0, prev - autoDmg));
+
+        if (res.ok) {
+          const data = await res.json().catch(() => null);
+          if (data?.boss_defeated) {
+            setShowCelebration(true);
+            setTimeout(() => setShowCelebration(false), 1600);
+            try {
+              const newProfile = await fetch(
+                `/api/boss?action=profile&userId=${userId}`,
+                { cache: "no-store" }
+              ).then((r) => r.json());
+              setProfileData(newProfile);
+            } catch {}
+            setTapCount(0);
+          }
+        }
+      } catch {
+        // ignore; retry next tick
+      } finally {
+        autoPostingRef.current = false;
+      }
+    };
+
+    const id = setInterval(tick, 750);
+    return () => clearInterval(id);
+  }, [mode, battleData, accumulatedAutoTapDamage, userId, roomCode]);
+
+  // ---------- BOSS STATE DERIVED VALUES ----------
+  const currentLevel = useMemo(
+    () => battleData?.current_level ?? battleData?.boss_level ?? 1,
+    [battleData?.current_level, battleData?.boss_level]
+  );
+
+  const hpMaxFromDb =
+    typeof battleData?.boss_max_hp === "number" && battleData.boss_max_hp > 0
+      ? battleData.boss_max_hp
+      : getBossHp(currentLevel);
+
+  const bossId = `${mode}:${battleData?.room_code ?? "solo"}:${currentLevel}:${hpMaxFromDb}`;
+  const bossIdRef = useRef(bossId);
+
+  // Reset accumulator on boss change
+  useEffect(() => {
+    if (bossIdRef.current !== bossId) {
+      bossIdRef.current = bossId;
+      setAccumulatedAutoTapDamage(0);
+      setTapCount(0);
+    }
+  }, [bossId]);
+
+  // If HP jumps up a lot (new boss), clear accumulator too
+  const prevHpRef = useRef(Number(battleData?.boss_hp ?? 0));
+  useEffect(() => {
+    const prev = prevHpRef.current;
+    const curr = Math.max(0, Number(battleData?.boss_hp ?? 0));
+    prevHpRef.current = curr;
+    if (curr > prev && (curr - prev) > Math.max(1, hpMaxFromDb * 0.25)) {
+      setAccumulatedAutoTapDamage(0);
+      setTapCount(0);
+    }
+  }, [battleData?.boss_hp, hpMaxFromDb]);
+
+  const rawHp = Math.max(0, Number(battleData?.boss_hp ?? 0));
+  const pendingAuto = Math.min(Math.max(0, accumulatedAutoTapDamage), rawHp);
+  const visibleBossHp = Math.max(0, rawHp - pendingAuto);
+  const hpMax = Math.max(1, hpMaxFromDb);
+  const hpPercentage = Math.max(0, Math.min(100, (visibleBossHp / hpMax) * 100));
+
+  // ---------- TAP HANDLER ----------
+  async function handleTap() {
+    const isSolo = mode === "solo";
+    const battle = isSolo ? soloRealtime : coopRealtime;
+    if (!battle || battle.boss_hp <= 0) return;
+
+    const tapPower = upgradesData?.stats?.tapPower || 1;
+
+    // 5% crit chance = 3x dmg
+    const isCrit = Math.random() < 0.05;
+    const totalDamage = Math.floor(tapPower * (isCrit ? 3 : 1));
+
+    // Floating number
+    const dmgId = Date.now() + Math.random();
+    setShowDamageNumbers((prev) => [
+      ...prev,
+      {
+        id: dmgId,
+        damage: totalDamage,
+        isCrit,
+        x: Math.random() * 120 - 60,
+        y: Math.random() * 60 - 30,
+      },
+    ]);
+    setTimeout(() => {
+      setShowDamageNumbers((prev) => prev.filter((d) => d.id !== dmgId));
+    }, 1200);
+
+    // Coop optimistic update but skip if it would exactly kill the boss
+    if (!isSolo) {
+      setCoopRealtime((prev) => {
+        if (!prev || typeof prev.boss_hp !== "number") return prev;
+        const nextHp = Math.max(0, prev.boss_hp - totalDamage);
+        if (nextHp === 0) return prev; // let server spawn new boss, realtime will sync
+        return { ...prev, boss_hp: nextHp };
+      });
+    }
+
     try {
-      const isSolo = mode === "solo";
-      const body = {
-        action: isSolo ? "solo_tap" : "coop_tap",
-        userId,
-        damage: autoDmg,
-        ...(isSolo ? {} : { roomCode }),
-      };
+      const body = { action: isSolo ? "solo_tap" : "coop_tap", userId, damage: totalDamage };
+      if (!isSolo) body.roomCode = battle.room_code;
 
       const res = await fetch("/api/boss", {
         method: "POST",
@@ -291,10 +415,16 @@ useEffect(() => {
         body: JSON.stringify(body),
       });
 
-      // consume what you posted (smooth HP bar)
-      setAccumulatedAutoTapDamage((prev) => Math.max(0, prev - autoDmg));
+      // Clear local auto-damage so the bar doesn't underflow visually
+      setAccumulatedAutoTapDamage(0);
 
-      // if boss died, do the same flair/profile refresh as manual taps
+      // Increment total_taps (fire and forget)
+      fetch("/api/boss", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "increment_total_taps", userId, amount: 1 }),
+      }).catch(() => {});
+
       if (res.ok) {
         const data = await res.json().catch(() => null);
         if (data?.boss_defeated) {
@@ -302,250 +432,78 @@ useEffect(() => {
           setTimeout(() => setShowCelebration(false), 1600);
           try {
             const newProfile = await fetch(
-              `/api/boss?action=profile&userId=${userId}`
+              `/api/boss?action=profile&userId=${userId}`,
+              { cache: "no-store" }
             ).then((r) => r.json());
             setProfileData(newProfile);
           } catch {}
           setTapCount(0);
+          return;
         }
+        setTapCount((prev) => prev + 1);
       }
-      // if 409 -> boss already defeated; realtime will push the new boss, nothing to do
-    } catch (e) {
-      // keep accumulator; we'll retry on next tick
-    } finally {
-      autoPostingRef.current = false;
+    } catch (err) {
+      // ignore
     }
-  };
-
-  const id = setInterval(tick, 750);
-  return () => clearInterval(id);
-}, [mode, battleData, accumulatedAutoTapDamage, userId, roomCode]);
-
-
-function getBossHp(level) {
-  // Boss HP gets a lot higher each level. Adjust GROWTH for difficulty.
-  const BASE_HP = 10000;
-  const GROWTH = 1.23; // Make this higher if you want even more scaling.
-  return Math.floor(BASE_HP * Math.pow(GROWTH, Math.max(level-1, 0)));
-}
-
-function getBossReward(level) {
-  // Rewards grow slower so you can't farm easy bosses for big gains.
-  const BASE_REWARD = 10000000;
-  const REWARD_CURVE = 1.115; // Lower means rewards scale less quickly.
-  return Math.floor(BASE_REWARD * Math.pow(REWARD_CURVE, Math.max(level-1, 0)));
-}
-
-// --- BOSS HP / PROGRESS (robust: resets accumulator on new boss, caps subtraction) ---
-const currentLevel = battleData?.current_level ?? battleData?.boss_level ?? 1;
-
-// Prefer DB's max HP (coop may scale by party power); fallback to local formula.
-const hpMaxFromDb =
-  (typeof battleData?.boss_max_hp === "number" && battleData.boss_max_hp > 0)
-    ? battleData.boss_max_hp
-    : getBossHp(currentLevel);
-
-// Unique ID for the current boss instance (changes when level or max HP changes)
-const bossId = `${mode}:${battleData?.room_code ?? "solo"}:${currentLevel}:${hpMaxFromDb}`;
-
-// Reset carried-over auto damage whenever a NEW boss appears
-const bossIdRef = useRef(bossId);
-useEffect(() => {
-  if (bossIdRef.current !== bossId) {
-    bossIdRef.current = bossId;
-    setAccumulatedAutoTapDamage(0);
-    setTapCount(0);
-  }
-}, [bossId]);
-
-// If HP suddenly jumps up (server spawned new boss), clear accumulator as well
-const prevHpRef = useRef(Number(battleData?.boss_hp ?? 0));
-useEffect(() => {
-  const prev = prevHpRef.current;
-  const curr = Math.max(0, Number(battleData?.boss_hp ?? 0));
-  prevHpRef.current = curr;
-
-  // Big upward jump = new boss; zero pending auto-damage
-  if (curr > prev && (curr - prev) > Math.max(1, hpMaxFromDb * 0.25)) {
-    setAccumulatedAutoTapDamage(0);
-    setTapCount(0);
-  }
-}, [battleData?.boss_hp, hpMaxFromDb]);
-
-// --- Visible HP (cap subtraction so a fresh boss can't look nearly dead) ---
-const rawHp = Math.max(0, Number(battleData?.boss_hp ?? 0));
-const pendingAuto = Math.min(Math.max(0, accumulatedAutoTapDamage), rawHp);
-const visibleBossHp = Math.max(0, rawHp - pendingAuto);
-
-const hpMax = Math.max(1, hpMaxFromDb);
-const hpPercentage = Math.max(0, Math.min(100, (visibleBossHp / hpMax) * 100));
-
-  // --- FUNCTION: HANDLE MANUAL TAP ---
-// --- TAP HANDLER ---
-async function handleTap() {
-  const isSolo = mode === "solo";
-  const battle = isSolo ? soloRealtime : coopRealtime;
-
-  // Safety checks
-  if (!battle || battle.boss_hp <= 0) return;
-
-  const tapPower = upgradesData?.stats?.tapPower || 1;
-  const autoTapperDps = upgradesData?.stats?.autoTapperDps || 0;
-
-  // 5% crit chance = 3x damage
-  const isCrit = Math.random() < 0.05;
-  const critMultiplier = isCrit ? 3 : 1;
-
-const totalDamage = Math.floor(tapPower * critMultiplier);
-
-  // Show floating damage number
-  const dmgId = Date.now() + Math.random();
-  setShowDamageNumbers((prev) => [
-    ...prev,
-    {
-      id: dmgId,
-      damage: totalDamage,
-      isCrit,
-      x: Math.random() * 120 - 60,
-      y: Math.random() * 60 - 30,
-    },
-  ]);
-  setTimeout(() => {
-    setShowDamageNumbers((prev) => prev.filter((d) => d.id !== dmgId));
-  }, 1200);
-
-  // Prepare request
-  const action = isSolo ? "solo_tap" : "coop_tap";
-  const body = { action, userId, damage: totalDamage };
-  if (!isSolo) body.roomCode = battle.room_code;
-
-  // --- Coop optimistic update (SAFE): only apply if this tap does NOT kill the boss
-  if (!isSolo) {
-    setcoopRealtime((prev) => {
-      if (!prev) return prev;
-      const nextHp = Math.max(0, prev.boss_hp - totalDamage);
-      // If this tap would kill, SKIP optimism to avoid overwriting the new spawned boss state.
-      if (nextHp === 0) return prev;
-      return { ...prev, boss_hp: nextHp };
-    });
   }
 
-  try {
-    const res = await fetch("/api/boss", {
+  function onTapButtonClick() {
+    playClick();
+    handleTap();
+  }
+
+  // ---------- AUTO TAPPER (accumulate DPS every second) ----------
+  useEffect(() => {
+    const battle = mode === "solo" ? soloRealtime : coopRealtime;
+    const autoTapperDps = upgradesData?.stats?.autoTapperDps || 0;
+    if (!battle || battle.boss_hp <= 0 || !autoTapperDps || autoTapperDps <= 0) return;
+
+    const interval = setInterval(() => {
+      setAccumulatedAutoTapDamage((prev) => prev + autoTapperDps);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [mode, soloRealtime, coopRealtime, upgradesData?.stats?.autoTapperDps]);
+
+  // ---------- COOP CREATE ----------
+  function handleCoopCreate() {
+    setCoopCreating(true);
+    setCoopError("");
+    fetch("/api/boss", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = await res.json();
-
-    // Always clear the accumulator after a sent tap
-    setAccumulatedAutoTapDamage(0);
-
-    // Increment total_taps via backend (no client-side SQL)
-    try {
-      await fetch("/api/boss", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "increment_total_taps", userId, amount: 1 }),
-      });
-    } catch (err) {
-      console.error("Failed to increment total_taps:", err);
-    }
-
-    if (data?.boss_defeated) {
-      // Victory animation; realtime will push the new level & HP
-      setShowCelebration(true);
-      setTimeout(() => setShowCelebration(false), 1600);
-
-      // Refresh profile (coins etc.)
-      try {
-        const newProfile = await fetch(`/api/boss?action=profile&userId=${userId}`).then((r) => r.json());
-        setProfileData(newProfile);
-      } catch (e) {
-        console.error("Failed to refresh profile after boss kill:", e);
-      }
-
-      setTapCount(0);
-      return;
-    }
-
-    // No kill: just bump local tap count; realtime covers HP sync
-    setTapCount((prev) => prev + 1);
-  } catch (error) {
-    console.error("Error sending tap damage:", error);
-  }
-}
-
-
-
-// --- TAP BUTTON HANDLER ---
-function onTapButtonClick() {
-  playClick();
-  handleTap();
-}
-
-// --- AUTO TAPPER DAMAGE (SOLO & COOP) ---
-// This should run in both solo and coop, tick every second.
-useEffect(() => {
-  const battle = mode === "solo" ? soloRealtime : coopRealtime;
-  const autoTapperDps = upgradesData?.stats?.autoTapperDps || 0;
-  if (
-    !battle ||
-    battle.boss_hp <= 0 ||
-    !autoTapperDps ||
-    autoTapperDps <= 0 ||
-    (mode !== "solo" && mode !== "coop")
-  )
-    return;
-
-  // Every second, add DPS to accumulator
-  const interval = setInterval(() => {
-    setAccumulatedAutoTapDamage((prev) => prev + autoTapperDps);
-  }, 1000);
-
-  return () => clearInterval(interval);
-}, [mode, soloRealtime, coopRealtime, upgradesData?.stats?.autoTapperDps]);
-
-// --- COOP CREATE ---
-function handleCoopCreate() {
-  setCoopCreating(true);
-  setCoopError("");
-  fetch("/api/boss", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "coop_create", userId }),
-  })
-    .then((r) => r.json())
-    .then((data) => {
-      if (!data.session) throw new Error("No session returned");
-      setRoomCode(data.session.room_code);
-      setMode("coop"); // This triggers coopRealtime to start
+      body: JSON.stringify({ action: "coop_create", userId }),
     })
-    .catch(() => setCoopError("Failed to create session. Please try again."))
-    .finally(() => setCoopCreating(false));
-}
-
-// --- COOP JOIN ---
-function handleCoopJoin() {
-  setCoopJoining(true);
-  setCoopError("");
-  fetch("/api/boss", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "coop_join", roomCode: roomCode.trim(), userId }),
-  })
-    .then((r) => r.json())
-    .then((data) => {
-      if (data.session) {
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.session) throw new Error("No session returned");
         setRoomCode(data.session.room_code);
-        setMode("coop"); // This triggers coopRealtime to start
-      } else setCoopError("Failed to join alliance. Check code.");
-    })
-    .catch(() => setCoopError("Failed to join alliance."))
-    .finally(() => setCoopJoining(false));
-}
+        setMode("coop");
+      })
+      .catch(() => setCoopError("Failed to create session. Please try again."))
+      .finally(() => setCoopCreating(false));
+  }
 
-  // --- LOADING WHEEL (no intrusive overlay) ---
+  // ---------- COOP JOIN ----------
+  function handleCoopJoin() {
+    setCoopJoining(true);
+    setCoopError("");
+    fetch("/api/boss", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "coop_join", roomCode: roomCode.trim(), userId }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.session) {
+          setRoomCode(data.session.room_code);
+          setMode("coop");
+        } else setCoopError("Failed to join alliance. Check code.");
+      })
+      .catch(() => setCoopError("Failed to join alliance."))
+      .finally(() => setCoopJoining(false));
+  }
+
+  // ---------- LOADING ----------
   if (pageLoading) {
     return (
       <div className="boss-bg min-h-screen flex items-center justify-center">
@@ -554,22 +512,18 @@ function handleCoopJoin() {
     );
   }
 
-  // --- MAIN MENU ---
+  // ---------- MAIN MENU ----------
   if (!mode) {
     return (
       <div className="boss-bg min-h-screen flex items-center justify-center px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
           {/* Profile Header */}
           {profileData && (
             <div className="relative mb-6">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                onClick={() => setShowProfileDropdown((v) => !v)}
                 className="w-full boss-glass-panel p-3 shadow-2xl border border-orange-500/40 flex items-center justify-between"
               >
                 <div className="flex items-center space-x-2">
@@ -590,9 +544,7 @@ function handleCoopJoin() {
                     <div className="text-orange-50 font-bold text-sm">
                       {profileData.profile.profile_name}
                     </div>
-                    <div className="text-orange-200 text-xs">
-                      Level {profileData.profile.total_level}
-                    </div>
+                    <div className="text-orange-200 text-xs">Level {profileData.profile.total_level}</div>
                   </div>
                 </div>
                 <ChevronDown className="text-orange-200" size={16} />
@@ -704,15 +656,11 @@ function handleCoopJoin() {
     );
   }
 
-  // --- COOP CREATE / JOIN SCREENS ---
+  // ---------- COOP CREATE ----------
   if (mode === "coop-create" && !coopRealtime) {
     return (
       <div className="boss-bg min-h-screen flex items-center justify-center px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
           <div className="boss-glass-panel p-8 shadow-3xl border border-orange-500/30">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-orange-100 mb-2">Forge Alliance</h2>
@@ -727,9 +675,7 @@ function handleCoopJoin() {
             >
               <div className="flex items-center justify-center space-x-3">
                 <Flame size={24} />
-                <span className="text-xl font-bold">
-                  {coopCreating ? "Forging..." : "Create Alliance"}
-                </span>
+                <span className="text-xl font-bold">{coopCreating ? "Forging..." : "Create Alliance"}</span>
               </div>
             </motion.button>
             {coopError && (
@@ -737,10 +683,7 @@ function handleCoopJoin() {
                 {coopError}
               </div>
             )}
-            <button
-              onClick={() => setMode("")}
-              className="w-full mt-4 text-orange-300 hover:text-orange-100 transition-colors"
-            >
+            <button onClick={() => setMode("")} className="w-full mt-4 text-orange-300 hover:text-orange-100 transition-colors">
               ← Back to menu
             </button>
           </div>
@@ -749,14 +692,12 @@ function handleCoopJoin() {
       </div>
     );
   }
+
+  // ---------- COOP JOIN ----------
   if (mode === "coop-join" && !coopRealtime) {
     return (
       <div className="boss-bg min-h-screen flex items-center justify-center px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
           <div className="boss-glass-panel p-8 shadow-3xl border border-orange-500/30">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-orange-100 mb-2">Join Alliance</h2>
@@ -780,9 +721,7 @@ function handleCoopJoin() {
               >
                 <div className="flex items-center justify-center space-x-3">
                   <Users size={24} />
-                  <span className="text-xl font-bold">
-                    {coopJoining ? "Joining..." : "Join Alliance"}
-                  </span>
+                  <span className="text-xl font-bold">{coopJoining ? "Joining..." : "Join Alliance"}</span>
                 </div>
               </motion.button>
               {coopError && (
@@ -791,10 +730,7 @@ function handleCoopJoin() {
                 </div>
               )}
             </div>
-            <button
-              onClick={() => setMode("")}
-              className="w-full mt-4 text-orange-300 hover:text-orange-100 transition-colors"
-            >
+            <button onClick={() => setMode("")} className="w-full mt-4 text-orange-300 hover:text-orange-100 transition-colors">
               ← Back to menu
             </button>
           </div>
@@ -804,10 +740,8 @@ function handleCoopJoin() {
     );
   }
 
-  // --- BATTLE UI (SOLO/COOP) ---
-   const isBattleLoading =
-  (mode === "solo" && !soloRealtime) || (mode === "coop" && !coopRealtime);
-
+  // ---------- BATTLE UI ----------
+  const isBattleLoading = (mode === "solo" && !soloRealtime) || (mode === "coop" && !coopRealtime);
   if (!upgradesData || !battleData || isBattleLoading) {
     return (
       <div className="boss-bg min-h-screen flex flex-col items-center justify-center px-4">
@@ -822,12 +756,10 @@ function handleCoopJoin() {
     if (!soloRealtime?.next_reset) return "";
     const now = new Date();
     const resetDate = new Date(soloRealtime.next_reset);
-    const diffMs = resetDate - now;
+    const diffMs = resetDate.getTime() - now.getTime();
     if (diffMs <= 0) return "0d 0h 0m";
     const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    const hours = Math.floor(
-      (diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-    );
+    const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     return `${days}d ${hours}h ${minutes}m`;
   }
@@ -841,17 +773,13 @@ function handleCoopJoin() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+              onClick={() => setShowProfileDropdown((v) => !v)}
               className="w-full boss-glass-panel p-3 shadow-2xl border border-orange-500/30 flex items-center justify-between"
             >
               <div className="flex items-center space-x-2">
                 {profileData.profile.profile_icon ? (
                   isImageUrl(profileData.profile.profile_icon) ? (
-                    <img
-                      src={profileData.profile.profile_icon}
-                      alt="icon"
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
+                    <img src={profileData.profile.profile_icon} alt="icon" className="w-8 h-8 rounded-full object-cover" />
                   ) : (
                     <i className={`${profileData.profile.profile_icon} text-white`}></i>
                   )
@@ -859,12 +787,8 @@ function handleCoopJoin() {
                   <div className="text-2xl">🙂</div>
                 )}
                 <div className="text-left">
-                  <div className="text-orange-50 font-bold text-sm">
-                    {profileData.profile.profile_name}
-                  </div>
-                  <div className="text-orange-200 text-xs">
-                    Level {profileData.profile.total_level}
-                  </div>
+                  <div className="text-orange-50 font-bold text-sm">{profileData.profile.profile_name}</div>
+                  <div className="text-orange-200 text-xs">Level {profileData.profile.total_level}</div>
                 </div>
               </div>
               <ChevronDown className="text-orange-300" size={16} />
@@ -906,26 +830,17 @@ function handleCoopJoin() {
         )}
 
         {/* Header Stats Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="boss-glass-panel p-4 shadow-2xl border border-orange-500/30"
-        >
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="boss-glass-panel p-4 shadow-2xl border border-orange-500/30">
           <div className="flex justify-between items-center text-sm">
             <div className="text-orange-100">
               <div className="flex items-center space-x-1 mb-1">
                 <Crown size={16} className="text-yellow-400" />
-                <span className="font-bold">
-                  Level {battleData.current_level || battleData.boss_level}
-                </span>
+                <span className="font-bold">Level {battleData.current_level || battleData.boss_level}</span>
               </div>
-             <div className="flex items-center space-x-1">
-  <CoinImg className="w-4 h-4 inline-block align-middle" />
-  <span className="text-xs opacity-80">
-    {formatNumberShort(profileData.stats.availableCoins)}
-  </span>
-</div>
-
+              <div className="flex items-center space-x-1">
+                <CoinImg className="w-4 h-4 inline-block align-middle" />
+                <span className="text-xs opacity-80">{formatNumberShort(profileData?.stats?.availableCoins || 0)}</span>
+              </div>
             </div>
             {mode === "solo" && (
               <div className="text-orange-100 text-right">
@@ -939,9 +854,7 @@ function handleCoopJoin() {
             {mode === "coop" && coopRealtime && (
               <div className="text-orange-100 text-right">
                 <div className="font-bold text-sm mb-1">{coopRealtime.room_code}</div>
-                <div className="text-xs opacity-80">
-                  {(coopRealtime.players?.length || 1)}/5 warriors
-                </div>
+                <div className="text-xs opacity-80">{(coopRealtime.players?.length || 1)}/5 warriors</div>
               </div>
             )}
           </div>
@@ -953,7 +866,6 @@ function handleCoopJoin() {
           animate={{ opacity: 1, scale: 1 }}
           className="boss-glass-panel p-6 shadow-2xl border border-orange-500/30 text-center relative overflow-hidden boss-arena"
         >
-          {/* Ambient flicker and flare */}
           <div className="boss-flicker" />
           <div className="boss-flare" />
 
@@ -972,9 +884,7 @@ function handleCoopJoin() {
                 style={{
                   left: `calc(50% + ${dmg.x}px)`,
                   top: `calc(40% + ${dmg.y}px)`,
-                  textShadow: dmg.isCrit
-                    ? "0 0 20px #fbbf24"
-                    : "0 0 10px #fb923c",
+                  textShadow: dmg.isCrit ? "0 0 20px #fbbf24" : "0 0 10px #fb923c",
                 }}
               >
                 {dmg.isCrit && "💥"}
@@ -984,13 +894,9 @@ function handleCoopJoin() {
             ))}
           </AnimatePresence>
 
-          {/* Boss Emoji / Image */}
+          {/* Boss Emoji */}
           <motion.div
-            animate={
-              showCelebration
-                ? { scale: [1, 1.3, 1], rotate: [0, 10, -10, 0] }
-                : { scale: 1, rotate: 0 }
-            }
+            animate={showCelebration ? { scale: [1, 1.3, 1], rotate: [0, 10, -10, 0] } : { scale: 1, rotate: 0 }}
             transition={{ duration: 0.6 }}
             className="text-7xl mb-4 drop-shadow-2xl"
             style={{ textShadow: "0 0 32px #ef4444, 0 0 64px #7c2d12" }}
@@ -998,7 +904,7 @@ function handleCoopJoin() {
             {battleData.boss_emoji}
           </motion.div>
 
-          {/* Boss Health Bar */}
+          {/* Boss HP */}
           <div className="mb-6">
             <div className="flex justify-between text-orange-100 mb-2 text-sm">
               <span className="font-bold">Boss HP</span>
@@ -1018,105 +924,66 @@ function handleCoopJoin() {
             </div>
           </div>
 
-          {/* Strike Action Button */}
+          {/* Strike Button */}
           <div className="relative mb-6">
-            <motion.button
-              whileHover={{ scale: 1.07 }}
-              whileTap={{ scale: 0.94, rotate: [0, -5, 5, 0] }}
-              onClick={onTapButtonClick}
-              className="boss-strike-button"
-            >
+            <motion.button whileHover={{ scale: 1.07 }} whileTap={{ scale: 0.94, rotate: [0, -5, 5, 0] }} onClick={onTapButtonClick} className="boss-strike-button">
               <div className="absolute inset-0 boss-strike-gloss"></div>
               <div className="relative z-10 flex flex-col items-center justify-center h-full">
                 <motion.div
-                  animate={{
-                    scale: [1, 1.2, 1],
-                    textShadow: [
-                      "0 0 10px #fbbf24",
-                      "0 0 24px #fbbf24",
-                      "0 0 10px #fbbf24",
-                    ],
-                  }}
+                  animate={{ scale: [1, 1.2, 1], textShadow: ["0 0 10px #fbbf24", "0 0 24px #fbbf24", "0 0 10px #fbbf24"] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
                   className="text-5xl mb-2"
                 >
                   🔥
                 </motion.div>
-                <div className="text-lg font-black tracking-wider drop-shadow-lg">
-                  STRIKE!
-                </div>
-                <div className="text-xs opacity-90 mt-1">
-                  {formatNumberShort(upgradesData?.stats?.tapPower || 1)} DMG
-                </div>
+                <div className="text-lg font-black tracking-wider drop-shadow-lg">STRIKE!</div>
+                <div className="text-xs opacity-90 mt-1">{formatNumberShort(upgradesData?.stats?.tapPower || 1)} DMG</div>
               </div>
             </motion.button>
           </div>
-         <div className="text-orange-200 space-y-1 text-sm">
-  <div className="flex items-center justify-center">
-   <span>
-  Strikes: {tapCount} | +{formatNumberShort(getBossReward(currentLevel))}
-</span>
-<CoinImg className="w-5 h-5 inline-block align-middle ml-1" />
-  </div>
-  {upgradesData?.stats?.autoTapperDps > 0 && (
-    <div className="text-green-400">
-      ⚡ Auto-Strike: {formatNumberShort(upgradesData.stats.autoTapperDps)} DPS
-    </div>
+
+          {/* Stats under button */}
+          <div className="text-orange-200 space-y-1 text-sm">
+            <div className="flex items-center justify-center">
+              <span>
+                Strikes: {tapCount} | +{formatNumberShort(getBossReward(currentLevel))}
+              </span>
+              <CoinImg className="w-5 h-5 inline-block align-middle ml-1" />
+            </div>
+            {upgradesData?.stats?.autoTapperDps > 0 && (
+              <div className="text-green-400">⚡ Auto-Strike: {formatNumberShort(upgradesData.stats.autoTapperDps)} DPS</div>
             )}
           </div>
         </motion.div>
 
-        {/* Upgrades Panel (view-only in boss mode) */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="boss-glass-panel p-4 shadow-2xl border border-orange-500/30"
-        >
-          <h3 className="text-xl font-bold text-orange-100 mb-1 text-center">
-            ⚔️ UPGRADES ⚔️
-          </h3>
-          <p className="text-xs text-orange-200 text-center mb-3">
-            (Manage upgrades in main game)
-          </p>
+        {/* Upgrades (view only) */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="boss-glass-panel p-4 shadow-2xl border border-orange-500/30">
+          <h3 className="text-xl font-bold text-orange-100 mb-1 text-center">⚔️ UPGRADES ⚔️</h3>
+          <p className="text-xs text-orange-200 text-center mb-3">(Manage upgrades in main game)</p>
           <div className="grid grid-cols-2 gap-2 text-orange-100 text-center text-xs font-bold">
             <div className="boss-upgrade-btn boss-upgrade-red cursor-not-allowed opacity-80 p-2">
               <div className="mb-1 flex items-center justify-between">
                 <Zap size={16} className="text-yellow-400" />
               </div>
               <div>Tap Power</div>
-              <div className="opacity-90">
-                Lv.{formatNumberShort(upgradesData?.upgrades?.tap_power_upgrades || 1)}
-              </div>
-              <div className="opacity-70">
-                {formatNumberShort(upgradesData?.stats?.tapPower || 1)} DMG
-              </div>
+              <div className="opacity-90">Lv.{formatNumberShort(upgradesData?.upgrades?.tap_power_upgrades || 1)}</div>
+              <div className="opacity-70">{formatNumberShort(upgradesData?.stats?.tapPower || 1)} DMG</div>
             </div>
             <div className="boss-upgrade-btn boss-upgrade-green cursor-not-allowed opacity-80 p-2">
               <div className="mb-1 flex items-center justify-between">
                 <Settings size={16} className="text-green-400" />
               </div>
               <div>Auto Tapper</div>
-              <div className="opacity-90">
-                Lv.{formatNumberShort(upgradesData?.upgrades?.auto_tapper_upgrades || 0)}
-              </div>
-              <div className="opacity-70">
-                {formatNumberShort(upgradesData?.stats?.autoTapperDps || 0)} DPS
-              </div>
+              <div className="opacity-90">Lv.{formatNumberShort(upgradesData?.upgrades?.auto_tapper_upgrades || 0)}</div>
+              <div className="opacity-70">{formatNumberShort(upgradesData?.stats?.autoTapperDps || 0)} DPS</div>
             </div>
           </div>
         </motion.div>
 
-        
-
-        {/* Victory Celebration Overlay */}
+        {/* Celebration */}
         <AnimatePresence>
           {showCelebration && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0 }}
-              className="fixed inset-0 flex items-center justify-center pointer-events-none z-50"
-            >
+            <motion.div initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0 }} className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
               <motion.div
                 animate={{ scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] }}
                 transition={{ duration: 0.8 }}
@@ -1129,21 +996,18 @@ function handleCoopJoin() {
           )}
         </AnimatePresence>
 
-        {/* Return to Main Game Button */}
-        <div className="text-center pt-2">
-          <button
-            onClick={() => router.push("/")}
-            className="text-orange-300 hover:text-orange-100 transition-colors text-sm"
-          >
+        {/* Footer Buttons */}
+        <div className="text-center pt-2 flex items-center justify-center gap-3">
+          <button onClick={() => router.push("/")} className="text-orange-300 hover:text-orange-100 transition-colors text-sm">
             ← Return to Tap Tap Two
           </button>
-                  <button
-              onClick={() => setMuted((m) => !m)}
-              className="flex items-center justify-center px-4 py-1 text-[#4a5568] hover:bg-gray-100 rounded-full border border-white/20"
-              aria-label={muted ? "Unmute sounds" : "Mute sounds"}
-            >
-              <i className={`fas ${muted ? "fa-volume-mute" : "fa-volume-up"}`}></i>
-            </button>
+          <button
+            onClick={() => setMuted((m) => !m)}
+            className="flex items-center justify-center px-4 py-1 text-[#4a5568] hover:bg-gray-100 rounded-full border border-white/20"
+            aria-label={muted ? "Unmute sounds" : "Mute sounds"}
+          >
+            <i className={`fas ${muted ? "fa-volume-mute" : "fa-volume-up"}`}></i>
+          </button>
         </div>
       </div>
       <style jsx global>{bossCSS}</style>
@@ -1163,156 +1027,152 @@ const bossCSS = `
   overflow: hidden;
 }
 
-  .boss-glass-panel {
-    background: linear-gradient(110deg, rgba(35,27,33,0.72) 80%, rgba(70,21,18,0.22) 100%);
-    box-shadow: 0 8px 40px #0d070b77, 0 1px 4px #ff6d0057 inset;
-    border-radius: 2rem;
-    border: 1.5px solid #3913122c;
-    backdrop-filter: blur(18px) brightness(0.95);
-  }
-  .boss-arena { position: relative; }
-  .boss-flicker {
-    pointer-events: none;
-    position: absolute; top: -12px; left: 0; right: 0;
-    height: 16px;
-    background: radial-gradient(ellipse at 50% 40%, #ea580c44 0%, transparent 60%);
-    animation: flicker-lights 2.7s infinite alternate;
-    z-index: 1;
-  }
-  @keyframes flicker-lights {
-    0%   { opacity: 0.92; filter: blur(1px); }
-    11%  { opacity: 0.7; }
-    22%  { opacity: 0.88; }
-    42%  { opacity: 0.6; }
-    62%  { opacity: 1; }
-    73%  { opacity: 0.74; }
-    100% { opacity: 0.88; filter: blur(2px); }
-  }
-  .boss-flare {
-    pointer-events: none;
-    position: absolute; left: 50%; top: 50%;
-    width: 260px; height: 60px;
-    transform: translate(-50%, -40%);
-    background: radial-gradient(circle, #ff6d0066 0%, transparent 85%);
-    opacity: 0.13;
-    filter: blur(8px);
-    z-index: 1;
-    animation: arena-flare 4s infinite alternate;
-  }
-  @keyframes arena-flare {
-    0%   { opacity: 0.11; }
-    51%  { opacity: 0.20; }
-    100% { opacity: 0.13; }
-  }
-  .boss-hp-bar {
-    width: 100%;
-    height: 20px;
-    background: linear-gradient(90deg, #18151e 0%, #27191c 100%);
-    border-radius: 10px;
-    border: 1.5px solid #e6a34455;
-    overflow: hidden;
-    box-shadow: 0 2px 12px #6d260466, 0 0.5px 1.5px #ed8033a8 inset;
-  }
-  .boss-hp-bar-inner {
-    background: linear-gradient(92deg, #ff4747 5%, #ffaf38 90%);
-    height: 100%;
-    border-radius: 10px 9px 9px 10px;
-    position: relative;
-  }
-  .boss-hp-bar-glow {
-    position: absolute;
-    inset: 0;
-    border-radius: 10px;
-    background: linear-gradient(91deg, #fbbf2496 40%, #fdba7488 90%, transparent 100%);
-    opacity: 0.4;
-    filter: blur(3px);
-    pointer-events: none;
-  }
-  .boss-strike-button {
-    width: 11rem; height: 11rem;
-    background: radial-gradient(ellipse at 70% 18%, #fffae5 7%, #ff6d00e0 49%, #6d1500 100%);
-    border-radius: 50%;
-    border: 4px solid #ffe18b55;
-    box-shadow: 0 0 40px #fb923caa, 0 0 90px #7c2d12, 0 4px 18px #000000cc;
-    overflow: hidden;
-    position: relative;
-    cursor: pointer;
-    user-select: none;
-    outline: none;
-    transition: box-shadow 0.2s;
-  }
-  .boss-strike-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.7;
-  }
-  .boss-strike-gloss {
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 2;
-    background: linear-gradient(170deg, rgba(255,255,255,0.19) 15%, rgba(251,191,36,0.1) 49%, rgba(0,0,0,0.13) 70%);
-    pointer-events: none;
-    mix-blend-mode: lighten;
-  }
-  .boss-button-solo, .boss-button-coop, .boss-button-join {
-    width: 100%;
-    color: #fff;
-    border-radius: 2rem;
-    padding: 1.5rem;
-    font-weight: 700;
-    border: 1.5px solid #fbbf2440;
-    backdrop-filter: blur(4px);
-    transition: box-shadow 0.2s, border 0.2s;
-  }
-  .boss-button-solo {
-    background: linear-gradient(91deg, #9a3412 2%, #ef4444 97%);
-    box-shadow: 0 8px 24px #7c2d12aa, 0 2px 12px #11111111;
-  }
-  .boss-button-coop {
-    background: linear-gradient(95deg, #ef4444 2%, #f59e42 97%);
-    box-shadow: 0 8px 24px #f59e4299, 0 2px 12px #11111111;
-  }
-  .boss-button-join {
-    background: linear-gradient(92deg, #b91c1c 2%, #ef4444 49%, #fb7185 97%);
-    box-shadow: 0 8px 24px #b91c1c99, 0 2px 12px #11111111;
-  }
-  .boss-input {
-    width: 100%;
-    padding: 1.2rem 1.5rem;
-    border-radius: 1.5rem;
-    background: #18151e77;
-    border: 1.5px solid #fbbf2450;
-    color: #ffecc1;
-    font-size: 1.5rem;
-    font-weight: 700;
-    text-align: center;
-    letter-spacing: 0.12em;
-    outline: none;
-    margin-bottom: 0.5rem;
-  }
-  .boss-upgrade-btn {
-    border-radius: 1rem;
-    font-weight: 700;
-    padding: 0.8rem 0.5rem;
-    box-shadow: 0 2px 8px #0d070b44;
-    border: 1.5px solid #ffffff11;
-    background: linear-gradient(120deg, #231b21cc 70%, #391a15cc 100%);
-    color: #fff;
-    user-select: none;
-  }
-  .boss-upgrade-red    { background: linear-gradient(92deg, #b91c1c 60%, #ef4444 100%); }
-  .boss-upgrade-green  { background: linear-gradient(92deg, #166534 60%, #22d3ee 100%); }
-  .boss-upgrade-purple { background: linear-gradient(91deg, #a21caf 60%, #ec4899 100%); }
-  .boss-upgrade-yellow { background: linear-gradient(92deg, #f59e42 60%, #fbbf24 100%); }
-  .flicker {
-    animation: flicker-text 2.2s infinite alternate;
-  }
-  @keyframes flicker-text {
-    0%, 19% { filter: brightness(0.97); text-shadow: 0 0 24px #fbbf24, 0 0 80px #d97706; }
-    23%, 31% { filter: brightness(1.03); }
-    47% { filter: brightness(1.1); }
-    51%, 62% { filter: brightness(0.85); }
-    89% { filter: brightness(1.11); }
-    100% { filter: brightness(1); }
-  }
-  .shadow-3xl {
-    box-shadow: 0 35px 60px -12px rgba(0,0,0,0.36);
-  }
+.boss-glass-panel {
+  background: linear-gradient(110deg, rgba(35,27,33,0.72) 80%, rgba(70,21,18,0.22) 100%);
+  box-shadow: 0 8px 40px #0d070b77, 0 1px 4px #ff6d0057 inset;
+  border-radius: 2rem;
+  border: 1.5px solid #3913122c;
+  backdrop-filter: blur(18px) brightness(0.95);
+}
+.boss-arena { position: relative; }
+.boss-flicker {
+  pointer-events: none;
+  position: absolute; top: -12px; left: 0; right: 0;
+  height: 16px;
+  background: radial-gradient(ellipse at 50% 40%, #ea580c44 0%, transparent 60%);
+  animation: flicker-lights 2.7s infinite alternate;
+  z-index: 1;
+}
+@keyframes flicker-lights {
+  0%   { opacity: 0.92; filter: blur(1px); }
+  11%  { opacity: 0.7; }
+  22%  { opacity: 0.88; }
+  42%  { opacity: 0.6; }
+  62%  { opacity: 1; }
+  73%  { opacity: 0.74; }
+  100% { opacity: 0.88; filter: blur(2px); }
+}
+.boss-flare {
+  pointer-events: none;
+  position: absolute; left: 50%; top: 50%;
+  width: 260px; height: 60px;
+  transform: translate(-50%, -40%);
+  background: radial-gradient(circle, #ff6d0066 0%, transparent 85%);
+  opacity: 0.13;
+  filter: blur(8px);
+  z-index: 1;
+  animation: arena-flare 4s infinite alternate;
+}
+@keyframes arena-flare {
+  0%   { opacity: 0.11; }
+  51%  { opacity: 0.20; }
+  100% { opacity: 0.13; }
+}
+.boss-hp-bar {
+  width: 100%;
+  height: 20px;
+  background: linear-gradient(90deg, #18151e 0%, #27191c 100%);
+  border-radius: 10px;
+  border: 1.5px solid #e6a34455;
+  overflow: hidden;
+  box-shadow: 0 2px 12px #6d260466, 0 0.5px 1.5px #ed8033a8 inset;
+}
+.boss-hp-bar-inner {
+  background: linear-gradient(92deg, #ff4747 5%, #ffaf38 90%);
+  height: 100%;
+  border-radius: 10px 9px 9px 10px;
+  position: relative;
+}
+.boss-hp-bar-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: linear-gradient(91deg, #fbbf2496 40%, #fdba7488 90%, transparent 100%);
+  opacity: 0.4;
+  filter: blur(3px);
+  pointer-events: none;
+}
+.boss-strike-button {
+  width: 11rem; height: 11rem;
+  background: radial-gradient(ellipse at 70% 18%, #fffae5 7%, #ff6d00e0 49%, #6d1500 100%);
+  border-radius: 50%;
+  border: 4px solid #ffe18b55;
+  box-shadow: 0 0 40px #fb923caa, 0 0 90px #7c2d12, 0 4px 18px #000000cc;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  transition: box-shadow 0.2s;
+}
+.boss-strike-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+.boss-strike-gloss {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 2;
+  background: linear-gradient(170deg, rgba(255,255,255,0.19) 15%, rgba(251,191,36,0.1) 49%, rgba(0,0,0,0.13) 70%);
+  pointer-events: none;
+  mix-blend-mode: lighten;
+}
+.boss-button-solo, .boss-button-coop, .boss-button-join {
+  width: 100%;
+  color: #fff;
+  border-radius: 2rem;
+  padding: 1.5rem;
+  font-weight: 700;
+  border: 1.5px solid #fbbf2440;
+  backdrop-filter: blur(4px);
+  transition: box-shadow 0.2s, border 0.2s;
+}
+.boss-button-solo {
+  background: linear-gradient(91deg, #9a3412 2%, #ef4444 97%);
+  box-shadow: 0 8px 24px #7c2d12aa, 0 2px 12px #11111111;
+}
+.boss-button-coop {
+  background: linear-gradient(95deg, #ef4444 2%, #f59e42 97%);
+  box-shadow: 0 8px 24px #f59e4299, 0 2px 12px #11111111;
+}
+.boss-button-join {
+  background: linear-gradient(92deg, #b91c1c 2%, #ef4444 49%, #fb7185 97%);
+  box-shadow: 0 8px 24px #b91c1c99, 0 2px 12px #11111111;
+}
+.boss-input {
+  width: 100%;
+  padding: 1.2rem 1.5rem;
+  border-radius: 1.5rem;
+  background: #18151e77;
+  border: 1.5px solid #fbbf2450;
+  color: #ffecc1;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.12em;
+  outline: none;
+  margin-bottom: 0.5rem;
+}
+.boss-upgrade-btn {
+  border-radius: 1rem;
+  font-weight: 700;
+  padding: 0.8rem 0.5rem;
+  box-shadow: 0 2px 8px #0d070b44;
+  border: 1.5px solid #ffffff11;
+  background: linear-gradient(120deg, #231b21cc 70%, #391a15cc 100%);
+  color: #fff;
+  user-select: none;
+}
+.boss-upgrade-red    { background: linear-gradient(92deg, #b91c1c 60%, #ef4444 100%); }
+.boss-upgrade-green  { background: linear-gradient(92deg, #166534 60%, #22d3ee 100%); }
+.boss-upgrade-purple { background: linear-gradient(91deg, #a21caf 60%, #ec4899 100%); }
+.boss-upgrade-yellow { background: linear-gradient(92deg, #f59e42 60%, #fbbf24 100%); }
+.flicker { animation: flicker-text 2.2s infinite alternate; }
+@keyframes flicker-text {
+  0%, 19% { filter: brightness(0.97); text-shadow: 0 0 24px #fbbf24, 0 0 80px #d97706; }
+  23%, 31% { filter: brightness(1.03); }
+  47% { filter: brightness(1.1); }
+  51%, 62% { filter: brightness(0.85); }
+  89% { filter: brightness(1.11); }
+  100% { filter: brightness(1); }
+}
+.shadow-3xl { box-shadow: 0 35px 60px -12px rgba(0,0,0,0.36); }
 `;
