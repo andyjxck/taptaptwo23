@@ -1,36 +1,55 @@
 import { createClient } from "@supabase/supabase-js";
 
+// Server route: save/load anonymous game progress by saveId
+// Uses SERVICE_ROLE_KEY so upsert works reliably.
+
 export async function POST(req) {
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-  const { userId, action, gameData } = await req.json();
+  try {
+    const { action, saveId, gameData } = await req.json();
 
-  if (!userId) {
-    return new Response(JSON.stringify({ error: "Missing userId" }), { status: 400 });
-  }
-
-  if (action === "save") {
-    const { data, error } = await supabase
-      .from("towers_progress")
-      .upsert({ user_id: userId, game_data: gameData, updated_at: new Date() });
-
-    if (error) {
-      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return new Response(JSON.stringify({ error: "Supabase env vars missing" }), { status: 500 });
     }
-    return new Response(JSON.stringify({ success: true }), { status: 200 });
-  }
 
-  if (action === "load") {
-    const { data, error } = await supabase
-      .from("towers_progress")
-      .select("game_data")
-      .eq("user_id", userId)
-      .single();
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
 
-    if (error) {
-      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    if (!action || !saveId) {
+      return new Response(JSON.stringify({ error: "Missing action or saveId" }), { status: 400 });
     }
-    return new Response(JSON.stringify({ success: true, gameData: data?.game_data || null }), { status: 200 });
-  }
 
-  return new Response(JSON.stringify({ error: "Invalid action" }), { status: 400 });
+    if (action === "save") {
+      const { error } = await supabase
+        .from("arcanesiege_progress")
+        .upsert({
+          save_id: saveId,
+          game_data: gameData || null,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (error) {
+        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      }
+      return new Response(JSON.stringify({ success: true }), { status: 200 });
+    }
+
+    if (action === "load") {
+      const { data, error } = await supabase
+        .from("arcanesiege_progress")
+        .select("game_data")
+        .eq("save_id", saveId)
+        .maybeSingle();
+
+      if (error) {
+        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      }
+      return new Response(JSON.stringify({ success: true, gameData: data?.game_data || null }), { status: 200 });
+    }
+
+    return new Response(JSON.stringify({ error: "Invalid action" }), { status: 400 });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: "Bad request", details: String(err) }), { status: 400 });
+  }
 }
