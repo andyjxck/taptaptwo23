@@ -618,94 +618,98 @@ const bossHp = getCoopBossHP(level, totalTapPower); // <<< FIX: pass level, tota
       });
     }
 
-    if (action === "coop_tap") {
-      const { roomCode, userId, damage } = body;
-      if (!roomCode)
-        return NextResponse.json({ error: "Room code is required" }, { status: 400 });
-      if (!userId)
-        return NextResponse.json({ error: "User ID is required" }, { status: 400 });
-      if (typeof damage !== "number" || damage <= 0)
-        return NextResponse.json({ error: "Valid damage required" }, { status: 400 });
+if (action === "coop_tap") {
+  const { roomCode, userId, damage } = body;
+  if (!roomCode)
+    return NextResponse.json({ error: "Room code is required" }, { status: 400 });
+  if (!userId)
+    return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+  if (typeof damage !== "number" || damage <= 0)
+    return NextResponse.json({ error: "Valid damage required" }, { status: 400 });
 
-      const { data: sessions } = await supabase
-        .from("boss_coop_sessions")
-        .select("*")
-        .eq("room_code", roomCode.toUpperCase())
-        .eq("is_active", true);
+  const { data: sessions } = await supabase
+    .from("boss_coop_sessions")
+    .select("*")
+    .eq("room_code", roomCode.toUpperCase())
+    .eq("is_active", true);
 
-      if (!sessions || sessions.length === 0)
-        return NextResponse.json({ error: "Session not found" }, { status: 404 });
+  if (!sessions || sessions.length === 0)
+    return NextResponse.json({ error: "Session not found" }, { status: 404 });
 
-      const sessionData = sessions[0];
-      const players = Array.isArray(sessionData.players) ? sessionData.players : [];
+  const sessionData = sessions[0];
+  const players = Array.isArray(sessionData.players) ? sessionData.players : [];
 
-      if (!players.includes(userId))
-        return NextResponse.json({ error: "User not in this session" }, { status: 403 });
+  if (!players.includes(userId))
+    return NextResponse.json({ error: "User not in this session" }, { status: 403 });
 
-      if (safe(sessionData.boss_hp) <= 0) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Boss already defeated. Wait for server to spawn new boss.",
-            current_boss_hp: sessionData.boss_hp,
-            needs_reload: true,
-          },
-          { status: 409 }
-        );
-      }
+  if (safe(sessionData.boss_hp) <= 0) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Boss already defeated. Wait for server to spawn new boss.",
+        current_boss_hp: sessionData.boss_hp,
+        needs_reload: true,
+      },
+      { status: 409 }
+    );
+  }
 
-      const newHp = Math.max(0, safe(sessionData.boss_hp) - damage);
-      const bossDefeated = newHp === 0;
-      let updatedSession;
+  const newHp = Math.max(0, safe(sessionData.boss_hp) - damage);
+  const bossDefeated = newHp === 0;
 
-      if (!bossDefeated) {
-        const { data: updateArr } = await supabase
-          .from("boss_coop_sessions")
-          .update({ boss_hp: newHp })
-          .eq("room_code", sessionData.room_code)
-          .select();
-        updatedSession = updateArr[0];
-   } else {
-const newLevel = safe(sessionData.boss_level) + 1;
-const totalTapPower = await getPlayersTotalTapPower(players);
-const newBossHp = getCoopBossHP(newLevel, totalTapPower); // <<< FIX: pass newLevel, totalTapPower!
+  // --- Not defeated: just reduce HP ---
+  if (!bossDefeated) {
+    const { data: updateArr } = await supabase
+      .from("boss_coop_sessions")
+      .update({ boss_hp: newHp })
+      .eq("room_code", sessionData.room_code)
+      .select();
 
+    const updatedSession = updateArr?.[0] ?? sessionData;
 
-  // Grab current coins for all players
-  const { data: playersCoinsData } = await supabase
-    .from("game_saves")
-    .select("user_id, coins")
-    .in("user_id", players);
-console.log("Players:", players);
-console.log("playersCoinsData:", playersCoinsData);
+    return NextResponse.json({
+      success: true,
+      boss_defeated: false,
+      coins_earned: 0,
+      session: {
+        ...updatedSession,
+        boss_emoji: getBossEmoji(updatedSession.boss_level),
+        coins_per_boss: getCoopCoinsPerBoss(updatedSession.boss_level),
+      },
+    });
+  }
 
-  // For each player, calculate and update coins (+50% of their own coins)
-  const rewards = [];
- await Promise.all(
-  playersCoinsData.map(async (p) => {
-    const reward = Math.floor(safe(p.coins) * 0.5);
-    rewards.push({ user_id: p.user_id, reward });
+  // --- Defeated: award fixed per-level reward, then advance level and respawn boss ---
+  const killedLevel = safe(sessionData.boss_level);
+  const perPlayerReward = getCoopCoinsPerBoss(killedLevel);
 
-    // Fetch total_coins_earned, defaulting to 0 if not present
-    const { data: userRow } = await supabase
-      .from("game_saves")
-      .select("total_coins_earned")
-      .eq("user_id", p.user_id)
-      .single();
-    const currentTotalEarned = safe(userRow?.total_coins_earned);
+  // Update each player's coins & total_coins_earned by a fixed per-level amount
+  await Promise.all(
+    players.map(async (uid) => {
+      const { data: row } = await supabase
+        .from("game_saves")
+        .select("coins,total_coins_earned")
+        .eq("user_id", uid)
+        .single();
 
-    await supabase
-      .from("game_saves")
-      .update({
-        coins: safe(p.coins) + reward,
-        total_coins_earned: currentTotalEarned + reward,
-      })
-      .eq("user_id", p.user_id);
-  })
-);
+      const currentCoins = safe(row?.coins);
+      const currentEarned = safe(row?.total_coins_earned);
 
+      await supabase
+        .from("game_saves")
+        .update({
+          coins: currentCoins + perPlayerReward,
+          total_coins_earned: currentEarned + perPlayerReward,
+        })
+        .eq("user_id", uid);
+    })
+  );
 
-  // Move up a level and reset boss HP
+  // Advance to next level and scale new boss HP by party total tap power
+  const newLevel = killedLevel + 1;
+  const totalTapPower = await getPlayersTotalTapPower(players);
+  const newBossHp = getCoopBossHP(newLevel, totalTapPower);
+
   const { data: updateArr } = await supabase
     .from("boss_coop_sessions")
     .update({
@@ -716,7 +720,15 @@ console.log("playersCoinsData:", playersCoinsData);
     .eq("room_code", sessionData.room_code)
     .select();
 
-  const updatedSession = updateArr[0];
+  const updatedSession = updateArr?.[0] ?? {
+    ...sessionData,
+    boss_level: newLevel,
+    boss_hp: newBossHp,
+    boss_max_hp: newBossHp,
+  };
+
+  // For transparency, return a rewards array (same reward for all)
+  const rewards = players.map((uid) => ({ user_id: uid, reward: perPlayerReward }));
 
   return NextResponse.json({
     success: true,
@@ -730,17 +742,6 @@ console.log("playersCoinsData:", playersCoinsData);
   });
 }
 
-      return NextResponse.json({
-        success: true,
-        boss_defeated: false,
-        coins_earned: 0,
-        session: {
-          ...updatedSession,
-          boss_emoji: getBossEmoji(updatedSession.boss_level),
-          coins_per_boss: getCoopCoinsPerBoss(updatedSession.boss_level),
-        },
-      });
-    }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
