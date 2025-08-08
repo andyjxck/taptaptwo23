@@ -226,10 +226,22 @@ function getBossReward(level) {
 }
 
 
-const currentLevel = battleData?.current_level || battleData?.boss_level || 1;
-const hpMax = getBossHp(currentLevel);
-const visibleBossHp = Math.max(0, (battleData?.boss_hp || 0) - accumulatedAutoTapDamage);
-const hpPercentage = Math.max(0, Math.min(100, (visibleBossHp / hpMax) * 100));
+// --- BOSS HP / PROGRESS (trust DB when available; prevents coop desync) ---
+const currentLevel = battleData?.current_level ?? battleData?.boss_level ?? 1;
+
+// Prefer boss_max_hp from the DB (coop scales by party tap power).
+// Fallback to local formula only if DB value is missing.
+const hpMax = (typeof battleData?.boss_max_hp === "number" && battleData.boss_max_hp > 0)
+  ? battleData.boss_max_hp
+  : getBossHp(currentLevel);
+
+// Always read current HP from DB, but visually subtract any batched auto-tap damage
+// to keep the bar smooth until we POST and reset the accumulator.
+const rawHp = typeof battleData?.boss_hp === "number" ? battleData.boss_hp : 0;
+const visibleBossHp = Math.max(0, rawHp - accumulatedAutoTapDamage);
+
+// Guard against divide-by-zero, clamp 0..100
+const hpPercentage = Math.max(0, Math.min(100, (visibleBossHp / Math.max(1, hpMax)) * 100));
 
 
 
@@ -303,19 +315,20 @@ async function handleTap() {
     });
     const data = await res.json();
 
-    // Reset auto tap damage accumulator (always)
-    setAccumulatedAutoTapDamage(0);
+// Reset auto tap damage accumulator (always)
+setAccumulatedAutoTapDamage(0);
 
-    // Increment total_taps in game_saves after a valid tap
-    try {
-      const { error } = await supabase
-        .from("game_saves")
-        .update({ total_taps: supabase.literal('total_taps + 1') })
-        .eq("user_id", userId);
-      if (error) throw error;
-    } catch (err) {
-      console.error("Failed to increment total_taps:", err);
-    }
+// Increment total_taps safely via the backend (avoids client-side SQL & RLS issues)
+try {
+  await fetch("/api/boss", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "increment_total_taps", userId, amount: 1 }),
+  });
+} catch (err) {
+  console.error("Failed to increment total_taps:", err);
+}
+
 
     // Victory celebration (let realtime reload the battle state)
     if (data.boss_defeated) {
