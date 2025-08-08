@@ -7,75 +7,61 @@ function safe(val) {
 }
 
 function getBossHP(level, tapPower = 1) {
-  const BASE_HP = 10000; // Match frontend base HP
-  const GROWTH = 1.23;   // Match frontend growth rate
+  const BASE_HP = 10000;
+  const GROWTH = 1.23;
   return Math.floor(BASE_HP * Math.pow(GROWTH, Math.max(level - 1, 0)) * tapPower);
 }
 
 function getCoinsPerBoss(level) {
-  const BASE = 10000000; // Match frontend base reward
-  const GROWTH = 1.115;  // Match frontend reward growth curve
+  const BASE = 10000000;
+  const GROWTH = 1.115;
   return Math.floor(BASE * Math.pow(GROWTH, Math.max(level - 1, 0)));
 }
 
 function getCoopBossHP(level, totalTapPower = 1) {
-  const BASE_HP = 10000; // Match frontend base HP for coop
-  const GROWTH = 1.23;   // Match frontend growth for coop
+  const BASE_HP = 10000;
+  const GROWTH = 1.23;
   return Math.floor(BASE_HP * Math.pow(GROWTH, Math.max(level - 1, 0)) * totalTapPower);
 }
 
 function getCoopCoinsPerBoss(level) {
-  const BASE = 10000000; // Match frontend base reward for coop
-  const GROWTH = 1.115;  // Match frontend reward growth for coop
+  const BASE = 10000000;
+  const GROWTH = 1.115;
   return Math.floor(BASE * Math.pow(GROWTH, Math.max(level - 1, 0)));
 }
 
-// --- Boss Emoji (20+ distinct bosses, fantasy/monster themed) ---
 function getBossEmoji(level) {
   const emojis = [
-    "👾","🐲","🦖","🐙","👻","🤖","🦈","🕷️","🐍","🦅",
-    "🦂","🦇","🧟","🦄","🦑","🦾","🐉","👹","💀","🔥",
-    "❄️","⚡","🍄","🌪️","👽","🪓","🛡️","🧙","🦅","👑",
+    "👾","🐲","🦖","🐙","👻","🤖","🦈","🕷️","🐍","🦅","🦂","🦇","🧟","🦄","🦑",
+    "🦾","🐉","👹","💀","🔥","❄️","⚡","🍄","🌪️","👽","🪓","🛡️","🧙","🦅","👑"
   ];
   return emojis[(level - 1) % emojis.length];
 }
 
-// Global weekly reset moment (UTC): 0=Sun...6=Sat
-const GLOBAL_RESET_DAY_UTC = 5;   // Sunday
-const GLOBAL_RESET_HOUR_UTC = 15;  // 00:00 UTC
-
-function getNextGlobalResetUTC(from = new Date()) {
+// 🔹 Get next Friday 15:00 UTC
+function getNextFridayResetUTC(from = new Date()) {
   const d = new Date(from);
-  const day = d.getUTCDay();
-  const hour = d.getUTCHours();
-  const minute = d.getUTCMinutes();
-  const second = d.getUTCSeconds();
-  const ms = d.getUTCMilliseconds();
-
-  let daysAhead = (GLOBAL_RESET_DAY_UTC - day + 7) % 7;
-
-  const alreadyPastToday =
-    daysAhead === 0 &&
-    (hour > GLOBAL_RESET_HOUR_UTC ||
-      (hour === GLOBAL_RESET_HOUR_UTC && (minute > 0 || second > 0 || ms > 0)));
-
-  if (alreadyPastToday) daysAhead = 7;
-
-  const next = new Date(
-    Date.UTC(
-      d.getUTCFullYear(),
-      d.getUTCMonth(),
-      d.getUTCDate() + daysAhead,
-      GLOBAL_RESET_HOUR_UTC, 0, 0, 0
-    )
-  );
+  const day = d.getUTCDay(); // 0 = Sun, 5 = Fri
+  let daysAhead = (5 - day + 7) % 7;
+  if (daysAhead === 0 && (d.getUTCHours() >= 15)) {
+    daysAhead = 7;
+  }
+  const next = new Date(Date.UTC(
+    d.getUTCFullYear(),
+    d.getUTCMonth(),
+    d.getUTCDate() + daysAhead,
+    15, 0, 0, 0
+  ));
   return next.toISOString();
 }
 
+// Generate room code
 function generateRoomCode() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let out = "";
-  for (let i = 0; i < 6; i++) out += chars.charAt(Math.floor(Math.random() * chars.length));
+  for (let i = 0; i < 6; i++) {
+    out += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
   return out;
 }
 
@@ -83,7 +69,7 @@ async function getPlayerTapPower(userId) {
   const { data } = await supabase
     .from("game_saves")
     .select("tap_power")
-    .eq("user_id", Number(userId))
+    .eq("user_id", userId)
     .single();
   return safe(data?.tap_power) || 1;
 }
@@ -93,62 +79,9 @@ async function getPlayersTotalTapPower(userIds) {
   const { data } = await supabase
     .from("game_saves")
     .select("tap_power")
-    .in("user_id", userIds.map((id) => Number(id)));
+    .in("user_id", userIds);
   if (!data) return 1;
   return data.reduce((sum, row) => sum + safe(row.tap_power), 0);
-}
-
-// --- Weekly reset helper (solo progress) ---
-async function maybeResetBossProgress(progressRow, userId) {
-  const now = new Date();
-
-  // Ensure a next_reset always exists
-  if (!progressRow?.next_reset) {
-    const next = getNextGlobalResetUTC(now);
-    const { data: updated } = await supabase
-      .from("boss_progress")
-      .update({ next_reset: next })
-      .eq("user_id", Number(userId))
-      .select()
-      .single();
-    return updated ?? { ...progressRow, next_reset: next };
-  }
-
-  // Lazy reset on first request after the global moment
-  if (now >= new Date(progressRow.next_reset)) {
-    const hp1 = getBossHP(1);
-    const next = getNextGlobalResetUTC(now);
-
-    const { data: updated } = await supabase
-      .from("boss_progress")
-      .update({
-        current_level: 1,
-        boss_hp: hp1,
-        boss_max_hp: hp1,
-        boss_emoji: getBossEmoji(1),
-        weekly_best_level: 1,
-        last_reset_date: now.toISOString(),
-        next_reset: next,
-      })
-      .eq("user_id", Number(userId))
-      .select()
-      .single();
-
-    return (
-      updated ?? {
-        ...progressRow,
-        current_level: 1,
-        boss_hp: hp1,
-        boss_max_hp: hp1,
-        boss_emoji: getBossEmoji(1),
-        weekly_best_level: 1,
-        last_reset_date: now.toISOString(),
-        next_reset: next,
-      }
-    );
-  }
-
-  return progressRow;
 }
 
 // ---------- GET HANDLER ----------
@@ -167,14 +100,14 @@ export async function GET(request) {
       let { data: gameSave } = await supabase
         .from("game_saves")
         .select("*")
-        .eq("user_id", Number(userId))
+        .eq("user_id", userId)
         .single();
 
       if (!gameSave) {
         const { data } = await supabase
           .from("game_saves")
           .insert([{
-            user_id: Number(userId),
+            user_id: userId,
             profile_name: "Fire Warrior",
             profile_icon: "🔥",
             tap_power_upgrades: 1,
@@ -196,7 +129,7 @@ export async function GET(request) {
       let { data: bossProgress } = await supabase
         .from("boss_progress")
         .select("*")
-        .eq("user_id", Number(userId))
+        .eq("user_id", userId)
         .single();
 
       if (!bossProgress) {
@@ -205,12 +138,12 @@ export async function GET(request) {
         const { data } = await supabase
           .from("boss_progress")
           .insert([{
-            user_id: Number(userId),
+            user_id: userId,
             current_level: lvl,
             boss_hp: hp,
             boss_max_hp: hp,
             boss_emoji: getBossEmoji(lvl),
-            next_reset: getNextGlobalResetUTC(),
+            next_reset: getNextFridayResetUTC(),
             total_coins: 0,
             weekly_best_level: lvl,
             total_level: lvl,
@@ -221,8 +154,34 @@ export async function GET(request) {
         bossProgress = data;
       }
 
-      // 🔹 Lazy weekly reset (writes and returns updated row)
-      bossProgress = await maybeResetBossProgress(bossProgress, userId);
+      // 🔹 Reset check — every Friday at 15:00 UTC
+      const now = new Date();
+      if (now >= new Date(bossProgress.next_reset)) {
+        const hp1 = getBossHP(1);
+        const newEmoji = getBossEmoji(Math.floor(Math.random() * 30) + 1);
+        const nextReset = getNextFridayResetUTC(now);
+
+        await supabase
+          .from("boss_progress")
+          .update({
+            current_level: 1,
+            boss_hp: hp1,
+            boss_max_hp: hp1,
+            boss_emoji: newEmoji,
+            weekly_best_level: 1,
+            last_reset_date: now.toISOString(),
+            next_reset: nextReset
+          })
+          .eq("user_id", userId);
+
+        bossProgress.current_level = 1;
+        bossProgress.boss_hp = hp1;
+        bossProgress.boss_max_hp = hp1;
+        bossProgress.boss_emoji = newEmoji;
+        bossProgress.weekly_best_level = 1;
+        bossProgress.last_reset_date = now.toISOString();
+        bossProgress.next_reset = nextReset;
+      }
 
       // Safety: align stored max HP with formula
       const expectedMax = getBossHP(bossProgress.current_level || 1);
@@ -231,16 +190,14 @@ export async function GET(request) {
           bossProgress.boss_hp == null ? expectedMax : bossProgress.boss_hp,
           expectedMax
         );
-        const { data: fixed } = await supabase
+        await supabase
           .from("boss_progress")
           .update({ boss_hp: fixedHp, boss_max_hp: expectedMax })
-          .eq("user_id", Number(userId))
-          .select()
-          .single();
-        bossProgress = fixed ?? { ...bossProgress, boss_hp: fixedHp, boss_max_hp: expectedMax };
+          .eq("user_id", userId);
+        bossProgress.boss_hp = fixedHp;
+        bossProgress.boss_max_hp = expectedMax;
       }
 
-      // Compute total level (progress level + upgrade levels)
       const upgradeLevel =
         safe(gameSave.tap_power_upgrades) +
         safe(gameSave.auto_tapper_upgrades) +
@@ -250,13 +207,11 @@ export async function GET(request) {
       const totalLevel = safe(bossProgress.current_level) + upgradeLevel;
 
       if (bossProgress.total_level !== totalLevel) {
-        const { data: tl } = await supabase
+        await supabase
           .from("boss_progress")
           .update({ total_level: totalLevel })
-          .eq("user_id", Number(userId))
-          .select()
-          .single();
-        bossProgress = tl ?? { ...bossProgress, total_level: totalLevel };
+          .eq("user_id", userId);
+        bossProgress.total_level = totalLevel;
       }
 
       return NextResponse.json({
