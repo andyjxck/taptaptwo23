@@ -67,15 +67,41 @@ function getBossEmoji(level) {
   ];
   return emojis[(level - 1) % emojis.length];
 }
+// Pick the global reset moment (UTC):
+// 0 = Sun, 1 = Mon, ... 6 = Sat
+const GLOBAL_RESET_DAY_UTC = 0;   // Sunday
+const GLOBAL_RESET_HOUR_UTC = 0;  // 00:00 UTC
 
-function getNextWeeklyReset() {
-  const now = new Date();
-  const daysUntilSunday = 7 - now.getDay();
-  const next = new Date(now);
-  next.setDate(now.getDate() + daysUntilSunday);
-  next.setHours(0, 0, 0, 0);
+function getNextGlobalResetUTC(from = new Date()) {
+  const d = new Date(from);
+  // Work in UTC so it's the same for everyone
+  const day = d.getUTCDay();
+  const hour = d.getUTCHours();
+  const minute = d.getUTCMinutes();
+  const second = d.getUTCSeconds();
+  const ms = d.getUTCMilliseconds();
+
+  let daysAhead = (GLOBAL_RESET_DAY_UTC - day + 7) % 7;
+
+  // If it's the reset day but we've already passed the reset hour, push to next week
+  const alreadyPastToday =
+    daysAhead === 0 &&
+    (hour > GLOBAL_RESET_HOUR_UTC ||
+      (hour === GLOBAL_RESET_HOUR_UTC && (minute > 0 || second > 0 || ms > 0)));
+
+  if (alreadyPastToday) daysAhead = 7;
+  if (daysAhead === 0 && !alreadyPastToday) daysAhead = 0;
+
+  const next = new Date(Date.UTC(
+    d.getUTCFullYear(),
+    d.getUTCMonth(),
+    d.getUTCDate() + daysAhead,
+    GLOBAL_RESET_HOUR_UTC, 0, 0, 0
+  ));
+
   return next.toISOString();
 }
+
 
 function generateRoomCode() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -165,7 +191,7 @@ export async function GET(request) {
         boss_hp: hp,
         boss_max_hp: hp,
         boss_emoji: getBossEmoji(lvl),
-        next_reset: getNextWeeklyReset(),
+        next_reset: getNextGlobalResetUTC(),
         total_coins: 0,
         weekly_best_level: lvl,
         total_level: lvl,
@@ -175,6 +201,34 @@ export async function GET(request) {
       .single();
     bossProgress = data;
   }
+
+    // 🔹 Lazy auto-reset check here
+const now = new Date();
+if (now >= new Date(bossProgress.next_reset)) {
+  const hp1 = getBossHP(1);
+  const next = getNextGlobalResetUTC(now);
+
+  await supabase
+    .from("boss_progress")
+    .update({
+      current_level: 1,
+      boss_hp: hp1,
+      boss_max_hp: hp1,
+      boss_emoji: getBossEmoji(1),
+      weekly_best_level: 1,
+      last_reset_date: now.toISOString(),
+      next_reset: next
+    })
+    .eq("user_id", userId);
+
+  bossProgress.current_level = 1;
+  bossProgress.boss_hp = hp1;
+  bossProgress.boss_max_hp = hp1;
+  bossProgress.boss_emoji = getBossEmoji(1);
+  bossProgress.weekly_best_level = 1;
+  bossProgress.last_reset_date = now.toISOString();
+  bossProgress.next_reset = next;
+}
 
   // Safety: align stored max HP with frontend formula at current level
   const expectedMax = getBossHP(bossProgress.current_level || 1);
@@ -299,13 +353,41 @@ if (action === "progress") {
         total_coins: 0,
         weekly_best_level: lvl,
         last_reset_date: new Date().toISOString(),
-        next_reset: getNextWeeklyReset(),
+        next_reset: getNextGlobalResetUTC(),
         total_level: lvl,
       }])
       .select()
       .single();
     progress = data;
   }
+
+ // 🔹 Lazy auto-reset check here
+const now = new Date();
+if (now >= new Date(progress.next_reset)) {
+  const hp1 = getBossHP(1);
+  const next = getNextGlobalResetUTC(now);
+
+  await supabase
+    .from("boss_progress")
+    .update({
+      current_level: 1,
+      boss_hp: hp1,
+      boss_max_hp: hp1,
+      boss_emoji: getBossEmoji(1),
+      weekly_best_level: 1,
+      last_reset_date: now.toISOString(),
+      next_reset: next
+    })
+    .eq("user_id", userId);
+
+  progress.current_level = 1;
+  progress.boss_hp = hp1;
+  progress.boss_max_hp = hp1;
+  progress.boss_emoji = getBossEmoji(1);
+  progress.weekly_best_level = 1;
+  progress.last_reset_date = now.toISOString();
+  progress.next_reset = next;
+}
 
   // Safety: Ensure boss HP is never null and always matches current level formula
   const expectedMax = getBossHP(progress.current_level || 1);
@@ -335,6 +417,7 @@ if (action === "progress") {
     last_reset_date: progress.last_reset_date,
   });
 }
+    
 
 
     if (action === "coop_session") {
