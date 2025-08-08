@@ -8,7 +8,7 @@ function safe(val) {
 
 function getBossHP(level, tapPower = 1) {
   const BASE_HP = 10000; // Match frontend base HP
-  const GROWTH = 1.29; // Match frontend growth rate
+  const GROWTH = 1.23; // Match frontend growth rate
   return Math.floor(BASE_HP * Math.pow(GROWTH, Math.max(level - 1, 0)) * tapPower);
 }
 
@@ -20,7 +20,7 @@ function getCoinsPerBoss(level) {
 
 function getCoopBossHP(level, totalTapPower = 1) {
   const BASE_HP = 10000; // Match frontend base HP for coop
-  const GROWTH = 1.29; // Match frontend growth for coop
+  const GROWTH = 1.23; // Match frontend growth for coop
   return Math.floor(BASE_HP * Math.pow(GROWTH, Math.max(level - 1, 0)) * totalTapPower);
 }
 
