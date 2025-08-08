@@ -1,8 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Server route: save/load anonymous game progress by saveId
-// Uses SERVICE_ROLE_KEY so upsert works reliably.
-
+// Save/load anonymous game progress by saveId
 export async function POST(req) {
   try {
     const { action, saveId, gameData } = await req.json();
@@ -10,15 +8,14 @@ export async function POST(req) {
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
       return new Response(JSON.stringify({ error: "Supabase env vars missing" }), { status: 500 });
     }
+    if (!action || !saveId) {
+      return new Response(JSON.stringify({ error: "Missing action or saveId" }), { status: 400 });
+    }
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
-
-    if (!action || !saveId) {
-      return new Response(JSON.stringify({ error: "Missing action or saveId" }), { status: 400 });
-    }
 
     if (action === "save") {
       const { error } = await supabase
@@ -28,10 +25,7 @@ export async function POST(req) {
           game_data: gameData || null,
           updated_at: new Date().toISOString(),
         });
-
-      if (error) {
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
-      }
+      if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 });
       return new Response(JSON.stringify({ success: true }), { status: 200 });
     }
 
@@ -41,10 +35,7 @@ export async function POST(req) {
         .select("game_data")
         .eq("save_id", saveId)
         .maybeSingle();
-
-      if (error) {
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
-      }
+      if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 });
       return new Response(JSON.stringify({ success: true, gameData: data?.game_data || null }), { status: 200 });
     }
 
