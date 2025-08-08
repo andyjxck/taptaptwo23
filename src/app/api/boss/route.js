@@ -104,11 +104,18 @@ async function getPlayersTotalTapPower(userIds) {
 async function maybeResetBossProgress(progressRow, userId) {
   const now = new Date();
 
-  // Ensure a next_reset always exists
+  // Ensure a next_reset always exists (and return the updated row)
   if (!progressRow?.next_reset) {
     const next = getNextGlobalResetUTC(now);
-    await supabase.from("boss_progress").update({ next_reset: next }).eq("user_id", userId);
-    return { ...progressRow, next_reset: next };
+    const { data: updated } = await supabase
+      .from("boss_progress")
+      .update({
+        next_reset: next,
+      })
+      .eq("user_id", userId)
+      .select()
+      .single();
+    return updated ?? { ...progressRow, next_reset: next };
   }
 
   // Lazy reset at first request after the global moment
@@ -116,7 +123,7 @@ async function maybeResetBossProgress(progressRow, userId) {
     const hp1 = getBossHP(1);
     const next = getNextGlobalResetUTC(now);
 
-    await supabase
+    const { data: updated } = await supabase
       .from("boss_progress")
       .update({
         current_level: 1,
@@ -127,9 +134,12 @@ async function maybeResetBossProgress(progressRow, userId) {
         last_reset_date: now.toISOString(),
         next_reset: next,
       })
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      .select()
+      .single();
 
-    return {
+    // Fall back to local shape if select didn't return
+    return updated ?? {
       ...progressRow,
       current_level: 1,
       boss_hp: hp1,
