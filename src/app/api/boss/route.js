@@ -1,5 +1,23 @@
 import { supabase } from "@/utilities/supabaseClient";
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+
+// ---------- ADMIN CLIENT (server-side only) ----------
+// Use SERVER env vars; NEVER expose service role to client.
+const SUPABASE_URL =
+  process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  console.warn(
+    "[/api/boss] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY env var. " +
+      "Admin writes will fail. Set them in your environment."
+  );
+}
+
+const supabaseAdmin = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
+  : null;
 
 // ---------- HELPERS ----------
 function safe(val) {
@@ -9,7 +27,9 @@ function safe(val) {
 function getBossHP(level, tapPower = 1) {
   const BASE_HP = 10000;
   const GROWTH = 1.23;
-  return Math.floor(BASE_HP * Math.pow(GROWTH, Math.max(level - 1, 0)) * tapPower);
+  return Math.floor(
+    BASE_HP * Math.pow(GROWTH, Math.max(level - 1, 0)) * tapPower
+  );
 }
 
 function getCoinsPerBoss(level) {
@@ -21,7 +41,9 @@ function getCoinsPerBoss(level) {
 function getCoopBossHP(level, totalTapPower = 1) {
   const BASE_HP = 10000;
   const GROWTH = 1.23;
-  return Math.floor(BASE_HP * Math.pow(GROWTH, Math.max(level - 1, 0)) * totalTapPower);
+  return Math.floor(
+    BASE_HP * Math.pow(GROWTH, Math.max(level - 1, 0)) * totalTapPower
+  );
 }
 
 function getCoopCoinsPerBoss(level) {
@@ -47,30 +69,62 @@ function getNextFridayResetUTC(from = new Date()) {
   if (daysAhead === 0 && d.getUTCHours() >= 15) {
     daysAhead = 7;
   }
-  const next = new Date(Date.UTC(
-    d.getUTCFullYear(),
-    d.getUTCMonth(),
-    d.getUTCDate() + daysAhead,
-    15, 0, 0, 0
-  ));
+  const next = new Date(
+    Date.UTC(
+      d.getUTCFullYear(),
+      d.getUTCMonth(),
+      d.getUTCDate() + daysAhead,
+      15,
+      0,
+      0,
+      0
+    )
+  );
   return next.toISOString();
 }
 
 // --- Lazy weekly reset (returns updated progress object) ---
 async function maybeResetBossProgress(progress, userId) {
-  if (!progress || !progress.next_reset) return progress;
+  if (!progress) return progress;
+
+  // Backfill if next_reset is missing (legacy rows)
+  if (!progress.next_reset) {
+    if (!supabaseAdmin) return progress; // cannot write without admin
+    const next = getNextFridayResetUTC();
+    const { data: backfilled } = await supabaseAdmin
+      .from("boss_progress")
+      .update({ next_reset: next })
+      .eq("user_id", Number(userId))
+      .select()
+      .single();
+    return backfilled ?? { ...progress, next_reset: next };
+  }
 
   const now = new Date();
   const due = new Date(progress.next_reset);
-
   if (now < due) return progress;
 
+  // Time to reset
   const lvl1 = 1;
   const hp1 = getBossHP(lvl1);
   const next = getNextFridayResetUTC(now);
   const newEmoji = getBossEmoji(Math.floor(Math.random() * 30) + 1);
 
-  const { data: updated } = await supabase
+  if (!supabaseAdmin) {
+    // Fallback: mutate locally if admin is unavailable (won't persist under RLS)
+    return {
+      ...progress,
+      current_level: lvl1,
+      boss_hp: hp1,
+      boss_max_hp: hp1,
+      boss_emoji: newEmoji,
+      weekly_best_level: lvl1,
+      last_reset_date: now.toISOString(),
+      next_reset: next,
+    };
+  }
+
+  const { data: updated } = await supabaseAdmin
     .from("boss_progress")
     .update({
       current_level: lvl1,
@@ -79,25 +133,24 @@ async function maybeResetBossProgress(progress, userId) {
       boss_emoji: newEmoji,
       weekly_best_level: lvl1,
       last_reset_date: now.toISOString(),
-      next_reset: next
+      next_reset: next,
     })
     .eq("user_id", Number(userId))
     .select()
     .single();
 
-  // Prefer DB echo; otherwise mutate the in-memory object and return it
-  if (updated) return updated;
-
-  return {
-    ...progress,
-    current_level: lvl1,
-    boss_hp: hp1,
-    boss_max_hp: hp1,
-    boss_emoji: newEmoji,
-    weekly_best_level: lvl1,
-    last_reset_date: now.toISOString(),
-    next_reset: next,
-  };
+  return (
+    updated ?? {
+      ...progress,
+      current_level: lvl1,
+      boss_hp: hp1,
+      boss_max_hp: hp1,
+      boss_emoji: newEmoji,
+      weekly_best_level: lvl1,
+      last_reset_date: now.toISOString(),
+      next_reset: next,
+    }
+  );
 }
 
 // --- Misc helpers ---
@@ -133,7 +186,7 @@ export async function GET(request) {
       if (!userId)
         return NextResponse.json({ error: "userId required" }, { status: 400 });
 
-      // Ensure game save exists
+      // Ensure game save exists (anon is fine here if RLS allows insert; keep existing behavior)
       let { data: gameSave } = await supabase
         .from("game_saves")
         .select("*")
@@ -143,26 +196,28 @@ export async function GET(request) {
       if (!gameSave) {
         const { data } = await supabase
           .from("game_saves")
-          .insert([{
-            user_id: userId,
-            profile_name: "Fire Warrior",
-            profile_icon: "🔥",
-            tap_power_upgrades: 1,
-            auto_tapper_upgrades: 0,
-            crit_chance_upgrades: 0,
-            tap_speed_bonus_upgrades: 0,
-            tap_power: 1,
-            auto_tapper: 0,
-            crit_chance: 0,
-            tap_speed_bonus: 0,
-            coins: 0,
-          }])
+          .insert([
+            {
+              user_id: userId,
+              profile_name: "Fire Warrior",
+              profile_icon: "🔥",
+              tap_power_upgrades: 1,
+              auto_tapper_upgrades: 0,
+              crit_chance_upgrades: 0,
+              tap_speed_bonus_upgrades: 0,
+              tap_power: 1,
+              auto_tapper: 0,
+              crit_chance: 0,
+              tap_speed_bonus: 0,
+              coins: 0,
+            },
+          ])
           .select()
           .single();
         gameSave = data;
       }
 
-      // Ensure boss progress exists
+      // Ensure boss progress exists (insert via admin to avoid RLS issues)
       let { data: bossProgress } = await supabase
         .from("boss_progress")
         .select("*")
@@ -172,26 +227,36 @@ export async function GET(request) {
       if (!bossProgress) {
         const lvl = 1;
         const hp = getBossHP(lvl);
-        const { data } = await supabase
-          .from("boss_progress")
-          .insert([{
-            user_id: userId,
-            current_level: lvl,
-            boss_hp: hp,
-            boss_max_hp: hp,
-            boss_emoji: getBossEmoji(lvl),
-            next_reset: getNextFridayResetUTC(),
-            total_coins: 0,
-            weekly_best_level: lvl,
-            total_level: lvl,
-            last_reset_date: new Date().toISOString(),
-          }])
-          .select()
-          .single();
-        bossProgress = data;
+        const insertPayload = {
+          user_id: userId,
+          current_level: lvl,
+          boss_hp: hp,
+          boss_max_hp: hp,
+          boss_emoji: getBossEmoji(lvl),
+          next_reset: getNextFridayResetUTC(),
+          total_coins: 0,
+          weekly_best_level: lvl,
+          total_level: lvl,
+          last_reset_date: new Date().toISOString(),
+        };
+        if (supabaseAdmin) {
+          const { data } = await supabaseAdmin
+            .from("boss_progress")
+            .insert([insertPayload])
+            .select()
+            .single();
+          bossProgress = data;
+        } else {
+          const { data } = await supabase
+            .from("boss_progress")
+            .insert([insertPayload])
+            .select()
+            .single();
+          bossProgress = data;
+        }
       }
 
-      // Lazy weekly reset
+      // Backfill / Lazy weekly reset
       bossProgress = await maybeResetBossProgress(bossProgress, userId);
 
       // Safety: align stored max HP with formula
@@ -201,13 +266,15 @@ export async function GET(request) {
           bossProgress.boss_hp == null ? expectedMax : bossProgress.boss_hp,
           expectedMax
         );
-        const { data: fixed } = await supabase
+        const writer = supabaseAdmin ?? supabase;
+        const { data: fixed } = await writer
           .from("boss_progress")
           .update({ boss_hp: fixedHp, boss_max_hp: expectedMax })
           .eq("user_id", userId)
           .select()
           .single();
-        bossProgress = fixed ?? { ...bossProgress, boss_hp: fixedHp, boss_max_hp: expectedMax };
+        bossProgress =
+          fixed ?? { ...bossProgress, boss_hp: fixedHp, boss_max_hp: expectedMax };
       }
 
       const upgradeLevel =
@@ -219,7 +286,8 @@ export async function GET(request) {
       const totalLevel = safe(bossProgress.current_level) + upgradeLevel;
 
       if (bossProgress.total_level !== totalLevel) {
-        const { data: fixed } = await supabase
+        const writer = supabaseAdmin ?? supabase;
+        const { data: fixed } = await writer
           .from("boss_progress")
           .update({ total_level: totalLevel })
           .eq("user_id", userId)
@@ -258,18 +326,20 @@ export async function GET(request) {
       if (!gameSave) {
         const { data } = await supabase
           .from("game_saves")
-          .insert([{
-            user_id: userId,
-            tap_power_upgrades: 1,
-            auto_tapper_upgrades: 0,
-            crit_chance_upgrades: 0,
-            tap_speed_bonus_upgrades: 0,
-            tap_power: 1,
-            auto_tapper: 0,
-            crit_chance: 0,
-            tap_speed_bonus: 0,
-            coins: 0,
-          }])
+          .insert([
+            {
+              user_id: userId,
+              tap_power_upgrades: 1,
+              auto_tapper_upgrades: 0,
+              crit_chance_upgrades: 0,
+              tap_speed_bonus_upgrades: 0,
+              tap_power: 1,
+              auto_tapper: 0,
+              crit_chance: 0,
+              tap_speed_bonus: 0,
+              coins: 0,
+            },
+          ])
           .select()
           .single();
         gameSave = data;
@@ -295,44 +365,58 @@ export async function GET(request) {
       if (!userId)
         return NextResponse.json({ error: "User ID required" }, { status: 400 });
 
-      // Try to fetch progress
+      // Fetch progress
       let { data: progress } = await supabase
         .from("boss_progress")
         .select("*")
         .eq("user_id", userId)
         .single();
 
-      // If no record exists, create one
+      // Create if missing
       if (!progress) {
         const lvl = 1;
         const hp = getBossHP(lvl);
-        const { data } = await supabase
-          .from("boss_progress")
-          .insert([{
-            user_id: userId,
-            current_level: lvl,
-            boss_hp: hp,
-            boss_max_hp: hp,
-            boss_emoji: getBossEmoji(lvl),
-            total_coins: 0,
-            weekly_best_level: lvl,
-            last_reset_date: new Date().toISOString(),
-            next_reset: getNextFridayResetUTC(),
-            total_level: lvl,
-          }])
-          .select()
-          .single();
-        progress = data;
+        const insertPayload = {
+          user_id: userId,
+          current_level: lvl,
+          boss_hp: hp,
+          boss_max_hp: hp,
+          boss_emoji: getBossEmoji(lvl),
+          total_coins: 0,
+          weekly_best_level: lvl,
+          last_reset_date: new Date().toISOString(),
+          next_reset: getNextFridayResetUTC(),
+          total_level: lvl,
+        };
+        if (supabaseAdmin) {
+          const { data } = await supabaseAdmin
+            .from("boss_progress")
+            .insert([insertPayload])
+            .select()
+            .single();
+          progress = data;
+        } else {
+          const { data } = await supabase
+            .from("boss_progress")
+            .insert([insertPayload])
+            .select()
+            .single();
+          progress = data;
+        }
       }
 
-      // Lazy weekly reset
+      // Backfill / Lazy reset
       progress = await maybeResetBossProgress(progress, userId);
 
       // Safety: ensure HP matches formula
       const expectedMax = getBossHP(progress.current_level || 1);
       if (progress.boss_max_hp !== expectedMax || progress.boss_hp == null) {
-        const fixedHp = progress.boss_hp == null ? expectedMax : Math.min(progress.boss_hp, expectedMax);
-        const { data: fixed } = await supabase
+        const fixedHp =
+          progress.boss_hp == null
+            ? expectedMax
+            : Math.min(progress.boss_hp, expectedMax);
+        const writer = supabaseAdmin ?? supabase;
+        const { data: fixed } = await writer
           .from("boss_progress")
           .update({ boss_hp: fixedHp, boss_max_hp: expectedMax })
           .eq("user_id", userId)
@@ -356,6 +440,7 @@ export async function GET(request) {
     }
 
     if (action === "coop_session") {
+      const roomCode = searchParams.get("roomCode");
       if (!roomCode)
         return NextResponse.json({ error: "Room code is required" }, { status: 400 });
       if (!userId)
@@ -371,10 +456,15 @@ export async function GET(request) {
         return NextResponse.json({ error: "Session not found" }, { status: 404 });
 
       const sessionData = sessions[0];
-      const players = Array.isArray(sessionData.players) ? sessionData.players : [];
+      const players = Array.isArray(sessionData.players)
+        ? sessionData.players
+        : [];
 
       if (!players.includes(Number(userId)))
-        return NextResponse.json({ error: "User not in this session" }, { status: 403 });
+        return NextResponse.json(
+          { error: "User not in this session" },
+          { status: 403 }
+        );
 
       return NextResponse.json({
         success: true,
@@ -413,7 +503,10 @@ export async function POST(request) {
       if (!userId)
         return NextResponse.json({ error: "User ID required" }, { status: 400 });
       if (typeof damage !== "number" || damage <= 0)
-        return NextResponse.json({ error: "Valid damage required" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Valid damage required" },
+          { status: 400 }
+        );
 
       let { data: progress } = await supabase
         .from("boss_progress")
@@ -422,7 +515,10 @@ export async function POST(request) {
         .single();
 
       if (!progress)
-        return NextResponse.json({ error: "User progress not found" }, { status: 404 });
+        return NextResponse.json(
+          { error: "User progress not found" },
+          { status: 404 }
+        );
 
       // Lazy weekly reset here too so taps right at the boundary behave
       progress = await maybeResetBossProgress(progress, userId);
@@ -447,7 +543,8 @@ export async function POST(request) {
       const isBossDefeated = newBossHp === 0;
 
       if (!isBossDefeated) {
-        await supabase
+        const writer = supabaseAdmin ?? supabase;
+        await writer
           .from("boss_progress")
           .update({ boss_hp: newBossHp })
           .eq("user_id", userId);
@@ -475,9 +572,13 @@ export async function POST(request) {
       const newLevel = currentLevel + 1;
       const nextHp = getBossHP(newLevel);
       const nextEmoji = getBossEmoji(newLevel);
-      const newWeeklyBest = Math.max(safe(progress.weekly_best_level), newLevel);
+      const newWeeklyBest = Math.max(
+        safe(progress.weekly_best_level),
+        newLevel
+      );
 
-      await supabase
+      const writer = supabaseAdmin ?? supabase;
+      await writer
         .from("boss_progress")
         .update({
           current_level: newLevel,
@@ -533,15 +634,17 @@ export async function POST(request) {
 
       const { data: session, error: insertErr } = await supabase
         .from("boss_coop_sessions")
-        .insert([{
-          room_code: roomCode,
-          boss_hp: bossHp,
-          boss_max_hp: bossHp,
-          boss_level: level,
-          players: playersArr,
-          is_active: true,
-          total_coins: 0,
-        }])
+        .insert([
+          {
+            room_code: roomCode,
+            boss_hp: bossHp,
+            boss_max_hp: bossHp,
+            boss_level: level,
+            players: playersArr,
+            is_active: true,
+            total_coins: 0,
+          },
+        ])
         .select()
         .single();
 
@@ -572,7 +675,10 @@ export async function POST(request) {
         .single();
 
       if (selErr)
-        return NextResponse.json({ error: "Failed to read total_taps" }, { status: 500 });
+        return NextResponse.json(
+          { error: "Failed to read total_taps" },
+          { status: 500 }
+        );
 
       const current = safe(row?.total_taps);
       const newTotal = current + increment;
@@ -583,7 +689,10 @@ export async function POST(request) {
         .eq("user_id", userId);
 
       if (updErr)
-        return NextResponse.json({ error: "Failed to update total_taps" }, { status: 500 });
+        return NextResponse.json(
+          { error: "Failed to update total_taps" },
+          { status: 500 }
+        );
 
       return NextResponse.json({ success: true, total_taps: newTotal });
     }
@@ -592,9 +701,15 @@ export async function POST(request) {
       const { roomCode, userId: userIdRaw } = body;
       const userId = Number(userIdRaw);
       if (!roomCode)
-        return NextResponse.json({ error: "Room code is required" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Room code is required" },
+          { status: 400 }
+        );
       if (!userId)
-        return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+        return NextResponse.json(
+          { error: "User ID is required" },
+          { status: 400 }
+        );
 
       const { data: sessions } = await supabase
         .from("boss_coop_sessions")
@@ -603,10 +718,15 @@ export async function POST(request) {
         .eq("is_active", true);
 
       if (!sessions || sessions.length === 0)
-        return NextResponse.json({ error: "Room not found or inactive" }, { status: 404 });
+        return NextResponse.json(
+          { error: "Room not found or inactive" },
+          { status: 404 }
+        );
 
       const session = sessions[0];
-      const currentPlayers = Array.isArray(session.players) ? session.players.map(Number) : [];
+      const currentPlayers = Array.isArray(session.players)
+        ? session.players.map(Number)
+        : [];
 
       if (currentPlayers.length >= 5 && !currentPlayers.includes(userId))
         return NextResponse.json({ error: "Room is full" }, { status: 400 });
@@ -645,11 +765,20 @@ export async function POST(request) {
       const { roomCode, userId: userIdRaw, damage } = body;
       const userId = Number(userIdRaw);
       if (!roomCode)
-        return NextResponse.json({ error: "Room code is required" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Room code is required" },
+          { status: 400 }
+        );
       if (!userId)
-        return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+        return NextResponse.json(
+          { error: "User ID is required" },
+          { status: 400 }
+        );
       if (typeof damage !== "number" || damage <= 0)
-        return NextResponse.json({ error: "Valid damage required" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Valid damage required" },
+          { status: 400 }
+        );
 
       const { data: sessions } = await supabase
         .from("boss_coop_sessions")
@@ -658,13 +787,21 @@ export async function POST(request) {
         .eq("is_active", true);
 
       if (!sessions || sessions.length === 0)
-        return NextResponse.json({ error: "Session not found" }, { status: 404 });
+        return NextResponse.json(
+          { error: "Session not found" },
+          { status: 404 }
+        );
 
       const sessionData = sessions[0];
-      const players = Array.isArray(sessionData.players) ? sessionData.players.map(Number) : [];
+      const players = Array.isArray(sessionData.players)
+        ? sessionData.players.map(Number)
+        : [];
 
       if (!players.includes(userId))
-        return NextResponse.json({ error: "User not in this session" }, { status: 403 });
+        return NextResponse.json(
+          { error: "User not in this session" },
+          { status: 403 }
+        );
 
       if (safe(sessionData.boss_hp) <= 0) {
         return NextResponse.json(
@@ -740,14 +877,18 @@ export async function POST(request) {
         .eq("room_code", sessionData.room_code)
         .select();
 
-      const updatedSession = updateArr?.[0] ?? {
-        ...sessionData,
-        boss_level: newLevel,
-        boss_hp: newBossHp,
-        boss_max_hp: newBossHp,
-      };
+      const updatedSession =
+        updateArr?.[0] ?? {
+          ...sessionData,
+          boss_level: newLevel,
+          boss_hp: newBossHp,
+          boss_max_hp: newBossHp,
+        };
 
-      const rewards = players.map((uid) => ({ user_id: uid, reward: perPlayerReward }));
+      const rewards = players.map((uid) => ({
+        user_id: uid,
+        reward: perPlayerReward,
+      }));
 
       return NextResponse.json({
         success: true,
