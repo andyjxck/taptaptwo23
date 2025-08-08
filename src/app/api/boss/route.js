@@ -360,8 +360,7 @@ if (action === "progress") {
       .single();
     progress = data;
   }
-
- // 🔹 Lazy auto-reset check here
+// 🔹 Lazy auto-reset check here
 const now = new Date();
 if (now >= new Date(progress.next_reset)) {
   const hp1 = getBossHP(1);
@@ -374,12 +373,13 @@ if (now >= new Date(progress.next_reset)) {
       boss_hp: hp1,
       boss_max_hp: hp1,
       boss_emoji: getBossEmoji(1),
-      weekly_best_level: 1,
+      weekly_best_level: 1, // or keep previous if you prefer
       last_reset_date: now.toISOString(),
-      next_reset: next
+      next_reset: next,
     })
     .eq("user_id", userId);
 
+  // keep the in-memory object in sync with what we just wrote
   progress.current_level = 1;
   progress.boss_hp = hp1;
   progress.boss_max_hp = hp1;
@@ -388,6 +388,7 @@ if (now >= new Date(progress.next_reset)) {
   progress.last_reset_date = now.toISOString();
   progress.next_reset = next;
 }
+
 
   // Safety: Ensure boss HP is never null and always matches current level formula
   const expectedMax = getBossHP(progress.current_level || 1);
@@ -413,7 +414,7 @@ if (now >= new Date(progress.next_reset)) {
     total_coins: safe(progress.total_coins),
     weekly_best_level: progress.weekly_best_level,
     coins_per_boss: getCoinsPerBoss(progress.current_level),
-    next_reset: progress.next_reset || getNextWeeklyReset(),
+    next_reset: progress.next_reset,
     last_reset_date: progress.last_reset_date,
   });
 }
