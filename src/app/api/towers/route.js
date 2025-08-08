@@ -1,6 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Save/load anonymous game progress by saveId
+/**
+ * Simple anonymous save/load for Tap Tap: Towers
+ * Requires a Supabase table:
+ *
+ * create table if not exists towers_progress (
+ *   save_id text primary key,
+ *   game_data jsonb,
+ *   updated_at timestamptz default now()
+ * );
+ */
+
 export async function POST(req) {
   try {
     const { action, saveId, gameData } = await req.json();
@@ -19,7 +29,7 @@ export async function POST(req) {
 
     if (action === "save") {
       const { error } = await supabase
-        .from("arcanesiege_progress")
+        .from("towers_progress")
         .upsert({
           save_id: saveId,
           game_data: gameData || null,
@@ -31,7 +41,7 @@ export async function POST(req) {
 
     if (action === "load") {
       const { data, error } = await supabase
-        .from("arcanesiege_progress")
+        .from("towers_progress")
         .select("game_data")
         .eq("save_id", saveId)
         .maybeSingle();
