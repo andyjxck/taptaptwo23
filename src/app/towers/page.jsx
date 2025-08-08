@@ -118,10 +118,13 @@ export default function TowersPage() {
   const rootRef = useRef(null);
   const [rect, setRect] = useState({ w: 390, h: 844 }); // phone-ish
 
-  // Game
+  // Game state
   const [gold, setGold] = useState(START_GOLD);
   const [lives, setLives] = useState(START_LIVES);
   const [renownTokens, setRenownTokens] = useState(0);
+  const [towerCoins, setTowerCoins] = useState(0);
+  const [houseLevel, setHouseLevel] = useState(1);
+  const [tapCoins, setTapCoins] = useState(0);
 
   const [wave, setWave] = useState(1);
   const [paused, setPaused] = useState(false);
@@ -130,12 +133,12 @@ export default function TowersPage() {
   // Summon
   const [summonCost, setSummonCost] = useState(SUMMON_BASE);
 
-  // Board
+  // Board and merge
   const [board, setBoard] = useState([]); // { id, element, level, stats, cellIndex, _cd }
   const [mergeMode, setMergeMode] = useState(false);
   const [mergeSrcId, setMergeSrcId] = useState(null);
 
-  // Taps (global)
+  // Taps (global combo)
   const [combo, setCombo] = useState(0);
 
   // Enemies & spawns
@@ -146,7 +149,7 @@ export default function TowersPage() {
   const waveEndAtRef = useRef(now() + WAVE_DURATION_MS);
   const [waveTimeLeft, setWaveTimeLeft] = useState(WAVE_DURATION_MS / 1000);
 
-  // Floaters / hitFx
+  // Floaters / hit effects
   const [floaters, setFloaters] = useState([]);
   function hitFx(x, y, color = "#fff", text = "•") {
     const id = rid();
@@ -156,10 +159,16 @@ export default function TowersPage() {
     }, 600);
   }
 
-  // Save id
+  // Save ID (for towers_progress table)
   const saveIdRef = useRef(null);
 
-  // Cells (centers)
+  // Initial values for global stats (for calculating gains)
+  const initialRenownRef = useRef(0);
+  const initialTowerCoinsRef = useRef(0);
+  const initialHouseRef = useRef(1);
+  const initialCoinsRef = useRef(0);
+
+  // Cell center coordinates for board grid
   const cells = useMemo(() => {
     const areaW = rect.w * 0.88;
     const areaH = rect.h * 0.50;
@@ -178,7 +187,7 @@ export default function TowersPage() {
     return arr;
   }, [rect]);
 
-  // Path
+  // Precomputed path points for enemies
   const pathPoints = useMemo(() => {
     const inset = 40;
     const left = inset;
@@ -197,7 +206,7 @@ export default function TowersPage() {
     ];
   }, [rect]);
 
-  // Resize observer (keeps within the centered device frame)
+  // Resize observer to maintain centered device frame
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return;
@@ -209,7 +218,7 @@ export default function TowersPage() {
     return () => ro.disconnect();
   }, []);
 
-  // Init / load
+  // Initial load: fetch saved game and global profile data
   useEffect(() => {
     const sid =
       localStorage.getItem("towersSaveId") ||
@@ -222,10 +231,17 @@ export default function TowersPage() {
 
     (async () => {
       try {
+        const storedUserId = localStorage.getItem("userId");
+        const storedPin = localStorage.getItem("pin");
         const res = await fetch("/api/towers", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "load", saveId: sid }),
+          body: JSON.stringify({ 
+            action: "load", 
+            saveId: sid, 
+            userId: storedUserId ? parseInt(storedUserId, 10) : undefined, 
+            pin: storedPin || undefined 
+          }),
         });
         const json = await res.json();
         if (json?.gameData) {
@@ -248,19 +264,23 @@ export default function TowersPage() {
     setWaveTimeLeft(Math.ceil(WAVE_DURATION_MS / 1000));
   }
 
-  // Make wave
+  // Construct an enemy spawn list for wave w
   function makeWave(w) {
     const list = [];
     const count = 12 + Math.floor(w * 1.8);
     for (let i = 0; i < count; i++) {
       const t = i % 10 === 9 ? "swift" : i % 8 === 7 ? "shield" : i % 6 === 5 ? "tank" : "grunt";
-      const base = t === "swift" ? ENEMY_TYPES.swift(w) : t === "shield" ? ENEMY_TYPES.shield(w) : t === "tank" ? ENEMY_TYPES.tank(w) : ENEMY_TYPES.grunt(w);
+      const base = t === "swift" ? ENEMY_TYPES.swift(w) 
+                  : t === "shield" ? ENEMY_TYPES.shield(w) 
+                  : t === "tank" ? ENEMY_TYPES.tank(w) 
+                  : ENEMY_TYPES.grunt(w);
       list.push({ type: t, base });
     }
     if (w % 10 === 0) list.push({ type: "boss", base: ENEMY_TYPES.boss(w) });
     return list;
   }
 
+  // Enqueue a wave's enemies to spawn
   function enqueueWave(w) {
     const blueprint = makeWave(w);
     spawnQueueRef.current = blueprint;
@@ -268,6 +288,7 @@ export default function TowersPage() {
     spawnTimerRef.current = 0;
   }
 
+  // Spawn a single enemy from a descriptor
   function spawnEnemy(desc) {
     const a = pathPoints[0];
     const e = {
@@ -289,15 +310,15 @@ export default function TowersPage() {
     setEnemies((prev) => [...prev, e]);
   }
 
-  // Game loop
+  // Main game loop (runs at TICK_MS interval)
   useEffect(() => {
     if (paused || gameOver) return;
     const iv = setInterval(() => {
-      // Wave timer
+      // Wave timer countdown
       const leftMs = Math.max(0, waveEndAtRef.current - now());
       setWaveTimeLeft(Math.ceil(leftMs / 1000));
 
-      // Spawning
+      // Spawn enemies on schedule
       spawnTimerRef.current += TICK_MS;
       if (spawnQueueRef.current.length > 0 && spawnTimerRef.current >= spawnEveryRef.current && leftMs > 0) {
         spawnTimerRef.current = 0;
@@ -305,10 +326,10 @@ export default function TowersPage() {
         spawnEnemy(next);
       }
 
-      // Move enemies
+      // Move enemies along the path
       setEnemies((prev) => {
         let arr = prev.map((e) => {
-          if (e.rootedUntil > now()) return { ...e }; // rooted, no progress
+          if (e.rootedUntil > now()) return { ...e }; // if rooted, no movement this tick
           const pA = pathPoints[e.seg];
           const pB = pathPoints[e.seg + 1];
           if (!pB) return { ...e, reached: true };
@@ -325,7 +346,7 @@ export default function TowersPage() {
           return { ...e, seg, t, x: lerp(A.x, B.x, t), y: lerp(A.y, B.y, t) };
         });
 
-        // Reached end
+        // Check for enemies reaching the end
         const survivors = [];
         let leaks = 0;
         for (const e of arr) {
@@ -340,7 +361,6 @@ export default function TowersPage() {
       setEnemies((prevEnemies) => {
         if (!prevEnemies.length || !board.length) return prevEnemies;
         const m = comboMultiplier(combo);
-
         let arr = prevEnemies.map((e) => ({ ...e }));
 
         for (const unit of board) {
@@ -362,17 +382,19 @@ export default function TowersPage() {
           }
           if (!candidates.length) continue;
 
-          // Most progressed along path
+          // Target the enemy furthest along the path
           candidates.sort((a, b) => (b.e.seg - a.e.seg) || (b.e.t - a.e.t));
           const dmgBase = unit.stats.dmg * m * (1 + (unit.stats.allyBuff || 0));
 
           if (unit.element === "pyro") {
+            // Pyro: AOE explosion around target
             const center = candidates[0].e;
             const radius = unit.stats.aoe || 28;
             arr = arr.map((e) => (dist(e.x, e.y, center.x, center.y) <= radius ? applyDamage(e, dmgBase) : e));
             hitFx(center.x, center.y, COLORS.pyro);
 
           } else if (unit.element === "frost") {
+            // Frost: slow target
             const t = candidates[0];
             const target = { ...arr[t.idx] };
             target.slowUntil = Math.max(target.slowUntil || 0, now() + (unit.stats.slowMs || 900));
@@ -380,6 +402,7 @@ export default function TowersPage() {
             hitFx(target.x, target.y, COLORS.frost);
 
           } else if (unit.element === "volt") {
+            // Volt: chain lightning
             let dmg = dmgBase;
             let last = candidates[0];
             arr[last.idx] = applyDamage(arr[last.idx], dmg);
@@ -399,6 +422,7 @@ export default function TowersPage() {
             }
 
           } else if (unit.element === "nature") {
+            // Nature: chance to root target
             const t = candidates[0];
             const target = { ...arr[t.idx] };
             if (Math.random() < (unit.stats.rootChance || 0.1)) {
@@ -409,26 +433,50 @@ export default function TowersPage() {
           }
         }
 
-        // Cleanup + gold
-        let earned = 0;
+        // Cleanup defeated enemies and accumulate rewards
+        let goldEarned = 0;
+        let towerCoinsEarned = 0;
+        let renownEarned = 0;
+        let houseEarned = 0;
+        let tapCoinsEarned = 0;
         const alive = [];
         for (const e of arr) {
-          if (e.hp <= 0) earned += e.gold;
-          else alive.push(e);
+          if (e.hp <= 0) {
+            goldEarned += e.gold;
+            towerCoinsEarned += e.gold;
+            if (e.kind === "boss") {
+              // Boss rewards
+              const renownBase = Math.floor(Math.random() * 26) + 25;    // 25–50 Renown Tokens
+              const renownBonus = Math.floor(Math.random() * 51) + 100; // 100–150 Renown Tokens (Mystery Gift)
+              renownEarned += renownBase + renownBonus;
+              const houseBase = Math.floor(Math.random() * 3) + 1;      // 1–3 House Levels
+              const houseBonus = Math.floor(Math.random() * 3) + 1;     // 1–3 House Levels (Mystery Gift)
+              houseEarned += houseBase + houseBonus;
+              const bossIndex = Math.floor(wave / 10);                 // boss wave index (1 for wave10, 2 for wave20, etc.)
+              const tapReward = 50_000_000 * bossIndex;                // Tap Coins reward (50M * boss number)
+              tapCoinsEarned += tapReward;
+            }
+          } else {
+            alive.push(e);
+          }
         }
-        if (earned) setGold((g) => g + earned);
+        if (goldEarned) setGold((g) => g + goldEarned);
+        if (towerCoinsEarned) setTowerCoins((c) => c + towerCoinsEarned);
+        if (renownEarned) setRenownTokens((r) => r + renownEarned);
+        if (houseEarned) setHouseLevel((h) => h + houseEarned);
+        if (tapCoinsEarned) setTapCoins((tc) => tc + tapCoinsEarned);
 
-        // Advance wave when timer ended & field clear
+        // If wave is over and all enemies are defeated, start next wave after a short pause
         if (alive.length === 0 && spawnQueueRef.current.length === 0 && now() >= waveEndAtRef.current) {
           setTimeout(() => !paused && !gameOver && startWave(wave + 1), 500);
         }
         return alive;
       });
 
-      // Combo decay
+      // Decay combo meter
       setCombo((c) => clamp(c - (COMBO_DECAY_PER_SEC * (TICK_MS / 1000)), 0, COMBO_MAX));
 
-      // Death
+      // Check for game over
       setLives((L) => {
         if (L <= 0) {
           setGameOver(true);
@@ -452,16 +500,15 @@ export default function TowersPage() {
     return e;
   }
 
-  // Tapping = global combo only
+  // Tap anywhere to increase combo meter
   function onTap() {
     setCombo((c) => clamp(c + COMBO_ADD, 0, COMBO_MAX));
   }
 
-  // Merge interaction
+  // Handle cell tap for merging units
   function onCellTap(cellIdx) {
     const u = board.find((b) => b.cellIndex === cellIdx);
     if (!mergeMode || !u) return;
-
     if (!mergeSrcId) {
       setMergeSrcId(u.id);
       return;
@@ -472,32 +519,33 @@ export default function TowersPage() {
     }
     const src = board.find((b) => b.id === mergeSrcId);
     if (!src) return;
-
     if (src.element !== u.element || src.level !== u.level) {
       setMergeSrcId(null);
       return;
     }
-
-    const merged = addStats(src.stats, u.stats);
+    // Merge two units of same element & level into one higher-level unit
+    const mergedStats = addStats(src.stats, u.stats);
     const newUnit = {
       id: rid(),
       element: u.element,
       level: u.level + 1,
-      stats: merged,
+      stats: mergedStats,
       cellIndex: u.cellIndex,
       _cd: 0,
     };
     setBoard((prev) => {
-      const keep = prev.filter((x) => x.id !== src.id && x.id !== u.id);
-      return [...keep, newUnit];
+      const remaining = prev.filter((x) => x.id !== src.id && x.id !== u.id);
+      return [...remaining, newUnit];
     });
     setMergeSrcId(null);
   }
 
-  // Summon
+  // Summon a new unit at first empty cell
   function firstEmptyCell() {
     const occ = new Set(board.map((b) => b.cellIndex));
-    for (let i = 0; i < BOARD_W * BOARD_H; i++) if (!occ.has(i)) return i;
+    for (let i = 0; i < BOARD_W * BOARD_H; i++) {
+      if (!occ.has(i)) return i;
+    }
     return -1;
   }
   function summon() {
@@ -512,36 +560,91 @@ export default function TowersPage() {
     setSummonCost((c) => Math.ceil(c * SUMMON_SCALE));
   }
 
-  // Save/Load
+  // Save game state and update profile progression
   async function save() {
     try {
-      await fetch("/api/towers", {
+      const userId = localStorage.getItem("userId");
+      const pin = localStorage.getItem("pin");
+      // Calculate gains since load
+      const renownGain = renownTokens - (initialRenownRef.current || 0);
+      const towerCoinGain = towerCoins - (initialTowerCoinsRef.current || 0);
+      const houseGain = houseLevel - (initialHouseRef.current || 1);
+      const coinGain = tapCoins - (initialCoinsRef.current || 0);
+      // Prepare game data to save (exclude global stats if logged in, since those go to profile)
+      const gameData = { gold, lives, wave, board, enemies, summonCost, timestamp: now() };
+      if (!userId) {
+        gameData.renownTokens = renownTokens;
+        gameData.towerCoins = towerCoins;
+      } else {
+        gameData.renownTokens = 0;
+        gameData.towerCoins = 0;
+      }
+      const res = await fetch("/api/towers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "save",
           saveId: saveIdRef.current,
-          gameData: { gold, lives, renownTokens, wave, board, enemies, summonCost, timestamp: now() },
+          userId: userId ? parseInt(userId, 10) : undefined,
+          pin: pin || undefined,
+          gameData,
+          renownGain: userId ? renownGain : undefined,
+          towerCoinGain: userId ? towerCoinGain : undefined,
+          houseGain: userId ? houseGain : undefined,
+          coinGain: userId ? coinGain : undefined,
         }),
       });
-    } catch {}
+      if (res.ok) {
+        const result = await res.json();
+        if (result.success) {
+          // Update initial reference values to current, so further saves only add new gains
+          initialRenownRef.current = renownTokens;
+          initialTowerCoinsRef.current = towerCoins;
+          initialHouseRef.current = houseLevel;
+          initialCoinsRef.current = tapCoins;
+        }
+      }
+    } catch {
+      // Ignore save errors for now
+    }
   }
+
+  // Restore game (and profile) state from loaded data
   function restore(g) {
     setGold(g.gold ?? START_GOLD);
     setLives(g.lives ?? START_LIVES);
-    setRenownTokens(g.renownTokens ?? 0);
     setWave(g.wave ?? 1);
     setBoard(g.board ?? []);
     setEnemies(g.enemies ?? []);
     setSummonCost(g.summonCost ?? SUMMON_BASE);
+    setCombo(0);
+    setMergeMode(false);
+    setMergeSrcId(null);
+    setGameOver(false);
+    // Set global stats from profile (or offline save)
+    setRenownTokens(g.renownTokens ?? 0);
+    setTowerCoins(g.towerCoins ?? 0);
+    setHouseLevel(g.houseLevel ?? 1);
+    setTapCoins(g.tapCoins ?? 0);
+    // Initialize baseline references for tracking gains
+    initialRenownRef.current = g.renownTokens ?? 0;
+    initialTowerCoinsRef.current = g.towerCoins ?? 0;
+    initialHouseRef.current = g.houseLevel ?? 1;
+    initialCoinsRef.current = g.tapCoins ?? 0;
+    // Start the loaded wave
     waveEndAtRef.current = now() + WAVE_DURATION_MS;
     enqueueWave(g.wave ?? 1);
     setWaveTimeLeft(Math.ceil(WAVE_DURATION_MS / 1000));
   }
+
+  // Reset game to initial state (does not affect persistent profile data)
   function resetGame() {
     setGold(START_GOLD);
     setLives(START_LIVES);
     setRenownTokens(0);
+    setTowerCoins(0);
+    setHouseLevel(1);
+    setTapCoins(0);
     setWave(1);
     setBoard([]);
     setEnemies([]);
@@ -553,7 +656,7 @@ export default function TowersPage() {
     startWave(1);
   }
 
-  // Image placeholders (swap later)
+  // Image placeholders (to be replaced with actual assets)
   const coinImg  = "https://ucarecdn.com/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/-/format/auto/";
   const tokenImg = "https://ucarecdn.com/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/-/format/auto/";
   const bgImg    = "https://ucarecdn.com/cccccccc-cccc-cccc-cccc-cccccccccccc/-/format/auto/";
@@ -570,8 +673,7 @@ export default function TowersPage() {
           mixBlendMode: "screen",
         }}
       />
-
-      {/* Device frame (mobile-first) */}
+      {/* Device frame (mobile view) */}
       <div
         ref={rootRef}
         className="relative w-[min(100vw,420px)] h-[min(100svh,860px)] rounded-[28px] border border-white/15 bg-white/6 backdrop-blur-xl shadow-[0_20px_80px_rgba(0,0,0,0.45)] overflow-hidden"
@@ -582,10 +684,15 @@ export default function TowersPage() {
           <div className="glass flex items-center justify-between px-3 py-2 rounded-xl text-white">
             <div className="flex items-center gap-3 text-sm">
               <span className="inline-flex items-center gap-1">
-                <img src={coinImg} alt="Coins" className="w-4 h-4 object-contain" />
-                {gold}
+                <img src={coinImg} alt="Tower Coins" className="w-4 h-4 object-contain" />
+                {towerCoins}
               </span>
-              <span className="inline-flex items-center gap-1"><Heart size={14} />{lives}</span>
+              <span className="inline-flex items-center gap-1">
+                <Coins size={14} />{gold}
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Heart size={14} />{lives}
+              </span>
               <span>Wave {wave}</span>
             </div>
             <div className="flex items-center gap-2">
@@ -597,11 +704,13 @@ export default function TowersPage() {
               </button>
             </div>
           </div>
-
-          {/* Wave timer + Combo */}
+          {/* Wave timer & Combo meter */}
           <div className="mt-2 grid grid-cols-2 gap-2">
             <div className="glass px-3 py-2 rounded-xl text-white flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs"><Timer size={14} /><span>Wave Time</span></div>
+              <div className="flex items-center gap-2 text-xs">
+                <Timer size={14} />
+                <span>Wave Time</span>
+              </div>
               <div className="font-mono text-sm">{String(waveTimeLeft).padStart(2, "0")}s</div>
             </div>
             <div className="glass px-3 py-2 rounded-xl text-white">
@@ -669,7 +778,7 @@ export default function TowersPage() {
           />
         ))}
 
-        {/* Floaters */}
+        {/* Floating damage/bonus text */}
         <AnimatePresence>
           {floaters.map((f) => (
             <motion.div
@@ -686,9 +795,10 @@ export default function TowersPage() {
           ))}
         </AnimatePresence>
 
-        {/* Controls */}
+        {/* Bottom controls & stats */}
         <div className="absolute bottom-3 left-3 right-3 z-20">
           <div className="glass rounded-2xl px-3 py-2 text-white">
+            {/* Action buttons */}
             <div className="flex items-center gap-2">
               <button
                 className={`btn flex-1 ${gold < summonCost ? "opacity-60" : ""}`}
@@ -713,14 +823,16 @@ export default function TowersPage() {
                 <span className="ml-1 text-xs">Restart</span>
               </button>
             </div>
-
-            {/* image slots / franchise hooks */}
+            {/* Persistent currency stats (Tower Coins & Renown Tokens) */}
             <div className="mt-2 flex items-center justify-center gap-4 text-xs">
+              <div className="inline-flex items-center gap-1 opacity-90">
+                <img src={coinImg} alt="Tower Coins" className="w-4 h-4 object-contain" />
+                <span>{towerCoins}</span>
+              </div>
               <div className="inline-flex items-center gap-1 opacity-90">
                 <img src={tokenImg} alt="Renown" className="w-4 h-4 object-contain" />
                 <span>{renownTokens}</span>
               </div>
-              <div className="opacity-80">Tap faster = stronger global boost</div>
             </div>
           </div>
         </div>
