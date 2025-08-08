@@ -191,25 +191,69 @@ useEffect(() => {
 }, []);
 
 
-  // --- EFFECTS: LOAD PROFILE & UPGRADES ON LOGIN ---
-  useEffect(() => {
-    if (!userReady) return;
-    setProfileLoading(true);
-    setUpgradesLoading(true);
-    Promise.all([
-      fetch(`/api/boss?action=profile&userId=${userId}`).then((r) => r.json()),
-      fetch(`/api/boss?action=upgrades&userId=${userId}`).then((r) => r.json()),
-    ])
-      .then(([profile, upgrades]) => {
-        setProfileData(profile);
-        setUpgradesData(upgrades);
-      })
-      .finally(() => {
-        setProfileLoading(false);
-        setUpgradesLoading(false);
-        setPageLoading(false);
-      });
-  }, [userReady, userId]);
+// --- EFFECTS: LOAD PROFILE & UPGRADES ON LOGIN ---
+useEffect(() => {
+  if (!userReady) return;
+  setProfileLoading(true);
+  setUpgradesLoading(true);
+  Promise.all([
+    fetch(`/api/boss?action=profile&userId=${userId}`).then((r) => r.json()),
+    fetch(`/api/boss?action=upgrades&userId=${userId}`).then((r) => r.json()),
+  ])
+    .then(([profile, upgrades]) => {
+      setProfileData(profile);
+      setUpgradesData(upgrades);
+    })
+    .finally(() => {
+      setProfileLoading(false);
+      setUpgradesLoading(false);
+      setPageLoading(false);
+    });
+}, [userReady, userId]);
+
+// ---------- NEW: minute heartbeat so state never goes stale ----------
+useEffect(() => {
+  if (!userReady || !userId) return;
+  const id = setInterval(() => {
+    // This hits the backend so the lazy reset code can run if needed.
+    fetch(`/api/boss?action=progress&userId=${userId}`, { cache: "no-store" })
+      .then((r) => r.json())
+      .catch(() => {});
+  }, 60_000); // every 60s
+  return () => clearInterval(id);
+}, [userReady, userId]);
+
+// ---------- NEW: trigger reset the moment timer reaches 0 ----------
+useEffect(() => {
+  if (!userReady || !userId) return;
+
+  let triggered = false;
+  const tick = () => {
+    const ns = soloRealtime?.next_reset ? new Date(soloRealtime.next_reset).getTime() : null;
+    if (!ns) return;
+
+    const now = Date.now();
+    if (!triggered && now >= ns) {
+      triggered = true;
+      // Call backend to perform lazy reset & set the NEXT Friday 15:00 UTC
+      fetch(`/api/boss?action=progress&userId=${userId}`, { cache: "no-store" })
+        .then(() => {
+          // optional: re-pull profile too so coins/levels snap instantly
+          return fetch(`/api/boss?action=profile&userId=${userId}`, { cache: "no-store" });
+        })
+        .then((r) => r?.json?.())
+        .then((p) => p && setProfileData(p))
+        .catch(() => {});
+      // allow future triggers if something weird happens
+      setTimeout(() => (triggered = false), 5_000);
+    }
+  };
+
+  // check every second so the reset is instant for the player
+  const id = setInterval(tick, 1000);
+  return () => clearInterval(id);
+}, [userReady, userId, soloRealtime?.next_reset]);
+
 
   // --- AUTO DPS SENDER (posts accumulated damage without clicks) ---
 // --- AUTO DPS SENDER (posts accumulated damage without clicks) ---
