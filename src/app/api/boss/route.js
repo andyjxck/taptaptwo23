@@ -54,6 +54,40 @@ function getNextFridayResetUTC(from = new Date()) {
   ));
   return next.toISOString();
 }
+async function maybeResetBossProgress(userId, progress) {
+  if (!progress || !progress.next_reset) return;
+
+  const now = new Date();
+  const due = new Date(progress.next_reset);
+
+  if (now >= due) {
+    const lvl1 = 1;
+    const hp1 = getBossHP(lvl1);
+    const next = getNextGlobalResetUTC(now); // your existing Friday 15:00 UTC function
+
+    await supabase
+      .from("boss_progress")
+      .update({
+        current_level: lvl1,
+        boss_hp: hp1,
+        boss_max_hp: hp1,
+        boss_emoji: getBossEmoji(lvl1),
+        weekly_best_level: lvl1,
+        last_reset_date: now.toISOString(),
+        next_reset: next
+      })
+      .eq("user_id", userId);
+
+    // Keep progress object in sync
+    progress.current_level = lvl1;
+    progress.boss_hp = hp1;
+    progress.boss_max_hp = hp1;
+    progress.boss_emoji = getBossEmoji(lvl1);
+    progress.weekly_best_level = lvl1;
+    progress.last_reset_date = now.toISOString();
+    progress.next_reset = next;
+  }
+}
 
 // Generate room code
 function generateRoomCode() {
