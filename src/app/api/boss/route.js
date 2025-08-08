@@ -545,26 +545,37 @@ const bossHp = getCoopBossHP(level, totalTapPower); // <<< FIX: pass level, tota
         },
       });
     }
-    // --- Increment total_taps for a user ---
-    if (action === "increment_total_taps") {
-      const { userId, amount } = body;
-      if (!userId)
-        return NextResponse.json({ error: "User ID required" }, { status: 400 });
+   // --- Increment total_taps for a user ---
+if (action === "increment_total_taps") {
+  const { userId, amount } = body;
+  if (!userId)
+    return NextResponse.json({ error: "User ID required" }, { status: 400 });
 
-      // Default increment to 1 if not provided
-      const increment = typeof amount === "number" && amount > 0 ? amount : 1;
+  const increment = typeof amount === "number" && amount > 0 ? amount : 1;
 
-      // Atomically increment total_taps
-      const { error } = await supabase
-        .from("game_saves")
-        .update({ total_taps: supabase.literal(`total_taps + ${increment}`) })
-        .eq("user_id", userId);
+  // Read current, then write new (simple, works with RLS; avoids supabase.literal)
+  const { data: row, error: selErr } = await supabase
+    .from("game_saves")
+    .select("total_taps")
+    .eq("user_id", userId)
+    .single();
 
-      if (error)
-        return NextResponse.json({ error: "Failed to increment total_taps" }, { status: 500 });
+  if (selErr)
+    return NextResponse.json({ error: "Failed to read total_taps" }, { status: 500 });
 
-      return NextResponse.json({ success: true });
-    }
+  const current = safe(row?.total_taps);
+  const newTotal = current + increment;
+
+  const { error: updErr } = await supabase
+    .from("game_saves")
+    .update({ total_taps: newTotal })
+    .eq("user_id", userId);
+
+  if (updErr)
+    return NextResponse.json({ error: "Failed to update total_taps" }, { status: 500 });
+
+  return NextResponse.json({ success: true, total_taps: newTotal });
+}
 
     if (action === "coop_join") {
       const { roomCode, userId } = body;
