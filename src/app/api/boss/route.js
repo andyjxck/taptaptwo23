@@ -2,35 +2,35 @@ import { supabase } from "@/utilities/supabaseClient";
 import { NextResponse } from "next/server";
 
 // ---------- HELPERS ----------
-function safe(val: any) {
+function safe(val) {
   return typeof val === "number" && !isNaN(val) ? val : 0;
 }
 
-function getBossHP(level: number, tapPower = 1) {
+function getBossHP(level, tapPower = 1) {
   const BASE_HP = 10000;
   const GROWTH = 1.23;
   return Math.floor(BASE_HP * Math.pow(GROWTH, Math.max(level - 1, 0)) * tapPower);
 }
 
-function getCoinsPerBoss(level: number) {
+function getCoinsPerBoss(level) {
   const BASE = 10000000;
   const GROWTH = 1.115;
   return Math.floor(BASE * Math.pow(GROWTH, Math.max(level - 1, 0)));
 }
 
-function getCoopBossHP(level: number, totalTapPower = 1) {
+function getCoopBossHP(level, totalTapPower = 1) {
   const BASE_HP = 10000;
   const GROWTH = 1.23;
   return Math.floor(BASE_HP * Math.pow(GROWTH, Math.max(level - 1, 0)) * totalTapPower);
 }
 
-function getCoopCoinsPerBoss(level: number) {
+function getCoopCoinsPerBoss(level) {
   const BASE = 10000000;
   const GROWTH = 1.115;
   return Math.floor(BASE * Math.pow(GROWTH, Math.max(level - 1, 0)));
 }
 
-function getBossEmoji(level: number) {
+function getBossEmoji(level) {
   const emojis = [
     "👾","🐲","🦖","🐙","👻","🤖","🦈","🕷️","🐍","🦅","🦂","🦇","🧟","🦄","🦑",
     "🦾","🐉","👹","💀","🔥","❄️","⚡","🍄","🌪️","👽","🪓","🛡️","🧙","🦅","👑"
@@ -38,24 +38,12 @@ function getBossEmoji(level: number) {
   return emojis[(level - 1) % emojis.length];
 }
 
-function pickDifferentEmoji(current: string | null | undefined) {
-  const emojis = [
-    "👾","🐲","🦖","🐙","👻","🤖","🦈","🕷️","🐍","🦅","🦂","🦇","🧟","🦄","🦑",
-    "🦾","🐉","👹","💀","🔥","❄️","⚡","🍄","🌪️","👽","🪓","🛡️","🧙","🦅","👑"
-  ];
-  if (!current || !emojis.includes(current)) {
-    return emojis[Math.floor(Math.random() * emojis.length)];
-  }
-  const candidates = emojis.filter(e => e !== current);
-  return candidates[Math.floor(Math.random() * candidates.length)];
-}
-
-// 🔹 Next Friday 15:00 UTC
+// --- Weekly reset: next Friday 15:00 UTC ---
 function getNextFridayResetUTC(from = new Date()) {
   const d = new Date(from);
-  const day = d.getUTCDay(); // 0 = Sun, 5 = Fri
+  const day = d.getUTCDay(); // 0=Sun ... 5=Fri
   let daysAhead = (5 - day + 7) % 7;
-  // If it's Friday but 15:00 UTC has passed, go to next Friday
+  // If it's already Friday at/after 15:00 UTC, push to next week
   if (daysAhead === 0 && d.getUTCHours() >= 15) {
     daysAhead = 7;
   }
@@ -68,39 +56,23 @@ function getNextFridayResetUTC(from = new Date()) {
   return next.toISOString();
 }
 
-// 🔹 Lazy weekly reset helper: returns the (possibly) updated progress row
-async function maybeResetBossProgress(userIdNum: number, progress: any) {
+// --- Lazy weekly reset (returns updated progress object) ---
+async function maybeResetBossProgress(progress, userId) {
   if (!progress || !progress.next_reset) return progress;
 
   const now = new Date();
   const due = new Date(progress.next_reset);
 
-  if (now >= due) {
-    const lvl1 = 1;
-    const hp1 = getBossHP(lvl1);
-    const newEmoji = pickDifferentEmoji(progress.boss_emoji);
-    const next = getNextFridayResetUTC(now);
+  if (now < due) return progress;
 
-    const { data: updated, error } = await supabase
-      .from("boss_progress")
-      .update({
-        current_level: lvl1,
-        boss_hp: hp1,
-        boss_max_hp: hp1,
-        boss_emoji: newEmoji,
-        weekly_best_level: lvl1,
-        last_reset_date: now.toISOString(),
-        next_reset: next
-      })
-      .eq("user_id", userIdNum)
-      .select()
-      .single();
+  const lvl1 = 1;
+  const hp1 = getBossHP(lvl1);
+  const next = getNextFridayResetUTC(now);
+  const newEmoji = getBossEmoji(Math.floor(Math.random() * 30) + 1);
 
-    if (!error && updated) return updated;
-
-    // Fall back to returning a locally-updated object if select() fails
-    return {
-      ...progress,
+  const { data: updated } = await supabase
+    .from("boss_progress")
+    .update({
       current_level: lvl1,
       boss_hp: hp1,
       boss_max_hp: hp1,
@@ -108,13 +80,27 @@ async function maybeResetBossProgress(userIdNum: number, progress: any) {
       weekly_best_level: lvl1,
       last_reset_date: now.toISOString(),
       next_reset: next
-    };
-  }
+    })
+    .eq("user_id", Number(userId))
+    .select()
+    .single();
 
-  return progress;
+  // Prefer DB echo; otherwise mutate the in-memory object and return it
+  if (updated) return updated;
+
+  return {
+    ...progress,
+    current_level: lvl1,
+    boss_hp: hp1,
+    boss_max_hp: hp1,
+    boss_emoji: newEmoji,
+    weekly_best_level: lvl1,
+    last_reset_date: now.toISOString(),
+    next_reset: next,
+  };
 }
 
-// Generate room code
+// --- Misc helpers ---
 function generateRoomCode() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let out = "";
@@ -124,16 +110,7 @@ function generateRoomCode() {
   return out;
 }
 
-async function getPlayerTapPower(userId: number) {
-  const { data } = await supabase
-    .from("game_saves")
-    .select("tap_power")
-    .eq("user_id", userId)
-    .single();
-  return safe(data?.tap_power) || 1;
-}
-
-async function getPlayersTotalTapPower(userIds: number[]) {
+async function getPlayersTotalTapPower(userIds) {
   if (!Array.isArray(userIds) || userIds.length === 0) return 1;
   const { data } = await supabase
     .from("game_saves")
@@ -144,30 +121,30 @@ async function getPlayersTotalTapPower(userIds: number[]) {
 }
 
 // ---------- GET HANDLER ----------
-export async function GET(request: Request) {
+export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const action = searchParams.get("action");
-  const userId = searchParams.get("userId");
+  const userIdStr = searchParams.get("userId");
+  const userId = userIdStr != null ? Number(userIdStr) : null;
   const roomCode = searchParams.get("roomCode");
-  const userIdNum = userId != null ? Number(userId) : NaN;
 
   try {
     if (action === "profile") {
-      if (!userId || isNaN(userIdNum))
+      if (!userId)
         return NextResponse.json({ error: "userId required" }, { status: 400 });
 
       // Ensure game save exists
       let { data: gameSave } = await supabase
         .from("game_saves")
         .select("*")
-        .eq("user_id", userIdNum)
+        .eq("user_id", userId)
         .single();
 
       if (!gameSave) {
         const { data } = await supabase
           .from("game_saves")
           .insert([{
-            user_id: userIdNum,
+            user_id: userId,
             profile_name: "Fire Warrior",
             profile_icon: "🔥",
             tap_power_upgrades: 1,
@@ -182,14 +159,14 @@ export async function GET(request: Request) {
           }])
           .select()
           .single();
-        gameSave = data!;
+        gameSave = data;
       }
 
       // Ensure boss progress exists
       let { data: bossProgress } = await supabase
         .from("boss_progress")
         .select("*")
-        .eq("user_id", userIdNum)
+        .eq("user_id", userId)
         .single();
 
       if (!bossProgress) {
@@ -198,7 +175,7 @@ export async function GET(request: Request) {
         const { data } = await supabase
           .from("boss_progress")
           .insert([{
-            user_id: userIdNum,
+            user_id: userId,
             current_level: lvl,
             boss_hp: hp,
             boss_max_hp: hp,
@@ -211,13 +188,13 @@ export async function GET(request: Request) {
           }])
           .select()
           .single();
-        bossProgress = data!;
+        bossProgress = data;
       }
 
-      // 🔹 Weekly lazy reset
-      bossProgress = await maybeResetBossProgress(userIdNum, bossProgress);
+      // Lazy weekly reset
+      bossProgress = await maybeResetBossProgress(bossProgress, userId);
 
-      // Safety: align max HP to formula for current level
+      // Safety: align stored max HP with formula
       const expectedMax = getBossHP(bossProgress.current_level || 1);
       if (bossProgress.boss_max_hp !== expectedMax) {
         const fixedHp = Math.min(
@@ -227,7 +204,7 @@ export async function GET(request: Request) {
         const { data: fixed } = await supabase
           .from("boss_progress")
           .update({ boss_hp: fixedHp, boss_max_hp: expectedMax })
-          .eq("user_id", userIdNum)
+          .eq("user_id", userId)
           .select()
           .single();
         bossProgress = fixed ?? { ...bossProgress, boss_hp: fixedHp, boss_max_hp: expectedMax };
@@ -242,13 +219,13 @@ export async function GET(request: Request) {
       const totalLevel = safe(bossProgress.current_level) + upgradeLevel;
 
       if (bossProgress.total_level !== totalLevel) {
-        const { data: updated } = await supabase
+        const { data: fixed } = await supabase
           .from("boss_progress")
           .update({ total_level: totalLevel })
-          .eq("user_id", userIdNum)
+          .eq("user_id", userId)
           .select()
           .single();
-        bossProgress = updated ?? { ...bossProgress, total_level: totalLevel };
+        bossProgress = fixed ?? { ...bossProgress, total_level: totalLevel };
       }
 
       return NextResponse.json({
@@ -269,20 +246,20 @@ export async function GET(request: Request) {
     }
 
     if (action === "upgrades") {
-      if (!userId || isNaN(userIdNum))
+      if (!userId)
         return NextResponse.json({ error: "User ID required" }, { status: 400 });
 
       let { data: gameSave } = await supabase
         .from("game_saves")
         .select("*")
-        .eq("user_id", userIdNum)
+        .eq("user_id", userId)
         .single();
 
       if (!gameSave) {
         const { data } = await supabase
           .from("game_saves")
           .insert([{
-            user_id: userIdNum,
+            user_id: userId,
             tap_power_upgrades: 1,
             auto_tapper_upgrades: 0,
             crit_chance_upgrades: 0,
@@ -295,7 +272,7 @@ export async function GET(request: Request) {
           }])
           .select()
           .single();
-        gameSave = data!;
+        gameSave = data;
       }
 
       return NextResponse.json({
@@ -315,24 +292,24 @@ export async function GET(request: Request) {
     }
 
     if (action === "progress") {
-      if (!userId || isNaN(userIdNum))
+      if (!userId)
         return NextResponse.json({ error: "User ID required" }, { status: 400 });
 
-      // Fetch progress
+      // Try to fetch progress
       let { data: progress } = await supabase
         .from("boss_progress")
         .select("*")
-        .eq("user_id", userIdNum)
+        .eq("user_id", userId)
         .single();
 
-      // Create if missing
+      // If no record exists, create one
       if (!progress) {
         const lvl = 1;
         const hp = getBossHP(lvl);
         const { data } = await supabase
           .from("boss_progress")
           .insert([{
-            user_id: userIdNum,
+            user_id: userId,
             current_level: lvl,
             boss_hp: hp,
             boss_max_hp: hp,
@@ -345,20 +322,20 @@ export async function GET(request: Request) {
           }])
           .select()
           .single();
-        progress = data!;
+        progress = data;
       }
 
-      // 🔹 Weekly lazy reset
-      progress = await maybeResetBossProgress(userIdNum, progress);
+      // Lazy weekly reset
+      progress = await maybeResetBossProgress(progress, userId);
 
-      // Safety HP
+      // Safety: ensure HP matches formula
       const expectedMax = getBossHP(progress.current_level || 1);
       if (progress.boss_max_hp !== expectedMax || progress.boss_hp == null) {
         const fixedHp = progress.boss_hp == null ? expectedMax : Math.min(progress.boss_hp, expectedMax);
         const { data: fixed } = await supabase
           .from("boss_progress")
           .update({ boss_hp: fixedHp, boss_max_hp: expectedMax })
-          .eq("user_id", userIdNum)
+          .eq("user_id", userId)
           .select()
           .single();
         progress = fixed ?? { ...progress, boss_hp: fixedHp, boss_max_hp: expectedMax };
@@ -369,7 +346,7 @@ export async function GET(request: Request) {
         current_level: progress.current_level,
         boss_hp: progress.boss_hp,
         boss_max_hp: progress.boss_max_hp,
-        boss_emoji: progress.boss_emoji ?? getBossEmoji(progress.current_level),
+        boss_emoji: getBossEmoji(progress.current_level),
         total_coins: safe(progress.total_coins),
         weekly_best_level: progress.weekly_best_level,
         coins_per_boss: getCoinsPerBoss(progress.current_level),
@@ -381,7 +358,7 @@ export async function GET(request: Request) {
     if (action === "coop_session") {
       if (!roomCode)
         return NextResponse.json({ error: "Room code is required" }, { status: 400 });
-      if (!userId || isNaN(userIdNum))
+      if (!userId)
         return NextResponse.json({ error: "User ID is required" }, { status: 400 });
 
       const { data: sessions } = await supabase
@@ -396,7 +373,7 @@ export async function GET(request: Request) {
       const sessionData = sessions[0];
       const players = Array.isArray(sessionData.players) ? sessionData.players : [];
 
-      if (!players.includes(userIdNum))
+      if (!players.includes(Number(userId)))
         return NextResponse.json({ error: "User not in this session" }, { status: 403 });
 
       return NextResponse.json({
@@ -410,7 +387,7 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       { error: error?.message || "Unknown error" },
       { status: 500 }
@@ -419,8 +396,8 @@ export async function GET(request: Request) {
 }
 
 // ---------- POST HANDLER ----------
-export async function POST(request: Request) {
-  let body: any;
+export async function POST(request) {
+  let body;
   try {
     body = await request.json();
   } catch {
@@ -431,9 +408,9 @@ export async function POST(request: Request) {
 
   try {
     if (action === "solo_tap") {
-      const { userId, damage } = body;
-      const userIdNum = Number(userId);
-      if (!userId || isNaN(userIdNum))
+      const { userId: userIdRaw, damage } = body;
+      const userId = Number(userIdRaw);
+      if (!userId)
         return NextResponse.json({ error: "User ID required" }, { status: 400 });
       if (typeof damage !== "number" || damage <= 0)
         return NextResponse.json({ error: "Valid damage required" }, { status: 400 });
@@ -441,11 +418,14 @@ export async function POST(request: Request) {
       let { data: progress } = await supabase
         .from("boss_progress")
         .select("*")
-        .eq("user_id", userIdNum)
+        .eq("user_id", userId)
         .single();
 
       if (!progress)
         return NextResponse.json({ error: "User progress not found" }, { status: 404 });
+
+      // Lazy weekly reset here too so taps right at the boundary behave
+      progress = await maybeResetBossProgress(progress, userId);
 
       if (safe(progress.boss_hp) <= 0) {
         return NextResponse.json(
@@ -470,7 +450,7 @@ export async function POST(request: Request) {
         await supabase
           .from("boss_progress")
           .update({ boss_hp: newBossHp })
-          .eq("user_id", userIdNum);
+          .eq("user_id", userId);
         return NextResponse.json({
           success: true,
           damage_dealt: damage,
@@ -485,7 +465,7 @@ export async function POST(request: Request) {
       const { data: gs } = await supabase
         .from("game_saves")
         .select("coins,total_coins_earned")
-        .eq("user_id", userIdNum)
+        .eq("user_id", userId)
         .single();
 
       const currentCoins = safe(gs?.coins);
@@ -506,7 +486,7 @@ export async function POST(request: Request) {
           boss_emoji: nextEmoji,
           weekly_best_level: newWeeklyBest,
         })
-        .eq("user_id", userIdNum);
+        .eq("user_id", userId);
 
       await supabase
         .from("game_saves")
@@ -514,7 +494,7 @@ export async function POST(request: Request) {
           coins: newCoins,
           total_coins_earned: currentEarned + coinsEarned,
         })
-        .eq("user_id", userIdNum);
+        .eq("user_id", userId);
 
       return NextResponse.json({
         success: true,
@@ -530,12 +510,12 @@ export async function POST(request: Request) {
     }
 
     if (action === "coop_create") {
-      const { userId } = body;
-      const userIdNum = Number(userId);
-      if (!userId || isNaN(userIdNum))
+      const { userId: userIdRaw } = body;
+      const userId = Number(userIdRaw);
+      if (!userId)
         return NextResponse.json({ error: "User ID required" }, { status: 400 });
 
-      let roomCode: string;
+      let roomCode;
       while (true) {
         roomCode = generateRoomCode();
         const { data: exists } = await supabase
@@ -547,7 +527,7 @@ export async function POST(request: Request) {
       }
 
       const level = 1;
-      const playersArr = [userIdNum];
+      const playersArr = [userId];
       const totalTapPower = await getPlayersTotalTapPower(playersArr);
       const bossHp = getCoopBossHP(level, totalTapPower);
 
@@ -570,7 +550,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         session: {
-          ...session!,
+          ...session,
           boss_emoji: getBossEmoji(level),
           coins_per_boss: getCoopCoinsPerBoss(level),
         },
@@ -578,9 +558,9 @@ export async function POST(request: Request) {
     }
 
     if (action === "increment_total_taps") {
-      const { userId, amount } = body;
-      const userIdNum = Number(userId);
-      if (!userId || isNaN(userIdNum))
+      const { userId: userIdRaw, amount } = body;
+      const userId = Number(userIdRaw);
+      if (!userId)
         return NextResponse.json({ error: "User ID required" }, { status: 400 });
 
       const increment = typeof amount === "number" && amount > 0 ? amount : 1;
@@ -588,7 +568,7 @@ export async function POST(request: Request) {
       const { data: row, error: selErr } = await supabase
         .from("game_saves")
         .select("total_taps")
-        .eq("user_id", userIdNum)
+        .eq("user_id", userId)
         .single();
 
       if (selErr)
@@ -600,7 +580,7 @@ export async function POST(request: Request) {
       const { error: updErr } = await supabase
         .from("game_saves")
         .update({ total_taps: newTotal })
-        .eq("user_id", userIdNum);
+        .eq("user_id", userId);
 
       if (updErr)
         return NextResponse.json({ error: "Failed to update total_taps" }, { status: 500 });
@@ -609,11 +589,11 @@ export async function POST(request: Request) {
     }
 
     if (action === "coop_join") {
-      const { roomCode, userId } = body;
-      const userIdNum = Number(userId);
+      const { roomCode, userId: userIdRaw } = body;
+      const userId = Number(userIdRaw);
       if (!roomCode)
         return NextResponse.json({ error: "Room code is required" }, { status: 400 });
-      if (!userId || isNaN(userIdNum))
+      if (!userId)
         return NextResponse.json({ error: "User ID is required" }, { status: 400 });
 
       const { data: sessions } = await supabase
@@ -628,10 +608,10 @@ export async function POST(request: Request) {
       const session = sessions[0];
       const currentPlayers = Array.isArray(session.players) ? session.players.map(Number) : [];
 
-      if (currentPlayers.length >= 5 && !currentPlayers.includes(userIdNum))
+      if (currentPlayers.length >= 5 && !currentPlayers.includes(userId))
         return NextResponse.json({ error: "Room is full" }, { status: 400 });
 
-      if (currentPlayers.includes(userIdNum)) {
+      if (currentPlayers.includes(userId)) {
         return NextResponse.json({
           success: true,
           session: {
@@ -642,14 +622,14 @@ export async function POST(request: Request) {
         });
       }
 
-      const newPlayers = [...currentPlayers, userIdNum];
+      const newPlayers = [...currentPlayers, userId];
       const { data: updatedSessionArr } = await supabase
         .from("boss_coop_sessions")
         .update({ players: newPlayers })
         .eq("room_code", session.room_code)
         .select();
 
-      const updatedSession = updatedSessionArr![0];
+      const updatedSession = updatedSessionArr[0];
 
       return NextResponse.json({
         success: true,
@@ -662,11 +642,11 @@ export async function POST(request: Request) {
     }
 
     if (action === "coop_tap") {
-      const { roomCode, userId, damage } = body;
-      const userIdNum = Number(userId);
+      const { roomCode, userId: userIdRaw, damage } = body;
+      const userId = Number(userIdRaw);
       if (!roomCode)
         return NextResponse.json({ error: "Room code is required" }, { status: 400 });
-      if (!userId || isNaN(userIdNum))
+      if (!userId)
         return NextResponse.json({ error: "User ID is required" }, { status: 400 });
       if (typeof damage !== "number" || damage <= 0)
         return NextResponse.json({ error: "Valid damage required" }, { status: 400 });
@@ -683,7 +663,7 @@ export async function POST(request: Request) {
       const sessionData = sessions[0];
       const players = Array.isArray(sessionData.players) ? sessionData.players.map(Number) : [];
 
-      if (!players.includes(userIdNum))
+      if (!players.includes(userId))
         return NextResponse.json({ error: "User not in this session" }, { status: 403 });
 
       if (safe(sessionData.boss_hp) <= 0) {
@@ -730,7 +710,7 @@ export async function POST(request: Request) {
           const { data: row } = await supabase
             .from("game_saves")
             .select("coins,total_coins_earned")
-            .eq("user_id", Number(uid))
+            .eq("user_id", uid)
             .single();
 
           const currentCoins = safe(row?.coins);
@@ -742,7 +722,7 @@ export async function POST(request: Request) {
               coins: currentCoins + perPlayerReward,
               total_coins_earned: currentEarned + perPlayerReward,
             })
-            .eq("user_id", Number(uid));
+            .eq("user_id", uid);
         })
       );
 
@@ -782,7 +762,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       { error: error?.message || "Unknown error" },
       { status: 500 }
