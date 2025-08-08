@@ -14,30 +14,14 @@ import {
   Dice6,
   RotateCw,
   Wand2,
-  Sword,
   Merge,
-  Sparkles,
 } from "lucide-react";
 
 /**
- * Tap Tap: Arcane Siege — v3
- * - Mobile-first portrait UI (glassmorphism, battle/boss-mode inspired)
- * - Circular battlefield with energy nodes around the Arcane Core
- * - AUTO-PLACE on roll:
- *    1) Place on first empty node
- *    2) If full → auto-merge two weakest of the same element (to free a node), then place
- *    3) Else replace the weakest unit
- * - MERGE MODE: tap Unit A → Unit B (same element) to combine and DOUBLE stats
- *   Merge rules:
- *     - For additive stats (dmg, range, aoe, chains, slowMs, rootMs, allyBuff): new = (a+b)*2 (then clamped)
- *     - For rate (ms between shots): new = max(120, floor(min(a,b)/2))  // ≈ double fire rate
- *     - For percentages (slow, rootChance, falloff): sensible combine + clamp
- * - Tapping:
- *    • Global surge (button or empty field): +30% dmg/+20% speed, 2s, 4s CD
- *    • Tap unit (not in merge mode): +100% dmg/+50% speed (local), 1.5s, 2s CD
- * - Arcane Charge: fills with taps; when 100, casts the chosen Path Ultimate instantly
- * - Hazards every 5 waves: rotate ring & add portals
- * - Save/Load via /api/arcanesiege (anonymous saveId in localStorage)
+ * Tap Tap: Arcane Siege — v3.1 (Global Targeting)
+ * - CHANGE: All defenders can attack ANY enemy on the board (no range checks).
+ *   Target selection = enemy closest to the Arcane Core (highest threat).
+ * - Everything else remains from v3 (auto-place, merge-2, surge/overdrive, ultimates, hazards, save/load).
  */
 
 const TICK_MS = 50;
@@ -73,7 +57,7 @@ const UNIT_BASE = {
   fire: {
     name: "Fire Mage",
     icon: Flame,
-    base: { dmg: 8, range: 140, rate: 650, aoe: 32 },
+    base: { dmg: 8, range: 140, rate: 650, aoe: 32 }, // range kept for future but ignored in targeting
   },
   ice: {
     name: "Frost Adept",
@@ -136,7 +120,6 @@ function mergedStats(a, b) {
       }
     }
   }
-  // sanity minimums
   if (!out.dmg) out.dmg = 2;
   if (!out.range) out.range = 120;
   if (!out.rate) out.rate = 600;
@@ -144,7 +127,6 @@ function mergedStats(a, b) {
 }
 
 function unitPowerScore(stats) {
-  // crude DPS-ish: dmg per second, with bonuses
   const dps = (stats.dmg || 0) * (1000 / (stats.rate || 600));
   const extras =
     (stats.aoe ? stats.aoe * 0.2 : 0) +
@@ -261,7 +243,7 @@ export default function ArcaneSiege() {
     }
   }, [wave]); // eslint-disable-line
 
-  // Game loop
+  // Game loop (GLOBAL TARGETING)
   useEffect(() => {
     if (paused || gameOver) return;
     const iv = setInterval(() => {
@@ -290,67 +272,68 @@ export default function ArcaneSiege() {
           })
           .filter(Boolean);
 
-        // Unit attacks
+        // Unit attacks — ANY enemy on board
         if (units.length && arr.length) {
           const gBoost = now() < globalBoostUntil ? 1.3 : 1;
           arr = arr.map((e) => ({ ...e }));
+          // Pre-sort by threat (closest to core)
+          const byThreat = arr
+            .map((e, idx) => ({ e, idx, d: dist(e.x, e.y, size.cx, size.cy) }))
+            .sort((a, b) => a.d - b.d); // lowest distance = highest threat
+
           for (const u of units) {
             u._nextAtk = u._nextAtk ?? 0;
             if (now() < u._nextAtk) continue;
-            const node = nodes[u.nodeIndex];
-            if (!node) continue;
+
             const st = u.stats;
             const localBoost = now() < (u.localUntil || 0) ? 1.5 : 1;
             const dmgBase = st.dmg * gBoost * localBoost * (1 + (st.allyBuff || 0));
-            // find nearest target
-            const inRange = arr
-              .map((e, idx) => ({ e, idx, d: dist(e.x, e.y, node.x, node.y) }))
-              .filter((o) => o.d <= st.range)
-              .sort((a, b) => a.d - b.d);
-            if (inRange.length === 0) continue;
+
+            if (byThreat.length === 0) break;
+            const primary = byThreat[0]; // most dangerous target
 
             if (u.element === "fire") {
-              const p = inRange[0].e;
+              // Splash around primary (AoE still uses st.aoe radius)
               for (let j = 0; j < arr.length; j++) {
                 const e = arr[j];
-                if (dist(e.x, e.y, p.x, p.y) <= (st.aoe || 28)) {
+                if (dist(e.x, e.y, primary.e.x, primary.e.y) <= (st.aoe || 28)) {
                   arr[j] = applyDamage(arr[j], dmgBase);
                 }
               }
-              hitFx(p.x, p.y, COLORS.fire);
+              hitFx(primary.e.x, primary.e.y, COLORS.fire);
             } else if (u.element === "ice") {
-              const o = inRange[0];
-              const t = { ...o.e };
+              const t = { ...arr[primary.idx] };
               t.slowUntil = Math.max(t.slowUntil || 0, now() + (st.slowMs || 900));
-              arr[o.idx] = applyDamage(t, dmgBase);
+              arr[primary.idx] = applyDamage(t, dmgBase);
               hitFx(t.x, t.y, COLORS.ice);
             } else if (u.element === "storm") {
+              // Chain from primary across globally nearest hops
               let dmg = dmgBase;
-              let last = inRange[0];
+              let last = primary;
               arr[last.idx] = applyDamage(arr[last.idx], dmg);
               hitFx(last.e.x, last.e.y, COLORS.storm);
               let hops = 1;
               const maxHops = st.chains || 2;
               const fall = st.falloff || 0.65;
               while (hops <= maxHops) {
-                const cands = arr
+                // find next nearest to last.e (global set)
+                const next = arr
                   .map((e, idx) => ({ e, idx, d: dist(e.x, e.y, last.e.x, last.e.y) }))
-                  .filter((o) => o.d <= st.range * 0.9 && o.idx !== last.idx)
-                  .sort((a, b) => a.d - b.d);
-                if (!cands.length) break;
-                last = cands[0];
+                  .filter((o) => o.idx !== last.idx)
+                  .sort((a, b) => a.d - b.d)[0];
+                if (!next) break;
+                last = next;
                 dmg *= fall;
                 arr[last.idx] = applyDamage(arr[last.idx], dmg);
                 hitFx(last.e.x, last.e.y, COLORS.storm);
                 hops++;
               }
             } else if (u.element === "nature") {
-              const o = inRange[0];
-              const t = { ...o.e };
+              const t = { ...arr[primary.idx] };
               if (Math.random() < (st.rootChance || 0.1)) {
                 t.rootedUntil = Math.max(t.rootedUntil || 0, now() + (st.rootMs || 600));
               }
-              arr[o.idx] = applyDamage(t, dmgBase);
+              arr[primary.idx] = applyDamage(t, dmgBase);
               hitFx(t.x, t.y, COLORS.nature);
             }
 
@@ -367,7 +350,7 @@ export default function ArcaneSiege() {
         }
         if (earned) setGold((g) => g + earned);
 
-        // Wave clear → next
+        // Next wave
         if (alive.length === 0) {
           setTimeout(() => {
             if (!paused && !gameOver) {
@@ -391,7 +374,7 @@ export default function ArcaneSiege() {
     }, TICK_MS);
     return () => clearInterval(iv);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paused, gameOver, units, nodes, globalBoostUntil, wave]);
+  }, [paused, gameOver, units, globalBoostUntil, wave, size.cx, size.cy]);
 
   function applyDamage(e, amount) {
     const out = { ...e };
@@ -572,7 +555,6 @@ export default function ArcaneSiege() {
       // Local overdrive
       if (unit) {
         if (now() < unit.localCdUntil) {
-          // fallback global tap if local on CD
           globalTap(x, y);
           return;
         }
@@ -626,7 +608,6 @@ export default function ArcaneSiege() {
   function castUltimate(path, x, y) {
     addFloater("ULTIMATE!", x, y, "#FFFFFF");
     if (path === "fire") {
-      // Meteors
       setEnemies((prev) => {
         let arr = [...prev];
         for (let i = 0; i < 8; i++) {
@@ -662,22 +643,19 @@ export default function ArcaneSiege() {
     }
   }
 
-  // Rolling & auto-placement
+  // Rolling & auto-placement (unchanged)
   function rollUnit() {
     const element = pick(ELEMENTS);
     autoPlaceOrMerge(element);
   }
-
   function baseStatsFor(element) {
     return { ...UNIT_BASE[element].base };
   }
-
   function firstEmptyNode() {
     const occupied = new Set(units.map((u) => u.nodeIndex));
     for (let i = 0; i < nodes.length; i++) if (!occupied.has(i)) return i;
     return -1;
   }
-
   function weakestUnitIndex() {
     if (!units.length) return -1;
     let worst = 0;
@@ -691,9 +669,7 @@ export default function ArcaneSiege() {
     }
     return worst;
   }
-
   function autoPlaceOrMerge(element) {
-    // place if empty
     let idx = firstEmptyNode();
     if (idx >= 0) {
       setUnits((prev) => [
@@ -711,13 +687,10 @@ export default function ArcaneSiege() {
       addFloater("Placed!", nodes[idx].x, nodes[idx].y, COLORS[element]);
       return;
     }
-
-    // no empty — try auto-merge two weakest of same element
     const same = units
       .map((u, i) => ({ u, i, s: unitPowerScore(u.stats) }))
       .filter((x) => x.u.element === element)
       .sort((a, b) => a.s - b.s);
-
     if (same.length >= 2) {
       const a = same[0];
       const b = same[1];
@@ -725,20 +698,17 @@ export default function ArcaneSiege() {
       const targetNode = b.u.nodeIndex;
       setUnits((prev) => {
         const keep = prev.filter((_, i) => i !== a.i && i !== b.i);
-        // merged unit on b's node
-        const mergedUnit = {
-          id: rid(),
-          element,
-          stats: merged,
-          nodeIndex: targetNode,
-          localUntil: 0,
-          localCdUntil: 0,
-          level: (a.u.level || 1) + (b.u.level || 1),
-        };
-        // we freed a node (a.u.nodeIndex). Place rolled fresh unit there.
         return [
           ...keep,
-          mergedUnit,
+          {
+            id: rid(),
+            element,
+            stats: merged,
+            nodeIndex: targetNode,
+            localUntil: 0,
+            localCdUntil: 0,
+            level: (a.u.level || 1) + (b.u.level || 1),
+          },
           {
             id: rid(),
             element,
@@ -753,8 +723,6 @@ export default function ArcaneSiege() {
       addFloater("Auto-merge + Place!", nodes[targetNode].x, nodes[targetNode].y, COLORS[element]);
       return;
     }
-
-    // still no — replace weakest
     const wIdx = weakestUnitIndex();
     if (wIdx >= 0) {
       const targetNode = units[wIdx].nodeIndex;
@@ -798,9 +766,9 @@ export default function ArcaneSiege() {
     setTimeout(() => spawnWave(1), 100);
   };
 
-  // Render helpers
   const globalCdLeft = Math.max(0, globalCdUntil - now());
   const globalActiveLeft = Math.max(0, globalBoostUntil - now());
+  const isGlobalReady = now() >= globalCdUntil;
 
   return (
     <div
@@ -867,9 +835,7 @@ export default function ArcaneSiege() {
             border: "1px solid rgba(255,255,255,0.6)",
             boxShadow: "0 3px 10px rgba(0,0,0,0.35)",
           }}
-        >
-          {e.aura && <div className="absolute rounded-full" style={{ inset: "-8px", border: "1px dashed rgba(255,255,255,0.6)" }} />}
-        </motion.div>
+        />
       ))}
 
       {/* Floaters */}
@@ -901,7 +867,7 @@ export default function ArcaneSiege() {
           <span>Wave {wave}</span>
         </div>
         <div className="flex items-center gap-2">
-          <button className="btn" onClick={togglePause} aria-label={paused ? "Resume" : "Pause"}>
+          <button className="btn" onClick={() => setPaused((p) => !p)} aria-label={paused ? "Resume" : "Pause"}>
             {paused ? <Play size={16} /> : <Pause size={16} />}
           </button>
           <button className="btn" onClick={saveProgress} aria-label="Save">
@@ -973,7 +939,8 @@ export default function ArcaneSiege() {
             className={`btn flex-1 ${isGlobalReady ? "" : "opacity-60"}`}
             onClick={(e) => {
               e.stopPropagation();
-              globalTap(size.cx, size.cy);
+              const rect = containerRef.current.getBoundingClientRect();
+              globalTap(rect.left + size.cx, rect.top + size.cy);
             }}
           >
             <Zap size={16} />
