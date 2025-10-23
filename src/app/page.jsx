@@ -1521,7 +1521,6 @@ const [menuOpen, setMenuOpen] = useState(false); // open by default
   const [pendingOfflineEarnings, setPendingOfflineEarnings] = useState(null);
   const [lastTapTimes, setLastTapTimes] = useState([]);
   const [showResetModal, setShowResetModal] = useState(false);
-  const [showMaddoxModal, setShowMaddoxModal] = useState(false);
                                                      
  const [muted, setMuted] = useState(false);
   const [playClick] = useSound("/sounds/click.wav", { volume: muted ? 0 : 0.4 });
@@ -5016,15 +5015,6 @@ const SHOP_THEMES = [
     isLimited: false,
   },
   {
-    id: "maddoxtheme",
-    name: "Maddox",
-    emoji: CUSTOM_THEMES.maddoxtheme.icon,
-    price: 250,
-    currency: "renownTokens",
-    isLimited: true,
-    stock: limitedStock["maddoxtheme"] ?? 10,
-  },
-  {
     id: "hell",
     name: "Hell",
     emoji: CUSTOM_THEMES.hell.icon,
@@ -5838,15 +5828,6 @@ const renderProfileTab = () => {
     price: 20,
     currency: "renownTokens",
     isLimited: false,
-  },
-  {
-    id: "maddoxtheme",
-    name: "Maddox",
-    emoji: CUSTOM_THEMES.maddoxtheme.icon,
-    price: 250,
-    currency: "renownTokens",
-    isLimited: true,
-    stock: limitedStock["maddoxtheme"] ?? 10,
   },
   {
     id: "hell",
@@ -7006,17 +6987,6 @@ async function claimDailyBonus(day, streakDay) {
       >
         <i className="fas fa-times text-2xl"></i>
       </button>
-      {/* Maddox Button */}
-      <button
-        onClick={() => { setShowMaddoxModal(true); setSidebarOpen(false); }}
-        className="relative flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-[#1e293b] to-[#dc2626] shadow-xl hover:scale-110 transition-all border-2 border-[#dc2626] mb-3"
-        aria-label="Maddox Promo"
-      >
-        <img
-          src="https://ucarecdn.com/7eaeaf25-2192-4082-a415-dd52f360d379/-/format/auto/"
-          alt="Maddox Logo"
-          className="w-7 h-7 rounded-full object-contain"
-        />
         <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center border-2 border-white shadow">
           <span className="text-xs font-bold text-white" style={{ lineHeight: "1" }}>
             !
@@ -7998,51 +7968,6 @@ const currentValueFormatted =
 )}
 {showDoubleEarningsModal && renderDoubleEarningsModal()}
 
-{showMaddoxModal && (
-  <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
-    <div className="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 pb-3 flex flex-col items-center border-2 border-[#dc2626]">
-      <button
-        onClick={() => setShowMaddoxModal(false)}
-        className="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-2xl font-bold"
-        aria-label="Close"
-        style={{ background: "none", border: "none" }}
-      >
-        ×
-      </button>
-      <img
-        src="https://ucarecdn.com/7eaeaf25-2192-4082-a415-dd52f360d379/-/format/auto/"
-        alt="Maddox Logo"
-        className="w-16 h-16 rounded-full mb-3"
-      />
-      <h2 className="text-xl font-bold mb-1 text-[#dc2626]">Announcement!</h2>
-      <p className="mb-3 text-center text-[#1e293b] font-medium">
-        We’ve partnered with{" "}
-        <span className="font-bold text-[#dc2626]">Maddox</span>!<br />
-        <span className="text-sm text-[#4b5563]">
-          Check out his channel, support the collab, and claim your bonus!
-        </span>
-      </p>
-      <a
-        href="https://www.youtube.com/channel/UCVXk-ixAOlk9we-5yFfKN9g"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="w-full bg-[#dc2626] text-white text-center font-semibold rounded-xl py-2 px-3 mb-2 hover:bg-[#991b1b] transition"
-      >
-        Maddox on YouTube
-      </a>
-      <div className="bg-gray-100 rounded-lg py-2 px-3 text-center mb-2">
-        <span className="text-[#1e293b] font-bold">
-          Use code{" "}
-          <span className="bg-yellow-200 px-2 py-1 rounded text-[#eab308]">maddox</span>{" "}
-          in the <b>House</b> tab!
-        </span>
-      </div>
-      <span className="text-xs text-[#6b7280] text-center block mt-2">
-        Exclusive rewards for a limited time only!
-      </span>
-    </div>
-  </div>
-)}
 
 {showWeatherFlash && (
   <div
