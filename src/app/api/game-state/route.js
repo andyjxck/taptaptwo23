@@ -77,12 +77,12 @@ const allIcons = [
 
 // LIMITED ICONS (these are the only ones that are limited)
 const limitedIcons = [
-  "logo", "maddox", "dog", "diamond", "dragon", "mermaid", "wizard", "crystalball", "cactus", "volcano",
+  "logo", "dog", "diamond", "dragon", "mermaid", "wizard", "crystalball", "cactus", "volcano",
   "jellyfish", "starstruck", "medal", "ninja", "phoenix", "pirate", "vampire", "dragonfruit"
 ];
 
   const allThemes = [
-    "heaven","hell","maddoxtheme","space","city_night","midnight","island","barn","city","forest","beach","seasons"
+    "heaven","hell","space","city_night","midnight","island","barn","city","forest","beach","seasons"
   ];
 
   const codeName = typeof code === "string" ? code.toLowerCase().trim() : "";
@@ -216,125 +216,7 @@ const limitedIcons = [
     return { success: true, message: "Tap Tap Two promo code applied!" };
   }
 
-  // === MADDOX CODE ===
-  if (codeName === "maddox") {
-    let houseLevel = (Number(save.house_level) || 1) + 5;
-    let tap_power_upgrades = Number(save.tap_power_upgrades) || 0;
-    let auto_tapper_upgrades = Number(save.auto_tapper_upgrades) || 0;
-    let crit_chance_upgrades = Number(save.crit_chance_upgrades) || 0;
-    let tap_speed_bonus_upgrades = Number(save.tap_speed_bonus_upgrades) || 0;
-    let house_coins_multiplier = (Number(save.house_coins_multiplier) || 0) + 0.5;
 
-    let remain = 10;
-    const upgKeys = ["tap_power_upgrades", "auto_tapper_upgrades", "crit_chance_upgrades", "tap_speed_bonus_upgrades"];
-    const upgradeValues = [0, 0, 0, 0];
-    for (let i = 0; i < upgKeys.length; i++) {
-      if (i === upgKeys.length - 1) {
-        upgradeValues[i] = remain;
-      } else {
-        const rand = Math.floor(Math.random() * (remain + 1));
-        upgradeValues[i] = rand;
-        remain -= rand;
-      }
-    }
-    tap_power_upgrades += upgradeValues[0];
-    auto_tapper_upgrades += upgradeValues[1];
-    crit_chance_upgrades += upgradeValues[2];
-    tap_speed_bonus_upgrades += upgradeValues[3];
-
-    let ownedProfileIcons = [];
-    try {
-      ownedProfileIcons = save.owned_profile_icons
-        ? JSON.parse(save.owned_profile_icons)
-        : [];
-    } catch {}
-    if (!Array.isArray(ownedProfileIcons)) ownedProfileIcons = [];
-    if (!ownedProfileIcons.includes("maddox")) ownedProfileIcons.push("maddox");
-    const availableRandomIcons = allIcons.filter(
-      (x) => x !== "maddox" && !ownedProfileIcons.includes(x)
-    );
-    if (availableRandomIcons.length > 0) {
-      const randIcon = availableRandomIcons[Math.floor(Math.random() * availableRandomIcons.length)];
-      ownedProfileIcons.push(randIcon);
-    }
-    const profileIcon = "maddox";
-
-    let ownedThemes = [];
-    try {
-      ownedThemes = save.owned_themes
-        ? typeof save.owned_themes === "string"
-          ? JSON.parse(save.owned_themes)
-          : save.owned_themes
-        : [];
-    } catch {}
-    if (!Array.isArray(ownedThemes)) ownedThemes = [];
-    if (!ownedThemes.includes("seasons")) ownedThemes.push("seasons");
-    if (!ownedThemes.includes("maddoxtheme")) ownedThemes.push("maddoxtheme");
-    const availableThemes = allThemes.filter(
-      (t) => t !== "maddoxtheme" && t !== "seasons" && !ownedThemes.includes(t)
-    );
-    if (availableThemes.length > 0) {
-      const randTheme = availableThemes[Math.floor(Math.random() * availableThemes.length)];
-      ownedThemes.push(randTheme);
-    }
-
-    const renownTokens = (Number(save.renown_tokens) || 0) + 10;
-    const coins = (Number(save.coins) || 0) + 10000;
-    usedCodes.push(codeName);
-
-    try {
-      await sql`
-        UPDATE game_saves
-        SET
-          house_level = ${houseLevel},
-          house_coins_multiplier = ${house_coins_multiplier},
-          tap_power_upgrades = ${tap_power_upgrades},
-          auto_tapper_upgrades = ${auto_tapper_upgrades},
-          crit_chance_upgrades = ${crit_chance_upgrades},
-          tap_speed_bonus_upgrades = ${tap_speed_bonus_upgrades},
-          owned_profile_icons = ${JSON.stringify(ownedProfileIcons)},
-          profile_icon = ${profileIcon},
-          owned_themes = ${JSON.stringify(ownedThemes)},
-          equipped_theme = 'maddoxtheme',
-          renown_tokens = ${renownTokens},
-          coins = ${coins},
-          profile_name = ${save.profile_name || "Player"}
-        WHERE user_id = ${userIdInt}
-      `;
-      await sql`
-        UPDATE users SET used_codes = ${JSON.stringify(usedCodes)}
-        WHERE user_id = ${userIdInt}
-      `;
-
-      const newSaveRows = await sql`SELECT * FROM game_saves WHERE user_id = ${userIdInt}`;
-      if (newSaveRows && newSaveRows.length > 0) {
-        const n = newSaveRows[0];
-        const tapPower =
-          (1 + (Number(n.tap_power_upgrades) || 0)) *
-          (Number(n.permanent_multiplier) || 1) *
-          (1 + (Number(n.house_coins_multiplier) || 0));
-        const autoTapper =
-          (Number(n.auto_tapper_upgrades) || 0) *
-          (Number(n.permanent_multiplier) || 1) *
-          (1 + (Number(n.house_coins_multiplier) || 0));
-        const critChance = (Number(n.crit_chance_upgrades) || 0) * 0.25;
-        const tapSpeedBonus = (Number(n.tap_speed_bonus_upgrades) || 0) * 0.05;
-
-        await sql`
-          UPDATE game_saves
-          SET
-            tap_power = ${tapPower},
-            auto_tapper = ${autoTapper},
-            crit_chance = ${critChance},
-            tap_speed_bonus = ${tapSpeedBonus}
-          WHERE user_id = ${userIdInt}
-        `;
-      }
-    } catch {
-      return { error: "Database error applying code" };
-    }
-    return { success: true, message: "Maddox promo code applied!" };
-  }
 if (codeName === "boss") {
   let houseLevel = (Number(save.house_level) || 1) + 3;
   let tap_power_upgrades = Number(save.tap_power_upgrades) || 0;
@@ -1144,11 +1026,11 @@ if (action === "claimDailyBonus") {
       "icecream", "rocket", "rainbow", "mouse", "frog", "fox", "penguin", "bunny", "duck", "hamster", "owl", "hedgehog",
       "panda", "monkey", "bee", "butterfly", "ladybug", "chick", "bear", "dolphin", "whale", "snail", "peach", "avocado",
       "mushroom", "cherry", "cookie", "lighthouse", "moon", "comet", "snowflake", "maple", "eclipse", "mountain",
-      "clover", "sakura", "balloon", "logo", "maddox", "dog", "diamond", "dragon", "mermaid", "wizard", "crystalball", "cactus", "volcano",
+      "clover", "sakura", "balloon", "logo", "dog", "diamond", "dragon", "mermaid", "wizard", "crystalball", "cactus", "volcano",
       "jellyfish", "starstruck", "medal", "ninja", "phoenix", "pirate", "vampire", "dragonfruit"
     ];
     const allThemes = [
-      "heaven", "hell", "maddoxtheme", "space", "city_night", "midnight", "island", "barn", "city", "forest", "beach", "seasons"
+      "heaven", "hell", "space", "city_night", "midnight", "island", "barn", "city", "forest", "beach", "seasons"
     ];
     const iconPool = allIcons.filter(icon => !updatedIcons.includes(icon));
     const themePool = allThemes.filter(theme => !updatedThemes.includes(theme));
