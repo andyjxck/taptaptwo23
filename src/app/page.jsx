@@ -6993,6 +6993,8 @@ async function claimDailyBonus(day, streakDay) {
           </span>
         </span>
       </button>
+    </div>
+  
       {/* Menu Buttons, ORDERED */}
       <div className="w-full flex flex-col items-center gap-3 mt-2">
         {/* Game */}
