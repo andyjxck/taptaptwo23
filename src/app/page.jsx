@@ -6987,13 +6987,6 @@ async function claimDailyBonus(day, streakDay) {
       >
         <i className="fas fa-times text-2xl"></i>
       </button>
-        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center border-2 border-white shadow">
-          <span className="text-xs font-bold text-white" style={{ lineHeight: "1" }}>
-            !
-          </span>
-        </span>
-      </button>
-    </div>
   
       {/* Menu Buttons, ORDERED */}
       <div className="w-full flex flex-col items-center gap-3 mt-2">
